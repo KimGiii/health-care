@@ -47,3 +47,7 @@ app:
     user-profile-ttl-minutes: 60
   notifications:
     max-per-day: 2
+  food-api:
+    usda-base-url: https://api.nal.usda.gov/fdc/v1
+    usda-api-key: "${USDA_API_KEY:DEMO_KEY}"
+    off-base-url: https://world.openfoodfacts.org

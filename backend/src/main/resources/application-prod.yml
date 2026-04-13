@@ -23,6 +23,8 @@ app:
     region: ap-northeast-2
   fcm:
     credentials-path: ${FCM_CREDENTIALS_PATH}
+  food-api:
+    usda-api-key: ${USDA_API_KEY}
 
 logging:
   level:
