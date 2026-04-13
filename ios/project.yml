@@ -1,0 +1,117 @@
+name: HealthCare
+options:
+  bundleIdPrefix: com.healthcare
+  deploymentTarget:
+    iOS: "16.0"
+  defaultConfig: Debug
+  createIntermediateGroups: true
+  xcodeVersion: "16.0"
+  groupSortPosition: none
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    PRODUCT_NAME: HealthCare
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_STRICT_CONCURRENCY: complete
+
+configs:
+  Debug: debug
+  Release: release
+
+packages:
+  FirebaseSDK:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "11.0.0"
+
+targets:
+  HealthCare:
+    type: application
+    platform: iOS
+    sources:
+      - path: HealthCare
+        excludes:
+          - "**/*.md"
+    info:
+      path: HealthCare/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: HealthCare
+        CFBundleIdentifier: com.healthcare.ios
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        UILaunchScreen:
+          UIColorName: SplashBackground
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: "진행 사진을 찍기 위해 카메라 접근 권한이 필요합니다."
+        NSPhotoLibraryUsageDescription: "진행 사진을 저장하기 위해 사진 라이브러리 접근 권한이 필요합니다."
+        UIBackgroundModes:
+          - remote-notification
+        FirebaseAppDelegateProxyEnabled: false
+    settings:
+      base:
+        INFOPLIST_FILE: HealthCare/Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.healthcare.ios
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - package: FirebaseSDK
+        product: FirebaseAnalytics
+      - package: FirebaseSDK
+        product: FirebaseMessaging
+    scheme:
+      testTargets:
+        - HealthCareTests
+        - HealthCareUITests
+
+  HealthCareTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: HealthCareTests
+    dependencies:
+      - target: HealthCare
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.healthcare.ios.tests
+
+  HealthCareUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: HealthCareUITests
+    dependencies:
+      - target: HealthCare
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.healthcare.ios.uitests
+
+schemes:
+  HealthCare:
+    build:
+      targets:
+        HealthCare: all
+        HealthCareTests: [test]
+        HealthCareUITests: [test]
+    run:
+      config: Debug
+      environmentVariables:
+        - variable: BASE_URL
+          value: http://localhost:8080
+          isEnabled: true
+    test:
+      config: Debug
+      targets:
+        - name: HealthCareTests
+          randomExecutionOrder: true
+        - name: HealthCareUITests
+          randomExecutionOrder: false
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

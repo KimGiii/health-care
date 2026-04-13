@@ -1,0 +1,17 @@
+/* HealthCare App — Korean Localizable Strings */
+
+/* Tab titles */
+"tab.home" = "홈";
+"tab.record" = "기록";
+"tab.change" = "변화";
+"tab.retrospective" = "회고";
+"tab.my" = "마이";
+
+/* Common */
+"common.loading" = "불러오는 중...";
+"common.error" = "오류가 발생했습니다.";
+"common.retry" = "다시 시도";
+"common.cancel" = "취소";
+"common.save" = "저장";
+"common.delete" = "삭제";
+"common.done" = "완료";
