@@ -24,6 +24,11 @@ actor APIClient {
         return try await performRequest(endpoint, retryOnUnauthorized: true)
     }
 
+    /// data 필드가 없는 응답 (DELETE 등 ApiResponse<Void>)을 처리
+    func requestVoid(_ endpoint: APIEndpoint) async throws {
+        try await performRequestVoid(endpoint, retryOnUnauthorized: true)
+    }
+
     // MARK: - Private
 
     private func performRequest<T: Decodable>(
@@ -51,6 +56,28 @@ actor APIClient {
             return envelope.data
         } catch {
             throw APIError.decodingError(error)
+        }
+    }
+
+    private func performRequestVoid(
+        _ endpoint: APIEndpoint,
+        retryOnUnauthorized: Bool
+    ) async throws {
+        let urlRequest = try buildRequest(for: endpoint)
+        let (data, response) = try await session.data(for: urlRequest)
+
+        guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
+
+        if http.statusCode == 401 && endpoint.requiresAuth && retryOnUnauthorized {
+            try await refreshTokens()
+            try await performRequestVoid(endpoint, retryOnUnauthorized: false)
+            return
+        }
+
+        guard (200..<300).contains(http.statusCode) else {
+            let apiError = try? decoder.decode(APIErrorResponse.self, from: data)
+            if http.statusCode == 401 { throw APIError.unauthorized }
+            throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code)
         }
     }
 

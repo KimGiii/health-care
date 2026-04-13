@@ -4,23 +4,21 @@ struct RecordHubView: View {
     @StateObject private var viewModel = RecordHubViewModel()
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                NavigationLink(destination: ExerciseRecordView()) {
-                    recordCell(title: "운동 기록", icon: "figure.strengthtraining.traditional", color: .orange)
-                }
-                NavigationLink(destination: DietRecordView()) {
-                    recordCell(title: "식단 기록", icon: "fork.knife", color: .green)
-                }
-                NavigationLink(destination: BodyMeasurementView()) {
-                    recordCell(title: "신체 변화 기록", icon: "scalemass", color: .blue)
-                }
-                Spacer()
+        VStack(spacing: 20) {
+            NavigationLink(destination: ExerciseRecordView()) {
+                recordCell(title: "운동 기록", icon: "figure.strengthtraining.traditional", color: .orange)
             }
-            .padding()
-            .navigationTitle("기록")
-            .navigationBarTitleDisplayMode(.large)
+            NavigationLink(destination: DietRecordView()) {
+                recordCell(title: "식단 기록", icon: "fork.knife", color: .green)
+            }
+            NavigationLink(destination: BodyMeasurementView()) {
+                recordCell(title: "신체 변화 기록", icon: "scalemass", color: .blue)
+            }
+            Spacer()
         }
+        .padding()
+        .navigationTitle("기록")
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private func recordCell(title: String, icon: String, color: Color) -> some View {

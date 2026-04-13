@@ -18,12 +18,9 @@ enum APIEndpoint {
 
     // Exercise
     case createExerciseSession(body: Data)
-    case getExerciseSessions
+    case getExerciseSessions(from: String?, to: String?, page: Int, size: Int)
     case getExerciseSession(id: Int)
-    case updateExerciseSession(id: Int, body: Data)
     case deleteExerciseSession(id: Int)
-    case getDailyExerciseSummary(date: String)
-    case getWeeklyExerciseSummary(weekStart: String)
     case getExerciseCatalog(query: String?)
 
     // Diet
@@ -63,10 +60,7 @@ extension APIEndpoint {
         case .createExerciseSession, .getExerciseSessions:
                                                  return "/api/v1/exercise/sessions"
         case .getExerciseSession(let id),
-             .updateExerciseSession(let id, _),
              .deleteExerciseSession(let id):     return "/api/v1/exercise/sessions/\(id)"
-        case .getDailyExerciseSummary:           return "/api/v1/exercise/summary/daily"
-        case .getWeeklyExerciseSummary:          return "/api/v1/exercise/summary/weekly"
         case .getExerciseCatalog:                return "/api/v1/exercise/catalog"
         case .createMeal, .getMeals:             return "/api/v1/diet/meals"
         case .updateMeal(let id, _),
@@ -94,7 +88,7 @@ extension APIEndpoint {
              .createExerciseSession, .createMeal, .addMealItem,
              .logMeasurement, .uploadProgressPhoto, .createGoal:
             return .POST
-        case .updateProfile, .updateExerciseSession, .updateMeal, .updateGoal:
+        case .updateProfile, .updateMeal, .updateGoal:
             return .PATCH
         case .deleteAccount, .deleteExerciseSession, .deleteMeal,
              .deleteMealItem, .deleteGoal:
@@ -108,7 +102,7 @@ extension APIEndpoint {
         switch self {
         case .register(let b), .login(let b), .refreshToken(let b),
              .updateProfile(let b),
-             .createExerciseSession(let b), .updateExerciseSession(_, let b),
+             .createExerciseSession(let b),
              .createMeal(let b), .updateMeal(_, let b), .addMealItem(_, let b),
              .logMeasurement(let b), .uploadProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b):
@@ -120,8 +114,14 @@ extension APIEndpoint {
 
     var queryItems: [URLQueryItem]? {
         switch self {
-        case .getDailyExerciseSummary(let date):   return [.init(name: "date", value: date)]
-        case .getWeeklyExerciseSummary(let w):     return [.init(name: "weekStart", value: w)]
+        case .getExerciseSessions(let from, let to, let page, let size):
+            var items: [URLQueryItem] = [
+                .init(name: "page", value: "\(page)"),
+                .init(name: "size", value: "\(size)")
+            ]
+            if let from { items.append(.init(name: "from", value: from)) }
+            if let to   { items.append(.init(name: "to",   value: to))   }
+            return items
         case .getExerciseCatalog(let q):           return q.map { [.init(name: "query", value: $0)] }
         case .getMeals(let date):                  return [.init(name: "date", value: date)]
         case .searchFood(let q):                   return [.init(name: "q", value: q)]

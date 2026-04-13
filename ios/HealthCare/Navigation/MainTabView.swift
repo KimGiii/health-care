@@ -27,21 +27,29 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem { Label(Tab.home.title,    systemImage: Tab.home.systemImage) }
-                .tag(Tab.home)
+            NavigationStack {
+                HomeView()
+            }
+            .tabItem { Label(Tab.home.title,    systemImage: Tab.home.systemImage) }
+            .tag(Tab.home)
 
-            DiaryView()
-                .tabItem { Label(Tab.diary.title,   systemImage: Tab.diary.systemImage) }
-                .tag(Tab.diary)
+            NavigationStack {
+                DiaryView()
+            }
+            .tabItem { Label(Tab.diary.title,   systemImage: Tab.diary.systemImage) }
+            .tag(Tab.diary)
 
-            ExploreView()
-                .tabItem { Label(Tab.explore.title, systemImage: Tab.explore.systemImage) }
-                .tag(Tab.explore)
+            NavigationStack {
+                ExploreView()
+            }
+            .tabItem { Label(Tab.explore.title, systemImage: Tab.explore.systemImage) }
+            .tag(Tab.explore)
 
-            MyPageView()
-                .tabItem { Label(Tab.myPage.title,  systemImage: Tab.myPage.systemImage) }
-                .tag(Tab.myPage)
+            NavigationStack {
+                MyPageView()
+            }
+            .tabItem { Label(Tab.myPage.title,  systemImage: Tab.myPage.systemImage) }
+            .tag(Tab.myPage)
         }
         .tint(Color.brandPrimary)
     }
