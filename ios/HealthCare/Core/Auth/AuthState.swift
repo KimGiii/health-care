@@ -17,7 +17,11 @@ final class AuthState: ObservableObject {
         checkPersistedAuth()
     }
 
-    func setAuthenticated() {
+    func saveAndAuthenticate(tokenResponse: TokenResponse) {
+        tokenStore.save(
+            accessToken: tokenResponse.accessToken,
+            refreshToken: tokenResponse.refreshToken
+        )
         status = .authenticated
     }
 

@@ -5,6 +5,7 @@ actor APIClient {
     private let baseURL: URL
     private let tokenStore: TokenStore
     private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
 
     init(baseURL: URL, tokenStore: TokenStore, session: URLSession = .shared) {
         self.baseURL    = baseURL
@@ -16,23 +17,56 @@ actor APIClient {
             d.dateDecodingStrategy = .iso8601
             return d
         }()
+        self.encoder = JSONEncoder()
     }
 
     func request<T: Decodable>(_ endpoint: APIEndpoint) async throws -> T {
+        return try await performRequest(endpoint, retryOnUnauthorized: true)
+    }
+
+    // MARK: - Private
+
+    private func performRequest<T: Decodable>(
+        _ endpoint: APIEndpoint,
+        retryOnUnauthorized: Bool
+    ) async throws -> T {
         let urlRequest = try buildRequest(for: endpoint)
         let (data, response) = try await session.data(for: urlRequest)
 
-        guard let http = response as? HTTPURLResponse else {
-            throw APIError.unknown
+        guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
+
+        if http.statusCode == 401 && endpoint.requiresAuth && retryOnUnauthorized {
+            try await refreshTokens()
+            return try await performRequest(endpoint, retryOnUnauthorized: false)
         }
 
         guard (200..<300).contains(http.statusCode) else {
             let apiError = try? decoder.decode(APIErrorResponse.self, from: data)
+            if http.statusCode == 401 { throw APIError.unauthorized }
             throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code)
         }
 
-        let envelope = try decoder.decode(SuccessEnvelope<T>.self, from: data)
-        return envelope.data
+        do {
+            let envelope = try decoder.decode(SuccessEnvelope<T>.self, from: data)
+            return envelope.data
+        } catch {
+            throw APIError.decodingError(error)
+        }
+    }
+
+    private func refreshTokens() async throws {
+        guard let refreshToken = tokenStore.refreshToken else {
+            throw APIError.unauthorized
+        }
+        let body = try encoder.encode(["refreshToken": refreshToken])
+        let tokenResponse: TokenResponse = try await performRequest(
+            .refreshToken(body: body),
+            retryOnUnauthorized: false
+        )
+        tokenStore.save(
+            accessToken: tokenResponse.accessToken,
+            refreshToken: tokenResponse.refreshToken
+        )
     }
 
     private func buildRequest(for endpoint: APIEndpoint) throws -> URLRequest {
@@ -56,6 +90,14 @@ actor APIClient {
     }
 }
 
+// MARK: - Convenience encode helper (accessible outside actor)
+extension APIClient {
+    nonisolated func encode<T: Encodable>(_ value: T) throws -> Data {
+        return try JSONEncoder().encode(value)
+    }
+}
+
+// MARK: - Response envelopes
 private struct SuccessEnvelope<T: Decodable>: Decodable {
     let success: Bool
     let data: T

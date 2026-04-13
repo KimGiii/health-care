@@ -5,8 +5,14 @@ struct LoginRequest: Encodable {
     let password: String
 }
 
+struct RegisterRequest: Encodable {
+    let email: String
+    let password: String
+    let displayName: String
+}
+
 struct TokenResponse: Decodable {
     let accessToken: String
     let refreshToken: String
-    let tokenType: String
+    let expiresIn: Int
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct SignUpView: View {
     @StateObject private var viewModel = SignUpViewModel()
     @EnvironmentObject private var authState: AuthState
+    @EnvironmentObject private var container: AppContainer
 
     var body: some View {
         ZStack {
@@ -27,6 +28,12 @@ struct SignUpView: View {
 
                 // Form
                 VStack(spacing: 14) {
+                    StyledTextField(
+                        icon:        "person",
+                        placeholder: "닉네임",
+                        text:        $viewModel.displayName
+                    )
+
                     StyledTextField(
                         icon:        "envelope",
                         placeholder: "이메일",
@@ -64,7 +71,7 @@ struct SignUpView: View {
                 // CTA
                 VStack(spacing: 0) {
                     Button {
-                        Task { await viewModel.register(authState: authState) }
+                        Task { await viewModel.register(apiClient: container.apiClient, authState: authState) }
                     } label: {
                         Group {
                             if viewModel.isLoading {

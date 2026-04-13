@@ -59,7 +59,7 @@ struct LoginView: View {
                 // CTA
                 VStack(spacing: 12) {
                     Button {
-                        Task { await viewModel.login(authState: authState) }
+                        Task { await viewModel.login(apiClient: container.apiClient, authState: authState) }
                     } label: {
                         Group {
                             if viewModel.isLoading {
