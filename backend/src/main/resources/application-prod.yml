@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  s3:
+    bucket: healthcare-photos-prod
+    region: ap-northeast-2
+  fcm:
+    credentials-path: ${FCM_CREDENTIALS_PATH}
+
+logging:
+  level:
+    com.healthcare: INFO
+    root: WARN

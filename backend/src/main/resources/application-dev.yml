@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  s3:
+    bucket: healthcare-photos-dev
+    region: ap-northeast-2
+  fcm:
+    credentials-path: ${FCM_CREDENTIALS_PATH}
+
+logging:
+  level:
+    com.healthcare: DEBUG
