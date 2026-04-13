@@ -2,7 +2,6 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject private var authState: AuthState
-    @State private var showLogin = false
 
     var body: some View {
         NavigationStack {
@@ -47,8 +46,8 @@ struct OnboardingView: View {
 
                     // CTA Buttons
                     VStack(spacing: 12) {
-                        NavigationLink(destination: SignUpView()) {
-                            Text("시작하기")
+                        NavigationLink(destination: LoginView()) {
+                            Text("로그인")
                                 .font(.system(size: 17, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
@@ -61,10 +60,8 @@ struct OnboardingView: View {
                                 )
                         }
 
-                        Button {
-                            showLogin = true
-                        } label: {
-                            Text("이미 계정이 있어요")
+                        NavigationLink(destination: SignUpView()) {
+                            Text("계정이 없어요, 가입하기")
                                 .font(.system(size: 15, weight: .medium))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
@@ -80,9 +77,6 @@ struct OnboardingView: View {
                     .padding(.horizontal, 28)
                     .padding(.bottom, 48)
                 }
-            }
-            .navigationDestination(isPresented: $showLogin) {
-                LoginView()
             }
         }
     }
