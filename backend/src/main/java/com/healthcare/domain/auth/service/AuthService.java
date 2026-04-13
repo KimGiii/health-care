@@ -101,6 +101,7 @@ public class AuthService {
             .accessToken(accessToken)
             .refreshToken(refreshTokenRaw)
             .expiresIn(SecurityConstants.ACCESS_TOKEN_EXPIRY_MS / 1000)
+            .onboardingCompleted(user.isOnboardingCompleted())
             .build();
     }
 

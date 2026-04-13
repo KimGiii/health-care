@@ -11,6 +11,8 @@ struct RootView: View {
                 switch authState.status {
                 case .unauthenticated:
                     OnboardingView()
+                case .profileSetup:
+                    ProfileSetupView()
                 case .authenticated:
                     MainTabView()
                 case .loading:

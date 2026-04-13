@@ -24,6 +24,7 @@ public class UserProfileResponse {
     private Integer carbTargetG;
     private Integer fatTargetG;
     private OffsetDateTime createdAt;
+    private boolean onboardingCompleted;
 
     public static UserProfileResponse from(User user) {
         return UserProfileResponse.builder()
@@ -40,6 +41,7 @@ public class UserProfileResponse {
             .carbTargetG(user.getCarbTargetG())
             .fatTargetG(user.getFatTargetG())
             .createdAt(user.getCreatedAt())
+            .onboardingCompleted(user.isOnboardingCompleted())
             .build();
     }
 }

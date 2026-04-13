@@ -11,6 +11,8 @@ public class UpdateProfileRequest {
     @Size(min = 1, max = 100, message = "닉네임은 1~100자여야 합니다.")
     private String displayName;
 
+    private String sex;
+
     @DecimalMin(value = "50.0", message = "키는 50cm 이상이어야 합니다.")
     @DecimalMax(value = "300.0", message = "키는 300cm 이하여야 합니다.")
     private Double heightCm;
@@ -26,4 +28,5 @@ public class UpdateProfileRequest {
     private Integer carbTargetG;
     private Integer fatTargetG;
     private String fcmToken;
+    private Boolean onboardingCompleted;
 }

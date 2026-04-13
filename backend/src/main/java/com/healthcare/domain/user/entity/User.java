@@ -49,6 +49,10 @@ public class User {
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    @Builder.Default
+    private boolean onboardingCompleted = false;
+
     @Column(name = "calorie_target")
     private Integer calorieTarget;
 
@@ -81,11 +85,16 @@ public class User {
         updatedAt = OffsetDateTime.now();
     }
 
-    public void updateProfile(String displayName, Double heightCm, Double weightKg, ActivityLevel activityLevel) {
+    public void updateProfile(String displayName, Double heightCm, Double weightKg, ActivityLevel activityLevel, Sex sex) {
         if (displayName != null) this.displayName = displayName;
         if (heightCm != null) this.heightCm = heightCm;
         if (weightKg != null) this.weightKg = weightKg;
         if (activityLevel != null) this.activityLevel = activityLevel;
+        if (sex != null) this.sex = sex;
+    }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
     }
 
     public void updateTargets(Integer calorieTarget, Integer proteinTargetG, Integer carbTargetG, Integer fatTargetG) {

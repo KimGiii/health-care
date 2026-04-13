@@ -3,6 +3,7 @@ import Foundation
 enum AuthStatus: Equatable {
     case loading
     case authenticated
+    case profileSetup
     case unauthenticated
 }
 
@@ -22,6 +23,10 @@ final class AuthState: ObservableObject {
             accessToken: tokenResponse.accessToken,
             refreshToken: tokenResponse.refreshToken
         )
+        status = tokenResponse.onboardingCompleted ? .authenticated : .profileSetup
+    }
+
+    func completeProfileSetup() {
         status = .authenticated
     }
 

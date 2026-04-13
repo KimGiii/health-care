@@ -34,11 +34,20 @@ public class UserService {
             activityLevel = User.ActivityLevel.valueOf(request.getActivityLevel());
         }
 
-        user.updateProfile(request.getDisplayName(), request.getHeightCm(), request.getWeightKg(), activityLevel);
+        User.Sex sex = null;
+        if (request.getSex() != null) {
+            sex = User.Sex.valueOf(request.getSex());
+        }
+
+        user.updateProfile(request.getDisplayName(), request.getHeightCm(), request.getWeightKg(), activityLevel, sex);
         user.updateTargets(request.getCalorieTarget(), request.getProteinTargetG(), request.getCarbTargetG(), request.getFatTargetG());
 
         if (request.getFcmToken() != null) {
             user.updateFcmToken(request.getFcmToken());
+        }
+
+        if (Boolean.TRUE.equals(request.getOnboardingCompleted())) {
+            user.completeOnboarding();
         }
 
         return UserProfileResponse.from(user);
