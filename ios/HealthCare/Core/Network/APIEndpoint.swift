@@ -23,15 +23,16 @@ enum APIEndpoint {
     case deleteExerciseSession(id: Int)
     case getExerciseCatalog(query: String?)
 
-    // Diet
-    case createMeal(body: Data)
-    case getMeals(date: String)
-    case updateMeal(id: Int, body: Data)
-    case deleteMeal(id: Int)
-    case addMealItem(mealId: Int, body: Data)
-    case deleteMealItem(mealId: Int, itemId: Int)
-    case searchFood(query: String)
-    case getDailyDietSummary(date: String)
+    // Diet - Logs
+    case createDietLog(body: Data)
+    case getDietLogs(from: String?, to: String?, page: Int, size: Int)
+    case getDietLog(id: Int)
+    case deleteDietLog(id: Int)
+    // Diet - Catalog
+    case getFoodCatalog(query: String?)
+    // Diet - External Foods
+    case searchExternalFoods(query: String, source: String, page: Int, size: Int)
+    case importExternalFood(body: Data)
 
     // Measurement
     case logMeasurement(body: Data)
@@ -62,14 +63,12 @@ extension APIEndpoint {
         case .getExerciseSession(let id),
              .deleteExerciseSession(let id):     return "/api/v1/exercise/sessions/\(id)"
         case .getExerciseCatalog:                return "/api/v1/exercise/catalog"
-        case .createMeal, .getMeals:             return "/api/v1/diet/meals"
-        case .updateMeal(let id, _),
-             .deleteMeal(let id):                return "/api/v1/diet/meals/\(id)"
-        case .addMealItem(let mealId, _):        return "/api/v1/diet/meals/\(mealId)/items"
-        case .deleteMealItem(let mealId, let itemId):
-                                                 return "/api/v1/diet/meals/\(mealId)/items/\(itemId)"
-        case .searchFood:                        return "/api/v1/diet/food/search"
-        case .getDailyDietSummary:               return "/api/v1/diet/summary/daily"
+        case .createDietLog, .getDietLogs:       return "/api/v1/diet/logs"
+        case .getDietLog(let id),
+             .deleteDietLog(let id):             return "/api/v1/diet/logs/\(id)"
+        case .getFoodCatalog:                    return "/api/v1/diet/catalog"
+        case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
+        case .importExternalFood:                return "/api/v1/diet/external-foods/import"
         case .logMeasurement, .getMeasurementHistory:
                                                  return "/api/v1/measurements"
         case .uploadProgressPhoto, .getProgressPhotos:
@@ -85,13 +84,13 @@ extension APIEndpoint {
     var method: HTTPMethod {
         switch self {
         case .register, .login, .refreshToken, .logout,
-             .createExerciseSession, .createMeal, .addMealItem,
+             .createExerciseSession, .createDietLog, .importExternalFood,
              .logMeasurement, .uploadProgressPhoto, .createGoal:
             return .POST
-        case .updateProfile, .updateMeal, .updateGoal:
+        case .updateProfile, .updateGoal:
             return .PATCH
-        case .deleteAccount, .deleteExerciseSession, .deleteMeal,
-             .deleteMealItem, .deleteGoal:
+        case .deleteAccount, .deleteExerciseSession, .deleteDietLog,
+             .deleteGoal:
             return .DELETE
         default:
             return .GET
@@ -103,7 +102,7 @@ extension APIEndpoint {
         case .register(let b), .login(let b), .refreshToken(let b),
              .updateProfile(let b),
              .createExerciseSession(let b),
-             .createMeal(let b), .updateMeal(_, let b), .addMealItem(_, let b),
+             .createDietLog(let b), .importExternalFood(let b),
              .logMeasurement(let b), .uploadProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b):
             return b
@@ -122,10 +121,25 @@ extension APIEndpoint {
             if let from { items.append(.init(name: "from", value: from)) }
             if let to   { items.append(.init(name: "to",   value: to))   }
             return items
-        case .getExerciseCatalog(let q):           return q.map { [.init(name: "query", value: $0)] }
-        case .getMeals(let date):                  return [.init(name: "date", value: date)]
-        case .searchFood(let q):                   return [.init(name: "q", value: q)]
-        case .getDailyDietSummary(let date):       return [.init(name: "date", value: date)]
+        case .getExerciseCatalog(let q):
+            return q.map { [.init(name: "query", value: $0)] }
+        case .getFoodCatalog(let q):
+            return q.map { [.init(name: "query", value: $0)] }
+        case .getDietLogs(let from, let to, let page, let size):
+            var items: [URLQueryItem] = [
+                .init(name: "page", value: "\(page)"),
+                .init(name: "size", value: "\(size)")
+            ]
+            if let from { items.append(.init(name: "from", value: from)) }
+            if let to   { items.append(.init(name: "to",   value: to))   }
+            return items
+        case .searchExternalFoods(let q, let source, let page, let size):
+            return [
+                .init(name: "q",      value: q),
+                .init(name: "source", value: source),
+                .init(name: "page",   value: "\(page)"),
+                .init(name: "size",   value: "\(size)")
+            ]
         default: return nil
         }
     }
