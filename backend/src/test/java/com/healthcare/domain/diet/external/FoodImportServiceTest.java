@@ -36,13 +36,13 @@ class FoodImportServiceTest {
     // ─────────────────────────── 외부 식품 가져오기 ───────────────────────────
 
     @Test
-    @DisplayName("USDA 식품 가져오기 시 isCustom=true, createdByUserId=현재사용자로 저장된다")
-    void importFood_fromUsda_savesAsUserCustomFood() {
+    @DisplayName("공공데이터 식품 가져오기 시 isCustom=true, createdByUserId=현재사용자로 저장된다")
+    void importFood_fromPublicApi_savesAsUserCustomFood() {
         // given
         Long userId = 1L;
         ImportFoodRequest request = ImportFoodRequest.builder()
-                .source(FoodDataSource.USDA)
-                .externalId("171705")
+                .source(FoodDataSource.PUBLIC_FOOD_API)
+                .externalId("F001")
                 .name("Chicken Breast")
                 .nameKo("닭가슴살")
                 .category(FoodCategory.PROTEIN_SOURCE)
@@ -82,13 +82,13 @@ class FoodImportServiceTest {
     }
 
     @Test
-    @DisplayName("Open Food Facts 식품 가져오기 시 올바른 영양소와 카테고리로 저장된다")
-    void importFood_fromOpenFoodFacts_savesCorrectNutrients() {
+    @DisplayName("공공데이터 API 식품 가져오기 시 올바른 영양소와 카테고리로 저장된다")
+    void importFood_fromPublicApi_savesCorrectNutrients() {
         // given
         Long userId = 2L;
         ImportFoodRequest request = ImportFoodRequest.builder()
-                .source(FoodDataSource.OPEN_FOOD_FACTS)
-                .externalId("3017620425400")
+                .source(FoodDataSource.PUBLIC_FOOD_API)
+                .externalId("F002")
                 .name("Nutella")
                 .category(FoodCategory.PROCESSED)
                 .caloriesPer100g(541.0)
@@ -125,8 +125,8 @@ class FoodImportServiceTest {
         // given
         Long userId = 1L;
         ImportFoodRequest request = ImportFoodRequest.builder()
-                .source(FoodDataSource.USDA)
-                .externalId("12345")
+                .source(FoodDataSource.PUBLIC_FOOD_API)
+                .externalId("F003")
                 .name("Oatmeal")
                 .category(FoodCategory.GRAIN)
                 .caloriesPer100g(389.0)
