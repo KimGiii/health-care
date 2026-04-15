@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 @Setter
 public class ExternalApiProperties {
 
-    private String usdaBaseUrl      = "https://api.nal.usda.gov/fdc/v1";
-    private String usdaApiKey       = "";
-    private String offBaseUrl       = "https://world.openfoodfacts.org";
-    private String offSearchBaseUrl = "https://search.openfoodfacts.org";
+    // 공공데이터 포털 API
+    private String publicApiKey        = "";
+    private String processedFoodApiUrl = "https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api";
+    private String generalFoodApiUrl   = "https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api";
 }

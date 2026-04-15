@@ -5,41 +5,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
-import java.time.Duration;
-
 @Configuration
 @RequiredArgsConstructor
 public class ExternalApiConfig {
 
     private final ExternalApiProperties props;
 
-    @Bean("usdaRestClient")
-    public RestClient usdaRestClient() {
+    /** 공공데이터 포털 - 가공식품 영양정보 API */
+    @Bean("processedFoodRestClient")
+    public RestClient processedFoodRestClient() {
         return RestClient.builder()
-                .baseUrl(props.getUsdaBaseUrl())
+                .baseUrl(props.getProcessedFoodApiUrl())
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
 
-    /** 바코드 조회용 (world.openfoodfacts.org) */
-    @Bean("offRestClient")
-    public RestClient offRestClient() {
+    /** 공공데이터 포털 - 음식 영양정보 API */
+    @Bean("generalFoodRestClient")
+    public RestClient generalFoodRestClient() {
         return RestClient.builder()
-                .baseUrl(props.getOffBaseUrl())
+                .baseUrl(props.getGeneralFoodApiUrl())
                 .defaultHeader("Accept", "application/json")
-                .defaultHeader("User-Agent",
-                        "HealthCareApp/1.0 (contact@healthcare.example.com)")
-                .build();
-    }
-
-    /** 텍스트 검색용 (search.openfoodfacts.org — v2 Elasticsearch API) */
-    @Bean("offSearchRestClient")
-    public RestClient offSearchRestClient() {
-        return RestClient.builder()
-                .baseUrl(props.getOffSearchBaseUrl())
-                .defaultHeader("Accept", "application/json")
-                .defaultHeader("User-Agent",
-                        "HealthCareApp/1.0 (contact@healthcare.example.com)")
                 .build();
     }
 }

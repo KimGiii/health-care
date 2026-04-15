@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/diet/external-foods")
@@ -27,10 +26,10 @@ public class ExternalFoodController {
 
     /**
      * GET /api/v1/diet/external-foods/search
-     * USDA / Open Food Facts 텍스트 검색
+     * 공공데이터 포털 식품 영양정보 API 검색
      *
      * @param q      검색어 (필수)
-     * @param source USDA | OPEN_FOOD_FACTS | ALL (기본값: ALL)
+     * @param source PUBLIC_FOOD_API | ALL (기본값: ALL)
      * @param page   0-based 페이지 (기본값: 0)
      * @param size   페이지당 결과 수 (기본값: 20)
      */
@@ -44,21 +43,6 @@ public class ExternalFoodController {
 
         List<ExternalFoodResult> results = searchService.search(q, source, page, size);
         return ResponseEntity.ok(ApiResponse.ok(results));
-    }
-
-    /**
-     * GET /api/v1/diet/external-foods/barcode/{barcode}
-     * Open Food Facts 바코드 조회
-     */
-    @GetMapping("/barcode/{barcode}")
-    public ResponseEntity<ApiResponse<ExternalFoodResult>> findByBarcode(
-            @RequestHeader("Authorization") String bearerToken,
-            @PathVariable String barcode) {
-
-        Optional<ExternalFoodResult> result = searchService.findByBarcode(barcode);
-        return result
-                .map(r -> ResponseEntity.ok(ApiResponse.ok(r)))
-                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

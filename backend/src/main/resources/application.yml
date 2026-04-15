@@ -48,6 +48,6 @@ app:
   notifications:
     max-per-day: 2
   food-api:
-    usda-base-url: https://api.nal.usda.gov/fdc/v1
-    usda-api-key: "${USDA_API_KEY:DEMO_KEY}"
-    off-base-url: https://world.openfoodfacts.org
+    public-api-key: "${PUBLIC_FOOD_API_KEY:}"
+    processed-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api
+    general-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api

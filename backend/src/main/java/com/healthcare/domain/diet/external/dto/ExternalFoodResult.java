@@ -20,6 +20,6 @@ public class ExternalFoodResult {
     private final Double fatPer100g;
 
     public enum FoodDataSource {
-        USDA, OPEN_FOOD_FACTS, ALL
+        PUBLIC_FOOD_API, ALL
     }
 }
