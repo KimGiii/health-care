@@ -57,12 +57,11 @@ enum FoodCategory: String, Codable {
 }
 
 enum FoodDataSource: String, Codable {
-    case USDA, OPEN_FOOD_FACTS, ALL
+    case PUBLIC_FOOD_API, ALL
 
     var displayName: String {
         switch self {
-        case .USDA:            return "USDA"
-        case .OPEN_FOOD_FACTS: return "Open Food Facts"
+        case .PUBLIC_FOOD_API: return "공공데이터"
         case .ALL:             return "전체"
         }
     }

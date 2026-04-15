@@ -62,8 +62,11 @@ final class AddDietLogViewModel: ObservableObject {
                 .getFoodCatalog(query: searchQuery)
             )
             catalogResults = results
+            errorMessage = nil
         } catch {
             catalogResults = []
+            errorMessage = "카탈로그 검색 실패: \(error.localizedDescription)"
+            print("❌ searchCatalog error: \(error)")
         }
     }
 
@@ -81,8 +84,12 @@ final class AddDietLogViewModel: ObservableObject {
                 .searchExternalFoods(query: searchQuery, source: "ALL", page: 0, size: 20)
             )
             externalResults = results
+            errorMessage = nil
+            print("✅ searchExternal success: \(results.count) results")
         } catch {
             externalResults = []
+            errorMessage = "외부 검색 실패: \(error.localizedDescription)"
+            print("❌ searchExternal error: \(error)")
         }
     }
 
