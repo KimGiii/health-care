@@ -43,6 +43,15 @@ public class GlobalExceptionHandler {
                 .build());
     }
 
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleViolation(BusinessRuleViolationException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(ErrorResponse.builder()
+                .code("BUSINESS_RULE_VIOLATION")
+                .message(e.getMessage())
+                .build());
+    }
+
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidation(ValidationException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
