@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -61,17 +62,18 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
             Map.entry("유지류", FoodCategory.FAT),
             Map.entry("음료류", FoodCategory.BEVERAGE),
             Map.entry("주류", FoodCategory.BEVERAGE),
-            Map.entry("조리가공식품류", FoodCategory.PROCESSED)
+            Map.entry("즉석", FoodCategory.PROCESSED),
+            Map.entry("가공", FoodCategory.PROCESSED)
     );
 
     @Override
     public List<ExternalFoodResult> search(String query, int page, int size) {
-        List<ExternalFoodResult> results = new ArrayList<>();
+        List<ExternalFoodResult> allResults = new ArrayList<>();
 
         // 1. 가공식품 API 검색
         try {
             List<ExternalFoodResult> processedResults = searchProcessedFood(query, page, size);
-            results.addAll(processedResults);
+            allResults.addAll(processedResults);
             log.debug("가공식품 API 검색 결과: {} 건", processedResults.size());
         } catch (Exception e) {
             log.warn("가공식품 API 검색 실패: {}", e.getMessage());
@@ -80,34 +82,40 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
         // 2. 음식 API 검색
         try {
             List<ExternalFoodResult> generalResults = searchGeneralFood(query, page, size);
-            results.addAll(generalResults);
+            allResults.addAll(generalResults);
             log.debug("음식 API 검색 결과: {} 건", generalResults.size());
         } catch (Exception e) {
             log.warn("음식 API 검색 실패: {}", e.getMessage());
         }
 
-        return results;
+        // 3. 검색어로 필터링 (클라이언트 사이드)
+        return allResults.stream()
+                .filter(item -> item.getName().contains(query))
+                .limit(size)
+                .collect(Collectors.toList());
     }
 
     /**
      * 가공식품 API 검색
      */
     private List<ExternalFoodResult> searchProcessedFood(String query, int page, int size) {
-        PublicFoodApiResponse response = processedFoodClient.get()
+        ApiResponseWrapper response = processedFoodClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("serviceKey", properties.getPublicApiKey())
-                        .queryParam("page", page + 1)  // 1-based
-                        .queryParam("perPage", size)
-                        .queryParam("cond[PRDLST_NM::LIKE]", query)
+                        .queryParam("type", "json")
+                        .queryParam("pageNo", page + 1)
+                        .queryParam("numOfRows", size * 2)  // 필터링 고려하여 더 많이 가져옴
                         .build())
                 .retrieve()
-                .body(PublicFoodApiResponse.class);
+                .body(ApiResponseWrapper.class);
 
-        if (response == null || response.getData() == null) {
+        if (response == null || response.getResponse() == null ||
+            response.getResponse().getBody() == null ||
+            response.getResponse().getBody().getItems() == null) {
             return List.of();
         }
 
-        return response.getData().stream()
+        return response.getResponse().getBody().getItems().stream()
                 .map(this::toExternalResult)
                 .filter(Objects::nonNull)
                 .toList();
@@ -117,21 +125,23 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
      * 음식 API 검색
      */
     private List<ExternalFoodResult> searchGeneralFood(String query, int page, int size) {
-        PublicFoodApiResponse response = generalFoodClient.get()
+        ApiResponseWrapper response = generalFoodClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("serviceKey", properties.getPublicApiKey())
-                        .queryParam("page", page + 1)  // 1-based
-                        .queryParam("perPage", size)
-                        .queryParam("cond[식품명::LIKE]", query)
+                        .queryParam("type", "json")
+                        .queryParam("pageNo", page + 1)
+                        .queryParam("numOfRows", size * 2)  // 필터링 고려하여 더 많이 가져옴
                         .build())
                 .retrieve()
-                .body(PublicFoodApiResponse.class);
+                .body(ApiResponseWrapper.class);
 
-        if (response == null || response.getData() == null) {
+        if (response == null || response.getResponse() == null ||
+            response.getResponse().getBody() == null ||
+            response.getResponse().getBody().getItems() == null) {
             return List.of();
         }
 
-        return response.getData().stream()
+        return response.getResponse().getBody().getItems().stream()
                 .map(this::toExternalResult)
                 .filter(Objects::nonNull)
                 .toList();
@@ -139,21 +149,33 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
     private ExternalFoodResult toExternalResult(PublicFoodItem item) {
         // 필수 필드 검증
-        if (item.getFoodName() == null || item.getFoodName().isBlank()) return null;
-        if (item.getCalories() == null) return null;
+        if (item.getFoodNm() == null || item.getFoodNm().isBlank()) return null;
+
+        // 칼로리 파싱 (문자열일 수 있음)
+        Double calories = parseDouble(item.getEnerc());
+        if (calories == null || calories == 0) return null;
 
         return ExternalFoodResult.builder()
                 .source(FoodDataSource.PUBLIC_FOOD_API)
-                .externalId(item.getFoodCode())
-                .name(item.getFoodName())
-                .nameKo(item.getFoodName())
-                .brand(item.getManufacturer())
-                .category(mapCategory(item.getMajorCategory()))
-                .caloriesPer100g(item.getCalories())
-                .proteinPer100g(item.getProtein())
-                .carbsPer100g(item.getCarbohydrate())
-                .fatPer100g(item.getFat())
+                .externalId(item.getFoodCd())
+                .name(item.getFoodNm())
+                .nameKo(item.getFoodNm())
+                .brand(item.getMfrNm())
+                .category(mapCategory(item.getFoodLv3Nm()))
+                .caloriesPer100g(calories)
+                .proteinPer100g(parseDouble(item.getProt()))
+                .carbsPer100g(parseDouble(item.getChocdf()))
+                .fatPer100g(parseDouble(item.getFatce()))
                 .build();
+    }
+
+    private Double parseDouble(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private FoodCategory mapCategory(String majorCategory) {
@@ -171,52 +193,49 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
     @Getter @Setter @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class PublicFoodApiResponse {
-        private Integer currentCount;
-        private List<PublicFoodItem> data;
-        private Integer matchCount;
-        private Integer page;
-        private Integer perPage;
-        private Integer totalCount;
+    static class ApiResponseWrapper {
+        private ResponseData response;
+    }
+
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class ResponseData {
+        private Header header;
+        private Body body;
+    }
+
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Header {
+        private String resultCode;
+        private String resultMsg;
+        private String type;
+    }
+
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Body {
+        private List<PublicFoodItem> items;
+        private String totalCount;
+        private String numOfRows;
+        private String pageNo;
     }
 
     @Getter @Setter @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class PublicFoodItem {
-        /** 식품코드 */
-        @JsonProperty("식품코드")
-        private String foodCode;
-
-        /** 식품명 */
-        @JsonProperty("식품명")
-        private String foodName;
-
-        /** 식품대분류명 */
-        @JsonProperty("식품대분류명")
-        private String majorCategory;
-
-        /** 에너지(kcal) */
-        @JsonProperty("에너지(kcal)")
-        private Double calories;
-
-        /** 단백질(g) */
-        @JsonProperty("단백질(g)")
-        private Double protein;
-
-        /** 탄수화물(g) */
-        @JsonProperty("탄수화물(g)")
-        private Double carbohydrate;
-
-        /** 지방(g) */
-        @JsonProperty("지방(g)")
-        private Double fat;
-
-        /** 제조사명 (가공식품의 경우) */
-        @JsonProperty("제조사명")
-        private String manufacturer;
-
-        /** 품목제조보고번호 (가공식품 전용 필드) */
-        @JsonProperty("품목제조보고번호")
-        private String productReportNumber;
+        private String foodCd;        // 식품코드
+        private String foodNm;        // 식품명
+        private String dataCd;        // 데이터구분코드
+        private String typeNm;        // 데이터구분명
+        private String foodLv3Cd;     // 식품대분류코드
+        private String foodLv3Nm;     // 식품대분류명
+        private String nutConSrtrQua; // 영양성분함량 기준량
+        private String enerc;         // 에너지(kcal)
+        private String prot;          // 단백질(g)
+        private String fatce;         // 지방(g)
+        private String chocdf;        // 탄수화물(g)
+        private String mfrNm;         // 제조사명
+        private String itemMnftrRptNo; // 품목제조보고번호
     }
 }
