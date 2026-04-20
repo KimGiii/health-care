@@ -191,58 +191,51 @@ private struct HomeSectionView<Content: View>: View {
 }
 
 // MARK: - Plan Card
+
 private struct PlanCardView: View {
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.brandSurface)
-                .frame(height: 140)
+        NavigationLink(destination: GoalSettingView()) {
+            ZStack(alignment: .bottomTrailing) {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.brandSurface)
+                    .frame(height: 140)
 
-            // Organic blob decoration
-            Circle()
-                .fill(Color.brandAccent.opacity(0.3))
-                .frame(width: 120, height: 120)
-                .offset(x: 20, y: 30)
+                // Organic blob decoration
+                Circle()
+                    .fill(Color.brandAccent.opacity(0.3))
+                    .frame(width: 120, height: 120)
+                    .offset(x: 20, y: 30)
 
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("12주 체중 감량")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color.brandPrimary)
-                    Text("주 4회 · 1,800 kcal")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Color.textSecondary)
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("목표 관리")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(Color.brandPrimary)
+                        Text("목표를 설정하고 달성률을 확인하세요")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.brandPrimary.opacity(0.5))
                 }
-                Spacer()
-                CheckmarkButton()
+                .padding(20)
             }
-            .padding(20)
         }
+        .buttonStyle(.plain)
         .padding(.horizontal, 20)
         .clipped()
     }
 }
 
-private struct CheckmarkButton: View {
-    var body: some View {
-        Circle()
-            .fill(Color.brandLight)
-            .frame(width: 52, height: 52)
-            .overlay(
-                Image(systemName: "checkmark")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color.brandPrimary)
-            )
-            .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
-    }
-}
 
 // MARK: - Recent Meals Row
 private struct RecentMealsRowView: View {
     private let meals: [(name: String, kcal: String, icon: String)] = [
         ("닭가슴살 샐러드", "420 kcal", "fork.knife"),
         ("그릭 요거트", "180 kcal", "cup.and.saucer.fill"),
-        ("현미밥 + 된장국", "510 kcal", "bowl.fill"),
+        ("현미밥 + 된장국", "510 kcal", "fork.knife.circle.fill"),
     ]
 
     var body: some View {

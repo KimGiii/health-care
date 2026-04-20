@@ -7,7 +7,9 @@ final class HomeViewModel: ObservableObject {
 
     func loadDashboard() async {
         isLoading = true
-        defer { isLoading = false }
-        // TODO: fetch daily summary from APIClient
+        do {
+            // TODO: fetch daily summary from APIClient
+        }
+        isLoading = false
     }
 }
