@@ -160,8 +160,12 @@ public class ExerciseSessionService {
 
     public SessionListResponse listSessions(Long userId, LocalDate from, LocalDate to,
             Pageable pageable) {
+        // null 파라미터를 기본값으로 변환 (PostgreSQL 타입 추론 문제 회피)
+        LocalDate effectiveFrom = from != null ? from : LocalDate.of(1900, 1, 1);
+        LocalDate effectiveTo = to != null ? to : LocalDate.of(2999, 12, 31);
+
         Page<ExerciseSession> page = sessionRepository
-                .findByUserIdAndDateRange(userId, from, to, pageable);
+                .findByUserIdAndDateRange(userId, effectiveFrom, effectiveTo, pageable);
         return SessionListResponse.from(page);
     }
 
@@ -234,33 +238,56 @@ public class ExerciseSessionService {
     private CalorieCalculationResult calculateCalories(User user,
             List<CreateSetRequest> sets, Map<Long, ExerciseCatalog> catalogMap,
             Integer durationMinutes) {
-        if (durationMinutes == null || user.getWeightKg() == null) {
+        if (user.getWeightKg() == null) {
             return new CalorieCalculationResult(null, CalorieEstimateMethod.NONE);
         }
 
-        // 평균 MET 계산
-        double totalMet = sets.stream()
-                .mapToDouble(s -> {
-                    ExerciseCatalog c = catalogMap.get(s.getExerciseCatalogId());
-                    return (c != null && c.getMetValue() != null) ? c.getMetValue() : 0.0;
-                })
-                .sum();
-        long setsWithMet = sets.stream()
-                .filter(s -> {
-                    ExerciseCatalog c = catalogMap.get(s.getExerciseCatalogId());
-                    return c != null && c.getMetValue() != null;
-                })
-                .count();
+        // 세트별로 칼로리 계산 후 합산
+        double totalCalories = 0.0;
+        int validSetCount = 0;
 
-        if (setsWithMet == 0) {
+        for (CreateSetRequest setReq : sets) {
+            ExerciseCatalog catalog = catalogMap.get(setReq.getExerciseCatalogId());
+
+            // 칼로리 계산이 불가능한 세트는 스킵
+            boolean cannotCalculateCalories = catalog == null
+                || catalog.getMetValue() == null
+                || (SetType.CARDIO.equals(setReq.getSetType()) && setReq.getDurationSeconds() == null);
+
+            if (cannotCalculateCalories) {
+                continue;
+            }
+
+            // 세트별 duration 결정
+            double setDurationMinutes;
+            if (setReq.getDurationSeconds() != null) {
+                // CARDIO 또는 명시적 duration이 있는 경우
+                setDurationMinutes = setReq.getDurationSeconds() / 60.0;
+            } else if (durationMinutes != null && !sets.isEmpty()) {
+                // WEIGHTED/BODYWEIGHT: 전체 세션 시간을 세트 수로 균등 분배
+                // 이는 세트 준비 + 실제 운동 + 세트 간 휴식을 모두 포함
+                setDurationMinutes = durationMinutes / (double) sets.size();
+            } else {
+                // duration 정보가 전혀 없으면 세트당 기본값 2.5분 사용
+                // (평균적인 WEIGHTED/BODYWEIGHT 세트 시간 + 휴식)
+                setDurationMinutes = 2.5;
+            }
+
+            // 칼로리 계산: MET × weight_kg × duration_hours
+            double durationHours = setDurationMinutes / 60.0;
+            double setCalories = catalog.getMetValue() * user.getWeightKg() * durationHours;
+            totalCalories += setCalories;
+            validSetCount++;
+        }
+
+        if (validSetCount == 0) {
             return new CalorieCalculationResult(null, CalorieEstimateMethod.NONE);
         }
 
-        double avgMet = totalMet / setsWithMet;
-        double durationHours = durationMinutes / 60.0;
-        // MET 공식: calories = MET × weight_kg × duration_hours
-        double calories = avgMet * user.getWeightKg() * durationHours;
-        return new CalorieCalculationResult(Math.round(calories * 10.0) / 10.0, CalorieEstimateMethod.MET);
+        return new CalorieCalculationResult(
+            Math.round(totalCalories * 10.0) / 10.0,
+            CalorieEstimateMethod.MET
+        );
     }
 
     private record CalorieCalculationResult(Double calories, CalorieEstimateMethod method) {}

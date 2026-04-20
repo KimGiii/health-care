@@ -14,13 +14,13 @@ public interface ExerciseSessionRepository extends JpaRepository<ExerciseSession
 
     /**
      * 사용자의 세션 목록을 날짜 범위로 페이징 조회한다.
-     * from / to 가 null 이면 전체 기간 조회.
+     * from / to는 null이 아니어야 함 (서비스 레이어에서 기본값 제공)
      */
     @Query("""
             SELECT s FROM ExerciseSession s
             WHERE s.userId = :userId
-              AND (:from IS NULL OR s.sessionDate >= :from)
-              AND (:to   IS NULL OR s.sessionDate <= :to)
+              AND s.sessionDate >= :from
+              AND s.sessionDate <= :to
             ORDER BY s.sessionDate DESC, s.createdAt DESC
             """)
     Page<ExerciseSession> findByUserIdAndDateRange(

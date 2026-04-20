@@ -251,7 +251,12 @@ class ExerciseSessionServiceTest {
                 LocalDate.of(2026, 4, 9), 60, 1000.0, null, CalorieEstimateMethod.NONE);
 
         Page<ExerciseSession> page = new PageImpl<>(List.of(session), pageable, 1);
-        given(sessionRepository.findByUserIdAndDateRange(userId, null, null, pageable))
+        // null 파라미터는 서비스에서 기본값으로 변환됨
+        given(sessionRepository.findByUserIdAndDateRange(
+                eq(userId),
+                eq(LocalDate.of(1900, 1, 1)),
+                eq(LocalDate.of(2999, 12, 31)),
+                eq(pageable)))
                 .willReturn(page);
 
         // when
