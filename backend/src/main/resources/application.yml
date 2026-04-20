@@ -1,6 +1,11 @@
 spring:
   application:
     name: healthcare-api
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:healthcare_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
@@ -13,6 +18,8 @@ spring:
           batch_size: 50
   data:
     redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       timeout: 2000ms
   flyway:
     enabled: true
@@ -38,6 +45,7 @@ management:
 
 app:
   jwt:
+    secret: "${JWT_SECRET:dev-secret-key-change-in-production-min-32-chars-required}"
     access-token-expiry-hours: 24
     refresh-token-expiry-days: 30
   photo:

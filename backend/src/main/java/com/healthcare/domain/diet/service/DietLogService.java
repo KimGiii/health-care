@@ -149,7 +149,12 @@ public class DietLogService {
 
     public DietLogListResponse listDietLogs(Long userId, LocalDate from, LocalDate to,
             Pageable pageable) {
-        Page<DietLog> page = dietLogRepository.findByUserIdAndDateRange(userId, from, to, pageable);
+        // PostgreSQL nullable 파라미터 타입 추론 불가 문제 회피
+        // — null이면 합리적인 기본 범위를 사용한다.
+        LocalDate effectiveFrom = from != null ? from : LocalDate.of(2000, 1, 1);
+        LocalDate effectiveTo   = to   != null ? to   : LocalDate.now().plusYears(1);
+        Page<DietLog> page = dietLogRepository.findByUserIdAndDateRange(
+                userId, effectiveFrom, effectiveTo, pageable);
         return DietLogListResponse.from(page);
     }
 
