@@ -81,15 +81,16 @@ struct AddExerciseSessionView: View {
                 sectionLabel("세트 구성")
                     .padding(.horizontal, 0)
                 Spacer()
-                if !viewModel.draftSets.isEmpty {
-                    Text("\(viewModel.draftSets.count)세트")
+                if !viewModel.exerciseGroups.isEmpty {
+                    let totalSets = viewModel.exerciseGroups.map(\.sets.count).reduce(0, +)
+                    Text("\(totalSets)세트")
                         .font(.system(size: 13))
                         .foregroundStyle(Color.textSecondary)
                 }
             }
             .padding(.horizontal, 16)
 
-            if viewModel.draftSets.isEmpty {
+            if viewModel.exerciseGroups.isEmpty {
                 // 빈 상태 — 운동 추가 유도
                 Button {
                     viewModel.showCatalogPicker = true
@@ -118,12 +119,16 @@ struct AddExerciseSessionView: View {
                 }
                 .padding(.horizontal, 16)
             } else {
-                // 세트 카드들
-                VStack(spacing: 8) {
-                    ForEach(Array($viewModel.draftSets.enumerated()), id: \.element.id) { idx, $draft in
-                        DraftSetCard(index: idx, draft: $draft) {
-                            viewModel.draftSets.remove(at: idx)
-                        }
+                // 운동 그룹 카드들
+                VStack(spacing: 12) {
+                    ForEach(viewModel.exerciseGroups.indices, id: \.self) { groupIdx in
+                        ExerciseGroupCard(
+                            groupIndex: groupIdx,
+                            group: $viewModel.exerciseGroups[groupIdx],
+                            onAddSet: { viewModel.addSetToGroup(at: groupIdx) },
+                            onDeleteGroup: { viewModel.removeExerciseGroup(at: groupIdx) },
+                            onDeleteSet: { setIdx in viewModel.removeSet(groupIndex: groupIdx, setIndex: setIdx) }
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
@@ -221,62 +226,98 @@ struct AddExerciseSessionView: View {
     }
 }
 
-// MARK: - Draft Set Card
+// MARK: - Exercise Group Card (운동 1개 + 세트 목록)
 
-private struct DraftSetCard: View {
-    let index: Int
+private struct ExerciseGroupCard: View {
+    let groupIndex: Int
+    @Binding var group: AddExerciseSessionViewModel.ExerciseGroup
+    let onAddSet: () -> Void
+    let onDeleteGroup: () -> Void
+    let onDeleteSet: (Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // 운동 헤더
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(group.exercise.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
+                    Text(group.exercise.muscleGroupLabel)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.textSecondary)
+                }
+                Spacer()
+                Button(action: onAddSet) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "plus.circle.fill").font(.system(size: 15))
+                        Text("세트 추가").font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.brandPrimary)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Color.brandLight).clipShape(Capsule())
+                }
+                Button(action: onDeleteGroup) {
+                    Image(systemName: "trash").font(.system(size: 14))
+                        .foregroundStyle(Color.textSecondary.opacity(0.5))
+                }
+            }
+            .padding(14)
+            .background(Color.brandSurface)
+
+            Divider()
+
+            // 세트 행들
+            VStack(spacing: 0) {
+                ForEach(group.sets.indices, id: \.self) { setIdx in
+                    DraftSetRow(
+                        setNumber: group.sets[setIdx].setNumber,
+                        draft: $group.sets[setIdx],
+                        onDelete: { onDeleteSet(setIdx) }
+                    )
+                    if setIdx < group.sets.count - 1 { Divider().padding(.leading, 14) }
+                }
+            }
+            .background(Color.surfacePrimary)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+    }
+}
+
+// MARK: - Draft Set Row (세트 1행)
+
+private struct DraftSetRow: View {
+    let setNumber: Int
     @Binding var draft: AddExerciseSessionViewModel.DraftSet
     let onDelete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // 헤더: 운동명 + 세트 번호 + 삭제
-            HStack(spacing: 10) {
-                // 세트 번호 배지
-                Text("세트 \(draft.setNumber)")
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("세트 \(setNumber)")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color.brandPrimary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.brandSurface)
-                    .clipShape(Capsule())
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.brandSurface).clipShape(Capsule())
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(draft.exercise.displayName)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Color.textPrimary)
-                    Text(draft.exercise.muscleGroupLabel)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.textSecondary)
+                // 세트 타입 피커
+                HStack(spacing: 4) {
+                    ForEach(AddExerciseSessionViewModel.DraftSet.SetTypeOption.allCases, id: \.self) { opt in
+                        Button { draft.setType = opt } label: {
+                            Text(opt.label)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(draft.setType == opt ? .white : Color.brandPrimary)
+                                .padding(.horizontal, 9).padding(.vertical, 4)
+                                .background(draft.setType == opt ? Color.brandPrimary : Color.brandLight)
+                                .clipShape(Capsule())
+                        }
+                    }
                 }
-
                 Spacer()
-
                 Button(action: onDelete) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Color.textSecondary.opacity(0.4))
-                }
-            }
-
-            // 세트 타입 피커
-            HStack(spacing: 6) {
-                ForEach(AddExerciseSessionViewModel.DraftSet.SetTypeOption.allCases, id: \.self) { opt in
-                    Button {
-                        draft.setType = opt
-                    } label: {
-                        Text(opt.label)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(draft.setType == opt ? .white : Color.brandPrimary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                draft.setType == opt
-                                    ? Color.brandPrimary
-                                    : Color.brandLight
-                            )
-                            .clipShape(Capsule())
-                    }
+                        .foregroundStyle(Color.textSecondary.opacity(0.35))
                 }
             }
 
@@ -291,34 +332,24 @@ private struct DraftSetCard: View {
                 inputField("횟수", unit: "회", text: $draft.repsText, keyboard: .numberPad)
             case .cardio:
                 HStack(spacing: 10) {
-                    inputField("시간", unit: "초", text: $draft.durationSecondsText, keyboard: .numberPad)
-                    inputField("거리", unit: "m (선택)", text: $draft.distanceMText, keyboard: .decimalPad)
+                    inputField("시간", unit: "분", text: $draft.durationMinutesText, keyboard: .decimalPad)
+                    inputField("거리", unit: "m", text: $draft.distanceMText, keyboard: .decimalPad)
                 }
             }
         }
         .padding(14)
-        .background(Color.surfacePrimary)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 
-    private func inputField(
-        _ placeholder: String,
-        unit: String,
-        text: Binding<String>,
-        keyboard: UIKeyboardType
-    ) -> some View {
+    private func inputField(_ placeholder: String, unit: String,
+                            text: Binding<String>, keyboard: UIKeyboardType) -> some View {
         HStack(spacing: 4) {
             TextField(placeholder, text: text)
                 .keyboardType(keyboard)
                 .font(.system(size: 16, weight: .medium))
                 .multilineTextAlignment(.trailing)
-            Text(unit)
-                .font(.system(size: 12))
-                .foregroundStyle(Color.textSecondary)
+            Text(unit).font(.system(size: 12)).foregroundStyle(Color.textSecondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Color.surfaceSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
@@ -409,7 +440,7 @@ struct ExerciseCatalogPickerView: View {
     private var catalogList: some View {
         List(viewModel.catalogResults) { item in
             Button {
-                viewModel.addSet(exercise: item)
+                viewModel.addExercise(item)
                 dismiss()
             } label: {
                 CatalogRow(item: item)

@@ -13,8 +13,15 @@ final class AddExerciseSessionViewModel: ObservableObject {
     @Published var isSearchingCatalog = false
     @Published var showCatalogPicker = false
 
-    // MARK: - Draft sets
-    @Published var draftSets: [DraftSet] = []
+    // MARK: - Draft sets (grouped by exercise)
+    @Published var exerciseGroups: [ExerciseGroup] = []
+
+    // ExerciseGroup: 운동별로 세트를 그룹핑
+    struct ExerciseGroup: Identifiable {
+        let id = UUID()
+        var exercise: ExerciseCatalogItem
+        var sets: [DraftSet]
+    }
 
     // MARK: - Submission
     @Published var isSaving = false
@@ -27,7 +34,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
         var setType: SetTypeOption = .weighted
         var weightKgText: String = ""
         var repsText: String = ""
-        var durationSecondsText: String = ""
+        var durationMinutesText: String = "" // 분 단위로 변경
         var distanceMText: String = ""
 
         var setNumber: Int = 1
@@ -53,13 +60,16 @@ final class AddExerciseSessionViewModel: ObservableObject {
             case .bodyweight:
                 return Int(repsText) != nil
             case .cardio:
-                return Int(durationSecondsText) != nil
+                return Double(durationMinutesText) != nil // 분 단위 검증
             }
         }
     }
 
     var canSave: Bool {
-        !draftSets.isEmpty && draftSets.allSatisfy { $0.isValid }
+        !exerciseGroups.isEmpty &&
+        exerciseGroups.allSatisfy { group in
+            !group.sets.isEmpty && group.sets.allSatisfy { $0.isValid }
+        }
     }
 
     // MARK: - Catalog Search
@@ -81,25 +91,67 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
     // MARK: - Draft Sets Management
 
-    func addSet(exercise: ExerciseCatalogItem) {
-        // 같은 운동이 이미 있으면 setNumber 이어서 증가
-        let existingCount = draftSets.filter { $0.exercise.id == exercise.id }.count
-        var draft = DraftSet(exercise: exercise)
-        draft.setNumber = existingCount + 1
+    func addExercise(_ exercise: ExerciseCatalogItem) {
+        // 같은 운동이 이미 있는지 확인
+        if let existingIndex = exerciseGroups.firstIndex(where: { $0.exercise.id == exercise.id }) {
+            // 이미 있으면 새 세트 추가
+            addSetToGroup(at: existingIndex)
+        } else {
+            // 새 운동 그룹 생성
+            var draft = DraftSet(exercise: exercise)
+            draft.setNumber = 1
 
-        // 운동 타입에 따라 기본 SetType 설정
-        switch exercise.exerciseType {
-        case "CARDIO":     draft.setType = .cardio
-        case "BODYWEIGHT": draft.setType = .bodyweight
-        default:           draft.setType = .weighted
+            // 운동 타입에 따라 기본 SetType 설정
+            switch exercise.exerciseType {
+            case "CARDIO":     draft.setType = .cardio
+            case "BODYWEIGHT": draft.setType = .bodyweight
+            default:           draft.setType = .weighted
+            }
+
+            let group = ExerciseGroup(exercise: exercise, sets: [draft])
+            exerciseGroups.append(group)
         }
-
-        draftSets.append(draft)
         showCatalogPicker = false
     }
 
-    func removeSet(at offsets: IndexSet) {
-        draftSets.remove(atOffsets: offsets)
+    /// 특정 그룹에 세트 추가 (마지막 세트 값 복사)
+    func addSetToGroup(at groupIndex: Int) {
+        guard groupIndex < exerciseGroups.count else { return }
+
+        let group = exerciseGroups[groupIndex]
+        let lastSet = group.sets.last!
+        let nextSetNumber = (group.sets.map { $0.setNumber }.max() ?? 0) + 1
+
+        var newSet = DraftSet(exercise: group.exercise)
+        newSet.setNumber = nextSetNumber
+        newSet.setType = lastSet.setType
+
+        // 이전 값 복사
+        newSet.weightKgText = lastSet.weightKgText
+        newSet.repsText = lastSet.repsText
+        newSet.durationMinutesText = lastSet.durationMinutesText
+        newSet.distanceMText = lastSet.distanceMText
+
+        exerciseGroups[groupIndex].sets.append(newSet)
+    }
+
+    /// 특정 세트 삭제
+    func removeSet(groupIndex: Int, setIndex: Int) {
+        guard groupIndex < exerciseGroups.count,
+              setIndex < exerciseGroups[groupIndex].sets.count else { return }
+
+        exerciseGroups[groupIndex].sets.remove(at: setIndex)
+
+        // 세트가 모두 삭제되면 운동 그룹도 삭제
+        if exerciseGroups[groupIndex].sets.isEmpty {
+            exerciseGroups.remove(at: groupIndex)
+        }
+    }
+
+    /// 운동 그룹 전체 삭제
+    func removeExerciseGroup(at index: Int) {
+        guard index < exerciseGroups.count else { return }
+        exerciseGroups.remove(at: index)
     }
 
     // MARK: - Save
@@ -117,14 +169,25 @@ final class AddExerciseSessionViewModel: ObservableObject {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
-        let sets = draftSets.enumerated().map { idx, draft -> CreateSetRequest in
-            CreateSetRequest(
+        // 모든 그룹의 세트를 flat하게 변환
+        let allSets = exerciseGroups.flatMap { $0.sets }
+        let sets = allSets.enumerated().map { idx, draft -> CreateSetRequest in
+            // 분을 초로 변환 (유산소 운동의 경우)
+            let durationSeconds: Int? = {
+                if draft.setType == .cardio,
+                   let minutes = Double(draft.durationMinutesText) {
+                    return Int(minutes * 60)
+                }
+                return nil
+            }()
+
+            return CreateSetRequest(
                 exerciseCatalogId: draft.exercise.id,
                 setNumber: idx + 1,
                 setType: draft.setType.rawValue,
                 weightKg: Double(draft.weightKgText),
                 reps: Int(draft.repsText),
-                durationSeconds: Int(draft.durationSecondsText),
+                durationSeconds: durationSeconds,
                 distanceM: Double(draft.distanceMText),
                 restSeconds: nil,
                 notes: nil
