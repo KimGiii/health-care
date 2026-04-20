@@ -18,7 +18,6 @@ actor APIClient {
         self.session    = session
         self.decoder = {
             let d = JSONDecoder()
-            d.keyDecodingStrategy  = .convertFromSnakeCase
             d.dateDecodingStrategy = .iso8601
             return d
         }()
