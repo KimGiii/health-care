@@ -17,11 +17,6 @@ final class DietRecordViewModel: ObservableObject {
 
     var today: String { dateFormatter.string(from: Date()) }
 
-    var fromDate: String {
-        let d = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        return dateFormatter.string(from: d)
-    }
-
     // MARK: - 오늘 식사 기록 (날짜별 필터)
     var todayLogs: [DietLogSummary] {
         logs.filter { $0.logDate == today }
@@ -55,12 +50,9 @@ final class DietRecordViewModel: ObservableObject {
     var carbsProgress: Double   { min(todayCarbsG   / Self.dailyCarbsGoal,   1.0) }
     var fatProgress: Double     { min(todayFatG     / Self.dailyFatGoal,     1.0) }
 
-    // MARK: - 날짜별 그룹핑 (리스트 표시용)
-    var logsByDate: [(date: String, logs: [DietLogSummary])] {
-        let grouped = Dictionary(grouping: logs, by: \.logDate)
-        return grouped
-            .sorted { $0.key > $1.key }
-            .map { (date: $0.key, logs: $0.value.sorted { $0.mealType.rawValue < $1.mealType.rawValue }) }
+    // MARK: - 오늘 식사 기록 (식사 유형 순 정렬)
+    var todaySortedLogs: [DietLogSummary] {
+        todayLogs.sorted { $0.mealType.rawValue < $1.mealType.rawValue }
     }
 
     // MARK: - API
@@ -72,7 +64,7 @@ final class DietRecordViewModel: ObservableObject {
 
         do {
             let response: DietLogListResponse = try await apiClient.request(
-                .getDietLogs(from: fromDate, to: nil, page: 0, size: 100)
+                .getDietLogs(from: today, to: today, page: 0, size: 50)
             )
             logs = response.content
         } catch let error as APIError {

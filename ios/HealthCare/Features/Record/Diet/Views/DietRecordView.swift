@@ -15,7 +15,7 @@ struct DietRecordView: View {
                         todayNutritionBar
                         if viewModel.isLoading {
                             ProgressView().padding(.top, 40)
-                        } else if viewModel.logs.isEmpty {
+                        } else if viewModel.todayLogs.isEmpty {
                             emptyState
                         } else {
                             logListSection
@@ -29,7 +29,7 @@ struct DietRecordView: View {
             .ignoresSafeArea(edges: .top)
             .refreshable { await viewModel.loadLogs(apiClient: container.apiClient) }
 
-            if !viewModel.logs.isEmpty {
+            if !viewModel.todayLogs.isEmpty {
                 fabButton
             }
         }
@@ -37,9 +37,15 @@ struct DietRecordView: View {
         .sheet(isPresented: $viewModel.showAddLog) {
             AddDietLogView {
                 viewModel.showAddLog = false
-                Task { await viewModel.logAdded(apiClient: container.apiClient) }
             }
             .environmentObject(container)
+        }
+        .onChange(of: viewModel.showAddLog) { isPresented in
+            if !isPresented {
+                Task {
+                    await viewModel.loadLogs(apiClient: container.apiClient)
+                }
+            }
         }
         .task { await viewModel.loadLogs(apiClient: container.apiClient) }
     }
@@ -119,17 +125,23 @@ struct DietRecordView: View {
         .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
     }
 
-    // MARK: - 식단 기록 리스트 (날짜별 그룹)
+    // MARK: - 오늘 식단 기록 리스트
 
     private var logListSection: some View {
-        LazyVStack(spacing: 16, pinnedViews: []) {
-            ForEach(viewModel.logsByDate, id: \.date) { group in
-                DietDateSection(
-                    date: group.date,
-                    logs: group.logs,
-                    isToday: group.date == viewModel.today
-                ) { logId in
-                    Task { await viewModel.deleteLog(id: logId, apiClient: container.apiClient) }
+        VStack(spacing: 8) {
+            ForEach(viewModel.todaySortedLogs) { log in
+                NavigationLink(destination:
+                    DietLogDetailView(logId: log.dietLogId, mealType: log.mealType, logDate: log.logDate)
+                ) {
+                    DietLogCard(log: log)
+                }
+                .buttonStyle(.plain)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        Task { await viewModel.deleteLog(id: log.dietLogId, apiClient: container.apiClient) }
+                    } label: {
+                        Label("삭제", systemImage: "trash")
+                    }
                 }
             }
         }
@@ -343,64 +355,6 @@ private struct MacroProgressCell: View {
             .padding(.horizontal, 8)
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-// MARK: - DietDateSection
-
-private struct DietDateSection: View {
-    let date: String
-    let logs: [DietLogSummary]
-    let isToday: Bool
-    let onDelete: (Int) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // 날짜 헤더
-            HStack(spacing: 6) {
-                if isToday {
-                    Text("오늘")
-                        .font(.caption.bold())
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.brandPrimary)
-                        .clipShape(Capsule())
-                }
-                Text(formattedDate(date))
-                    .font(.subheadline.bold())
-                    .foregroundColor(isToday ? .brandPrimary : .primary)
-                Spacer()
-                Text(String(format: "합계 %.0f kcal", logs.compactMap(\.totalCalories).reduce(0, +)))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            // 식사 카드 목록
-            VStack(spacing: 8) {
-                ForEach(logs) { log in
-                    NavigationLink(destination:
-                        DietLogDetailView(logId: log.dietLogId, mealType: log.mealType, logDate: log.logDate)
-                    ) {
-                        DietLogCard(log: log)
-                    }
-                    .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            onDelete(log.dietLogId)
-                        } label: {
-                            Label("삭제", systemImage: "trash")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func formattedDate(_ s: String) -> String {
-        let parts = s.split(separator: "-")
-        guard parts.count == 3 else { return s }
-        return "\(parts[1])월 \(parts[2])일"
     }
 }
 

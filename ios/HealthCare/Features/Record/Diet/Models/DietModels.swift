@@ -25,33 +25,33 @@ enum MealType: String, Codable, CaseIterable {
 }
 
 enum FoodCategory: String, Codable {
-    case GRAIN, PROTEIN, VEGETABLE, FRUIT, DAIRY, FAT, BEVERAGE, PROCESSED, OTHER
+    case GRAIN, PROTEIN_SOURCE, VEGETABLE, FRUIT, DAIRY, FAT, BEVERAGE, PROCESSED, OTHER
 
     var displayName: String {
         switch self {
-        case .GRAIN:     return "곡류"
-        case .PROTEIN:   return "단백질"
-        case .VEGETABLE: return "채소"
-        case .FRUIT:     return "과일"
-        case .DAIRY:     return "유제품"
-        case .FAT:       return "지방"
-        case .BEVERAGE:  return "음료"
-        case .PROCESSED: return "가공식품"
-        case .OTHER:     return "기타"
+        case .GRAIN:          return "곡류"
+        case .PROTEIN_SOURCE: return "단백질"
+        case .VEGETABLE:      return "채소"
+        case .FRUIT:          return "과일"
+        case .DAIRY:          return "유제품"
+        case .FAT:            return "지방"
+        case .BEVERAGE:       return "음료"
+        case .PROCESSED:      return "가공식품"
+        case .OTHER:          return "기타"
         }
     }
 
     var emoji: String {
         switch self {
-        case .GRAIN:     return "🍚"
-        case .PROTEIN:   return "🥩"
-        case .VEGETABLE: return "🥦"
-        case .FRUIT:     return "🍎"
-        case .DAIRY:     return "🥛"
-        case .FAT:       return "🥑"
-        case .BEVERAGE:  return "🧃"
-        case .PROCESSED: return "🍱"
-        case .OTHER:     return "🍽"
+        case .GRAIN:          return "🍚"
+        case .PROTEIN_SOURCE: return "🥩"
+        case .VEGETABLE:      return "🥦"
+        case .FRUIT:          return "🍎"
+        case .DAIRY:          return "🥛"
+        case .FAT:            return "🥑"
+        case .BEVERAGE:       return "🧃"
+        case .PROCESSED:      return "🍱"
+        case .OTHER:          return "🍽"
         }
     }
 }
