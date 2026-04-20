@@ -7,7 +7,7 @@ struct DietRecordView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Color.brandLight.ignoresSafeArea()
+            Color.surfaceGrouped.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 0) {
                     DietHeroSection(viewModel: viewModel, onDismiss: { dismiss() })
@@ -216,7 +216,7 @@ private struct DietHeroSection: View {
                 )
             // Wave 전환
             DietWaveCurve()
-                .fill(Color.brandLight)
+                .fill(Color.surfaceGrouped)
                 .frame(height: 50)
                 .offset(y: 1)
 

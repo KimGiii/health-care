@@ -79,6 +79,7 @@ struct GoalSettingView: View {
 
 private struct GoalHeroSection: View {
     let activeGoal: GoalSummary?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -86,13 +87,23 @@ private struct GoalHeroSection: View {
 
             VStack(spacing: 0) {
                 HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(10)
+                            .background(.white.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
                     Text("나의 목표")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                     Spacer()
+                    Color.clear.frame(width: 40, height: 40)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 60)
+                .padding(.horizontal, 20)
+                .padding(.top, 56)
 
                 if let goal = activeGoal {
                     GoalProgressRing(goal: goal).padding(.top, 16)
