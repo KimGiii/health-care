@@ -97,13 +97,47 @@ struct AddMeasurementView: View {
 
     private var circumferenceSection: some View {
         FormCard(title: "둘레 측정") {
-            MeasurementField(
-                icon: "ruler",
-                iconColor: Color(hex: "#DC2626"),
-                label: "허리둘레",
-                unit: "cm",
-                text: $viewModel.waistCm
-            )
+            VStack(spacing: 0) {
+                MeasurementField(
+                    icon: "ruler",
+                    iconColor: Color(hex: "#0EA5E9"),
+                    label: "가슴",
+                    unit: "cm",
+                    text: $viewModel.chestCm
+                )
+                Divider().padding(.leading, 52)
+                MeasurementField(
+                    icon: "ruler",
+                    iconColor: Color(hex: "#DC2626"),
+                    label: "허리",
+                    unit: "cm",
+                    text: $viewModel.waistCm
+                )
+                Divider().padding(.leading, 52)
+                MeasurementField(
+                    icon: "ruler",
+                    iconColor: Color(hex: "#D97706"),
+                    label: "엉덩이",
+                    unit: "cm",
+                    text: $viewModel.hipCm
+                )
+                Divider().padding(.leading, 52)
+                MeasurementField(
+                    icon: "ruler",
+                    iconColor: Color(hex: "#059669"),
+                    label: "허벅지",
+                    unit: "cm",
+                    text: $viewModel.thighCm
+                )
+                Divider().padding(.leading, 52)
+                MeasurementField(
+                    icon: "ruler",
+                    iconColor: Color(hex: "#7C3AED"),
+                    label: "팔",
+                    unit: "cm",
+                    text: $viewModel.armCm
+                )
+            }
         }
     }
 

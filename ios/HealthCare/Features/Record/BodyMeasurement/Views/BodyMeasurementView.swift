@@ -258,9 +258,25 @@ private struct LatestStatsCard: View {
                     StatCell(icon: "heart.fill", color: Color(hex: "#EA580C"),
                              value: String(format: "%.1f", v), unit: "", label: "BMI")
                 }
+                if let v = measurement.chestCm {
+                    StatCell(icon: "ruler", color: Color(hex: "#0EA5E9"),
+                             value: String(format: "%.1f", v), unit: "cm", label: "가슴")
+                }
                 if let v = measurement.waistCm {
                     StatCell(icon: "ruler", color: Color(hex: "#DC2626"),
                              value: String(format: "%.1f", v), unit: "cm", label: "허리")
+                }
+                if let v = measurement.hipCm {
+                    StatCell(icon: "ruler", color: Color(hex: "#D97706"),
+                             value: String(format: "%.1f", v), unit: "cm", label: "엉덩이")
+                }
+                if let v = measurement.thighCm {
+                    StatCell(icon: "ruler", color: Color(hex: "#059669"),
+                             value: String(format: "%.1f", v), unit: "cm", label: "허벅지")
+                }
+                if let v = measurement.armCm {
+                    StatCell(icon: "ruler", color: Color(hex: "#7C3AED"),
+                             value: String(format: "%.1f", v), unit: "cm", label: "팔")
                 }
             }
         }

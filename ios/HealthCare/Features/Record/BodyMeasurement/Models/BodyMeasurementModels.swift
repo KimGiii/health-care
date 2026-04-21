@@ -46,6 +46,10 @@ struct CreateMeasurementRequest: Encodable {
     let bodyFatPct: Double?
     let muscleMassKg: Double?
     let bmi: Double?
+    let chestCm: Double?
     let waistCm: Double?
+    let hipCm: Double?
+    let thighCm: Double?
+    let armCm: Double?
     let notes: String?
 }

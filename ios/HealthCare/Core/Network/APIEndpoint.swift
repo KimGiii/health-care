@@ -42,6 +42,7 @@ enum APIEndpoint {
     case createBodyMeasurement(body: Data)
     case getBodyMeasurements(page: Int, size: Int)
     case getLatestBodyMeasurement
+    case getBodyMeasurementAtOrBefore(date: String)
     case getBodyMeasurement(id: Int)
     case deleteBodyMeasurement(id: Int)
     case uploadProgressPhoto(body: Data)
@@ -84,6 +85,7 @@ extension APIEndpoint {
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getLatestBodyMeasurement:          return "/api/v1/body-measurements/latest"
+        case .getBodyMeasurementAtOrBefore:      return "/api/v1/body-measurements/at-or-before"
         case .getBodyMeasurement(let id),
              .deleteBodyMeasurement(let id):     return "/api/v1/body-measurements/\(id)"
         case .uploadProgressPhoto, .getProgressPhotos:
@@ -163,6 +165,8 @@ extension APIEndpoint {
                 .init(name: "page", value: "\(page)"),
                 .init(name: "size", value: "\(size)")
             ]
+        case .getBodyMeasurementAtOrBefore(let date):
+            return [.init(name: "date", value: date)]
         default: return nil
         }
     }
