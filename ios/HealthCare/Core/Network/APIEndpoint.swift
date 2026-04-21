@@ -28,15 +28,22 @@ enum APIEndpoint {
     case getDietLogs(from: String?, to: String?, page: Int, size: Int)
     case getDietLog(id: Int)
     case deleteDietLog(id: Int)
+    case initiateMealPhotoAnalysis(body: Data)
+    case analyzeMealPhoto(id: Int, body: Data)
+    case getMealPhotoAnalysis(id: Int)
+    case confirmMealPhotoAnalysis(id: Int, body: Data)
     // Diet - Catalog
     case getFoodCatalog(query: String?)
     // Diet - External Foods
     case searchExternalFoods(query: String, source: String, page: Int, size: Int)
     case importExternalFood(body: Data)
 
-    // Measurement
-    case logMeasurement(body: Data)
-    case getMeasurementHistory
+    // Body Measurement
+    case createBodyMeasurement(body: Data)
+    case getBodyMeasurements(page: Int, size: Int)
+    case getLatestBodyMeasurement
+    case getBodyMeasurement(id: Int)
+    case deleteBodyMeasurement(id: Int)
     case uploadProgressPhoto(body: Data)
     case getProgressPhotos
 
@@ -66,13 +73,21 @@ extension APIEndpoint {
         case .createDietLog, .getDietLogs:       return "/api/v1/diet/logs"
         case .getDietLog(let id),
              .deleteDietLog(let id):             return "/api/v1/diet/logs/\(id)"
+        case .initiateMealPhotoAnalysis:         return "/api/v1/diet/photo-analyses/initiate"
+        case .analyzeMealPhoto(let id, _):       return "/api/v1/diet/photo-analyses/\(id)/analyze"
+        case .getMealPhotoAnalysis(let id):      return "/api/v1/diet/photo-analyses/\(id)"
+        case .confirmMealPhotoAnalysis(let id, _):
+                                                 return "/api/v1/diet/photo-analyses/\(id)/confirm"
         case .getFoodCatalog:                    return "/api/v1/diet/catalog"
         case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
         case .importExternalFood:                return "/api/v1/diet/external-foods/import"
-        case .logMeasurement, .getMeasurementHistory:
-                                                 return "/api/v1/measurements"
+        case .createBodyMeasurement, .getBodyMeasurements:
+                                                 return "/api/v1/body-measurements"
+        case .getLatestBodyMeasurement:          return "/api/v1/body-measurements/latest"
+        case .getBodyMeasurement(let id),
+             .deleteBodyMeasurement(let id):     return "/api/v1/body-measurements/\(id)"
         case .uploadProgressPhoto, .getProgressPhotos:
-                                                 return "/api/v1/measurements/photos"
+                                                 return "/api/v1/body-measurements/photos"
         case .createGoal, .getGoals:             return "/api/v1/goals"
         case .getGoal(let id),
              .updateGoal(let id, _),
@@ -84,13 +99,14 @@ extension APIEndpoint {
     var method: HTTPMethod {
         switch self {
         case .register, .login, .refreshToken, .logout,
-             .createExerciseSession, .createDietLog, .importExternalFood,
-             .logMeasurement, .uploadProgressPhoto, .createGoal:
+             .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
+             .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
+             .createBodyMeasurement, .uploadProgressPhoto, .createGoal:
             return .POST
         case .updateProfile, .updateGoal:
             return .PATCH
         case .deleteAccount, .deleteExerciseSession, .deleteDietLog,
-             .deleteGoal:
+             .deleteGoal, .deleteBodyMeasurement:
             return .DELETE
         default:
             return .GET
@@ -102,8 +118,10 @@ extension APIEndpoint {
         case .register(let b), .login(let b), .refreshToken(let b),
              .updateProfile(let b),
              .createExerciseSession(let b),
-             .createDietLog(let b), .importExternalFood(let b),
-             .logMeasurement(let b), .uploadProgressPhoto(let b),
+             .createDietLog(let b), .initiateMealPhotoAnalysis(let b),
+             .analyzeMealPhoto(_, let b), .confirmMealPhotoAnalysis(_, let b),
+             .importExternalFood(let b),
+             .createBodyMeasurement(let b), .uploadProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b):
             return b
         default:
@@ -139,6 +157,11 @@ extension APIEndpoint {
                 .init(name: "source", value: source),
                 .init(name: "page",   value: "\(page)"),
                 .init(name: "size",   value: "\(size)")
+            ]
+        case .getBodyMeasurements(let page, let size):
+            return [
+                .init(name: "page", value: "\(page)"),
+                .init(name: "size", value: "\(size)")
             ]
         default: return nil
         }

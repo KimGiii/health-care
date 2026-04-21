@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 // MARK: - AddDietLogView
@@ -5,6 +6,7 @@ import SwiftUI
 struct AddDietLogView: View {
     @EnvironmentObject private var container: AppContainer
     @StateObject private var viewModel = AddDietLogViewModel()
+    @State private var selectedPhotoItem: PhotosPickerItem?
     var onSaved: () -> Void
 
     var body: some View {
@@ -14,9 +16,10 @@ struct AddDietLogView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         mealTypeSection
+                        photoAnalysisSection
                         nutritionPreviewCard
                         entriesSection
-                        addFoodButton
+                        actionButtons
                         if !viewModel.notes.isEmpty || true {
                             notesSection
                         }
@@ -46,6 +49,21 @@ struct AddDietLogView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+            .onChange(of: selectedPhotoItem) { item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        await viewModel.startPhotoAnalysis(
+                            imageData: data,
+                            suggestedFileName: "meal-photo.jpg",
+                            apiClient: container.apiClient
+                        )
+                    } else {
+                        viewModel.errorMessage = "사진을 불러오지 못했습니다."
+                    }
+                    selectedPhotoItem = nil
+                }
+            }
         }
     }
 
@@ -68,6 +86,40 @@ struct AddDietLogView: View {
     }
 
     // MARK: - 영양 미리보기 카드
+
+    private var photoAnalysisSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if viewModel.isAnalyzingPhoto {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("AI가 식단 사진을 분석하고 있어요...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+
+            if !viewModel.analysisWarnings.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("AI 추정치 안내", systemImage: "sparkles")
+                        .font(.subheadline.bold())
+                        .foregroundColor(.brandPrimary)
+                    ForEach(viewModel.analysisWarnings, id: \.self) { warning in
+                        Text("• \(warning)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
 
     private var nutritionPreviewCard: some View {
         VStack(spacing: 12) {
@@ -113,23 +165,38 @@ struct AddDietLogView: View {
         }
     }
 
-    private var addFoodButton: some View {
-        Button {
-            viewModel.searchQuery = ""
-            viewModel.catalogResults = []
-            viewModel.externalResults = []
-            viewModel.showFoodSearch = true
-        } label: {
-            HStack {
-                Image(systemName: "plus.circle.fill")
-                Text("식품 추가")
+    private var actionButtons: some View {
+        HStack(spacing: 12) {
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                HStack {
+                    Image(systemName: "camera.viewfinder")
+                    Text("사진으로 시작")
+                }
+                .font(.subheadline.bold())
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.brandPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .font(.subheadline.bold())
-            .foregroundColor(.brandPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(Color.brandSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            Button {
+                viewModel.searchQuery = ""
+                viewModel.catalogResults = []
+                viewModel.externalResults = []
+                viewModel.showFoodSearch = true
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("식품 추가")
+                }
+                .font(.subheadline.bold())
+                .foregroundColor(.brandPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.brandSurface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
         }
     }
 
@@ -212,12 +279,28 @@ private struct DraftEntryCard: View {
         VStack(spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.food.displayName)
+                    Text(entry.displayName)
                         .font(.subheadline.bold())
                     if let cat = entry.food.category {
                         Text(cat.displayName)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    }
+                    if entry.analysisItemId != nil {
+                        HStack(spacing: 6) {
+                            Text("AI 추정")
+                                .font(.caption2.bold())
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color.brandPrimary.opacity(0.12))
+                                .foregroundColor(.brandPrimary)
+                                .clipShape(Capsule())
+                            if let confidence = entry.aiConfidence {
+                                Text("신뢰도 \(Int(confidence * 100))%")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                 }
                 Spacer()
@@ -248,11 +331,40 @@ private struct DraftEntryCard: View {
                     .font(.subheadline.bold())
                     .foregroundColor(.brandAccent)
             }
+
+            if entry.analysisItemId != nil {
+                HStack(spacing: 8) {
+                    portionButton(title: "0.5x", multiplier: 0.5)
+                    portionButton(title: "1x", multiplier: 1.0)
+                    portionButton(title: "2x", multiplier: 2.0)
+                    Spacer()
+                }
+
+                if entry.needsReview || entry.unknownOrUncertain != nil {
+                    Text(entry.unknownOrUncertain ?? "AI 추정 항목이라 저장 전 검토를 권장합니다.")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
         .padding(14)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
+    }
+
+    private func portionButton(title: String, multiplier: Double) -> some View {
+        Button(title) {
+            let updated = max(entry.servingG * multiplier, 1)
+            entry.servingGText = String(format: "%.0f", updated)
+        }
+        .font(.caption.bold())
+        .foregroundColor(.brandPrimary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color.brandSurface)
+        .clipShape(Capsule())
     }
 }
 
@@ -281,7 +393,6 @@ struct MacroCell: View {
 struct FoodSearchSheet: View {
     @EnvironmentObject private var container: AppContainer
     @ObservedObject var viewModel: AddDietLogViewModel
-    @State private var selectedTab = 0
 
     var body: some View {
         NavigationStack {
@@ -312,23 +423,12 @@ struct FoodSearchSheet: View {
                     triggerSearch()
                 }
 
-                // 탭 선택
-                Picker("소스", selection: $selectedTab) {
-                    Text("내 카탈로그").tag(0)
-                    Text("외부 검색").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-
                 if viewModel.isSearching {
                     Spacer()
                     ProgressView("검색 중...")
                     Spacer()
-                } else if selectedTab == 0 {
-                    catalogList
                 } else {
-                    externalList
+                    combinedList
                 }
             }
             .navigationTitle("식품 검색")
@@ -342,30 +442,33 @@ struct FoodSearchSheet: View {
         }
     }
 
-    private var catalogList: some View {
-        Group {
-            if viewModel.catalogResults.isEmpty && !viewModel.searchQuery.isEmpty {
-                emptyState(message: "카탈로그에 일치하는 식품이 없습니다.\n외부 검색을 이용해보세요.")
-            } else {
-                List(viewModel.catalogResults) { item in
-                    CatalogFoodRow(item: item) {
-                        viewModel.addEntry(food: item)
-                    }
-                }
-                .listStyle(.plain)
-            }
-        }
-    }
+    private var combinedList: some View {
+        let hasQuery = !viewModel.searchQuery.isEmpty
+        let hasAny = !viewModel.catalogResults.isEmpty || !viewModel.externalResults.isEmpty
 
-    private var externalList: some View {
-        Group {
-            if viewModel.externalResults.isEmpty && !viewModel.searchQuery.isEmpty {
-                emptyState(message: "외부 검색 결과가 없습니다.")
+        return Group {
+            if hasQuery && !hasAny {
+                emptyState(message: "검색 결과가 없습니다.")
             } else {
-                List(viewModel.externalResults) { item in
-                    ExternalFoodRow(item: item) {
-                        Task {
-                            await viewModel.importAndAdd(external: item, apiClient: container.apiClient)
+                List {
+                    if !viewModel.catalogResults.isEmpty {
+                        Section(header: Text("내 카탈로그")) {
+                            ForEach(viewModel.catalogResults) { item in
+                                CatalogFoodRow(item: item) {
+                                    viewModel.addEntry(food: item)
+                                }
+                            }
+                        }
+                    }
+                    if !viewModel.externalResults.isEmpty {
+                        Section(header: Text("외부 검색")) {
+                            ForEach(viewModel.externalResults) { item in
+                                ExternalFoodRow(item: item) {
+                                    Task {
+                                        await viewModel.importAndAdd(external: item, apiClient: container.apiClient)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -391,11 +494,7 @@ struct FoodSearchSheet: View {
 
     private func triggerSearch() {
         Task {
-            if selectedTab == 0 {
-                await viewModel.searchCatalog(apiClient: container.apiClient)
-            } else {
-                await viewModel.searchExternal(apiClient: container.apiClient)
-            }
+            await viewModel.searchAll(apiClient: container.apiClient)
         }
     }
 }

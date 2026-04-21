@@ -169,6 +169,19 @@ struct GoalResponse: Codable, Identifiable, Sendable {
 
 // MARK: - Progress Response
 
+struct GoalCheckpointItem: Codable, Sendable {
+    let checkpointDate: String
+    let actualValue: Double?
+    let projectedValue: Double?
+    let isOnTrack: Bool?
+
+    var formattedDate: String {
+        let parts = checkpointDate.split(separator: "-")
+        guard parts.count == 3 else { return checkpointDate }
+        return "\(parts[1])월 \(parts[2])일"
+    }
+}
+
 struct GoalProgressResponse: Codable, Sendable {
     let goalId: Int
     let goalType: GoalType
@@ -184,6 +197,51 @@ struct GoalProgressResponse: Codable, Sendable {
     let isOnTrack: Bool
     let trackingStatus: String?
     let trackingColor: String?
+    let checkpoints: [GoalCheckpointItem]?
+
+    var progressRatio: Double {
+        min(max((percentComplete ?? 0) / 100.0, 0), 1.0)
+    }
+
+    var trackingStatusLabel: String {
+        switch trackingStatus {
+        case "AHEAD":           return "목표 초과 달성 중"
+        case "ON_TRACK":        return "순조롭게 진행 중"
+        case "SLIGHTLY_BEHIND": return "조금 뒤처지고 있어요"
+        case "BEHIND":          return "페이스를 높여야 해요"
+        default:                return "진행 중"
+        }
+    }
+
+    var trackingIcon: String {
+        switch trackingStatus {
+        case "AHEAD":           return "arrow.up.circle.fill"
+        case "ON_TRACK":        return "checkmark.circle.fill"
+        case "SLIGHTLY_BEHIND": return "exclamationmark.circle.fill"
+        case "BEHIND":          return "xmark.circle.fill"
+        default:                return "circle.fill"
+        }
+    }
+
+    func formattedValue(_ v: Double?) -> String {
+        guard let v else { return "-" }
+        let unit = targetUnit.flatMap { $0.isEmpty ? nil : $0 } ?? ""
+        return String(format: "%.1f%@", v, unit.isEmpty ? "" : " \(unit)")
+    }
+
+    var formattedProjectedDate: String {
+        guard let d = projectedCompletionDate else { return "계산 중" }
+        let parts = d.split(separator: "-")
+        guard parts.count == 3 else { return d }
+        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+    }
+
+    var formattedTargetDate: String {
+        guard let d = targetDate else { return "-" }
+        let parts = d.split(separator: "-")
+        guard parts.count == 3 else { return d }
+        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+    }
 }
 
 // MARK: - Request DTOs

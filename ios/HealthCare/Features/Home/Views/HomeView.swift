@@ -41,14 +41,14 @@ private struct HeroHeaderView: View {
     var body: some View {
         ZStack(alignment: .top) {
             WaveBackground()
-                .frame(height: 400)
+                .frame(height: 310)
 
-            VStack(spacing: 14) {
+            VStack(spacing: 10) {
                 // App title
                 Text("VITALITY")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                    .padding(.top, 60)
+                    .padding(.top, 44)
 
                 // 오늘의 요약 — 풀너비
                 SnapshotCard(
@@ -60,6 +60,7 @@ private struct HeroHeaderView: View {
                 // 기록하기 CTA — 풀너비
                 LogButton()
                     .padding(.horizontal, 20)
+                    .padding(.top, 10)
             }
         }
     }
@@ -400,7 +401,7 @@ private struct MealLogCard: View {
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .frame(width: 130, alignment: .leading)
+            .frame(width: 130, height: 34, alignment: .topLeading)
             .padding(.top, 8)
         }
     }
@@ -427,7 +428,7 @@ private struct EmptyMealPlaceholder: View {
             Text("오늘 첫 식사")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.textSecondary)
-                .frame(width: 130, alignment: .leading)
+                .frame(width: 130, height: 34, alignment: .topLeading)
                 .padding(.top, 8)
         }
     }
@@ -435,7 +436,7 @@ private struct EmptyMealPlaceholder: View {
 
 private struct AddMealCard: View {
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(Color.brandAccent.opacity(0.5),
@@ -451,6 +452,12 @@ private struct AddMealCard: View {
                         .foregroundStyle(Color.brandAccent)
                 }
             }
+
+            Text("식단 추가")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.brandAccent)
+                .frame(width: 130, height: 34, alignment: .topLeading)
+                .padding(.top, 8)
         }
     }
 }

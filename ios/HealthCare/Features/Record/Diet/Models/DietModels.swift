@@ -225,6 +225,78 @@ struct CreateDietLogResponse: Codable {
     let totalFatG: Double?
 }
 
+struct InitiateMealPhotoAnalysisRequest: Codable {
+    let fileName: String
+    let contentType: String
+    let fileSizeBytes: Int
+    let capturedAt: String
+}
+
+struct InitiateMealPhotoAnalysisResponse: Codable {
+    let analysisId: Int
+    let storageKey: String
+    let uploadUrl: String
+    let previewUrl: String?
+    let expiresAt: String
+}
+
+struct AnalyzeMealPhotoRequest: Codable {
+    let mealType: String
+}
+
+struct MealPhotoAnalysisResponse: Codable {
+    let analysisId: Int
+    let status: String
+    let provider: String?
+    let analysisVersion: String?
+    let previewUrl: String?
+    let capturedAt: String
+    let needsReview: Bool
+    let analysisWarnings: [String]
+    let detectedItems: [MealPhotoAnalysisItem]
+}
+
+struct MealPhotoAnalysisItem: Codable, Identifiable {
+    let analysisItemId: Int
+    let label: String
+    let matchedFoodCatalogId: Int?
+    let estimatedServingG: Double
+    let calories: Double?
+    let proteinG: Double?
+    let carbsG: Double?
+    let fatG: Double?
+    let confidence: Double?
+    let needsReview: Bool
+    let unknownOrUncertain: String?
+
+    var id: Int { analysisItemId }
+}
+
+struct ConfirmMealPhotoAnalysisRequest: Codable {
+    let logDate: String
+    let mealType: String
+    let notes: String?
+    let items: [ConfirmMealPhotoAnalysisItem]
+}
+
+struct ConfirmMealPhotoAnalysisItem: Codable {
+    let analysisItemId: Int?
+    let label: String
+    let matchedFoodCatalogId: Int?
+    let estimatedServingG: Double
+    let calories: Double
+    let proteinG: Double?
+    let carbsG: Double?
+    let fatG: Double?
+    let notes: String?
+}
+
+struct ConfirmMealPhotoAnalysisResponse: Codable {
+    let analysisId: Int
+    let status: String
+    let dietLog: CreateDietLogResponse
+}
+
 // MARK: - Draft (로컬 상태)
 
 struct DraftFoodEntry: Identifiable {
@@ -232,12 +304,55 @@ struct DraftFoodEntry: Identifiable {
     var food: FoodCatalogItem
     var servingGText: String = "100"
     var notes: String = ""
+    var analysisItemId: Int?
+    var sourceLabel: String?
+    var aiConfidence: Double?
+    var needsReview: Bool = false
+    var unknownOrUncertain: String?
 
     var servingG: Double { Double(servingGText) ?? 100 }
     var calories: Double { food.calories(forServing: servingG) }
     var protein:  Double { food.protein(forServing: servingG) }
     var carbs:    Double { food.carbs(forServing: servingG) }
     var fat:      Double { food.fat(forServing: servingG) }
+    var matchedFoodCatalogId: Int? { food.id >= 0 ? food.id : nil }
+    var displayName: String { sourceLabel ?? food.displayName }
 
     var isValid: Bool { servingG > 0 }
+}
+
+extension DraftFoodEntry {
+    init(food: FoodCatalogItem) {
+        self.food = food
+        self.servingGText = "100"
+        self.notes = ""
+    }
+
+    init(analysisItem: MealPhotoAnalysisItem) {
+        let serving = max(analysisItem.estimatedServingG, 1)
+        let per100Calories = ((analysisItem.calories ?? 0) / serving) * 100
+        let per100Protein = ((analysisItem.proteinG ?? 0) / serving) * 100
+        let per100Carbs = ((analysisItem.carbsG ?? 0) / serving) * 100
+        let per100Fat = ((analysisItem.fatG ?? 0) / serving) * 100
+        let syntheticId = analysisItem.matchedFoodCatalogId ?? -analysisItem.analysisItemId
+
+        self.food = FoodCatalogItem(
+            id: syntheticId,
+            name: analysisItem.label,
+            nameKo: analysisItem.label,
+            category: nil,
+            caloriesPer100g: per100Calories,
+            proteinPer100g: per100Protein,
+            carbsPer100g: per100Carbs,
+            fatPer100g: per100Fat,
+            custom: analysisItem.matchedFoodCatalogId == nil
+        )
+        self.servingGText = String(format: "%.0f", analysisItem.estimatedServingG)
+        self.notes = ""
+        self.analysisItemId = analysisItem.analysisItemId
+        self.sourceLabel = analysisItem.label
+        self.aiConfidence = analysisItem.confidence
+        self.needsReview = analysisItem.needsReview
+        self.unknownOrUncertain = analysisItem.unknownOrUncertain
+    }
 }

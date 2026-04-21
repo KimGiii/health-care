@@ -18,14 +18,21 @@ struct GoalSettingView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.top, 40)
                         } else if let active = viewModel.activeGoal {
-                            ActiveGoalCard(goal: active) {
-                                Task {
-                                    await viewModel.abandonGoal(
-                                        id: active.id,
-                                        apiClient: container.apiClient
-                                    )
+                            ActiveGoalCard(
+                                goal: active,
+                                onAbandon: {
+                                    Task {
+                                        await viewModel.abandonGoal(
+                                            id: active.id,
+                                            apiClient: container.apiClient
+                                        )
+                                    }
+                                },
+                                progressDestination: {
+                                    GoalProgressView(goalId: active.id)
+                                        .environmentObject(container)
                                 }
-                            }
+                            )
                             .padding(.horizontal, 20)
                         } else {
                             EmptyGoalCard { viewModel.showAddGoal = true }
@@ -235,9 +242,10 @@ private struct NoGoalPlaceholder: View {
 
 // MARK: - Active Goal Card
 
-private struct ActiveGoalCard: View {
+private struct ActiveGoalCard<Destination: View>: View {
     let goal: GoalSummary
     let onAbandon: () -> Void
+    let progressDestination: () -> Destination
     @State private var showAbandonConfirm = false
 
     var body: some View {
@@ -284,6 +292,21 @@ private struct ActiveGoalCard: View {
                         valueColor: days >= 14 ? .textPrimary : .brandDanger
                     )
                 }
+            }
+
+            Divider()
+
+            NavigationLink(destination: progressDestination()) {
+                HStack(spacing: 6) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("상세 진행률 보기")
+                        .font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(Color.brandPrimary)
             }
         }
         .padding(18)
