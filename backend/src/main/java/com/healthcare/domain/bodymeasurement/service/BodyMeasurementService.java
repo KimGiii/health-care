@@ -100,6 +100,15 @@ public class BodyMeasurementService {
         measurementRepository.save(measurement);
     }
 
+    // ─────────────────────────── 특정 날짜 기준 직전 기록 조회 ───────────────────────────
+
+    public MeasurementResponse getMeasurementAtOrBefore(Long userId, LocalDate referenceDate) {
+        return measurementRepository
+                .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, referenceDate)
+                .map(MeasurementResponse::from)
+                .orElseThrow(() -> new ResourceNotFoundException("BodyMeasurement", 0L));
+    }
+
     // ─────────────────────────── 내부 헬퍼 ───────────────────────────
 
     private BodyMeasurement findAndVerifyOwnership(Long userId, Long measurementId) {

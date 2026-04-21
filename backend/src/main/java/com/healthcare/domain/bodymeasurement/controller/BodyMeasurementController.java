@@ -79,6 +79,19 @@ public class BodyMeasurementController {
     }
 
     /**
+     * GET /api/v1/body-measurements/at-or-before?date=2024-04-01
+     * 특정 날짜 이전 가장 최근 측정 기록 조회 (iOS 변화 그래프 기준점 비교용)
+     */
+    @GetMapping("/at-or-before")
+    public ResponseEntity<ApiResponse<MeasurementResponse>> getMeasurementAtOrBefore(
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Long userId = resolveUserId(bearerToken);
+        MeasurementResponse response = measurementService.getMeasurementAtOrBefore(userId, date);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    /**
      * GET /api/v1/body-measurements/{id}
      * 신체 측정 기록 단건 조회
      */

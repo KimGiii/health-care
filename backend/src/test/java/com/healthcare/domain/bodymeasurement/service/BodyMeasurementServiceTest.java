@@ -300,6 +300,37 @@ class BodyMeasurementServiceTest {
                 .isInstanceOf(UnauthorizedException.class);
     }
 
+    // ─────────────────────────── 특정 날짜 기준 직전 기록 조회 ───────────────────────────
+
+    @Test
+    @DisplayName("특정 날짜 이전 가장 최근 측정 기록 조회 성공")
+    void getMeasurementAtOrBefore_success_returnsMostRecentBeforeDate() {
+        Long userId = 1L;
+        LocalDate referenceDate = LocalDate.now().minusDays(7);
+        BodyMeasurement m = buildMeasurement(3L, userId, referenceDate.minusDays(2), 74.0, 17.8);
+        given(measurementRepository
+                .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, referenceDate))
+                .willReturn(Optional.of(m));
+
+        MeasurementResponse response = measurementService.getMeasurementAtOrBefore(userId, referenceDate);
+
+        assertThat(response.getId()).isEqualTo(3L);
+        assertThat(response.getWeightKg()).isEqualTo(74.0);
+    }
+
+    @Test
+    @DisplayName("특정 날짜 이전 측정 기록 없으면 ResourceNotFoundException 발생")
+    void getMeasurementAtOrBefore_noData_throwsResourceNotFoundException() {
+        Long userId = 1L;
+        LocalDate referenceDate = LocalDate.of(2023, 1, 1);
+        given(measurementRepository
+                .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, referenceDate))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> measurementService.getMeasurementAtOrBefore(userId, referenceDate))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     // ─────────────────────────── 헬퍼 ───────────────────────────
 
     private BodyMeasurement buildMeasurement(Long id, Long userId, LocalDate measuredAt,

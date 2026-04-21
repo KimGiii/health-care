@@ -24,4 +24,9 @@ public interface BodyMeasurementRepository extends JpaRepository<BodyMeasurement
             @Param("to") LocalDate to);
 
     Optional<BodyMeasurement> findFirstByUserIdOrderByMeasuredAtDesc(Long userId);
+
+    Optional<BodyMeasurement> findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(
+            Long userId,
+            LocalDate measuredAt
+    );
 }
