@@ -205,8 +205,8 @@ class DietLogServiceTest {
     // ─────────────────────────── 식사 기록 목록 조회 ───────────────────────────
 
     @Test
-    @DisplayName("식사 기록 목록 조회 시 페이지네이션 결과 반환")
-    void listDietLogs_returnsPaginatedResults() {
+    @DisplayName("식사 기록 목록 조회 시 null 기간은 기본 날짜 범위로 치환되어 페이지네이션 결과를 반환한다")
+    void listDietLogs_withNullDateRange_usesDefaultDatesAndReturnsPaginatedResults() {
         // given
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 20);
@@ -214,7 +214,7 @@ class DietLogServiceTest {
                 MealType.BREAKFAST, 300.0, 15.0, 40.0, 8.0);
 
         Page<DietLog> page = new PageImpl<>(List.of(log), pageable, 1);
-        given(dietLogRepository.findByUserIdAndDateRange(userId, null, null, pageable))
+        given(dietLogRepository.findByUserIdAndDateRange(eq(userId), any(LocalDate.class), any(LocalDate.class), eq(pageable)))
                 .willReturn(page);
 
         // when
@@ -224,6 +224,12 @@ class DietLogServiceTest {
         assertThat(response.getContent()).hasSize(1);
         assertThat(response.getTotalElements()).isEqualTo(1);
         assertThat(response.isFirst()).isTrue();
+
+        ArgumentCaptor<LocalDate> fromCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> toCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        verify(dietLogRepository).findByUserIdAndDateRange(eq(userId), fromCaptor.capture(), toCaptor.capture(), eq(pageable));
+        assertThat(fromCaptor.getValue()).isEqualTo(LocalDate.of(2000, 1, 1));
+        assertThat(toCaptor.getValue()).isEqualTo(LocalDate.now().plusYears(1));
     }
 
     // ─────────────────────────── 식사 기록 삭제 ───────────────────────────

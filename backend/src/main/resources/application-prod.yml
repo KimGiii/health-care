@@ -21,6 +21,7 @@ app:
   s3:
     bucket: healthcare-photos-prod
     region: ap-northeast-2
+    path-style-access: false
   fcm:
     credentials-path: ${FCM_CREDENTIALS_PATH}
   food-api:

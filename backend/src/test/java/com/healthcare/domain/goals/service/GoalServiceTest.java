@@ -3,10 +3,13 @@ package com.healthcare.domain.goals.service;
 import com.healthcare.common.exception.BusinessRuleViolationException;
 import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.UnauthorizedException;
+import com.healthcare.domain.bodymeasurement.entity.BodyMeasurement;
+import com.healthcare.domain.bodymeasurement.repository.BodyMeasurementRepository;
 import com.healthcare.domain.goals.dto.*;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.entity.Goal.GoalStatus;
 import com.healthcare.domain.goals.entity.Goal.GoalType;
+import com.healthcare.domain.goals.entity.GoalCheckpoint;
 import com.healthcare.domain.goals.repository.GoalCheckpointRepository;
 import com.healthcare.domain.goals.repository.GoalRepository;
 import com.healthcare.domain.user.entity.User;
@@ -42,6 +45,7 @@ class GoalServiceTest {
     @Mock private GoalRepository goalRepository;
     @Mock private GoalCheckpointRepository goalCheckpointRepository;
     @Mock private UserRepository userRepository;
+    @Mock private BodyMeasurementRepository bodyMeasurementRepository;
 
     @InjectMocks
     private GoalService goalService;
@@ -270,6 +274,156 @@ class GoalServiceTest {
                 .isInstanceOf(BusinessRuleViolationException.class);
     }
 
+    // ─────────────────────────── 목표 진행률 조회 ───────────────────────────
+
+    @Test
+    @DisplayName("신체 측정 기록이 있는 경우 진행률이 계산된다 (체중 감량 목표 50% 진행)")
+    void getGoalProgress_withBodyMeasurement_calculatesPercent() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        // 시작: 80kg, 목표: 70kg (-10kg), 현재: 75kg → 50% 진행
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                LocalDate.now().minusDays(30), LocalDate.now().plusDays(30));
+        BodyMeasurement measurement = buildMeasurement(userId, 75.0);
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(measurement));
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response.getPercentComplete()).isEqualTo(50.0);
+        assertThat(response.getCurrentValue()).isEqualByComparingTo(new BigDecimal("75.0"));
+        assertThat(response.getDaysRemaining()).isEqualTo(30L);
+    }
+
+    @Test
+    @DisplayName("신체 측정 기록이 없으면 현재값이 시작값과 동일하고 진행률은 0%이다")
+    void getGoalProgress_noBodyMeasurement_zeroPercent() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response.getPercentComplete()).isEqualTo(0.0);
+        assertThat(response.getCurrentValue()).isEqualByComparingTo(new BigDecimal("80.0"));
+    }
+
+    @Test
+    @DisplayName("목표보다 빠르게 진행 중이면 trackingStatus 가 AHEAD 이다")
+    void getGoalProgress_aheadOfSchedule_returnsAhead() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        // 10일 경과(총 60일), 기대 진행률 ~16%, 실제 80%
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
+        BodyMeasurement measurement = buildMeasurement(userId, 72.0); // -8kg / -10kg = 80%
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(measurement));
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response.getTrackingStatus()).isEqualTo("AHEAD");
+        assertThat(response.getTrackingColor()).isEqualTo("GREEN");
+        assertThat(response.getIsOnTrack()).isTrue();
+    }
+
+    @Test
+    @DisplayName("크게 뒤처진 경우 trackingStatus 가 BEHIND 이다")
+    void getGoalProgress_behindSchedule_returnsBehind() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        // 50일 경과(총 60일), 기대 진행률 ~83%, 실제 0%
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                LocalDate.now().minusDays(50), LocalDate.now().plusDays(10));
+        BodyMeasurement measurement = buildMeasurement(userId, 80.0); // 진행 없음
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(measurement));
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response.getTrackingStatus()).isEqualTo("BEHIND");
+        assertThat(response.getTrackingColor()).isEqualTo("RED");
+        assertThat(response.getIsOnTrack()).isFalse();
+    }
+
+    @Test
+    @DisplayName("이미 오늘 체크포인트가 있으면 중복 저장하지 않는다")
+    void getGoalProgress_checkpointAlreadyExists_noNewSave() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
+        BodyMeasurement measurement = buildMeasurement(userId, 75.0);
+        GoalCheckpoint existing = GoalCheckpoint.builder()
+                .goalId(goalId).checkpointDate(LocalDate.now())
+                .actualValue(new BigDecimal("75.0")).isOnTrack(true).build();
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(measurement));
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(goalId, LocalDate.now()))
+                .willReturn(Optional.of(existing));
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of(existing));
+
+        goalService.getGoalProgress(userId, goalId);
+
+        verify(goalCheckpointRepository, times(0)).save(any());
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 목표 진행률 조회 시 UnauthorizedException 발생")
+    void getGoalProgress_otherUserGoal_throwsUnauthorizedException() {
+        Long goalId = 10L;
+        Goal goal = buildGoal(goalId, 99L, GoalType.WEIGHT_LOSS, GoalStatus.ACTIVE);
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+
+        assertThatThrownBy(() -> goalService.getGoalProgress(1L, goalId))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 목표 진행률 조회 시 ResourceNotFoundException 발생")
+    void getGoalProgress_goalNotFound_throwsResourceNotFoundException() {
+        given(goalRepository.findById(9999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> goalService.getGoalProgress(1L, 9999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     // ─────────────────────────── 헬퍼 ───────────────────────────
 
     private Goal buildGoal(Long id, Long userId, GoalType goalType, GoalStatus status) {
@@ -295,5 +449,24 @@ class GoalServiceTest {
         return User.builder()
                 .id(id).email("test@example.com").passwordHash("hash")
                 .displayName("Tester").build();
+    }
+
+    private Goal buildWeightGoal(Long id, Long userId, BigDecimal startValue, BigDecimal targetValue,
+            LocalDate startDate, LocalDate targetDate) {
+        return Goal.builder()
+                .id(id).userId(userId)
+                .goalType(GoalType.WEIGHT_LOSS).status(GoalStatus.ACTIVE)
+                .startValue(startValue).targetValue(targetValue).targetUnit("kg")
+                .startDate(startDate).targetDate(targetDate)
+                .weeklyRateTarget(new BigDecimal("-0.5"))
+                .build();
+    }
+
+    private BodyMeasurement buildMeasurement(Long userId, double weightKg) {
+        return BodyMeasurement.builder()
+                .id(1L).userId(userId)
+                .measuredAt(LocalDate.now())
+                .weightKg(weightKg)
+                .build();
     }
 }

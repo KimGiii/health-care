@@ -24,7 +24,7 @@ public class GoalProgressResponse {
     private Double percentComplete;
     private Long daysRemaining;
     private LocalDate projectedCompletionDate;
-    private boolean isOnTrack;
+    private Boolean isOnTrack;
     private String trackingStatus;
     private String trackingColor;
     private List<GoalCheckpointResponse> checkpoints;

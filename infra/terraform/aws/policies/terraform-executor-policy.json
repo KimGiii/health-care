@@ -1,0 +1,64 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3BucketLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:GetBucketLocation",
+        "s3:ListBucket",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:DeleteBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:DeleteBucketPublicAccessBlock",
+        "s3:GetBucketCORS",
+        "s3:PutBucketCORS",
+        "s3:DeleteBucketCORS"
+      ],
+      "Resource": [
+        "arn:aws:s3:::healthcare-photos-dev",
+        "arn:aws:s3:::healthcare-photos-prod"
+      ]
+    },
+    {
+      "Sid": "S3ObjectLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::healthcare-photos-dev/*",
+        "arn:aws:s3:::healthcare-photos-prod/*"
+      ]
+    },
+    {
+      "Sid": "IamManagedPolicyLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicyVersions",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:policy/healthcare-dev-progress-photo-bucket-access",
+        "arn:aws:iam::*:policy/healthcare-prod-progress-photo-bucket-access"
+      ]
+    }
+  ]
+}

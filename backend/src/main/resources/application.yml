@@ -48,8 +48,20 @@ app:
     secret: "${JWT_SECRET:dev-secret-key-change-in-production-min-32-chars-required}"
     access-token-expiry-hours: 24
     refresh-token-expiry-days: 30
+  s3:
+    bucket: ${S3_BUCKET:healthcare-photos-local}
+    region: ${S3_REGION:ap-northeast-2}
+    endpoint: ${S3_ENDPOINT:}
+    path-style-access: ${S3_PATH_STYLE_ACCESS:false}
+    upload-prefix: ${S3_UPLOAD_PREFIX:progress-photos}
+    meal-upload-prefix: ${S3_MEAL_UPLOAD_PREFIX:meal-photos}
   photo:
     signed-url-ttl-minutes: 15
+  ai:
+    meal:
+      openai-api-key: "${OPENAI_API_KEY:}"
+      openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      model: ${OPENAI_MEAL_MODEL:gpt-4.1-mini}
   cache:
     food-search-ttl-days: 30
     user-profile-ttl-minutes: 60

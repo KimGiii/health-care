@@ -46,6 +46,14 @@ public class User {
     @Column(name = "activity_level", length = 20)
     private ActivityLevel activityLevel;
 
+    @Column(name = "locale", length = 10, nullable = false)
+    @Builder.Default
+    private String locale = "ko-KR";
+
+    @Column(name = "timezone", length = 64, nullable = false)
+    @Builder.Default
+    private String timezone = "Asia/Seoul";
+
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
 
@@ -85,12 +93,16 @@ public class User {
         updatedAt = OffsetDateTime.now();
     }
 
-    public void updateProfile(String displayName, Double heightCm, Double weightKg, ActivityLevel activityLevel, Sex sex) {
+    public void updateProfile(String displayName, LocalDate dateOfBirth, Double heightCm, Double weightKg,
+                              ActivityLevel activityLevel, Sex sex, String locale, String timezone) {
         if (displayName != null) this.displayName = displayName;
+        if (dateOfBirth != null) this.dateOfBirth = dateOfBirth;
         if (heightCm != null) this.heightCm = heightCm;
         if (weightKg != null) this.weightKg = weightKg;
         if (activityLevel != null) this.activityLevel = activityLevel;
         if (sex != null) this.sex = sex;
+        if (locale != null) this.locale = locale;
+        if (timezone != null) this.timezone = timezone;
     }
 
     public void completeOnboarding() {

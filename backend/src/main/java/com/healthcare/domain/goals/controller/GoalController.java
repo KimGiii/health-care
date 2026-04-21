@@ -78,6 +78,19 @@ public class GoalController {
     }
 
     /**
+     * GET /api/v1/goals/{id}/progress
+     * 목표 진행률 조회 — 현재 체중/체지방 등 신체 측정값 기반 진행 계산
+     */
+    @GetMapping("/{id}/progress")
+    public ResponseEntity<ApiResponse<GoalProgressResponse>> getGoalProgress(
+            @RequestHeader("Authorization") String bearerToken,
+            @PathVariable Long id) {
+        Long userId = resolveUserId(bearerToken);
+        GoalProgressResponse response = goalService.getGoalProgress(userId, id);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    /**
      * DELETE /api/v1/goals/{id}
      * 목표 포기 (ABANDONED) — 히스토리는 유지
      */

@@ -2,6 +2,7 @@ package com.healthcare.domain.auth.service;
 
 import com.healthcare.common.exception.DuplicateResourceException;
 import com.healthcare.common.exception.UnauthorizedException;
+import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.auth.dto.LoginRequest;
 import com.healthcare.domain.auth.dto.RefreshTokenRequest;
 import com.healthcare.domain.auth.dto.RegisterRequest;
@@ -39,10 +40,21 @@ public class AuthService {
             throw new DuplicateResourceException("이미 사용 중인 이메일입니다.");
         }
 
+        User.Sex sex = parseSex(request.getSex());
+        User.ActivityLevel activityLevel = parseActivityLevel(request.getActivityLevel());
+
         User user = User.builder()
             .email(request.getEmail())
             .passwordHash(passwordEncoder.encode(request.getPassword()))
             .displayName(request.getDisplayName())
+            .sex(sex)
+            .dateOfBirth(request.getDateOfBirth())
+            .heightCm(request.getHeightCm())
+            .weightKg(request.getWeightKg())
+            .activityLevel(activityLevel)
+            .locale(normalizeLocale(request.getLocale()))
+            .timezone(normalizeTimezone(request.getTimezone()))
+            .onboardingCompleted(hasCompletedOnboardingProfile(request))
             .build();
 
         userRepository.save(user);
@@ -98,6 +110,9 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         return TokenResponse.builder()
+            .userId(user.getId())
+            .email(user.getEmail())
+            .displayName(user.getDisplayName())
             .accessToken(accessToken)
             .refreshToken(refreshTokenRaw)
             .expiresIn(SecurityConstants.ACCESS_TOKEN_EXPIRY_MS / 1000)
@@ -113,5 +128,45 @@ public class AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
         }
+    }
+
+    private User.Sex parseSex(String sex) {
+        if (sex == null || sex.isBlank()) {
+            return null;
+        }
+        try {
+            return User.Sex.valueOf(sex);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("유효하지 않은 성별입니다: " + sex);
+        }
+    }
+
+    private User.ActivityLevel parseActivityLevel(String activityLevel) {
+        if (activityLevel == null || activityLevel.isBlank()) {
+            return null;
+        }
+        try {
+            return User.ActivityLevel.valueOf(activityLevel);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("유효하지 않은 활동 수준입니다: " + activityLevel);
+        }
+    }
+
+    private String normalizeLocale(String locale) {
+        return locale == null || locale.isBlank() ? "ko-KR" : locale;
+    }
+
+    private String normalizeTimezone(String timezone) {
+        return timezone == null || timezone.isBlank() ? "Asia/Seoul" : timezone;
+    }
+
+    private boolean hasCompletedOnboardingProfile(RegisterRequest request) {
+        return request.getSex() != null
+            && request.getDateOfBirth() != null
+            && request.getHeightCm() != null
+            && request.getWeightKg() != null
+            && request.getActivityLevel() != null
+            && request.getLocale() != null
+            && request.getTimezone() != null;
     }
 }

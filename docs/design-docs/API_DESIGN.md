@@ -1019,6 +1019,139 @@ Access tokens expire after 24 hours. The client should use the refresh token end
 
 ---
 
+### POST /api/v1/diet/photo-analyses/initiate
+
+**Auth required:** Yes
+**Description:** Creates a meal-photo analysis draft and returns a presigned upload URL. Meal photos use a dedicated storage prefix separate from progress photos.
+
+**Request Body:**
+```json
+{
+  "fileName": "meal.jpg",
+  "contentType": "image/jpeg",
+  "fileSizeBytes": 482193,
+  "capturedAt": "2026-04-21T12:30:00+09:00"
+}
+```
+
+**Response: 201 Created**
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": 9001,
+    "storageKey": "meal-photos/42/550e8400-e29b-41d4-a716-446655440000.jpg",
+    "uploadUrl": "https://...signed-put-url...",
+    "previewUrl": "https://...signed-get-url...",
+    "expiresAt": "2026-04-21T03:45:00Z"
+  },
+  "message": "식단 사진 업로드 준비가 완료되었습니다."
+}
+```
+
+### POST /api/v1/diet/photo-analyses/{id}/analyze
+
+**Auth required:** Yes
+**Description:** Runs AI analysis and returns a normalized draft. This endpoint does not persist the final meal log. Items with low confidence remain editable and are marked with `needsReview=true`.
+
+**Request Body:**
+```json
+{
+  "mealType": "LUNCH"
+}
+```
+
+**Response: 200 OK**
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": 9001,
+    "status": "ANALYZED",
+    "provider": "openai",
+    "analysisVersion": "gpt-4.1-mini",
+    "previewUrl": "https://...signed-get-url...",
+    "capturedAt": "2026-04-21T12:30:00+09:00",
+    "needsReview": true,
+    "analysisWarnings": [
+      "국물과 소스는 실제보다 낮게 추정될 수 있습니다."
+    ],
+    "detectedItems": [
+      {
+        "analysisItemId": 1,
+        "label": "제육볶음",
+        "matchedFoodCatalogId": 501,
+        "estimatedServingG": 180.0,
+        "calories": 423.0,
+        "proteinG": 24.0,
+        "carbsG": 18.0,
+        "fatG": 28.0,
+        "confidence": 0.71,
+        "needsReview": true,
+        "unknownOrUncertain": "양념, 설탕, 사용된 기름 양은 사진만으로 확정하기 어렵습니다."
+      }
+    ]
+  },
+  "message": "식단 사진 분석 초안이 생성되었습니다."
+}
+```
+
+### POST /api/v1/diet/photo-analyses/{id}/confirm
+
+**Auth required:** Yes
+**Description:** Persists the edited AI draft as a regular diet log. When an item cannot be matched to an existing catalog row, the server creates a user-owned custom food before saving the final log.
+
+**Request Body:**
+```json
+{
+  "logDate": "2026-04-21",
+  "mealType": "LUNCH",
+  "notes": "회사 근처 식당 점심",
+  "items": [
+    {
+      "analysisItemId": 1,
+      "label": "제육볶음",
+      "matchedFoodCatalogId": 501,
+      "estimatedServingG": 180.0,
+      "calories": 423.0,
+      "proteinG": 24.0,
+      "carbsG": 18.0,
+      "fatG": 28.0,
+      "notes": "밥은 따로 추가"
+    }
+  ]
+}
+```
+
+**Response: 201 Created**
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": 9001,
+    "status": "CONFIRMED",
+    "dietLog": {
+      "dietLogId": 321,
+      "logDate": "2026-04-21",
+      "mealType": "LUNCH",
+      "entryCount": 1,
+      "totalCalories": 423.0,
+      "totalProteinG": 24.0,
+      "totalCarbsG": 18.0,
+      "totalFatG": 28.0
+    }
+  },
+  "message": "식단 사진 분석 결과가 식단 기록으로 저장되었습니다."
+}
+```
+
+**Key Error Codes:**
+- `400 VALIDATION_ERROR` — unsupported image type, oversized upload, invalid confirmation payload
+- `404 NOT_FOUND` — analysis record does not belong to the authenticated user
+- `422 BUSINESS_RULE_VIOLATION` — analysis already confirmed
+
+---
+
 ## 6. Measurement Endpoints
 
 ### POST /api/v1/measurements

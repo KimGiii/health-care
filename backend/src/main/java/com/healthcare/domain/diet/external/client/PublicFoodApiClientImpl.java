@@ -88,9 +88,7 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
             log.warn("음식 API 검색 실패: {}", e.getMessage());
         }
 
-        // 3. 검색어로 필터링 (클라이언트 사이드)
         return allResults.stream()
-                .filter(item -> item.getName().contains(query))
                 .limit(size)
                 .collect(Collectors.toList());
     }
@@ -104,7 +102,8 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
                         .queryParam("serviceKey", properties.getPublicApiKey())
                         .queryParam("type", "json")
                         .queryParam("pageNo", page + 1)
-                        .queryParam("numOfRows", size * 2)  // 필터링 고려하여 더 많이 가져옴
+                        .queryParam("numOfRows", size * 2)
+                        .queryParam("foodNm", query)
                         .build())
                 .retrieve()
                 .body(ApiResponseWrapper.class);
@@ -130,7 +129,8 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
                         .queryParam("serviceKey", properties.getPublicApiKey())
                         .queryParam("type", "json")
                         .queryParam("pageNo", page + 1)
-                        .queryParam("numOfRows", size * 2)  // 필터링 고려하여 더 많이 가져옴
+                        .queryParam("numOfRows", size * 2)
+                        .queryParam("foodNm", query)
                         .build())
                 .retrieve()
                 .body(ApiResponseWrapper.class);

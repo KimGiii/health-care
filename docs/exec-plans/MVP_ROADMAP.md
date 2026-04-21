@@ -371,6 +371,16 @@ Phase 6: MVP 출시 준비
 
 **핵심 도전:** USDA + Open Food Facts API 연동, 한국 음식 데이터 확보
 
+#### 추가 구현 메모: 사진 기반 AI 식단 초안
+
+- [x] `meal_photo_analyses`, `meal_photo_analysis_items` 임시 테이블 추가
+- [x] `POST /api/v1/diet/photo-analyses/initiate`
+- [x] `POST /api/v1/diet/photo-analyses/{id}/analyze`
+- [x] `POST /api/v1/diet/photo-analyses/{id}/confirm`
+- [x] OpenAI 우선, API 키 미설정 시 fallback draft provider 추가
+- [x] iOS `AddDietLogView`에 "사진으로 시작" 진입점 추가
+- [x] AI 초안 수정 후 기존 식단 기록 저장 흐름으로 연결
+
 #### 백엔드 작업
 
 1. **DB 스키마 구현**

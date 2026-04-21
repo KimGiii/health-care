@@ -22,3 +22,8 @@ Desktop.ini
 *.bak
 *.log
 .claude/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
