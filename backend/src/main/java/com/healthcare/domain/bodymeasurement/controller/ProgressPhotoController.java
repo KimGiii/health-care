@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/measurements/photos")
+@RequestMapping("/api/v1/body-measurements/photos")
 @RequiredArgsConstructor
 public class ProgressPhotoController {
 

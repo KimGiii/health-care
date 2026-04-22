@@ -23,7 +23,7 @@ public class ExternalFoodSearchService {
      * 결과는 Redis에 캐싱된다 (TTL: 30일, application.yml).
      */
     @Cacheable(value = "external-food-search",
-               key = "#query + ':' + #source + ':' + #page + ':' + #size")
+               key = "'v2:' + #query + ':' + #source + ':' + #page + ':' + #size")
     public List<ExternalFoodResult> search(String query, FoodDataSource source, int page, int size) {
         if (source == FoodDataSource.PUBLIC_FOOD_API || source == FoodDataSource.ALL) {
             return fetchSafely("Public Food API",

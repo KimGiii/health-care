@@ -101,6 +101,26 @@ class FoodCatalogServiceTest {
         assertThat(result.get(0).getCreatedByUserId()).isEqualTo(userId);
     }
 
+    @Test
+    @DisplayName("검색어는 trim 후 repository에 전달한다")
+    void searchFoods_trimsQueryBeforeRepositoryCall() {
+        // given
+        Long userId = 1L;
+        FoodCatalog chicken = buildGlobalFood(3L, "Chicken Breast", "닭가슴살",
+                FoodCategory.PROTEIN_SOURCE, 165.0, 31.0, 0.0, 3.6);
+
+        given(foodCatalogRepository.findAccessibleToUser(userId, "닭가슴살", null, false))
+                .willReturn(List.of(chicken));
+
+        // when
+        List<FoodCatalogResponse> result = foodCatalogService.searchFoods(
+                userId, FoodSearchParams.of("  닭가슴살  ", null, false));
+
+        // then
+        assertThat(result).hasSize(1);
+        verify(foodCatalogRepository).findAccessibleToUser(userId, "닭가슴살", null, false);
+    }
+
     // ─────────────────────────── 커스텀 식품 생성 ───────────────────────────
 
     @Test

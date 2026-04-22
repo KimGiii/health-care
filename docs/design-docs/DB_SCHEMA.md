@@ -515,8 +515,8 @@ CREATE TABLE goals (
                             'WEIGHT_LOSS', 'MUSCLE_GAIN', 'BODY_RECOMPOSITION',
                             'ENDURANCE', 'GENERAL_HEALTH'
                         )),
-    target_value        DECIMAL(7,2),   -- e.g., target weight in kg, target body fat %, target finish time in seconds
-    target_unit         VARCHAR(20),    -- 'kg', 'pct', 'seconds', null for GENERAL_HEALTH
+    target_value        DECIMAL(7,2),   -- e.g., target weight in kg, target body fat %, target endurance time in minutes
+    target_unit         VARCHAR(20),    -- 'kg', 'pct', 'minutes', null for GENERAL_HEALTH
     target_date         DATE,
     start_value         DECIMAL(7,2),   -- value at goal creation (for progress %)
     start_date          DATE            NOT NULL DEFAULT CURRENT_DATE,

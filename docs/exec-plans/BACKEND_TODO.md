@@ -48,21 +48,19 @@
 
 ### 2. 컨트롤러/보안 통합 테스트 보강
 
-- [ ] `AuthController` MockMvc 통합 테스트
-- [ ] `UserController` MockMvc 통합 테스트
+- [x] `AuthController` MockMvc 단위 테스트
+- [x] `UserController` MockMvc 단위 테스트
 - [ ] JWT 필터 테스트 (인증 없는 요청, 만료 토큰)
 - [ ] 주요 도메인 컨트롤러 보안 테스트 (타 사용자 접근 시나리오)
 
 완료 기준:
-- 핵심 인증/인가 흐름이 서비스 단위 테스트 외 컨트롤러 계층에서도 검증된다.
+- 핵심 인증/인가 흐름이 서비스 단위 테스트 외 보안 체인까지 포함해 검증된다.
 
 ### 3. API 설계 문서와 실제 경로 정합성
 
-- [ ] `API_DESIGN.md`와 실제 구현 경로 차이 정리
-  - `/api/v1/measurements` vs `/api/v1/body-measurements` (현재 컨트롤러 기준 후자)
-  - 진행 사진 경로 확인
-- [ ] 문서 또는 컨트롤러 경로 중 하나로 통일
-- [ ] iOS API 클라이언트 계약 일치 여부 점검
+- [x] `ProgressPhotoController` 경로를 `/api/v1/body-measurements/photos`로 통일
+- [x] iOS `APIEndpoint`에서 진행 사진 관련 계약 반영
+- [x] `DB_SCHEMA.md`의 endurance 목표 단위를 실제 구현 기준(`minutes`)으로 정리
 
 완료 기준:
 - 문서, 서버, iOS 클라이언트가 같은 경로와 응답 계약을 사용한다.
@@ -93,6 +91,8 @@
 ## 메모
 
 - 백엔드 신체 측정은 "CRUD + atOrBefore + TDD 20개 완료" 상태다.
-- 목표 도메인은 "CRUD + 진행률 API + GoalControllerTest 11개 + GoalServiceTest 23개 완료" 상태다.
+- 진행 사진은 "presigned URL 발급 + 메타데이터 등록 + signed download 조회 + 경로 정합성 반영" 상태다.
+- 목표 도메인은 "CRUD + 진행률 API + GoalControllerTest 11개 + GoalServiceTest 23개 + endurance minutes 정규화" 상태다.
+- 식단 검색은 공백 무시 검색과 prefix 우선 정렬까지 반영된 상태다.
 - iOS GoalProgressView 이미 구현 완료 → 백엔드 진행률 API 완성으로 연동 가능 상태.
 - Jackson `write-dates-as-timestamps: false` 설정으로 전 도메인 LocalDate ISO-8601 직렬화 보장.

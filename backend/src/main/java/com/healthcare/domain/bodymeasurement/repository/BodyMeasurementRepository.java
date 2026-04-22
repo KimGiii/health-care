@@ -23,6 +23,13 @@ public interface BodyMeasurementRepository extends JpaRepository<BodyMeasurement
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
 
+    @Query("SELECT b FROM BodyMeasurement b WHERE b.userId = :userId " +
+           "AND b.measuredAt BETWEEN :from AND :to ORDER BY b.measuredAt ASC")
+    List<BodyMeasurement> findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+            @Param("userId") Long userId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+
     Optional<BodyMeasurement> findFirstByUserIdOrderByMeasuredAtDesc(Long userId);
 
     Optional<BodyMeasurement> findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(

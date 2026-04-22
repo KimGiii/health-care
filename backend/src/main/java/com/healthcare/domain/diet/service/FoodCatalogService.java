@@ -19,8 +19,9 @@ public class FoodCatalogService {
     private final FoodCatalogRepository foodCatalogRepository;
 
     public List<FoodCatalogResponse> searchFoods(Long userId, FoodSearchParams params) {
+        String normalizedQuery = normalizeQuery(params.getQuery());
         return foodCatalogRepository
-                .findAccessibleToUser(userId, params.getQuery(), params.getCategory(), params.isCustomOnly())
+                .findAccessibleToUser(userId, normalizedQuery, params.getCategory(), params.isCustomOnly())
                 .stream()
                 .map(FoodCatalogResponse::from)
                 .toList();
@@ -42,5 +43,13 @@ public class FoodCatalogService {
 
         FoodCatalog saved = foodCatalogRepository.save(food);
         return FoodCatalogResponse.from(saved);
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null) {
+            return null;
+        }
+        String trimmed = query.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

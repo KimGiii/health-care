@@ -25,8 +25,24 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long> 
                     :query IS NULL
                     OR LOWER(f.name)   LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
                     OR LOWER(f.nameKo) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
+                    OR LOWER(FUNCTION('replace', COALESCE(f.name, ''), ' ', ''))
+                        LIKE LOWER(CONCAT('%', FUNCTION('replace', CAST(:query AS string), ' ', ''), '%'))
+                    OR LOWER(FUNCTION('replace', COALESCE(f.nameKo, ''), ' ', ''))
+                        LIKE LOWER(CONCAT('%', FUNCTION('replace', CAST(:query AS string), ' ', ''), '%'))
                   )
-            ORDER BY f.isCustom ASC, f.name ASC
+            ORDER BY
+              CASE
+                WHEN :query IS NULL THEN 0
+                WHEN LOWER(f.nameKo) LIKE LOWER(CONCAT(CAST(:query AS string), '%')) THEN 0
+                WHEN LOWER(f.name) LIKE LOWER(CONCAT(CAST(:query AS string), '%')) THEN 0
+                WHEN LOWER(FUNCTION('replace', COALESCE(f.nameKo, ''), ' ', ''))
+                    LIKE LOWER(CONCAT(FUNCTION('replace', CAST(:query AS string), ' ', ''), '%')) THEN 1
+                WHEN LOWER(FUNCTION('replace', COALESCE(f.name, ''), ' ', ''))
+                    LIKE LOWER(CONCAT(FUNCTION('replace', CAST(:query AS string), ' ', ''), '%')) THEN 1
+                ELSE 2
+              END,
+              f.isCustom ASC,
+              COALESCE(f.nameKo, f.name) ASC
             """)
     List<FoodCatalog> findAccessibleToUser(
             @Param("userId")     Long userId,
