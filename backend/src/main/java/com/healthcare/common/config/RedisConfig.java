@@ -1,5 +1,6 @@
 package com.healthcare.common.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -23,20 +24,28 @@ public class RedisConfig {
     private int foodSearchTtlDays;
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, Object> redisTemplate(
+        RedisConnectionFactory connectionFactory,
+        ObjectMapper objectMapper
+    ) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
+        GenericJackson2JsonRedisSerializer jsonSerializer = jsonSerializer(objectMapper);
+
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setValueSerializer(jsonSerializer);
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashValueSerializer(jsonSerializer);
         template.afterPropertiesSet();
         return template;
     }
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
+    public RedisCacheManager cacheManager(
+        RedisConnectionFactory connectionFactory,
+        ObjectMapper objectMapper
+    ) {
+        GenericJackson2JsonRedisSerializer jsonSerializer = jsonSerializer(objectMapper);
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
@@ -55,6 +64,13 @@ public class RedisConfig {
                 "external-food-search",  foodSearchConfig,
                 "external-food-barcode", foodSearchConfig
             ))
+            .build();
+    }
+
+    private GenericJackson2JsonRedisSerializer jsonSerializer(ObjectMapper objectMapper) {
+        return GenericJackson2JsonRedisSerializer.builder()
+            .objectMapper(objectMapper.copy())
+            .defaultTyping(true)
             .build();
     }
 }
