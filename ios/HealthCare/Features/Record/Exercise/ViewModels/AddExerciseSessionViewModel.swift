@@ -5,6 +5,9 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
     // MARK: - Session fields
     @Published var sessionDate = Date()
+    @Published var includeSessionTime = true
+    @Published var sessionStartTime = AddExerciseSessionViewModel.defaultTime(hour: 18, minute: 0)
+    @Published var sessionEndTime = AddExerciseSessionViewModel.defaultTime(hour: 19, minute: 0)
     @Published var sessionNotes = ""
 
     // MARK: - Catalog search
@@ -67,9 +70,30 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
     var canSave: Bool {
         !exerciseGroups.isEmpty &&
+        (!includeSessionTime || hasValidSessionTime) &&
         exerciseGroups.allSatisfy { group in
             !group.sets.isEmpty && group.sets.allSatisfy { $0.isValid }
         }
+    }
+
+    var hasValidSessionTime: Bool {
+        guard includeSessionTime else { return true }
+        guard let start = combinedDateTime(date: sessionDate, time: sessionStartTime),
+              let end = combinedDateTime(date: sessionDate, time: sessionEndTime) else {
+            return false
+        }
+        return end > start
+    }
+
+    var sessionDurationMinutes: Int? {
+        guard includeSessionTime,
+              let start = combinedDateTime(date: sessionDate, time: sessionStartTime),
+              let end = combinedDateTime(date: sessionDate, time: sessionEndTime) else {
+            return nil
+        }
+
+        let minutes = Int(end.timeIntervalSince(start) / 60)
+        return minutes > 0 ? minutes : nil
     }
 
     // MARK: - Catalog Search
@@ -158,7 +182,9 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
     func save(apiClient: APIClient, onSuccess: @escaping @MainActor (CreateSessionResponse) -> Void) async {
         guard canSave else {
-            errorMessage = "모든 세트 정보를 올바르게 입력해주세요."
+            errorMessage = hasValidSessionTime
+                ? "모든 세트 정보를 올바르게 입력해주세요."
+                : "운동 종료 시간은 시작 시간보다 늦어야 합니다."
             return
         }
 
@@ -196,8 +222,8 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
         let request = CreateSessionRequest(
             sessionDate: dateFormatter.string(from: sessionDate),
-            startedAt: nil,
-            endedAt: nil,
+            startedAt: startedAtString,
+            endedAt: endedAtString,
             notes: sessionNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : sessionNotes,
             sets: sets
         )
@@ -214,4 +240,43 @@ final class AddExerciseSessionViewModel: ObservableObject {
             errorMessage = "저장 중 오류가 발생했습니다."
         }
     }
+
+    private var startedAtString: String? {
+        guard includeSessionTime,
+              let date = combinedDateTime(date: sessionDate, time: sessionStartTime) else {
+            return nil
+        }
+        return Self.iso8601Formatter.string(from: date)
+    }
+
+    private var endedAtString: String? {
+        guard includeSessionTime,
+              let date = combinedDateTime(date: sessionDate, time: sessionEndTime) else {
+            return nil
+        }
+        return Self.iso8601Formatter.string(from: date)
+    }
+
+    private func combinedDateTime(date: Date, time: Date) -> Date? {
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = Calendar.current.dateComponents([.hour, .minute], from: time)
+        dateComponents.hour = timeComponents.hour
+        dateComponents.minute = timeComponents.minute
+        dateComponents.second = 0
+        return Calendar.current.date(from: dateComponents)
+    }
+
+    private static func defaultTime(hour: Int, minute: Int) -> Date {
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = .current
+        return formatter
+    }()
 }

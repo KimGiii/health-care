@@ -24,7 +24,7 @@ struct AddGoalView: View {
                     TargetDateSection(
                         targetDate: $viewModel.targetDate,
                         weeklyRateText: $viewModel.weeklyRateText,
-                        showWeeklyRate: viewModel.selectedType == .WEIGHT_LOSS || viewModel.selectedType == .MUSCLE_GAIN
+                        selectedType: viewModel.selectedType
                     )
 
                     if let error = viewModel.errorMessage {
@@ -135,7 +135,7 @@ private struct TargetValueSection: View {
                     NumericField(
                         label: "목표 \(type.displayName)",
                         placeholder: "예: 70.0",
-                        unit: type.defaultUnit,
+                        unit: type.displayUnit,
                         text: $valueText
                     )
 
@@ -143,8 +143,8 @@ private struct TargetValueSection: View {
 
                     NumericField(
                         label: "현재 값 (선택)",
-                        placeholder: "현재 \(type.defaultUnit) 입력",
-                        unit: type.defaultUnit,
+                        placeholder: type.displayUnit.isEmpty ? "현재 값 입력" : "현재 \(type.displayUnit) 입력",
+                        unit: type.displayUnit,
                         text: $startValueText
                     )
                 }
@@ -158,7 +158,7 @@ private struct TargetValueSection: View {
 private struct TargetDateSection: View {
     @Binding var targetDate: Date
     @Binding var weeklyRateText: String
-    let showWeeklyRate: Bool
+    let selectedType: GoalType
 
     private let presets: [(label: String, days: Int)] = [
         ("4주", 28), ("8주", 56), ("12주", 84), ("24주", 168)
@@ -189,12 +189,12 @@ private struct TargetDateSection: View {
                 .environment(\.locale, Locale(identifier: "ko_KR"))
             }
 
-            if showWeeklyRate {
+            if selectedType.supportsWeeklyRateTarget {
                 FormCard {
                     NumericField(
                         label: "주간 목표 변화량 (선택)",
-                        placeholder: "예: 0.5",
-                        unit: "kg/주",
+                        placeholder: selectedType == .BODY_RECOMPOSITION ? "예: 0.25" : "예: 0.5",
+                        unit: selectedType.weeklyRateDisplayUnit,
                         text: $weeklyRateText
                     )
                 }

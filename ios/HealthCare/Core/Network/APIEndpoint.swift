@@ -45,8 +45,9 @@ enum APIEndpoint {
     case getBodyMeasurementAtOrBefore(date: String)
     case getBodyMeasurement(id: Int)
     case deleteBodyMeasurement(id: Int)
-    case uploadProgressPhoto(body: Data)
-    case getProgressPhotos
+    case initiatePhotoUpload(body: Data)
+    case registerProgressPhoto(body: Data)
+    case getProgressPhotos(photoType: String?, page: Int, size: Int)
 
     // Goal
     case createGoal(body: Data)
@@ -88,7 +89,8 @@ extension APIEndpoint {
         case .getBodyMeasurementAtOrBefore:      return "/api/v1/body-measurements/at-or-before"
         case .getBodyMeasurement(let id),
              .deleteBodyMeasurement(let id):     return "/api/v1/body-measurements/\(id)"
-        case .uploadProgressPhoto, .getProgressPhotos:
+        case .initiatePhotoUpload:               return "/api/v1/body-measurements/photos/upload-url"
+        case .registerProgressPhoto, .getProgressPhotos:
                                                  return "/api/v1/body-measurements/photos"
         case .createGoal, .getGoals:             return "/api/v1/goals"
         case .getGoal(let id),
@@ -103,7 +105,7 @@ extension APIEndpoint {
         case .register, .login, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
              .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
-             .createBodyMeasurement, .uploadProgressPhoto, .createGoal:
+             .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal:
             return .POST
         case .updateProfile, .updateGoal:
             return .PATCH
@@ -123,7 +125,7 @@ extension APIEndpoint {
              .createDietLog(let b), .initiateMealPhotoAnalysis(let b),
              .analyzeMealPhoto(_, let b), .confirmMealPhotoAnalysis(_, let b),
              .importExternalFood(let b),
-             .createBodyMeasurement(let b), .uploadProgressPhoto(let b),
+             .createBodyMeasurement(let b), .initiatePhotoUpload(let b), .registerProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b):
             return b
         default:
@@ -167,6 +169,13 @@ extension APIEndpoint {
             ]
         case .getBodyMeasurementAtOrBefore(let date):
             return [.init(name: "date", value: date)]
+        case .getProgressPhotos(let photoType, let page, let size):
+            var items: [URLQueryItem] = [
+                .init(name: "page", value: "\(page)"),
+                .init(name: "size", value: "\(size)")
+            ]
+            if let t = photoType { items.append(.init(name: "photoType", value: t)) }
+            return items
         default: return nil
         }
     }

@@ -28,10 +28,10 @@ final class AddGoalViewModel: ObservableObject {
         let req = CreateGoalRequest(
             goalType: selectedType.rawValue,
             targetValue: selectedType.requiresTargetValue ? Double(targetValueText) : nil,
-            targetUnit: selectedType.requiresTargetValue ? selectedType.defaultUnit : nil,
+            targetUnit: selectedType.requiresTargetValue ? selectedType.apiUnit : nil,
             targetDate: fmt.string(from: targetDate),
             startValue: Double(startValueText).flatMap { $0 > 0 ? $0 : nil },
-            weeklyRateTarget: Double(weeklyRateText).flatMap { $0 > 0 ? $0 : nil }
+            weeklyRateTarget: selectedType.normalizeWeeklyRate(Double(weeklyRateText))
         )
 
         do {

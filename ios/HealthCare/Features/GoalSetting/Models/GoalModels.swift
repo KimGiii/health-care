@@ -1,5 +1,27 @@
 import SwiftUI
 
+private func displayUnitText(from rawUnit: String?) -> String {
+    switch rawUnit {
+    case "pct":     return "%"
+    case "minutes", "seconds": return "분"
+    case .some(let rawUnit):
+        return rawUnit
+    case .none:
+        return ""
+    }
+}
+
+private func displayValue(for rawValue: Double?, unit rawUnit: String?) -> Double? {
+    guard let rawValue else { return nil }
+
+    switch rawUnit {
+    case "seconds":
+        return rawValue / 60.0
+    default:
+        return rawValue
+    }
+}
+
 // MARK: - Enums
 
 enum GoalType: String, Codable, CaseIterable, Sendable {
@@ -49,11 +71,32 @@ enum GoalType: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    var defaultUnit: String {
+    var apiUnit: String? {
         switch self {
-        case .WEIGHT_LOSS, .MUSCLE_GAIN, .BODY_RECOMPOSITION: return "kg"
-        case .ENDURANCE:      return "km"
-        case .GENERAL_HEALTH: return ""
+        case .WEIGHT_LOSS, .MUSCLE_GAIN: return "kg"
+        case .BODY_RECOMPOSITION:        return "pct"
+        case .ENDURANCE:                 return "minutes"
+        case .GENERAL_HEALTH:            return nil
+        }
+    }
+
+    var displayUnit: String {
+        displayUnitText(from: apiUnit)
+    }
+
+    var supportsWeeklyRateTarget: Bool {
+        switch self {
+        case .WEIGHT_LOSS, .MUSCLE_GAIN, .BODY_RECOMPOSITION: return true
+        case .ENDURANCE, .GENERAL_HEALTH:                     return false
+        }
+    }
+
+    var weeklyRateDisplayUnit: String {
+        switch self {
+        case .WEIGHT_LOSS, .MUSCLE_GAIN: return "kg/주"
+        case .BODY_RECOMPOSITION:        return "%/주"
+        case .ENDURANCE:                 return "분/주"
+        case .GENERAL_HEALTH:            return ""
         }
     }
 
@@ -68,6 +111,19 @@ enum GoalType: String, Codable, CaseIterable, Sendable {
     }
 
     var requiresTargetValue: Bool { self != .GENERAL_HEALTH }
+
+    func normalizeWeeklyRate(_ rawValue: Double?) -> Double? {
+        guard let rawValue, rawValue > 0 else { return nil }
+
+        switch self {
+        case .WEIGHT_LOSS, .BODY_RECOMPOSITION:
+            return -abs(rawValue)
+        case .MUSCLE_GAIN:
+            return abs(rawValue)
+        case .ENDURANCE, .GENERAL_HEALTH:
+            return nil
+        }
+    }
 }
 
 enum GoalStatus: String, Codable, Sendable {
@@ -106,7 +162,8 @@ struct GoalSummary: Codable, Identifiable, Sendable {
 
     var daysRemaining: Int? {
         guard let targetDate, let date = Self.parseDate(targetDate) else { return nil }
-        let days = Calendar.current.dateComponents([.day], from: .now, to: date).day ?? 0
+        let today = Calendar.current.startOfDay(for: .now)
+        let days = Calendar.current.dateComponents([.day], from: today, to: date).day ?? 0
         return days >= 0 ? days : nil
     }
 
@@ -118,14 +175,28 @@ struct GoalSummary: Codable, Identifiable, Sendable {
     }
 
     var targetText: String {
-        guard let v = targetValue, let u = targetUnit, !u.isEmpty else {
+        let displayUnit = displayUnitText(from: targetUnit)
+        guard let v = displayValue(for: targetValue, unit: targetUnit), !displayUnit.isEmpty else {
             return goalType.displayName
         }
-        return String(format: "%.1f %@", v, u)
+        return String(format: "%.1f %@", v, displayUnit)
     }
 
     var progressRatio: Double {
         min(max((percentComplete ?? 0) / 100.0, 0), 1.0)
+    }
+
+    func withPercentComplete(_ percentComplete: Double?) -> GoalSummary {
+        GoalSummary(
+            goalId: goalId,
+            goalType: goalType,
+            targetValue: targetValue,
+            targetUnit: targetUnit,
+            targetDate: targetDate,
+            startDate: startDate,
+            status: status,
+            percentComplete: percentComplete
+        )
     }
 
     private static func parseDate(_ s: String) -> Date? {
@@ -224,8 +295,8 @@ struct GoalProgressResponse: Codable, Sendable {
     }
 
     func formattedValue(_ v: Double?) -> String {
-        guard let v else { return "-" }
-        let unit = targetUnit.flatMap { $0.isEmpty ? nil : $0 } ?? ""
+        guard let v = displayValue(for: v, unit: targetUnit) else { return "-" }
+        let unit = displayUnitText(from: targetUnit)
         return String(format: "%.1f%@", v, unit.isEmpty ? "" : " \(unit)")
     }
 

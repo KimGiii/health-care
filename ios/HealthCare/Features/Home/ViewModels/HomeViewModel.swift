@@ -60,9 +60,22 @@ final class HomeViewModel: ObservableObject {
             let (diet, exercise, goals) = try await (dietResponse, exerciseResponse, goalResponse)
             todayDietLogs  = diet.content
             recentSessions = exercise.content
-            activeGoal     = goals.content.first { $0.status == .ACTIVE }
+            if let goal = goals.content.first(where: { $0.status == .ACTIVE }) {
+                activeGoal = await enrichedActiveGoal(goal, apiClient: apiClient)
+            } else {
+                activeGoal = nil
+            }
         } catch {
             // 대시보드 로딩 실패는 조용히 처리 — 빈 상태 유지
+        }
+    }
+
+    private func enrichedActiveGoal(_ goal: GoalSummary, apiClient: APIClient) async -> GoalSummary {
+        do {
+            let progress: GoalProgressResponse = try await apiClient.request(.getGoalProgress(id: goal.goalId))
+            return goal.withPercentComplete(progress.percentComplete)
+        } catch {
+            return goal
         }
     }
 }

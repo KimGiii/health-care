@@ -16,6 +16,9 @@ struct AddExerciseSessionView: View {
                     // 날짜 선택
                     dateSection
 
+                    // 운동 시간
+                    durationSection
+
                     // 세트 목록
                     setsSection
 
@@ -67,6 +70,59 @@ struct AddExerciseSessionView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
+            .background(Color.surfacePrimary)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var durationSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("운동 시간")
+
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: $viewModel.includeSessionTime) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("칼로리 계산에 운동 시간 반영")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.textPrimary)
+                        Text("웨이트와 맨몸 운동은 시간을 입력해야 칼로리 추정이 더 정확해집니다")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                }
+                .tint(Color.brandPrimary)
+
+                if viewModel.includeSessionTime {
+                    HStack(spacing: 10) {
+                        timePickerCard(title: "시작", selection: $viewModel.sessionStartTime)
+                        timePickerCard(title: "종료", selection: $viewModel.sessionEndTime)
+                    }
+
+                    HStack {
+                        Label {
+                            Text(viewModel.sessionDurationMinutes.map { "총 \($0)분" } ?? "시간을 확인해주세요")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(viewModel.hasValidSessionTime ? Color.brandPrimary : Color.brandDanger)
+                        } icon: {
+                            Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                                .foregroundStyle(viewModel.hasValidSessionTime ? Color.brandPrimary : Color.brandDanger)
+                        }
+                        Spacer()
+                    }
+
+                    if !viewModel.hasValidSessionTime {
+                        Text("종료 시간은 시작 시간보다 늦어야 합니다.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.brandDanger)
+                    }
+                } else {
+                    Text("시간을 입력하지 않으면 서버가 세트 수 기준의 대략적인 값으로 칼로리를 추정합니다.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.textSecondary)
+                }
+            }
+            .padding(16)
             .background(Color.surfacePrimary)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
@@ -223,6 +279,28 @@ struct AddExerciseSessionView: View {
             .tracking(0.5)
             .padding(.horizontal, 4)
             .padding(.bottom, 8)
+    }
+
+    private func timePickerCard(title: String, selection: Binding<Date>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.textSecondary)
+
+            DatePicker(
+                "",
+                selection: selection,
+                displayedComponents: .hourAndMinute
+            )
+            .labelsHidden()
+            .datePickerStyle(.compact)
+            .environment(\.locale, Locale(identifier: "ko_KR"))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surfaceSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
