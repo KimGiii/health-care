@@ -20,8 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -45,6 +48,14 @@ public class GoalService {
             throw new BusinessRuleViolationException("목표 날짜는 오늘 이후여야 합니다.");
         }
 
+        Goal.GoalType goalType = request.getGoalType();
+        String normalizedTargetUnit = normalizeTargetUnit(goalType);
+        BigDecimal normalizedTargetValue = normalizeTargetValue(
+                goalType, request.getTargetUnit(), request.getTargetValue());
+        BigDecimal normalizedStartValue = normalizeTargetValue(
+                goalType, request.getTargetUnit(), request.getStartValue());
+        BigDecimal normalizedWeeklyRateTarget = normalizeWeeklyRateTarget(goalType, request.getWeeklyRateTarget());
+
         // 기존 ACTIVE 목표 → ABANDONED
         goalRepository.findActiveGoalByUserId(userId).ifPresent(active -> {
             active.abandon();
@@ -53,14 +64,14 @@ public class GoalService {
 
         Goal goal = Goal.builder()
                 .userId(userId)
-                .goalType(request.getGoalType())
-                .targetValue(request.getTargetValue())
-                .targetUnit(request.getTargetUnit())
+                .goalType(goalType)
+                .targetValue(normalizedTargetValue)
+                .targetUnit(normalizedTargetUnit)
                 .targetDate(request.getTargetDate())
-                .startValue(request.getStartValue())
+                .startValue(normalizedStartValue)
                 .startDate(LocalDate.now())
                 .status(GoalStatus.ACTIVE)
-                .weeklyRateTarget(request.getWeeklyRateTarget())
+                .weeklyRateTarget(normalizedWeeklyRateTarget)
                 .build();
 
         Goal saved = goalRepository.save(goal);
@@ -97,7 +108,11 @@ public class GoalService {
         if (!goal.isActive()) {
             throw new BusinessRuleViolationException("COMPLETED 또는 ABANDONED 상태의 목표는 수정할 수 없습니다.");
         }
-        goal.updateTarget(request.getTargetValue(), request.getTargetDate(), request.getWeeklyRateTarget());
+        goal.updateTarget(
+                request.getTargetValue(),
+                request.getTargetDate(),
+                normalizeWeeklyRateTarget(goal.getGoalType(), request.getWeeklyRateTarget())
+        );
         Goal saved = goalRepository.save(goal);
         return GoalResponse.from(saved);
     }
@@ -115,21 +130,22 @@ public class GoalService {
         LocalDate today = LocalDate.now();
         LocalDate startDate = goal.getStartDate();
         LocalDate targetDate = goal.getTargetDate();
-
-        long daysPassed = Math.max(0, ChronoUnit.DAYS.between(startDate, today));
-        long totalDays = Math.max(1, ChronoUnit.DAYS.between(startDate, targetDate));
-        long daysRemaining = ChronoUnit.DAYS.between(today, targetDate);
-
-        BigDecimal currentValue = resolveCurrentValue(userId, goal);
         BigDecimal startValue = goal.getStartValue();
         BigDecimal targetValue = goal.getTargetValue();
 
-        ProgressMetrics metrics = calculateMetrics(
-                startValue, targetValue, currentValue, daysPassed, totalDays, startDate);
-
-        if (currentValue != null && startValue != null && targetValue != null) {
-            upsertCheckpoint(goal, today, currentValue, metrics, startValue, targetValue, daysPassed, totalDays);
+        List<MeasurementPoint> measurementPoints = loadMeasurementPoints(userId, goal, today);
+        if (measurementPoints.isEmpty()) {
+            throw new BusinessRuleViolationException("신체 측정 기록이 없어 목표 진행률을 계산할 수 없습니다.");
         }
+
+        upsertMissingWeeklyCheckpoints(goal, measurementPoints, today);
+
+        BigDecimal currentValue = measurementPoints.get(measurementPoints.size() - 1).value();
+        long daysElapsed = resolveDaysElapsed(startDate, today);
+        long totalDays = resolveTotalDays(startDate, targetDate);
+        Long daysRemaining = targetDate != null ? ChronoUnit.DAYS.between(today, targetDate) : null;
+        ProgressMetrics metrics = calculateMetrics(
+                startValue, targetValue, currentValue, daysElapsed, totalDays, startDate);
 
         List<GoalCheckpointResponse> checkpoints = goalCheckpointRepository
                 .findByGoalIdOrderByCheckpointDate(goalId)
@@ -156,10 +172,19 @@ public class GoalService {
                 .build();
     }
 
-    private BigDecimal resolveCurrentValue(Long userId, Goal goal) {
-        return bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId)
-                .map(m -> extractValueByGoalType(goal.getGoalType(), m))
-                .orElse(goal.getStartValue());
+    private List<MeasurementPoint> loadMeasurementPoints(Long userId, Goal goal, LocalDate today) {
+        if (goal.getStartDate() == null) {
+            return List.of();
+        }
+
+        return bodyMeasurementRepository
+                .findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(userId, goal.getStartDate(), today)
+                .stream()
+                .map(measurement -> new MeasurementPoint(
+                        measurement.getMeasuredAt(),
+                        extractValueByGoalType(goal.getGoalType(), measurement)))
+                .filter(point -> point.value() != null)
+                .toList();
     }
 
     private BigDecimal extractValueByGoalType(Goal.GoalType goalType, BodyMeasurement m) {
@@ -172,6 +197,42 @@ public class GoalService {
         return raw != null ? BigDecimal.valueOf(raw) : null;
     }
 
+    private String normalizeTargetUnit(Goal.GoalType goalType) {
+        return switch (goalType) {
+            case WEIGHT_LOSS, MUSCLE_GAIN -> "kg";
+            case BODY_RECOMPOSITION -> "pct";
+            case ENDURANCE -> "minutes";
+            case GENERAL_HEALTH -> null;
+        };
+    }
+
+    private BigDecimal normalizeTargetValue(Goal.GoalType goalType, String requestUnit, BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (goalType == Goal.GoalType.ENDURANCE && "seconds".equalsIgnoreCase(requestUnit)) {
+            return value.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+        }
+
+        return value;
+    }
+
+    private BigDecimal normalizeWeeklyRateTarget(Goal.GoalType goalType, BigDecimal weeklyRateTarget) {
+        if (weeklyRateTarget == null) {
+            return null;
+        }
+
+        BigDecimal magnitude = weeklyRateTarget.abs();
+        return switch (goalType) {
+            case WEIGHT_LOSS, BODY_RECOMPOSITION -> magnitude.negate();
+            case MUSCLE_GAIN -> magnitude;
+            case ENDURANCE, GENERAL_HEALTH -> null;
+        };
+    }
+
+    private record MeasurementPoint(LocalDate measuredAt, BigDecimal value) {}
+
     private record ProgressMetrics(
             double percentComplete,
             boolean isOnTrack,
@@ -181,7 +242,7 @@ public class GoalService {
     ) {}
 
     private ProgressMetrics calculateMetrics(BigDecimal startValue, BigDecimal targetValue,
-            BigDecimal currentValue, long daysPassed, long totalDays, LocalDate startDate) {
+            BigDecimal currentValue, long daysElapsed, long totalDays, LocalDate startDate) {
 
         if (startValue == null || targetValue == null || currentValue == null) {
             return new ProgressMetrics(0.0, true, "ON_TRACK", "GREEN", null);
@@ -189,7 +250,7 @@ public class GoalService {
 
         BigDecimal totalChange = targetValue.subtract(startValue);
         if (totalChange.compareTo(BigDecimal.ZERO) == 0) {
-            return new ProgressMetrics(100.0, true, "ON_TRACK", "GREEN", LocalDate.now());
+            return new ProgressMetrics(100.0, true, "ON_TRACK", "GREEN", startDate);
         }
 
         BigDecimal currentChange = currentValue.subtract(startValue);
@@ -198,7 +259,8 @@ public class GoalService {
                 .doubleValue();
         percent = Math.max(0.0, Math.min(100.0, percent));
 
-        double expectedPercent = (double) daysPassed / totalDays * 100.0;
+        long cappedDaysElapsed = Math.min(daysElapsed, totalDays);
+        double expectedPercent = (double) cappedDaysElapsed / totalDays * 100.0;
         double diff = percent - expectedPercent;
 
         boolean isOnTrack = diff >= -5.0;
@@ -219,9 +281,11 @@ public class GoalService {
         }
 
         LocalDate projectedDate = null;
-        if (daysPassed > 0 && currentChange.compareTo(BigDecimal.ZERO) != 0) {
+        if (daysElapsed > 0
+                && currentChange.compareTo(BigDecimal.ZERO) != 0
+                && currentChange.signum() == totalChange.signum()) {
             try {
-                BigDecimal daysNeeded = totalChange.multiply(BigDecimal.valueOf(daysPassed))
+                BigDecimal daysNeeded = totalChange.multiply(BigDecimal.valueOf(daysElapsed))
                         .divide(currentChange, 0, RoundingMode.CEILING);
                 projectedDate = startDate.plusDays(daysNeeded.longValue());
             } catch (ArithmeticException ignored) {}
@@ -230,28 +294,107 @@ public class GoalService {
         return new ProgressMetrics(percent, isOnTrack, trackingStatus, trackingColor, projectedDate);
     }
 
-    private void upsertCheckpoint(Goal goal, LocalDate today, BigDecimal currentValue,
-            ProgressMetrics metrics, BigDecimal startValue, BigDecimal targetValue,
-            long daysPassed, long totalDays) {
-        boolean exists = goalCheckpointRepository
-                .findByGoalIdAndCheckpointDate(goal.getId(), today).isPresent();
-        if (exists) return;
+    private long resolveDaysElapsed(LocalDate startDate, LocalDate referenceDate) {
+        if (startDate == null || referenceDate == null) {
+            return 0L;
+        }
+        return Math.max(0, ChronoUnit.DAYS.between(startDate, referenceDate));
+    }
 
-        BigDecimal projectedValue = null;
-        if (totalDays > 0) {
-            BigDecimal totalChange = targetValue.subtract(startValue);
-            BigDecimal projectedChange = totalChange.multiply(BigDecimal.valueOf(daysPassed))
-                    .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
-            projectedValue = startValue.add(projectedChange);
+    private long resolveTotalDays(LocalDate startDate, LocalDate targetDate) {
+        if (startDate == null || targetDate == null) {
+            return 1L;
+        }
+        return Math.max(1, ChronoUnit.DAYS.between(startDate, targetDate));
+    }
+
+    private void upsertMissingWeeklyCheckpoints(Goal goal, List<MeasurementPoint> measurementPoints, LocalDate today) {
+        LocalDate firstCheckpointDate = resolveFirstCheckpointDate(goal.getStartDate());
+        LocalDate lastCheckpointDate = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+
+        if (firstCheckpointDate == null || firstCheckpointDate.isAfter(lastCheckpointDate)) {
+            return;
         }
 
-        goalCheckpointRepository.save(GoalCheckpoint.builder()
-                .goalId(goal.getId())
-                .checkpointDate(today)
-                .actualValue(currentValue)
-                .projectedValue(projectedValue)
-                .isOnTrack(metrics.isOnTrack())
-                .build());
+        List<GoalCheckpoint> checkpointsToSave = new ArrayList<>();
+        for (LocalDate checkpointDate = firstCheckpointDate;
+             !checkpointDate.isAfter(lastCheckpointDate);
+             checkpointDate = checkpointDate.plusWeeks(1)) {
+
+            boolean exists = goalCheckpointRepository
+                    .findByGoalIdAndCheckpointDate(goal.getId(), checkpointDate)
+                    .isPresent();
+            if (exists) {
+                continue;
+            }
+
+            BigDecimal actualValue = findLatestValueAtOrBefore(measurementPoints, checkpointDate);
+            BigDecimal projectedValue = calculateProjectedValue(goal, checkpointDate);
+            Boolean isOnTrack = determineCheckpointOnTrack(goal, actualValue, projectedValue);
+
+            checkpointsToSave.add(GoalCheckpoint.builder()
+                    .goalId(goal.getId())
+                    .checkpointDate(checkpointDate)
+                    .actualValue(actualValue)
+                    .projectedValue(projectedValue)
+                    .isOnTrack(isOnTrack)
+                    .build());
+        }
+
+        if (!checkpointsToSave.isEmpty()) {
+            goalCheckpointRepository.saveAll(checkpointsToSave);
+        }
+    }
+
+    private LocalDate resolveFirstCheckpointDate(LocalDate startDate) {
+        if (startDate == null) {
+            return null;
+        }
+        return startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+    }
+
+    private BigDecimal findLatestValueAtOrBefore(List<MeasurementPoint> measurementPoints, LocalDate checkpointDate) {
+        BigDecimal latestValue = null;
+        for (MeasurementPoint point : measurementPoints) {
+            if (point.measuredAt().isAfter(checkpointDate)) {
+                break;
+            }
+            latestValue = point.value();
+        }
+        return latestValue;
+    }
+
+    private BigDecimal calculateProjectedValue(Goal goal, LocalDate checkpointDate) {
+        if (goal.getStartValue() == null || goal.getTargetValue() == null
+                || goal.getStartDate() == null || goal.getTargetDate() == null) {
+            return null;
+        }
+
+        long totalDays = resolveTotalDays(goal.getStartDate(), goal.getTargetDate());
+        long daysElapsed = Math.min(
+                resolveDaysElapsed(goal.getStartDate(), checkpointDate),
+                totalDays
+        );
+
+        BigDecimal totalChange = goal.getTargetValue().subtract(goal.getStartValue());
+        BigDecimal projectedChange = totalChange.multiply(BigDecimal.valueOf(daysElapsed))
+                .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
+        return goal.getStartValue().add(projectedChange);
+    }
+
+    private Boolean determineCheckpointOnTrack(Goal goal, BigDecimal actualValue, BigDecimal projectedValue) {
+        if (actualValue == null || projectedValue == null
+                || goal.getStartValue() == null || goal.getTargetValue() == null) {
+            return null;
+        }
+
+        int direction = goal.getTargetValue().compareTo(goal.getStartValue());
+        if (direction == 0) {
+            return actualValue.compareTo(projectedValue) == 0;
+        }
+        return direction < 0
+                ? actualValue.compareTo(projectedValue) <= 0
+                : actualValue.compareTo(projectedValue) >= 0;
     }
 
     // ─────────────────────────── 목표 포기 ───────────────────────────

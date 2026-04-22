@@ -1,6 +1,11 @@
 spring:
   application:
     name: healthcare-api
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:healthcare_db}
     username: ${POSTGRES_USER:postgres}

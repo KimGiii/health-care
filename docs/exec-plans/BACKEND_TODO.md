@@ -1,118 +1,98 @@
-# 백엔드 TODO — 2026년 4월 20일 기준
+# 백엔드 TODO — 2026년 4월 22일 기준
 
 ## 목적
 
 - 현재 백엔드 코드를 기준으로, MVP 완성에 직접 연결되는 작업만 우선순위대로 정리한다.
 - 장기 아이디어보다 "바로 착수 가능한 일" 중심으로 관리한다.
 
-## 최우선
+## 완료된 항목
 
-### 1. 테스트 깨진 것부터 복구
+### ✅ 테스트 복구 및 안정화
 
 - [x] `DietLogServiceTest.listDietLogs_returnsPaginatedResults` 수정
 - [x] `./gradlew test` 전체 통과 확인
-- [x] 테스트 실패 원인을 문서화하고, 날짜 기본값 정책을 테스트 이름과 stub에 반영
 
-완료 기준:
-- 로컬에서 백엔드 테스트가 전부 통과한다.
+### ✅ 회원가입 스펙과 실제 구현 맞추기
 
-### 2. 회원가입 스펙과 실제 구현 맞추기
+- [x] `RegisterRequest`에 초기 프로필 필드 반영 (`sex`, `dateOfBirth`, `heightCm`, `weightKg`, `activityLevel`, `locale`, `timezone`)
+- [x] `AuthService.register()` 저장 로직 확장
+- [x] `goalType`은 목표 도메인 책임으로 유지
 
-- [x] `RegisterRequest`에 초기 프로필 필드 반영 여부 확정
-  - `sex`
-  - `dateOfBirth`
-  - `heightCm`
-  - `weightKg`
-  - `activityLevel`
-  - `goalType`
-  - `locale`
-  - `timezone`
-- [x] `AuthService.register()`에서 저장 로직 확장
-- [x] `TokenResponse` 또는 후속 프로필 API 책임 범위 재정리
-- [x] 관련 단위 테스트 추가
+### ✅ 진행 사진 업로드 API 구현
 
-완료 기준:
-- 회원가입 요청 스펙이 문서와 코드 사이에서 일관된다.
+- [x] presigned URL 방식으로 업로드 → 메타데이터 저장 → signed download 조회
+- [x] S3/LocalStack 연동 설정
+- [x] Terraform AWS 골격 (`infra/terraform/aws`)
+- [x] `ProgressPhotoServiceTest` 추가
 
-메모:
-- `sex`, `dateOfBirth`, `heightCm`, `weightKg`, `activityLevel`, `locale`, `timezone`는 회원가입 시 저장한다.
-- `goalType`은 현재 목표 도메인 책임으로 유지하며, 회원가입에서 별도 목표 레코드를 자동 생성하지 않는다.
+### ✅ 신체 측정 TDD 및 atOrBefore 쿼리
+
+- [x] `BodyMeasurementServiceTest`: 20개 단위 테스트 (Mockito)
+- [x] `getMeasurementAtOrBefore()` 서비스 메서드
+- [x] `GET /api/v1/body-measurements/at-or-before?date=` 엔드포인트
+
+### ✅ 목표 진행률 API 완성
+
+- [x] `GET /api/v1/goals/{id}/progress` — 신체 측정 기반 진행률 계산 구현
+- [x] `GoalCheckpointRepository` 연결 — 조회 시 자동 upsert
+- [x] 목표 타입별 분기 (체중 감량 / 근육 증가 / 체지방 감소 / 지구력)
+- [x] `GoalProgressResponse` 완성 (percentComplete, trackingStatus, trackingColor, checkpoints, projectedCompletionDate)
+- [x] Jackson `write-dates-as-timestamps: false` 설정 — iOS `LocalDate` 디코딩 버그 수정
+- [x] `GoalController` Bearer 토큰 검증 개선 (`required = false` + resolveUserId null 체크)
+- [x] `GoalControllerTest` 11개 단위 테스트 추가 (MockMvc standaloneSetup)
+- [x] `GoalServiceTest` 2개 추가 (총 23개) — SLIGHTLY_BEHIND, null값 케이스
+
+---
 
 ## 다음 순서
 
-### 3. 진행 사진 업로드 API 구현
+### 2. 컨트롤러/보안 통합 테스트 보강
 
-- [x] 사진 저장 전략 확정
-  - presigned URL 방식 유지 여부
-  - multipart 직접 업로드 대신 클라이언트 업로드 방식 유지 여부
-- [x] 사진 메타데이터 테이블 마이그레이션 추가
-- [x] S3/LocalStack 연동 설정 클래스 추가
-- [x] 업로드 URL 발급 API 구현
-- [x] 사진 메타데이터 저장 API 구현
-- [x] 사진 목록 조회 API 구현
-- [x] 보안/권한 체크 추가
-- [x] 관련 서비스/컨트롤러 테스트 추가
-- [x] AWS S3 리소스와 접근 정책 Terraform 골격 추가
+- [ ] `AuthController` MockMvc 통합 테스트
+- [ ] `UserController` MockMvc 통합 테스트
+- [ ] JWT 필터 테스트 (인증 없는 요청, 만료 토큰)
+- [ ] 주요 도메인 컨트롤러 보안 테스트 (타 사용자 접근 시나리오)
 
 완료 기준:
-- 사용자가 측정 기록에 연결된 진행 사진을 업로드하고 다시 조회할 수 있다.
+- 핵심 인증/인가 흐름이 서비스 단위 테스트 외 컨트롤러 계층에서도 검증된다.
 
-메모:
-- 현재 구현은 `presigned upload -> 메타데이터 저장 -> signed download 조회` 기반 MVP다.
-- EXIF 제거와 썸네일 비동기 생성은 다음 단계로 남겨두고, 관련 컬럼은 확장 가능하게 남겨뒀다.
-- AWS 버킷과 IAM 정책은 `infra/terraform/aws` 기준으로 관리한다.
+### 3. API 설계 문서와 실제 경로 정합성
 
-### 4. 목표 진행률 API 완성
-
-- [ ] `GET /api/v1/goals/{id}/progress` 구현
-- [ ] `GoalCheckpointRepository` 실제 사용 로직 연결
-- [ ] 체크포인트 생성 규칙 정의
-- [ ] 측정 기록 기반 진행률 계산 로직 구현
-- [ ] 목표 데이터가 없을 때 예외 처리 정리
-- [ ] 테스트 추가
+- [ ] `API_DESIGN.md`와 실제 구현 경로 차이 정리
+  - `/api/v1/measurements` vs `/api/v1/body-measurements` (현재 컨트롤러 기준 후자)
+  - 진행 사진 경로 확인
+- [ ] 문서 또는 컨트롤러 경로 중 하나로 통일
+- [ ] iOS API 클라이언트 계약 일치 여부 점검
 
 완료 기준:
-- iOS가 목표 진행 차트와 추세선을 그릴 수 있는 응답을 받는다.
+- 문서, 서버, iOS 클라이언트가 같은 경로와 응답 계약을 사용한다.
 
 ## 중간 우선순위
 
-### 5. 컨트롤러/보안 테스트 보강
+### 4. 신체 측정 후처리 (EXIF, 썸네일)
 
-- [ ] AuthController 통합 테스트
-- [ ] UserController 통합 테스트
-- [ ] JWT 필터 테스트
-- [ ] 주요 도메인 컨트롤러 MockMvc 테스트
-- [ ] 인증 없는 요청, 타 사용자 접근 시나리오 검증
+- [ ] EXIF 제거 서버 측 구현 (`ExifStripper`)
+- [ ] 썸네일 비동기 생성 (150px, 400px, 800px)
+- [ ] 업로드 완료 검증 로직 (`progress_photos.upload_completed_at` 활용)
 
-완료 기준:
-- 핵심 인증/인가 흐름이 서비스 테스트 외 계층에서도 검증된다.
-
-### 6. API 설계와 실제 엔드포인트 이름 정리
-
-- [ ] `API_DESIGN.md`와 실제 경로 차이 정리
-  - 예: `/api/v1/measurements` vs `/api/v1/body-measurements`
-- [ ] 실제 구현에 맞춰 문서 수정 또는 컨트롤러 경로 수정
-- [ ] iOS API 클라이언트와 계약 차이 점검
-
-완료 기준:
-- 문서, 서버, 클라이언트가 같은 경로와 응답 계약을 사용한다.
-
-## 후순위
-
-### 7. 인사이트/알림 기반 작업
+### 5. 인사이트/알림 기반 작업
 
 - [ ] FCM Admin SDK 실제 사용 흐름 연결
-- [ ] 알림 발송 조건 정의
+- [ ] 알림 발송 조건 정의 (주간 회고 등)
 - [ ] 스케줄링 또는 이벤트 트리거 방식 결정
 
-### 8. 출시 준비용 백엔드 작업
+## 후순위 (출시 준비)
 
-- [ ] 운영 프로필 점검
+### 6. 출시 준비용 백엔드 작업
+
+- [ ] 운영 프로필 점검 (`application-prod.yml`)
 - [ ] 환경 변수 체크리스트 정리
 - [ ] 헬스체크/로그/모니터링 기준 정리
 - [ ] E2E 테스트 시나리오 정리
 
 ## 메모
 
-- 현재 구현상 백엔드는 "신체 측정 미착수" 단계가 아니라 "측정 기록 구현 완료, 사진 업로드 미구현" 단계로 봐야 한다.
-- 목표 도메인도 미착수가 아니라 "CRUD 완료, 진행률/인사이트 미완성" 상태다.
+- 백엔드 신체 측정은 "CRUD + atOrBefore + TDD 20개 완료" 상태다.
+- 목표 도메인은 "CRUD + 진행률 API + GoalControllerTest 11개 + GoalServiceTest 23개 완료" 상태다.
+- iOS GoalProgressView 이미 구현 완료 → 백엔드 진행률 API 완성으로 연동 가능 상태.
+- Jackson `write-dates-as-timestamps: false` 설정으로 전 도메인 LocalDate ISO-8601 직렬화 보장.

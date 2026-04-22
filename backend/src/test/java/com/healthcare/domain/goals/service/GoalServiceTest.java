@@ -24,7 +24,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,9 +61,9 @@ class GoalServiceTest {
         Goal existingActive = buildGoal(10L, userId, GoalType.WEIGHT_LOSS, GoalStatus.ACTIVE);
         CreateGoalRequest request = buildCreateRequest(
                 GoalType.BODY_RECOMPOSITION,
-                new BigDecimal("15.0"), "pct",
+                new BigDecimal("15.0"), "kg",
                 LocalDate.now().plusMonths(6),
-                new BigDecimal("18.5"), new BigDecimal("-0.25"));
+                new BigDecimal("18.5"), new BigDecimal("0.25"));
 
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(buildUser(userId)));
         given(goalRepository.findActiveGoalByUserId(userId)).willReturn(Optional.of(existingActive));
@@ -78,6 +80,8 @@ class GoalServiceTest {
         verify(goalRepository, times(2)).save(captor.capture());
         List<Goal> savedGoals = captor.getAllValues();
         assertThat(savedGoals.get(0).getStatus()).isEqualTo(GoalStatus.ABANDONED);
+        assertThat(savedGoals.get(1).getTargetUnit()).isEqualTo("pct");
+        assertThat(savedGoals.get(1).getWeeklyRateTarget()).isEqualByComparingTo("-0.25");
     }
 
     @Test
@@ -196,6 +200,7 @@ class GoalServiceTest {
         UpdateGoalRequest request = UpdateGoalRequest.builder()
                 .targetDate(LocalDate.now().plusMonths(9))
                 .targetValue(new BigDecimal("68.0"))
+                .weeklyRateTarget(new BigDecimal("0.40"))
                 .build();
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
@@ -204,7 +209,31 @@ class GoalServiceTest {
         GoalResponse response = goalService.updateGoal(userId, goalId, request);
 
         assertThat(response.getGoalId()).isEqualTo(goalId);
-        verify(goalRepository).save(any(Goal.class));
+        ArgumentCaptor<Goal> captor = ArgumentCaptor.forClass(Goal.class);
+        verify(goalRepository).save(captor.capture());
+        assertThat(captor.getValue().getWeeklyRateTarget()).isEqualByComparingTo("-0.40");
+    }
+
+    @Test
+    @DisplayName("ENDURANCE 목표 생성 시 seconds 입력값은 minutes 로 변환되고 weeklyRateTarget 은 null 로 정규화된다")
+    void createGoal_endurance_normalizesTargetUnitAndWeeklyRate() {
+        Long userId = 1L;
+        CreateGoalRequest request = buildCreateRequest(
+                GoalType.ENDURANCE,
+                new BigDecimal("3600"), "seconds",
+                LocalDate.now().plusMonths(3),
+                new BigDecimal("1800"), new BigDecimal("15"));
+
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(buildUser(userId)));
+        given(goalRepository.findActiveGoalByUserId(userId)).willReturn(Optional.empty());
+        given(goalRepository.save(any(Goal.class))).willAnswer(inv -> inv.getArgument(0));
+
+        GoalResponse response = goalService.createGoal(userId, request);
+
+        assertThat(response.getTargetValue()).isEqualByComparingTo("60.00");
+        assertThat(response.getTargetUnit()).isEqualTo("minutes");
+        assertThat(response.getStartValue()).isEqualByComparingTo("30.00");
+        assertThat(response.getWeeklyRateTarget()).isNull();
     }
 
     @Test
@@ -277,22 +306,27 @@ class GoalServiceTest {
     // ─────────────────────────── 목표 진행률 조회 ───────────────────────────
 
     @Test
-    @DisplayName("신체 측정 기록이 있는 경우 진행률이 계산된다 (체중 감량 목표 50% 진행)")
+    @DisplayName("신체 측정 기록이 있으면 진행률을 계산하고 누락된 일요일 체크포인트를 생성한다")
+    @SuppressWarnings("unchecked")
     void getGoalProgress_withBodyMeasurement_calculatesPercent() {
         Long userId = 1L;
         Long goalId = 10L;
-        // 시작: 80kg, 목표: 70kg (-10kg), 현재: 75kg → 50% 진행
+        LocalDate today = LocalDate.now();
         Goal goal = buildWeightGoal(goalId, userId,
                 new BigDecimal("80.0"), new BigDecimal("70.0"),
-                LocalDate.now().minusDays(30), LocalDate.now().plusDays(30));
-        BodyMeasurement measurement = buildMeasurement(userId, 75.0);
+                today.minusDays(30), today.plusDays(30));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(21), 78.5),
+                buildMeasurement(userId, today.minusDays(7), 76.8),
+                buildMeasurement(userId, today, 75.0)
+        );
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
-                .willReturn(Optional.of(measurement));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
         given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
                 .willReturn(Optional.empty());
-        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
         given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
                 .willReturn(List.of());
 
@@ -301,27 +335,31 @@ class GoalServiceTest {
         assertThat(response.getPercentComplete()).isEqualTo(50.0);
         assertThat(response.getCurrentValue()).isEqualByComparingTo(new BigDecimal("75.0"));
         assertThat(response.getDaysRemaining()).isEqualTo(30L);
+
+        ArgumentCaptor<List<GoalCheckpoint>> captor = ArgumentCaptor.forClass(List.class);
+        verify(goalCheckpointRepository).saveAll(captor.capture());
+        assertThat(captor.getValue())
+                .allMatch(checkpoint -> checkpoint.getCheckpointDate().getDayOfWeek() == DayOfWeek.SUNDAY);
     }
 
     @Test
-    @DisplayName("신체 측정 기록이 없으면 현재값이 시작값과 동일하고 진행률은 0%이다")
-    void getGoalProgress_noBodyMeasurement_zeroPercent() {
+    @DisplayName("신체 측정 기록이 없으면 BusinessRuleViolationException 이 발생한다")
+    void getGoalProgress_noBodyMeasurement_throwsBusinessRuleViolationException() {
         Long userId = 1L;
         Long goalId = 10L;
+        LocalDate today = LocalDate.now();
         Goal goal = buildWeightGoal(goalId, userId,
                 new BigDecimal("80.0"), new BigDecimal("70.0"),
-                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
+                today.minusDays(10), today.plusDays(50));
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
-                .willReturn(Optional.empty());
-        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
                 .willReturn(List.of());
 
-        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
-
-        assertThat(response.getPercentComplete()).isEqualTo(0.0);
-        assertThat(response.getCurrentValue()).isEqualByComparingTo(new BigDecimal("80.0"));
+        assertThatThrownBy(() -> goalService.getGoalProgress(userId, goalId))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("신체 측정 기록");
     }
 
     @Test
@@ -329,18 +367,21 @@ class GoalServiceTest {
     void getGoalProgress_aheadOfSchedule_returnsAhead() {
         Long userId = 1L;
         Long goalId = 10L;
+        LocalDate today = LocalDate.now();
         // 10일 경과(총 60일), 기대 진행률 ~16%, 실제 80%
         Goal goal = buildWeightGoal(goalId, userId,
                 new BigDecimal("80.0"), new BigDecimal("70.0"),
-                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
-        BodyMeasurement measurement = buildMeasurement(userId, 72.0); // -8kg / -10kg = 80%
+                today.minusDays(10), today.plusDays(50));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(3), 72.0)
+        );
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
-                .willReturn(Optional.of(measurement));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
         given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
                 .willReturn(Optional.empty());
-        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
         given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
                 .willReturn(List.of());
 
@@ -356,18 +397,21 @@ class GoalServiceTest {
     void getGoalProgress_behindSchedule_returnsBehind() {
         Long userId = 1L;
         Long goalId = 10L;
+        LocalDate today = LocalDate.now();
         // 50일 경과(총 60일), 기대 진행률 ~83%, 실제 0%
         Goal goal = buildWeightGoal(goalId, userId,
                 new BigDecimal("80.0"), new BigDecimal("70.0"),
-                LocalDate.now().minusDays(50), LocalDate.now().plusDays(10));
-        BodyMeasurement measurement = buildMeasurement(userId, 80.0); // 진행 없음
+                today.minusDays(50), today.plusDays(10));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(1), 80.0)
+        );
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
-                .willReturn(Optional.of(measurement));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
         given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
                 .willReturn(Optional.empty());
-        given(goalCheckpointRepository.save(any(GoalCheckpoint.class))).willAnswer(inv -> inv.getArgument(0));
         given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
                 .willReturn(List.of());
 
@@ -379,29 +423,132 @@ class GoalServiceTest {
     }
 
     @Test
-    @DisplayName("이미 오늘 체크포인트가 있으면 중복 저장하지 않는다")
+    @DisplayName("이미 해당 일요일 체크포인트가 있으면 새로 저장하지 않는다")
     void getGoalProgress_checkpointAlreadyExists_noNewSave() {
         Long userId = 1L;
         Long goalId = 10L;
+        LocalDate today = LocalDate.now();
+        LocalDate lastSunday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
         Goal goal = buildWeightGoal(goalId, userId,
                 new BigDecimal("80.0"), new BigDecimal("70.0"),
-                LocalDate.now().minusDays(10), LocalDate.now().plusDays(50));
-        BodyMeasurement measurement = buildMeasurement(userId, 75.0);
+                lastSunday.minusDays(2), today.plusDays(50));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(1), 75.0)
+        );
         GoalCheckpoint existing = GoalCheckpoint.builder()
-                .goalId(goalId).checkpointDate(LocalDate.now())
+                .goalId(goalId).checkpointDate(lastSunday)
                 .actualValue(new BigDecimal("75.0")).isOnTrack(true).build();
 
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
-                .willReturn(Optional.of(measurement));
-        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(goalId, LocalDate.now()))
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(goalId, lastSunday))
                 .willReturn(Optional.of(existing));
         given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
                 .willReturn(List.of(existing));
 
         goalService.getGoalProgress(userId, goalId);
 
-        verify(goalCheckpointRepository, times(0)).save(any());
+        verify(goalCheckpointRepository, times(0)).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("약간 뒤처진 경우 trackingStatus 가 SLIGHTLY_BEHIND, trackingColor 가 YELLOW 이다")
+    void getGoalProgress_slightlyBehind_returnsSlightlyBehind() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        LocalDate today = LocalDate.now();
+        // 경과: 30일 / 총 60일 → 기대 50%, 실제 38% → diff = -12% → SLIGHTLY_BEHIND
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                today.minusDays(30), today.plusDays(30));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(2), 76.2)
+        );
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response.getTrackingStatus()).isEqualTo("SLIGHTLY_BEHIND");
+        assertThat(response.getTrackingColor()).isEqualTo("YELLOW");
+        assertThat(response.getIsOnTrack()).isFalse();
+        // diff = 38% - 50% = -12% → SLIGHTLY_BEHIND 범위(-15 ≤ diff < -5) 검증
+        assertThat(response.getPercentComplete()).isBetween(30.0, 45.0);
+    }
+
+    @Test
+    @DisplayName("목표 타입에 맞는 측정값이 없으면 진행률을 계산할 수 없다")
+    void getGoalProgress_unsupportedGoalType_throwsBusinessRuleViolationException() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        LocalDate today = LocalDate.now();
+        Goal goal = Goal.builder()
+                .id(goalId).userId(userId)
+                .goalType(GoalType.ENDURANCE).status(Goal.GoalStatus.ACTIVE)
+                .startValue(null).targetValue(null).targetUnit("minutes")
+                .startDate(today.minusDays(10))
+                .targetDate(today.plusDays(50))
+                .build();
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, today.minusDays(1), 75.0)
+        );
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
+
+        assertThatThrownBy(() -> goalService.getGoalProgress(userId, goalId))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("신체 측정 기록");
+    }
+
+    @Test
+    @DisplayName("체크포인트 on-track 여부는 실제값과 예상값 비교로 계산된다")
+    @SuppressWarnings("unchecked")
+    void getGoalProgress_checkpointOnTrack_comparesActualAndProjected() {
+        Long userId = 1L;
+        Long goalId = 10L;
+        LocalDate today = LocalDate.now();
+        Goal goal = buildWeightGoal(goalId, userId,
+                new BigDecimal("80.0"), new BigDecimal("70.0"),
+                today.minusDays(20), today.plusDays(40));
+        LocalDate firstSunday = goal.getStartDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        List<BodyMeasurement> measurements = List.of(
+                buildMeasurement(userId, firstSunday, 79.8),
+                buildMeasurement(userId, today, 75.0)
+        );
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, goal.getStartDate(), today))
+                .willReturn(measurements);
+        given(goalCheckpointRepository.findByGoalIdAndCheckpointDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        goalService.getGoalProgress(userId, goalId);
+
+        ArgumentCaptor<List<GoalCheckpoint>> captor = ArgumentCaptor.forClass(List.class);
+        verify(goalCheckpointRepository).saveAll(captor.capture());
+        GoalCheckpoint firstCheckpoint = captor.getValue().stream()
+                .filter(checkpoint -> checkpoint.getCheckpointDate().equals(firstSunday))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(firstCheckpoint.getActualValue()).isEqualByComparingTo("79.8");
+        assertThat(firstCheckpoint.getProjectedValue()).isNotNull();
+        assertThat(firstCheckpoint.getIsOnTrack()).isFalse();
     }
 
     @Test
@@ -462,10 +609,10 @@ class GoalServiceTest {
                 .build();
     }
 
-    private BodyMeasurement buildMeasurement(Long userId, double weightKg) {
+    private BodyMeasurement buildMeasurement(Long userId, LocalDate measuredAt, double weightKg) {
         return BodyMeasurement.builder()
                 .id(1L).userId(userId)
-                .measuredAt(LocalDate.now())
+                .measuredAt(measuredAt)
                 .weightKg(weightKg)
                 .build();
     }

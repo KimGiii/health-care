@@ -26,7 +26,7 @@ public class GoalController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<GoalResponse>> createGoal(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @Valid @RequestBody CreateGoalRequest request) {
         Long userId = resolveUserId(bearerToken);
         GoalResponse response = goalService.createGoal(userId, request);
@@ -40,7 +40,7 @@ public class GoalController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<GoalListResponse>> listGoals(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @RequestParam(required = false) GoalStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -56,7 +56,7 @@ public class GoalController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<GoalResponse>> getGoal(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @PathVariable Long id) {
         Long userId = resolveUserId(bearerToken);
         GoalResponse response = goalService.getGoalById(userId, id);
@@ -69,7 +69,7 @@ public class GoalController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<GoalResponse>> updateGoal(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @PathVariable Long id,
             @RequestBody UpdateGoalRequest request) {
         Long userId = resolveUserId(bearerToken);
@@ -83,7 +83,7 @@ public class GoalController {
      */
     @GetMapping("/{id}/progress")
     public ResponseEntity<ApiResponse<GoalProgressResponse>> getGoalProgress(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @PathVariable Long id) {
         Long userId = resolveUserId(bearerToken);
         GoalProgressResponse response = goalService.getGoalProgress(userId, id);
@@ -96,7 +96,7 @@ public class GoalController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> abandonGoal(
-            @RequestHeader("Authorization") String bearerToken,
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
             @PathVariable Long id) {
         Long userId = resolveUserId(bearerToken);
         goalService.abandonGoal(userId, id);
@@ -104,7 +104,9 @@ public class GoalController {
     }
 
     private Long resolveUserId(String bearerToken) {
-        String token = bearerToken.replace("Bearer ", "");
-        return jwtTokenProvider.getUserId(token);
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+            throw new com.healthcare.common.exception.UnauthorizedException("유효하지 않은 인증 형식입니다.");
+        }
+        return jwtTokenProvider.getUserId(bearerToken.substring(7));
     }
 }
