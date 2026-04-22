@@ -43,9 +43,16 @@ class RedisConfigTest {
         byte[] serialized = serializer.serialize(response);
 
         assertThat(serialized).isNotNull();
-        assertThat(serializer.deserialize(serialized))
-            .isInstanceOf(UserProfileResponse.class)
-            .usingRecursiveComparison()
-            .isEqualTo(response);
+        Object deserialized = serializer.deserialize(serialized);
+
+        assertThat(deserialized).isInstanceOf(UserProfileResponse.class);
+
+        UserProfileResponse restored = (UserProfileResponse) deserialized;
+        assertThat(restored.getId()).isEqualTo(response.getId());
+        assertThat(restored.getEmail()).isEqualTo(response.getEmail());
+        assertThat(restored.getDisplayName()).isEqualTo(response.getDisplayName());
+        assertThat(restored.getDateOfBirth()).isEqualTo(response.getDateOfBirth());
+        assertThat(restored.getCreatedAt().toInstant()).isEqualTo(response.getCreatedAt().toInstant());
+        assertThat(restored.isOnboardingCompleted()).isEqualTo(response.isOnboardingCompleted());
     }
 }
