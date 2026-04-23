@@ -6,6 +6,7 @@ struct GoalProgressView: View {
     @StateObject private var viewModel: GoalProgressViewModel
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
+    @State private var showEditSheet = false
 
     init(goalId: Int) {
         _viewModel = StateObject(wrappedValue: GoalProgressViewModel(goalId: goalId))
@@ -20,7 +21,8 @@ struct GoalProgressView: View {
                     ProgressHeroSection(
                         progress: viewModel.progress,
                         isLoading: viewModel.isLoading,
-                        onDismiss: { dismiss() }
+                        onDismiss: { dismiss() },
+                        onEdit: viewModel.progress?.isOnTrack != nil ? { showEditSheet = true } : nil
                     )
 
                     if let p = viewModel.progress {
@@ -45,6 +47,13 @@ struct GoalProgressView: View {
             .refreshable { await viewModel.load(apiClient: container.apiClient) }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $showEditSheet) {
+            if let progress = viewModel.progress {
+                EditGoalView(progress: progress) {
+                    Task { await viewModel.load(apiClient: container.apiClient) }
+                }
+            }
+        }
         .alert("오류", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -63,6 +72,7 @@ private struct ProgressHeroSection: View {
     let progress: GoalProgressResponse?
     let isLoading: Bool
     let onDismiss: () -> Void
+    let onEdit: (() -> Void)?
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -83,7 +93,18 @@ private struct ProgressHeroSection: View {
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                     Spacer()
-                    Color.clear.frame(width: 40, height: 40)
+                    if let onEdit {
+                        Button(action: onEdit) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(10)
+                                .background(.white.opacity(0.15))
+                                .clipShape(Circle())
+                        }
+                    } else {
+                        Color.clear.frame(width: 40, height: 40)
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 56)

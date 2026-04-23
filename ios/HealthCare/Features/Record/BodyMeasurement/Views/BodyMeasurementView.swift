@@ -1,3 +1,4 @@
+import Charts
 import SwiftUI
 
 struct BodyMeasurementView: View {
@@ -28,6 +29,8 @@ struct BodyMeasurementView: View {
                                 LatestStatsCard(measurement: latest)
                                     .padding(.horizontal, 20)
                             }
+                            MeasurementTrendSection(viewModel: viewModel)
+                                .padding(.horizontal, 20)
                             MeasurementHistorySection(
                                 measurements: viewModel.measurements,
                                 onDelete: { id in
@@ -74,6 +77,12 @@ struct BodyMeasurementView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .task { await viewModel.load(apiClient: container.apiClient) }
+        .onChange(of: viewModel.selectedRange) { _ in
+            Task { await viewModel.loadTrendData(apiClient: container.apiClient) }
+        }
+        .onChange(of: viewModel.selectedMetric) { _ in
+            Task { await viewModel.loadTrendData(apiClient: container.apiClient) }
+        }
     }
 }
 
@@ -317,6 +326,211 @@ private struct StatCell: View {
                 .font(.system(size: 11))
                 .foregroundStyle(Color.textSecondary)
         }
+    }
+}
+
+// MARK: - Trend Section
+
+private struct MeasurementTrendSection: View {
+    @ObservedObject var viewModel: BodyMeasurementViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("변화 추세")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color.textPrimary)
+                    Text("백엔드 range / at-or-before 기준으로 계산된 추세입니다")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.textSecondary)
+                }
+                Spacer()
+                if let latestValue = viewModel.latestTrendValueText {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(latestValue + viewModel.currentMetricUnit)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.textPrimary)
+                        if let delta = viewModel.trendChangeText {
+                            Text(delta + "  ·  " + viewModel.trendSummaryText)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(delta.hasPrefix("-") ? Color.brandDanger : Color.brandPrimary)
+                        }
+                    }
+                }
+            }
+
+            Picker("기간", selection: $viewModel.selectedRange) {
+                ForEach(MeasurementTrendRange.allCases) { range in
+                    Text(range.title).tag(range)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(MeasurementMetric.allCases) { metric in
+                        MetricChip(
+                            title: metric.title,
+                            isSelected: viewModel.selectedMetric == metric,
+                            accent: Color(hex: metric.accentHex)
+                        ) {
+                            viewModel.selectedMetric = metric
+                        }
+                    }
+                }
+            }
+
+            if viewModel.isTrendLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 30)
+            } else if viewModel.hasTrendData {
+                VStack(alignment: .leading, spacing: 12) {
+                    Chart(viewModel.displayTrendPoints) { point in
+                        LineMark(
+                            x: .value("날짜", point.date),
+                            y: .value(viewModel.selectedMetric.title, point.value)
+                        )
+                        .foregroundStyle(Color(hex: viewModel.selectedMetric.accentHex))
+                        .lineStyle(.init(lineWidth: 3, lineCap: .round, lineJoin: .round))
+
+                        AreaMark(
+                            x: .value("날짜", point.date),
+                            y: .value(viewModel.selectedMetric.title, point.value)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: viewModel.selectedMetric.accentHex).opacity(0.28),
+                                    Color(hex: viewModel.selectedMetric.accentHex).opacity(0.03)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                        PointMark(
+                            x: .value("날짜", point.date),
+                            y: .value(viewModel.selectedMetric.title, point.value)
+                        )
+                        .foregroundStyle(Color(hex: viewModel.selectedMetric.accentHex))
+                    }
+                    .frame(height: 220)
+                    .chartYAxis {
+                        AxisMarks(position: .leading)
+                    }
+                    .chartXAxis {
+                        AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.4))
+                                .foregroundStyle(Color.black.opacity(0.08))
+                            AxisTick()
+                                .foregroundStyle(Color.black.opacity(0.15))
+                            AxisValueLabel {
+                                if let date = value.as(Date.self) {
+                                    Text(Self.axisDateFormatter.string(from: date))
+                                }
+                            }
+                        }
+                    }
+
+                    HStack(spacing: 12) {
+                        TrendSummaryPill(
+                            title: "시작",
+                            value: formattedValue(viewModel.displayTrendPoints.first?.value),
+                            unit: viewModel.currentMetricUnit
+                        )
+                        TrendSummaryPill(
+                            title: "현재",
+                            value: formattedValue(viewModel.displayTrendPoints.last?.value),
+                            unit: viewModel.currentMetricUnit
+                        )
+                    }
+                }
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Color.textSecondary.opacity(0.6))
+                    Text("추세를 보여주기엔 기록이 조금 더 필요해요")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
+                    Text("선택한 기간 안에 \(viewModel.selectedMetric.title) 기록이 2개 이상 있으면 그래프로 보여드릴게요.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 28)
+                .background(Color.surfaceSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+        }
+        .padding(18)
+        .background(Color.surfacePrimary)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+    }
+
+    private func formattedValue(_ value: Double?) -> String {
+        guard let value else { return "-" }
+        return String(format: "%.1f", value)
+    }
+
+    private static let axisDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter
+    }()
+}
+
+private struct MetricChip: View {
+    let title: String
+    let isSelected: Bool
+    let accent: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isSelected ? .white : accent)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(isSelected ? accent : accent.opacity(0.12))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct TrendSummaryPill: View {
+    let title: String
+    let value: String
+    let unit: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.textSecondary)
+                HStack(alignment: .lastTextBaseline, spacing: 2) {
+                    Text(value)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.textPrimary)
+                    Text(unit)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.textSecondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(Color.surfaceSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
 

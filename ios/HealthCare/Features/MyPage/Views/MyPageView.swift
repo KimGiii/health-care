@@ -169,13 +169,9 @@ private struct EditProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let sexOptions = [("남성", "MALE"), ("여성", "FEMALE")]
-    let activityOptions: [(String, String)] = [
-        ("거의 안 움직임", "SEDENTARY"),
-        ("가벼운 활동", "LIGHT"),
-        ("보통 활동", "MODERATE"),
-        ("활발한 활동", "ACTIVE"),
-        ("매우 활발", "VERY_ACTIVE"),
-    ]
+    let activityOptions: [ActivityOptionRow] = ActivityLevelOption.all.map {
+        ActivityOptionRow(label: $0.label, value: $0.value)
+    }
 
     var body: some View {
         NavigationStack {
@@ -197,16 +193,16 @@ private struct EditProfileSheet: View {
 
                     EditCard(title: "활동량") {
                         VStack(spacing: 0) {
-                            ForEach(activityOptions, id: \.1) { label, value in
+                            ForEach(activityOptions) { option in
                                 Button {
-                                    viewModel.editActivityLevel = value
+                                    viewModel.editActivityLevel = option.value
                                 } label: {
                                     HStack {
-                                        Text(label)
+                                        Text(option.label)
                                             .font(.bodyMedium)
                                             .foregroundStyle(Color.textPrimary)
                                         Spacer()
-                                        if viewModel.editActivityLevel == value {
+                                        if viewModel.editActivityLevel == option.value {
                                             Image(systemName: "checkmark")
                                                 .foregroundStyle(Color.brandAccent)
                                                 .font(.system(size: 14, weight: .semibold))
@@ -215,7 +211,7 @@ private struct EditProfileSheet: View {
                                     .padding(.vertical, 12)
                                     .padding(.horizontal, 16)
                                 }
-                                if value != activityOptions.last?.1 {
+                                if option.value != activityOptions.last?.value {
                                     Divider().padding(.leading, 16)
                                 }
                             }
@@ -260,6 +256,13 @@ private struct EditProfileSheet: View {
             }
         }
     }
+}
+
+private struct ActivityOptionRow: Identifiable {
+    let label: String
+    let value: String
+
+    var id: String { value }
 }
 
 // MARK: - Reusable Components

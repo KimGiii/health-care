@@ -24,6 +24,10 @@ public class GoalSummary {
     private Double percentComplete;
 
     public static GoalSummary from(Goal goal) {
+        return from(goal, null);
+    }
+
+    public static GoalSummary from(Goal goal, Double percentComplete) {
         return GoalSummary.builder()
                 .goalId(goal.getId())
                 .goalType(goal.getGoalType())
@@ -32,7 +36,7 @@ public class GoalSummary {
                 .targetDate(goal.getTargetDate())
                 .startDate(goal.getStartDate())
                 .status(goal.getStatus())
-                .percentComplete(null) // 실측값 필요 시 별도 조회
+                .percentComplete(percentComplete)
                 .build();
     }
 }

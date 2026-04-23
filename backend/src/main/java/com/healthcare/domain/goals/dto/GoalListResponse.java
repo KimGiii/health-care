@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Getter
 @Builder
@@ -20,8 +21,14 @@ public class GoalListResponse {
     private boolean last;
 
     public static GoalListResponse from(Page<Goal> page) {
+        return from(page, goal -> null);
+    }
+
+    public static GoalListResponse from(Page<Goal> page, Function<Goal, Double> percentResolver) {
         return GoalListResponse.builder()
-                .content(page.getContent().stream().map(GoalSummary::from).toList())
+                .content(page.getContent().stream()
+                        .map(goal -> GoalSummary.from(goal, percentResolver.apply(goal)))
+                        .toList())
                 .pageNumber(page.getNumber())
                 .pageSize(page.getSize())
                 .totalElements(page.getTotalElements())

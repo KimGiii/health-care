@@ -20,6 +20,7 @@ public class GoalProgressResponse {
     private LocalDate targetDate;
     private LocalDate startDate;
     private BigDecimal startValue;
+    private BigDecimal weeklyRateTarget;
     private BigDecimal currentValue;
     private Double percentComplete;
     private Long daysRemaining;

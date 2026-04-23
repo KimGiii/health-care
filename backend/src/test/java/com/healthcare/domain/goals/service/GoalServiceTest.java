@@ -5,6 +5,7 @@ import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.UnauthorizedException;
 import com.healthcare.domain.bodymeasurement.entity.BodyMeasurement;
 import com.healthcare.domain.bodymeasurement.repository.BodyMeasurementRepository;
+import com.healthcare.domain.exercise.repository.ExerciseSessionRepository;
 import com.healthcare.domain.goals.dto.*;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.entity.Goal.GoalStatus;
@@ -48,6 +49,7 @@ class GoalServiceTest {
     @Mock private GoalCheckpointRepository goalCheckpointRepository;
     @Mock private UserRepository userRepository;
     @Mock private BodyMeasurementRepository bodyMeasurementRepository;
+    @Mock private ExerciseSessionRepository exerciseSessionRepository;
 
     @InjectMocks
     private GoalService goalService;
@@ -486,30 +488,31 @@ class GoalServiceTest {
     }
 
     @Test
-    @DisplayName("목표 타입에 맞는 측정값이 없으면 진행률을 계산할 수 없다")
-    void getGoalProgress_unsupportedGoalType_throwsBusinessRuleViolationException() {
+    @DisplayName("ENDURANCE 목표는 운동 세션 합산 기반으로 진행률을 계산한다")
+    void getGoalProgress_enduranceGoalWithExercise_calculatesProgressFromSessions() {
         Long userId = 1L;
         Long goalId = 10L;
         LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(14);
         Goal goal = Goal.builder()
                 .id(goalId).userId(userId)
                 .goalType(GoalType.ENDURANCE).status(Goal.GoalStatus.ACTIVE)
-                .startValue(null).targetValue(null).targetUnit("minutes")
-                .startDate(today.minusDays(10))
-                .targetDate(today.plusDays(50))
+                .startValue(BigDecimal.valueOf(30)).targetValue(BigDecimal.valueOf(60)).targetUnit("minutes")
+                .startDate(startDate).targetDate(today.plusDays(50))
                 .build();
-        List<BodyMeasurement> measurements = List.of(
-                buildMeasurement(userId, today.minusDays(1), 75.0)
-        );
 
+        // 2주 동안 총 60분 → 주당 평균 30분 (시작값과 동일 → 0% 순진행)
         given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
-        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
-                userId, goal.getStartDate(), today))
-                .willReturn(measurements);
+        given(exerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange(
+                userId, startDate, today)).willReturn(60);
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
 
-        assertThatThrownBy(() -> goalService.getGoalProgress(userId, goalId))
-                .isInstanceOf(BusinessRuleViolationException.class)
-                .hasMessageContaining("신체 측정 기록");
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getGoalType()).isEqualTo(GoalType.ENDURANCE);
+        assertThat(response.getPercentComplete()).isGreaterThanOrEqualTo(0.0);
     }
 
     @Test

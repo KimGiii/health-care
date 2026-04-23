@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface DietLogRepository extends JpaRepository<DietLog, Long> {
 
@@ -28,5 +29,18 @@ public interface DietLogRepository extends JpaRepository<DietLog, Long> {
             @Param("from")   LocalDate from,
             @Param("to")     LocalDate to,
             Pageable pageable
+    );
+
+    @Query("""
+            SELECT d FROM DietLog d
+            WHERE d.userId = :userId
+              AND d.logDate >= :from
+              AND d.logDate <= :to
+            ORDER BY d.logDate ASC, d.mealType ASC
+            """)
+    List<DietLog> findAllByUserIdAndDateRange(
+            @Param("userId") Long userId,
+            @Param("from")   LocalDate from,
+            @Param("to")     LocalDate to
     );
 }

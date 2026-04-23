@@ -41,6 +41,7 @@ enum APIEndpoint {
     // Body Measurement
     case createBodyMeasurement(body: Data)
     case getBodyMeasurements(page: Int, size: Int)
+    case getBodyMeasurementsRange(from: String, to: String)
     case getLatestBodyMeasurement
     case getBodyMeasurementAtOrBefore(date: String)
     case getBodyMeasurement(id: Int)
@@ -56,6 +57,10 @@ enum APIEndpoint {
     case updateGoal(id: Int, body: Data)
     case deleteGoal(id: Int)
     case getGoalProgress(id: Int)
+
+    // Insights
+    case getWeeklySummary(weekOffset: Int)
+    case getChangeAnalysis(from: String, to: String)
 }
 
 extension APIEndpoint {
@@ -85,6 +90,7 @@ extension APIEndpoint {
         case .importExternalFood:                return "/api/v1/diet/external-foods/import"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
+        case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
         case .getLatestBodyMeasurement:          return "/api/v1/body-measurements/latest"
         case .getBodyMeasurementAtOrBefore:      return "/api/v1/body-measurements/at-or-before"
         case .getBodyMeasurement(let id),
@@ -97,6 +103,8 @@ extension APIEndpoint {
              .updateGoal(let id, _),
              .deleteGoal(let id):                return "/api/v1/goals/\(id)"
         case .getGoalProgress(let id):           return "/api/v1/goals/\(id)/progress"
+        case .getWeeklySummary:                  return "/api/v1/insights/weekly-summary"
+        case .getChangeAnalysis:                 return "/api/v1/insights/change-analysis"
         }
     }
 
@@ -167,6 +175,11 @@ extension APIEndpoint {
                 .init(name: "page", value: "\(page)"),
                 .init(name: "size", value: "\(size)")
             ]
+        case .getBodyMeasurementsRange(let from, let to):
+            return [
+                .init(name: "from", value: from),
+                .init(name: "to", value: to)
+            ]
         case .getBodyMeasurementAtOrBefore(let date):
             return [.init(name: "date", value: date)]
         case .getProgressPhotos(let photoType, let page, let size):
@@ -176,6 +189,10 @@ extension APIEndpoint {
             ]
             if let t = photoType { items.append(.init(name: "photoType", value: t)) }
             return items
+        case .getWeeklySummary(let weekOffset):
+            return [.init(name: "weekOffset", value: "\(weekOffset)")]
+        case .getChangeAnalysis(let from, let to):
+            return [.init(name: "from", value: from), .init(name: "to", value: to)]
         default: return nil
         }
     }

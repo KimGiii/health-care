@@ -1,5 +1,32 @@
 import Foundation
 
+enum ActivityLevelOption {
+    static let all: [(label: String, value: String)] = [
+        ("거의 안 움직임", "SEDENTARY"),
+        ("가벼운 활동", "LIGHTLY_ACTIVE"),
+        ("보통 활동", "MODERATELY_ACTIVE"),
+        ("활발한 활동", "VERY_ACTIVE"),
+        ("매우 활발", "EXTRA_ACTIVE"),
+    ]
+
+    static func label(for value: String?) -> String {
+        switch value {
+        case "SEDENTARY":
+            return "거의 안 움직임"
+        case "LIGHTLY_ACTIVE", "LIGHT":
+            return "가벼운 활동"
+        case "MODERATELY_ACTIVE", "MODERATE":
+            return "보통 활동"
+        case "VERY_ACTIVE", "ACTIVE":
+            return "활발한 활동"
+        case "EXTRA_ACTIVE":
+            return "매우 활발"
+        default:
+            return "-"
+        }
+    }
+}
+
 struct UpdateProfileRequest: Encodable {
     var displayName: String?
     var sex: String?
@@ -23,14 +50,7 @@ final class MyPageViewModel: ObservableObject {
     @Published var editActivityLevel = ""
 
     var activityLevelLabel: String {
-        switch profile?.activityLevel {
-        case "SEDENTARY":    return "거의 안 움직임"
-        case "LIGHT":        return "가벼운 활동"
-        case "MODERATE":     return "보통 활동"
-        case "ACTIVE":       return "활발한 활동"
-        case "VERY_ACTIVE":  return "매우 활발"
-        default:             return "-"
-        }
+        ActivityLevelOption.label(for: profile?.activityLevel)
     }
 
     var sexLabel: String {

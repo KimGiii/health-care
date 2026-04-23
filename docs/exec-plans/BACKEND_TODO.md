@@ -4,6 +4,7 @@
 
 - 현재 백엔드 코드를 기준으로, MVP 완성에 직접 연결되는 작업만 우선순위대로 정리한다.
 - 장기 아이디어보다 "바로 착수 가능한 일" 중심으로 관리한다.
+- 백엔드 단독 완료보다 `docs/exec-plans/BACKEND_IOS_SYNC_WORKFLOW.md`의 연동 슬라이스 기준을 우선한다.
 
 ## 완료된 항목
 
@@ -50,11 +51,13 @@
 
 - [x] `AuthController` MockMvc 단위 테스트
 - [x] `UserController` MockMvc 단위 테스트
-- [ ] JWT 필터 테스트 (인증 없는 요청, 만료 토큰)
+- [x] JWT 필터/보안 체인 통합 테스트 (`JwtSecurityIntegrationTest`)
+- [x] 보안 실패 응답 JSON 통일 (`RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`)
 - [ ] 주요 도메인 컨트롤러 보안 테스트 (타 사용자 접근 시나리오)
 
 완료 기준:
 - 핵심 인증/인가 흐름이 서비스 단위 테스트 외 보안 체인까지 포함해 검증된다.
+- 남은 범위는 도메인별 권한 경계 시나리오다.
 
 ### 3. API 설계 문서와 실제 경로 정합성
 
@@ -75,6 +78,10 @@
 
 ### 5. 인사이트/알림 기반 작업
 
+- [x] `GET /api/v1/insights/weekly-summary` — 주간 요약 API 구현 (운동/식단/신체/목표 집계)
+- [x] `GET /api/v1/insights/change-analysis` — 기간별 신체 변화 분석 API 구현
+- [x] ENDURANCE 목표 진행률 — 운동 세션 합산 기반 계산 (`ExerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange`)
+- [x] GoalSummary.percentComplete 채우기 — 목록 API에서 읽기 전용 경량 계산 (`calculatePercentCompleteReadOnly`)
 - [ ] FCM Admin SDK 실제 사용 흐름 연결
 - [ ] 알림 발송 조건 정의 (주간 회고 등)
 - [ ] 스케줄링 또는 이벤트 트리거 방식 결정

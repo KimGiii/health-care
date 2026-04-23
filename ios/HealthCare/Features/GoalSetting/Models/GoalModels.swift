@@ -265,6 +265,7 @@ struct GoalProgressResponse: Codable, Sendable {
     let percentComplete: Double?
     let daysRemaining: Int?
     let projectedCompletionDate: String?
+    let weeklyRateTarget: Double?
     let isOnTrack: Bool
     let trackingStatus: String?
     let trackingColor: String?

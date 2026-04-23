@@ -6,6 +6,7 @@ struct ProgressPhotoView: View {
 
     @State private var showAddSheet = false
     @State private var selectedPhoto: ProgressPhotoItem?
+    @State private var activeErrorAlert: ErrorAlertItem?
 
     private let columns = [GridItem(.flexible(), spacing: 3), GridItem(.flexible(), spacing: 3)]
 
@@ -43,13 +44,19 @@ struct ProgressPhotoView: View {
                     .background(Color.black.opacity(0.08))
             }
         }
-        .alert("오류", isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
-        )) {
-            Button("확인", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "")
+        .alert(item: $activeErrorAlert) { item in
+            Alert(
+                title: Text("오류"),
+                message: Text(item.message),
+                dismissButton: .cancel(Text("확인")) {
+                    activeErrorAlert = nil
+                    viewModel.errorMessage = nil
+                }
+            )
+        }
+        .onChange(of: viewModel.errorMessage) { _, newValue in
+            guard let newValue else { return }
+            activeErrorAlert = ErrorAlertItem(message: newValue)
         }
         .task { await viewModel.loadAll(apiClient: container.apiClient) }
     }
@@ -170,6 +177,11 @@ struct ProgressPhotoView: View {
         .padding(.horizontal, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+}
+
+private struct ErrorAlertItem: Identifiable, Equatable {
+    let id = UUID()
+    let message: String
 }
 
 // MARK: - Grid Cell

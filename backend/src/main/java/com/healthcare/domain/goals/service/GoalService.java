@@ -5,6 +5,7 @@ import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.UnauthorizedException;
 import com.healthcare.domain.bodymeasurement.entity.BodyMeasurement;
 import com.healthcare.domain.bodymeasurement.repository.BodyMeasurementRepository;
+import com.healthcare.domain.exercise.repository.ExerciseSessionRepository;
 import com.healthcare.domain.goals.dto.*;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.entity.Goal.GoalStatus;
@@ -36,6 +37,7 @@ public class GoalService {
     private final GoalCheckpointRepository goalCheckpointRepository;
     private final UserRepository userRepository;
     private final BodyMeasurementRepository bodyMeasurementRepository;
+    private final ExerciseSessionRepository exerciseSessionRepository;
 
     // ─────────────────────────── 목표 생성 ───────────────────────────
 
@@ -93,7 +95,7 @@ public class GoalService {
 
     public GoalListResponse listGoals(Long userId, GoalStatus status, Pageable pageable) {
         Page<Goal> page = goalRepository.findByUserIdAndStatus(userId, status, pageable);
-        return GoalListResponse.from(page);
+        return GoalListResponse.from(page, goal -> calculatePercentCompleteReadOnly(userId, goal));
     }
 
     // ─────────────────────────── 목표 수정 ───────────────────────────
@@ -135,7 +137,10 @@ public class GoalService {
 
         List<MeasurementPoint> measurementPoints = loadMeasurementPoints(userId, goal, today);
         if (measurementPoints.isEmpty()) {
-            throw new BusinessRuleViolationException("신체 측정 기록이 없어 목표 진행률을 계산할 수 없습니다.");
+            String msg = goal.getGoalType() == Goal.GoalType.ENDURANCE
+                    ? "운동 기록이 없어 지구력 목표 진행률을 계산할 수 없습니다."
+                    : "신체 측정 기록이 없어 목표 진행률을 계산할 수 없습니다.";
+            throw new BusinessRuleViolationException(msg);
         }
 
         upsertMissingWeeklyCheckpoints(goal, measurementPoints, today);
@@ -167,6 +172,7 @@ public class GoalService {
                 .projectedCompletionDate(metrics.projectedCompletionDate())
                 .isOnTrack(metrics.isOnTrack())
                 .trackingStatus(metrics.trackingStatus())
+                .weeklyRateTarget(goal.getWeeklyRateTarget())
                 .trackingColor(metrics.trackingColor())
                 .checkpoints(checkpoints)
                 .build();
@@ -175,6 +181,10 @@ public class GoalService {
     private List<MeasurementPoint> loadMeasurementPoints(Long userId, Goal goal, LocalDate today) {
         if (goal.getStartDate() == null) {
             return List.of();
+        }
+
+        if (goal.getGoalType() == Goal.GoalType.ENDURANCE) {
+            return loadExercisePoints(userId, goal, today);
         }
 
         return bodyMeasurementRepository
@@ -187,6 +197,15 @@ public class GoalService {
                 .toList();
     }
 
+    private List<MeasurementPoint> loadExercisePoints(Long userId, Goal goal, LocalDate today) {
+        long weeksSinceStart = Math.max(1, ChronoUnit.WEEKS.between(goal.getStartDate(), today));
+        int totalMinutes = exerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange(
+                userId, goal.getStartDate(), today);
+        BigDecimal weeklyAvg = BigDecimal.valueOf(totalMinutes)
+                .divide(BigDecimal.valueOf(weeksSinceStart), 2, RoundingMode.HALF_UP);
+        return List.of(new MeasurementPoint(today, weeklyAvg));
+    }
+
     private BigDecimal extractValueByGoalType(Goal.GoalType goalType, BodyMeasurement m) {
         Double raw = switch (goalType) {
             case WEIGHT_LOSS, GENERAL_HEALTH -> m.getWeightKg();
@@ -195,6 +214,29 @@ public class GoalService {
             case ENDURANCE -> null;
         };
         return raw != null ? BigDecimal.valueOf(raw) : null;
+    }
+
+    private Double calculatePercentCompleteReadOnly(Long userId, Goal goal) {
+        if (goal.getGoalType() == Goal.GoalType.ENDURANCE) {
+            return null;
+        }
+        if (goal.getStartDate() == null || goal.getStartValue() == null || goal.getTargetValue() == null) {
+            return null;
+        }
+        LocalDate today = LocalDate.now();
+        return bodyMeasurementRepository
+                .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, today)
+                .map(m -> extractValueByGoalType(goal.getGoalType(), m))
+                .map(current -> {
+                    if (current == null) return null;
+                    long daysElapsed = resolveDaysElapsed(goal.getStartDate(), today);
+                    long totalDays = resolveTotalDays(goal.getStartDate(), goal.getTargetDate());
+                    return calculateMetrics(
+                            goal.getStartValue(), goal.getTargetValue(), current,
+                            daysElapsed, totalDays, goal.getStartDate()
+                    ).percentComplete();
+                })
+                .orElse(null);
     }
 
     private String normalizeTargetUnit(Goal.GoalType goalType) {

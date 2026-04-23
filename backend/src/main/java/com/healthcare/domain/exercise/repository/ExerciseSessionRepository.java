@@ -41,4 +41,30 @@ public interface ExerciseSessionRepository extends JpaRepository<ExerciseSession
             @Param("userId") Long userId,
             @Param("date")   LocalDate date
     );
+
+    @Query("""
+            SELECT COALESCE(SUM(s.durationMinutes), 0)
+            FROM ExerciseSession s
+            WHERE s.userId = :userId
+              AND s.sessionDate >= :from
+              AND s.sessionDate <= :to
+            """)
+    Integer sumDurationMinutesByUserIdAndDateRange(
+            @Param("userId") Long userId,
+            @Param("from")   LocalDate from,
+            @Param("to")     LocalDate to
+    );
+
+    @Query("""
+            SELECT s FROM ExerciseSession s
+            WHERE s.userId = :userId
+              AND s.sessionDate >= :from
+              AND s.sessionDate <= :to
+            ORDER BY s.sessionDate ASC
+            """)
+    List<ExerciseSession> findByUserIdAndDateRangeOrdered(
+            @Param("userId") Long userId,
+            @Param("from")   LocalDate from,
+            @Param("to")     LocalDate to
+    );
 }
