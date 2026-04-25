@@ -5,37 +5,35 @@ struct ChangeAnalysisView: View {
     @EnvironmentObject private var container: AppContainer
 
     var body: some View {
-        NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    DateRangeSection(
-                        fromDate: $viewModel.fromDate,
-                        toDate: $viewModel.toDate,
-                        onAnalyze: { Task { await viewModel.load(apiClient: container.apiClient) } }
-                    )
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
+                DateRangeSection(
+                    fromDate: $viewModel.fromDate,
+                    toDate: $viewModel.toDate,
+                    onAnalyze: { Task { await viewModel.load(apiClient: container.apiClient) } }
+                )
 
-                    if viewModel.isLoading {
-                        ProgressView().padding(.top, 60)
-                    } else if let analysis = viewModel.analysis {
-                        ChangeAnalysisContent(analysis: analysis)
-                    } else {
-                        ChangeEmptyState()
-                    }
+                if viewModel.isLoading {
+                    ProgressView().padding(.top, 60)
+                } else if let analysis = viewModel.analysis {
+                    ChangeAnalysisContent(analysis: analysis)
+                } else {
+                    ChangeEmptyState()
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("변화 분석")
-            .navigationBarTitleDisplayMode(.large)
-            .alert("오류", isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) {
-                Button("확인", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
+        .background(Color.surfaceGrouped)
+        .navigationTitle("변화 분석")
+        .navigationBarTitleDisplayMode(.large)
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
         .task { await viewModel.load(apiClient: container.apiClient) }
     }

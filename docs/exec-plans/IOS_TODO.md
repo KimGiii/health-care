@@ -87,7 +87,7 @@
 - [x] `EditGoalView` + `EditGoalViewModel` 신설 — `GoalProgressView`에서 목표 수정 진입점 추가
 - [x] `InsightsModels.swift` — `WeeklySummaryResponse`, `ChangeAnalysisResponse` 모델 정의
 - [x] `APIEndpoint` — `.getWeeklySummary`, `.getChangeAnalysis` case 추가
-- [ ] `HistoryCalendarView` 데이터 연결 (별도 작업)
+- [x] `HistoryCalendarView` — DiaryView와 역할 중복으로 파일 삭제 (구현 불필요)
 
 ### 5. 알림 및 앱 상태 대응
 

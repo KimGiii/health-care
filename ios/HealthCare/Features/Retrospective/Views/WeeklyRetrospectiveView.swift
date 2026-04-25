@@ -5,40 +5,38 @@ struct WeeklyRetrospectiveView: View {
     @EnvironmentObject private var container: AppContainer
 
     var body: some View {
-        NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    WeekNavigationBar(
-                        weekRange: viewModel.summary?.formattedWeekRange ?? "이번 주",
-                        canGoNext: viewModel.weekOffset > 0,
-                        onPrev: { viewModel.goToPreviousWeek(apiClient: container.apiClient) },
-                        onNext: { viewModel.goToNextWeek(apiClient: container.apiClient) }
-                    )
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
+                WeekNavigationBar(
+                    weekRange: viewModel.summary?.formattedWeekRange ?? "이번 주",
+                    canGoNext: viewModel.weekOffset > 0,
+                    onPrev: { viewModel.goToPreviousWeek(apiClient: container.apiClient) },
+                    onNext: { viewModel.goToNextWeek(apiClient: container.apiClient) }
+                )
 
-                    if viewModel.isLoading {
-                        ProgressView().padding(.top, 60)
-                    } else if let s = viewModel.summary {
-                        WeeklySummaryContent(summary: s)
-                    } else {
-                        WeeklyEmptyState()
-                    }
+                if viewModel.isLoading {
+                    ProgressView().padding(.top, 60)
+                } else if let s = viewModel.summary {
+                    WeeklySummaryContent(summary: s)
+                } else {
+                    WeeklyEmptyState()
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("주간 회고")
-            .navigationBarTitleDisplayMode(.large)
-            .alert("오류", isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) {
-                Button("확인", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
-            .refreshable { await viewModel.load(apiClient: container.apiClient) }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
         }
+        .background(Color.surfaceGrouped)
+        .navigationTitle("주간 회고")
+        .navigationBarTitleDisplayMode(.large)
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .refreshable { await viewModel.load(apiClient: container.apiClient) }
         .task { await viewModel.load(apiClient: container.apiClient) }
     }
 }
