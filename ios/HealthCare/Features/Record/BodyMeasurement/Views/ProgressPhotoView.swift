@@ -54,7 +54,7 @@ struct ProgressPhotoView: View {
                 }
             )
         }
-        .onChange(of: viewModel.errorMessage) { _, newValue in
+        .onChange(of: viewModel.errorMessage) { newValue in
             guard let newValue else { return }
             activeErrorAlert = ErrorAlertItem(message: newValue)
         }
