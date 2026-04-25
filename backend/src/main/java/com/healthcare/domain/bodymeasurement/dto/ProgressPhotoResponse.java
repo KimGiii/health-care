@@ -1,5 +1,6 @@
 package com.healthcare.domain.bodymeasurement.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.healthcare.domain.bodymeasurement.entity.ProgressPhoto;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +13,7 @@ public class ProgressPhotoResponse {
     private Long photoId;
     private OffsetDateTime capturedAt;
     private ProgressPhoto.PhotoType photoType;
+    @JsonProperty("isBaseline")
     private boolean isBaseline;
     private boolean exifStripped;
     private boolean isPrivate;
