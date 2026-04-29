@@ -1,4 +1,4 @@
-# 백엔드 TODO — 2026년 4월 22일 기준
+# 백엔드 TODO — 2026년 4월 28일 기준
 
 ## 목적
 
@@ -45,6 +45,19 @@
 
 ---
 
+### ✅ AI 기반 검색 폴백 (음식 / 운동)
+
+- [x] `AiNutritionEstimationService` — 한국어 음식명 → 100g 기준 영양성분 AI 추정
+  - OpenAI Responses API (`/v1/responses`) 재사용, `@ConditionalOnExpression` 비활성화 안전
+  - `POST /api/v1/diet/ai-estimate` 엔드포인트 신규 추가
+  - 응답에 `isAiEstimated: true` + `disclaimer` 포함 (AI기본법 대응)
+- [x] `AiExerciseEstimationService` — 한국어 운동명 → muscleGroup, exerciseType, MET값 AI 추정
+  - `POST /api/v1/exercise/ai-estimate` 엔드포인트 신규 추가
+- [x] `V11__exercise_catalog_seed.sql` — 110개 운동 시드 데이터
+  - 근육군 14종 전체 커버, 한/영 이름, Compendium of Physical Activities 기준 MET값
+
+---
+
 ## 다음 순서
 
 ### 2. 컨트롤러/보안 통합 테스트 보강
@@ -53,11 +66,15 @@
 - [x] `UserController` MockMvc 단위 테스트
 - [x] JWT 필터/보안 체인 통합 테스트 (`JwtSecurityIntegrationTest`)
 - [x] 보안 실패 응답 JSON 통일 (`RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`)
-- [ ] 주요 도메인 컨트롤러 보안 테스트 (타 사용자 접근 시나리오)
+- [x] 주요 도메인 컨트롤러 보안 테스트 (타 사용자 접근 시나리오)
+  - `ExerciseAuthorizationBoundaryTest` — 운동 세션 GET/DELETE 크로스유저 401
+  - `DietLogAuthorizationBoundaryTest` — 식단 기록 GET/DELETE 크로스유저 401
+  - `BodyMeasurementAuthorizationBoundaryTest` — 신체 측정 GET/PATCH/DELETE 크로스유저 401
+  - `GoalAuthorizationBoundaryTest` — 목표 GET/진행률/포기 크로스유저 401, 잘못된 토큰 형식 401
 
 완료 기준:
 - 핵심 인증/인가 흐름이 서비스 단위 테스트 외 보안 체인까지 포함해 검증된다.
-- 남은 범위는 도메인별 권한 경계 시나리오다.
+- 도메인별 권한 경계 시나리오 검증 완료.
 
 ### 3. API 설계 문서와 실제 경로 정합성
 
@@ -69,6 +86,14 @@
 - 문서, 서버, iOS 클라이언트가 같은 경로와 응답 계약을 사용한다.
 
 ## 중간 우선순위
+
+### 3.5. AI 추정 서비스 단위 테스트
+
+- [ ] `AiNutritionEstimationServiceTest` — OpenAI 응답 파싱, 카테고리 매핑, 예외 처리 케이스
+- [ ] `AiExerciseEstimationServiceTest` — muscleGroup/exerciseType 파싱, MET 기본값 폴백
+
+완료 기준:
+- AI 응답 파싱 실패 시 기본값 반환, 카테고리 매핑 정확성, `@ConditionalOnExpression` 비활성화 케이스가 테스트로 검증된다.
 
 ### 4. 신체 측정 후처리 (EXIF, 썸네일)
 
@@ -82,6 +107,9 @@
 - [x] `GET /api/v1/insights/change-analysis` — 기간별 신체 변화 분석 API 구현
 - [x] ENDURANCE 목표 진행률 — 운동 세션 합산 기반 계산 (`ExerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange`)
 - [x] GoalSummary.percentComplete 채우기 — 목록 API에서 읽기 전용 경량 계산 (`calculatePercentCompleteReadOnly`)
+- [x] `InsightsControllerTest` 10개 추가 — weekOffset, 빈 데이터, 401, 날짜 유효성, from>to 검증
+- [x] `InsightsServiceTest` 11개 추가 — 델타 반올림, ENDURANCE 스킵, WEIGHT_LOSS 달성률 등
+- [x] `ProgressPhotoResponse.isBaseline` `@JsonProperty` 직렬화 버그 수정
 - [ ] FCM Admin SDK 실제 사용 흐름 연결
 - [ ] 알림 발송 조건 정의 (주간 회고 등)
 - [ ] 스케줄링 또는 이벤트 트리거 방식 결정
@@ -97,9 +125,12 @@
 
 ## 메모
 
+- AI 추정 서비스(`AiNutritionEstimationService`, `AiExerciseEstimationService`)는 기존 `OpenAiMealAnalysisProvider`와 동일한 OpenAI Responses API 패턴을 재사용한다. `OPENAI_API_KEY`는 `backend/.env`에 추가하면 된다.
+- 운동 카탈로그는 V11 마이그레이션으로 110개 시드 추가. 이후 검색 결과 없으면 AI 추정 엔드포인트 폴백 사용.
+- AI 추정 응답의 `isAiEstimated: true` + `disclaimer` 필드는 AI기본법(2026) 대응이다 — 클라이언트 View에서 반드시 표시해야 한다.
+- Insights 도메인은 "InsightsController/Service 구현 + InsightsControllerTest 10개 + InsightsServiceTest 11개 완료" 상태다.
 - 백엔드 신체 측정은 "CRUD + atOrBefore + TDD 20개 완료" 상태다.
 - 진행 사진은 "presigned URL 발급 + 메타데이터 등록 + signed download 조회 + 경로 정합성 반영" 상태다.
 - 목표 도메인은 "CRUD + 진행률 API + GoalControllerTest 11개 + GoalServiceTest 23개 + endurance minutes 정규화" 상태다.
 - 식단 검색은 공백 무시 검색과 prefix 우선 정렬까지 반영된 상태다.
-- iOS GoalProgressView 이미 구현 완료 → 백엔드 진행률 API 완성으로 연동 가능 상태.
 - Jackson `write-dates-as-timestamps: false` 설정으로 전 도메인 LocalDate ISO-8601 직렬화 보장.

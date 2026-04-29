@@ -1,4 +1,4 @@
-# iOS TODO — 2026년 4월 22일 기준
+# iOS TODO — 2026년 4월 28일 기준
 
 ## 목적
 
@@ -32,8 +32,17 @@
 - [x] 운동 기록 화면, 운동 세션 추가/상세 흐름 구현
 - [x] 식단 기록 화면, 식단 상세/추가 흐름 구현
 - [x] 외부 식품 검색 및 AI 사진 분석 진입점 반영
+- [x] 식단 검색 입력 500ms 디바운스 + 이전 요청 취소 + 검색어 삭제 시 즉시 초기화 반영
 - [x] 목표 생성/목록/진행 화면 구현
 - [x] endurance 목표 단위를 분 기준으로 표시하도록 정합성 반영
+
+### ✅ AI 검색 폴백 연동
+
+- [x] `APIEndpoint` — `.aiEstimateFood`, `.aiEstimateExercise`, `.createCustomFood`, `.createCustomExercise` 4개 case 추가
+- [x] `DietModels.swift` — `AiNutritionEstimateResponse`, `AiNutritionEstimateRequest` 모델 추가
+- [x] `ExerciseModels.swift` — `AiExerciseEstimateResponse`, `AiExerciseEstimateRequest` 모델 추가
+- [x] `AddDietLogViewModel` — `estimateWithAI()`, `addAiEstimatedFood()` + `aiEstimateResult`/`isAiEstimating` 상태 추가
+- [x] `AddExerciseSessionViewModel` — `estimateWithAI()`, `addAiEstimatedExercise()` + `aiEstimateResult`/`isAiEstimating` 상태 추가
 
 ### ✅ 신체 측정 / 진행 사진
 
@@ -46,6 +55,18 @@
 ---
 
 ## 다음 순서
+
+### 0. AI 추정 결과 View UI (신규 — 최우선)
+
+- [ ] 음식 검색 결과 없을 때 "AI로 추정하기" 버튼 표시 (`AddDietLogView`)
+- [ ] `aiEstimateResult` 표시 카드 — 추정 영양성분 + "AI 추정값" 배지 + disclaimer 텍스트
+- [ ] 사용자가 추정값 수정 가능하도록 인라인 편집 UI
+- [ ] 운동 검색 결과 없을 때 "AI로 추정하기" 버튼 표시 (`AddExerciseSessionView`)
+- [ ] `aiEstimateResult` 표시 카드 — 추정 muscleGroup/exerciseType/MET + 배지 + disclaimer
+
+완료 기준:
+- 검색 결과 없는 경우 사용자가 AI 추정을 요청하고, 결과를 확인·수정 후 저장할 수 있다.
+- "AI 추정값이며 실제와 다를 수 있습니다" 문구가 항상 표시된다 (AI기본법 대응).
 
 ### 1. 진행 사진 UX 보강 및 백엔드 후처리 대응
 
@@ -70,6 +91,7 @@
 
 ### 3. iOS 테스트 보강
 
+- [x] `AddDietLogViewModel` 검색 디바운스/즉시 검색/검색어 삭제/느린 응답 역전 방지 단위 테스트 추가
 - [ ] `APIClient` 토큰 refresh 및 401 재시도 테스트
 - [ ] 주요 ViewModel 테스트 (`HomeViewModel`, `GoalProgressViewModel`, `ProgressPhotoViewModel`, `MyPageViewModel`)
 - [ ] 인증/온보딩/메인 진입 smoke UI 테스트 추가
@@ -88,6 +110,8 @@
 - [x] `InsightsModels.swift` — `WeeklySummaryResponse`, `ChangeAnalysisResponse` 모델 정의
 - [x] `APIEndpoint` — `.getWeeklySummary`, `.getChangeAnalysis` case 추가
 - [x] `HistoryCalendarView` — DiaryView와 역할 중복으로 파일 삭제 (구현 불필요)
+- [x] 탐색 탭(`ExploreView`) — `WeeklyRetrospectiveView`, `ChangeAnalysisView` 진입점 연결
+- [x] `ProgressPhotoView` — `onChange` iOS 16 호환 시그니처 수정
 
 ### 5. 알림 및 앱 상태 대응
 
@@ -107,6 +131,11 @@
 
 ## 메모
 
+- AI 검색 폴백은 ViewModel 레이어까지만 구현된 상태다. View UI(배지·disclaimer·수정 폼)가 없으면 사용자가 기능을 사용할 수 없다 — 최우선 작업.
+- 식단 검색 시트는 이제 `onChange`마다 즉시 네트워크를 치지 않고, 입력 종료 후 500ms 뒤에만 검색한다.
+- `AddDietLogViewModelTests`는 추가됐지만 현재 `HealthCareTests` 타깃이 앱 소스 일부를 잘못 포함하고 있어 전체 `xcodebuild test`는 별도 타깃 정리가 필요하다.
+- `estimateWithAI()` 호출 시점: 검색 결과(`catalogResults` + `externalResults`)가 모두 비어 있을 때 버튼을 활성화하거나 자동 호출하는 UX 결정 필요.
+- `addAiEstimatedFood()`는 `POST /api/v1/diet/catalog`(커스텀 식품 생성)를 호출한다. 저장 후 항목이 사용자 카탈로그에 남는다.
 - 현재 iOS는 화면 목업 수준이 아니라 인증, 홈, 운동, 식단, 신체 측정, 진행 사진, 목표, 마이페이지까지 실데이터 연동 범위가 넓다.
 - `APIClient`는 actor 기반이며 JWT 만료 선제 체크와 refresh 재시도 흐름까지 이미 포함되어 있다.
 - 반면 테스트는 `TokenStore`, `AuthState`, 온보딩 노출 정도만 있어 자동 회귀 방어선이 약하다.

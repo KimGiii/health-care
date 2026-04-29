@@ -1152,6 +1152,84 @@ Access tokens expire after 24 hours. The client should use the refresh token end
 
 ---
 
+### POST /api/v1/diet/ai-estimate
+
+**Auth required:** Yes
+
+**Description:** 한국어 음식 이름을 받아 AI(OpenAI)로 100g 기준 영양성분을 추정한다. 공공 API 검색 결과가 없을 때 클라이언트 폴백용으로 사용한다. `OPENAI_API_KEY` 미설정 시 서비스가 비활성화되며 503을 반환한다.
+
+**Regulatory note:** 응답의 `isAiEstimated: true`와 `disclaimer` 필드를 클라이언트 UI에 반드시 표시해야 한다 (AI기본법 2026 대응).
+
+**Request Body:**
+```json
+{
+  "foodName": "제육볶음"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "foodName": "제육볶음",
+    "category": "PROTEIN_SOURCE",
+    "caloriesPer100g": 190.0,
+    "proteinPer100g": 14.5,
+    "carbsPer100g": 8.2,
+    "fatPer100g": 11.3,
+    "confidence": 0.82,
+    "disclaimer": "AI 추정값이며 실제 영양성분과 다를 수 있습니다. 수정 후 저장하세요.",
+    "isAiEstimated": true
+  }
+}
+```
+
+**Key Error Codes:**
+- `400 VALIDATION_ERROR` — `foodName` 누락 또는 100자 초과
+- `503 SERVICE_UNAVAILABLE` — `OPENAI_API_KEY` 미설정 시 서비스 비활성화
+
+---
+
+### POST /api/v1/exercise/ai-estimate
+
+**Auth required:** Yes
+
+**Description:** 한국어 운동 이름을 받아 AI(OpenAI)로 근육군, 운동 유형, MET값을 추정한다. 카탈로그 검색 결과가 없을 때 클라이언트 폴백용으로 사용한다.
+
+**Request Body:**
+```json
+{
+  "exerciseName": "케이블 킥백"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "exerciseName": "케이블 킥백",
+    "muscleGroup": "GLUTES",
+    "exerciseType": "STRENGTH",
+    "metValue": 4.0,
+    "confidence": 0.78,
+    "disclaimer": "AI 추정값이며 실제 소모 칼로리와 다를 수 있습니다. 수정 후 저장하세요.",
+    "isAiEstimated": true
+  }
+}
+```
+
+**Valid `muscleGroup` values:** `CHEST`, `BACK`, `SHOULDERS`, `BICEPS`, `TRICEPS`, `FOREARMS`, `CORE`, `QUADRICEPS`, `HAMSTRINGS`, `GLUTES`, `CALVES`, `FULL_BODY`, `CARDIO`, `OTHER`
+
+**Valid `exerciseType` values:** `STRENGTH`, `CARDIO`, `BODYWEIGHT`, `FLEXIBILITY`, `SPORTS`
+
+**Key Error Codes:**
+- `400 VALIDATION_ERROR` — `exerciseName` 누락 또는 100자 초과
+- `503 SERVICE_UNAVAILABLE` — `OPENAI_API_KEY` 미설정 시 서비스 비활성화
+
+---
+
 ## 6. Measurement Endpoints
 
 ### POST /api/v1/measurements
