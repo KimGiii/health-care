@@ -35,11 +35,6 @@ public class FoodCatalogController {
         List<FoodCatalogResponse> response = foodCatalogService.searchFoods(
                 userId, FoodSearchParams.of(query, category, customOnly));
 
-        System.out.println("🔍 FoodCatalog search - query: " + query + ", results: " + response.size());
-        if (!response.isEmpty()) {
-            System.out.println("📦 First result: " + response.get(0));
-        }
-
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

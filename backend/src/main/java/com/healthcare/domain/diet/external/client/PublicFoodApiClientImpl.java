@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -68,12 +67,12 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
     @Override
     public List<ExternalFoodResult> search(String query, int page, int size) {
-        List<ExternalFoodResult> allResults = new ArrayList<>();
+        List<ExternalFoodResult> processedResults = List.of();
+        List<ExternalFoodResult> generalResults = List.of();
 
         // 1. 가공식품 API 검색
         try {
-            List<ExternalFoodResult> processedResults = searchProcessedFood(query, page, size);
-            allResults.addAll(processedResults);
+            processedResults = searchProcessedFood(query, page, size);
             log.debug("가공식품 API 검색 결과: {} 건", processedResults.size());
         } catch (Exception e) {
             log.warn("가공식품 API 검색 실패: {}", e.getMessage());
@@ -81,16 +80,32 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
         // 2. 음식 API 검색
         try {
-            List<ExternalFoodResult> generalResults = searchGeneralFood(query, page, size);
-            allResults.addAll(generalResults);
+            generalResults = searchGeneralFood(query, page, size);
             log.debug("음식 API 검색 결과: {} 건", generalResults.size());
         } catch (Exception e) {
             log.warn("음식 API 검색 실패: {}", e.getMessage());
         }
 
-        return allResults.stream()
-                .limit(size)
-                .collect(Collectors.toList());
+        // 두 소스를 균등 비율로 인터리브한 뒤 limit 적용
+        // → 한 API 결과만으로 size 슬롯이 꽉 차는 문제 방지
+        return interleave(processedResults, generalResults, size);
+    }
+
+    /**
+     * 두 리스트를 교대로 섞은 뒤 maxSize 개로 자른다.
+     * 한쪽이 소진되면 나머지 소스로 채운다.
+     */
+    private List<ExternalFoodResult> interleave(
+            List<ExternalFoodResult> a,
+            List<ExternalFoodResult> b,
+            int maxSize) {
+        List<ExternalFoodResult> merged = new ArrayList<>(maxSize);
+        int ai = 0, bi = 0;
+        while (merged.size() < maxSize && (ai < a.size() || bi < b.size())) {
+            if (ai < a.size()) merged.add(a.get(ai++));
+            if (merged.size() < maxSize && bi < b.size()) merged.add(b.get(bi++));
+        }
+        return merged;
     }
 
     /**
