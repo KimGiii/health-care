@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class HealthCareUITests: XCTestCase {
     let app = XCUIApplication()
 

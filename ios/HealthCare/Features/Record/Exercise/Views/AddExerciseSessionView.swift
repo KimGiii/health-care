@@ -502,8 +502,7 @@ struct ExerciseCatalogPickerView: View {
 
             if !viewModel.catalogQuery.isEmpty {
                 Button {
-                    viewModel.catalogQuery = ""
-                    viewModel.catalogResults = []
+                    viewModel.clearCatalogSearch()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Color.textSecondary.opacity(0.6))
@@ -552,8 +551,84 @@ struct ExerciseCatalogPickerView: View {
             Text("'\(viewModel.catalogQuery)'에 대한 결과 없음")
                 .font(.system(size: 15))
                 .foregroundStyle(Color.textSecondary)
+
+            // Codex 작업: 검색 결과가 없을 때 AI 운동 추정 플로우를 화면에 연결합니다.
+            if let estimate = viewModel.aiEstimateResult {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Label("AI 운동 추정", systemImage: "sparkles")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.brandPrimary)
+                        Spacer()
+                        Text("신뢰도 \(Int(estimate.confidence * 100))%")
+                            .font(.caption)
+                            .foregroundStyle(Color.textSecondary)
+                    }
+
+                    Text(estimate.exerciseName)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color.textPrimary)
+
+                    HStack(spacing: 8) {
+                        aiExerciseTag(estimate.muscleGroup)
+                        aiExerciseTag(estimate.exerciseType)
+                        aiExerciseTag(String(format: "MET %.1f", estimate.metValue))
+                    }
+
+                    Text(estimate.disclaimer)
+                        .font(.caption)
+                        .foregroundStyle(Color.brandWarning)
+
+                    Button {
+                        Task {
+                            await viewModel.addAiEstimatedExercise(apiClient: container.apiClient)
+                            dismiss()
+                        }
+                    } label: {
+                        Label("추정값으로 추가", systemImage: "plus.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.brandPrimary)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.surfacePrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 24)
+            } else {
+                Button {
+                    Task {
+                        await viewModel.estimateWithAI(apiClient: container.apiClient)
+                    }
+                } label: {
+                    if viewModel.isAiEstimating {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Label("AI로 운동 추정", systemImage: "sparkles")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.brandPrimary)
+                .disabled(viewModel.isAiEstimating)
+                .padding(.horizontal, 24)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func aiExerciseTag(_ text: String) -> some View {
+        Text(text)
+            .font(.caption.bold())
+            .foregroundStyle(Color.brandPrimary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(Color.brandSurface)
+            .clipShape(Capsule())
     }
 }
 

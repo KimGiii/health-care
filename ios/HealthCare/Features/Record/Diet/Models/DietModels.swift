@@ -356,3 +356,21 @@ extension DraftFoodEntry {
         self.unknownOrUncertain = analysisItem.unknownOrUncertain
     }
 }
+
+// MARK: - AI 영양 추정 응답
+
+struct AiNutritionEstimateResponse: Decodable {
+    let foodName: String
+    let category: FoodCategory?
+    let caloriesPer100g: Double
+    let proteinPer100g: Double
+    let carbsPer100g: Double
+    let fatPer100g: Double
+    let confidence: Double
+    let disclaimer: String
+    let isAiEstimated: Bool
+}
+
+struct AiNutritionEstimateRequest: Encodable {
+    let foodName: String
+}

@@ -1,6 +1,21 @@
 import Foundation
 import UniformTypeIdentifiers
 
+protocol DietFoodSearching: Sendable {
+    func searchFoodCatalog(query: String) async throws -> [FoodCatalogItem]
+    func searchExternalFoods(query: String) async throws -> [ExternalFoodResult]
+}
+
+extension APIClient: DietFoodSearching {
+    func searchFoodCatalog(query: String) async throws -> [FoodCatalogItem] {
+        try await request(.getFoodCatalog(query: query))
+    }
+
+    func searchExternalFoods(query: String) async throws -> [ExternalFoodResult] {
+        try await request(.searchExternalFoods(query: query, source: "ALL", page: 0, size: 20))
+    }
+}
+
 @MainActor
 final class AddDietLogViewModel: ObservableObject {
     // MARK: - 식사 입력 상태
@@ -16,6 +31,10 @@ final class AddDietLogViewModel: ObservableObject {
     @Published var isSearching = false
     @Published var showFoodSearch = false
 
+    // MARK: - AI 추정 상태
+    @Published var aiEstimateResult: AiNutritionEstimateResponse?
+    @Published var isAiEstimating = false
+
     // MARK: - 저장 상태
     @Published var isSaving = false
     @Published var errorMessage: String?
@@ -23,6 +42,10 @@ final class AddDietLogViewModel: ObservableObject {
     @Published var analysisWarnings: [String] = []
     @Published var photoAnalysisId: Int?
     @Published var photoPreviewURL: String?
+
+    private let debounceDuration: Duration
+    private var searchDebounceTask: Task<Void, Never>?
+    private var searchTask: Task<Void, Never>?
 
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -37,7 +60,8 @@ final class AddDietLogViewModel: ObservableObject {
         return formatter
     }()
 
-    init() {
+    init(debounceDuration: Duration = .milliseconds(500)) {
+        self.debounceDuration = debounceDuration
         logDate = dateFormatter.string(from: Date())
         // 현재 시간에 따라 기본 식사 타입 설정
         let hour = Calendar.current.component(.hour, from: Date())
@@ -53,15 +77,66 @@ final class AddDietLogViewModel: ObservableObject {
         !draftEntries.isEmpty && draftEntries.allSatisfy(\.isValid)
     }
 
+    deinit {
+        searchDebounceTask?.cancel()
+        searchTask?.cancel()
+    }
+
     // MARK: - 영양 합계 (실시간 미리보기)
     var totalCalories: Double { draftEntries.map(\.calories).reduce(0, +) }
     var totalProtein:  Double { draftEntries.map(\.protein).reduce(0, +) }
     var totalCarbs:    Double { draftEntries.map(\.carbs).reduce(0, +) }
     var totalFat:      Double { draftEntries.map(\.fat).reduce(0, +) }
 
+    func scheduleSearch(apiClient: any DietFoodSearching) {
+        let query = normalizedSearchQuery
+        guard !query.isEmpty else {
+            cancelPendingSearches()
+            resetSearchResults()
+            return
+        }
+
+        searchDebounceTask?.cancel()
+        searchDebounceTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: self?.debounceDuration ?? .zero)
+                try Task.checkCancellation()
+                guard let self else { return }
+                await self.searchAll(apiClient: apiClient)
+            } catch is CancellationError {
+                return
+            } catch {
+                return
+            }
+        }
+    }
+
+    func triggerImmediateSearch(apiClient: any DietFoodSearching) {
+        searchDebounceTask?.cancel()
+        searchDebounceTask = nil
+
+        guard !normalizedSearchQuery.isEmpty else {
+            cancelPendingSearches()
+            resetSearchResults()
+            return
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+            await self.searchAll(apiClient: apiClient)
+        }
+    }
+
+    func clearSearch() {
+        searchQuery = ""
+        cancelPendingSearches()
+        resetSearchResults()
+    }
+
     // MARK: - 카탈로그 검색 (내 DB)
     func searchCatalog(apiClient: APIClient) async {
-        guard !searchQuery.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let query = normalizedSearchQuery
+        guard !query.isEmpty else {
             catalogResults = []
             return
         }
@@ -70,7 +145,7 @@ final class AddDietLogViewModel: ObservableObject {
 
         do {
             let results: [FoodCatalogItem] = try await apiClient.request(
-                .getFoodCatalog(query: searchQuery)
+                .getFoodCatalog(query: query)
             )
             catalogResults = results
             errorMessage = nil
@@ -82,30 +157,130 @@ final class AddDietLogViewModel: ObservableObject {
     }
 
     // MARK: - 카탈로그 + 외부 동시 검색
-    func searchAll(apiClient: APIClient) async {
-        guard !searchQuery.trimmingCharacters(in: .whitespaces).isEmpty else {
-            catalogResults = []
-            externalResults = []
+    func searchAll(apiClient: any DietFoodSearching) async {
+        let query = normalizedSearchQuery
+        guard !query.isEmpty else {
+            resetSearchResults()
             return
         }
+
+        searchTask?.cancel()
         isSearching = true
-        defer { isSearching = false }
+        aiEstimateResult = nil
 
-        async let catalogFetch: [FoodCatalogItem] = {
-            (try? await apiClient.request(.getFoodCatalog(query: searchQuery))) ?? []
-        }()
-        async let externalFetch: [ExternalFoodResult] = {
-            (try? await apiClient.request(.searchExternalFoods(query: searchQuery, source: "ALL", page: 0, size: 20))) ?? []
-        }()
+        searchTask = Task { [weak self] in
+            do {
+                async let catalogFetch = Self.fetchCatalog(apiClient: apiClient, query: query)
+                async let externalFetch = Self.fetchExternalFoods(apiClient: apiClient, query: query)
+                let (catalog, external) = await (catalogFetch, externalFetch)
+                try Task.checkCancellation()
 
-        let (c, e) = await (catalogFetch, externalFetch)
-        catalogResults = c
-        externalResults = e
+                await MainActor.run {
+                    guard let self, self.normalizedSearchQuery == query else { return }
+                    self.catalogResults = catalog
+                    self.externalResults = external
+                    self.errorMessage = nil
+                    self.isSearching = false
+                    self.searchTask = nil
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    guard let self else { return }
+                    if self.normalizedSearchQuery == query {
+                        self.isSearching = false
+                    }
+                    self.searchTask = nil
+                }
+            } catch {
+                await MainActor.run {
+                    guard let self, self.normalizedSearchQuery == query else { return }
+                    self.catalogResults = []
+                    self.externalResults = []
+                    self.errorMessage = "식품 검색 중 오류가 발생했습니다."
+                    self.isSearching = false
+                    self.searchTask = nil
+                }
+            }
+        }
+
+        await searchTask?.value
+    }
+
+    private static func fetchCatalog(
+        apiClient: any DietFoodSearching,
+        query: String
+    ) async -> [FoodCatalogItem] {
+        do {
+            return try await apiClient.searchFoodCatalog(query: query)
+        } catch is CancellationError {
+            return []
+        } catch {
+            return []
+        }
+    }
+
+    private static func fetchExternalFoods(
+        apiClient: any DietFoodSearching,
+        query: String
+    ) async -> [ExternalFoodResult] {
+        do {
+            return try await apiClient.searchExternalFoods(query: query)
+        } catch is CancellationError {
+            return []
+        } catch {
+            return []
+        }
+    }
+
+    // MARK: - AI 영양 추정 (카탈로그·외부 검색 모두 결과 없을 때 폴백)
+    func estimateWithAI(apiClient: APIClient) async {
+        let query = searchQuery.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return }
+
+        isAiEstimating = true
+        defer { isAiEstimating = false }
+
+        do {
+            let request = AiNutritionEstimateRequest(foodName: query)
+            let body = try JSONEncoder().encode(request)
+            let result: AiNutritionEstimateResponse = try await apiClient.request(
+                .aiEstimateFood(body: body)
+            )
+            aiEstimateResult = result
+        } catch {
+            errorMessage = "AI 영양 추정에 실패했습니다. 직접 입력해 주세요."
+        }
+    }
+
+    // MARK: - AI 추정 결과로 커스텀 식품 생성 후 항목 추가
+    func addAiEstimatedFood(apiClient: APIClient) async {
+        guard let estimate = aiEstimateResult else { return }
+
+        do {
+            let payload: [String: Any] = [
+                "name": estimate.foodName,
+                "nameKo": estimate.foodName,
+                "category": estimate.category?.rawValue ?? "OTHER",
+                "caloriesPer100g": estimate.caloriesPer100g,
+                "proteinPer100g": estimate.proteinPer100g,
+                "carbsPer100g": estimate.carbsPer100g,
+                "fatPer100g": estimate.fatPer100g
+            ]
+            let body = try JSONSerialization.data(withJSONObject: payload)
+            let catalogItem: FoodCatalogItem = try await apiClient.request(
+                .createCustomFood(body: body)
+            )
+            addEntry(food: catalogItem)
+            aiEstimateResult = nil
+        } catch {
+            errorMessage = "AI 추정 식품 저장에 실패했습니다."
+        }
     }
 
     // MARK: - 외부 식품 검색 (USDA / OFF)
     func searchExternal(apiClient: APIClient) async {
-        guard !searchQuery.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let query = normalizedSearchQuery
+        guard !query.isEmpty else {
             externalResults = []
             return
         }
@@ -114,7 +289,7 @@ final class AddDietLogViewModel: ObservableObject {
 
         do {
             let results: [ExternalFoodResult] = try await apiClient.request(
-                .searchExternalFoods(query: searchQuery, source: "ALL", page: 0, size: 20)
+                .searchExternalFoods(query: query, source: "ALL", page: 0, size: 20)
             )
             externalResults = results
             errorMessage = nil
@@ -297,5 +472,24 @@ final class AddDietLogViewModel: ObservableObject {
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw APIError.unknown
         }
+    }
+
+    private var normalizedSearchQuery: String {
+        searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func cancelPendingSearches() {
+        searchDebounceTask?.cancel()
+        searchDebounceTask = nil
+        searchTask?.cancel()
+        searchTask = nil
+        isSearching = false
+    }
+
+    private func resetSearchResults() {
+        catalogResults = []
+        externalResults = []
+        aiEstimateResult = nil
+        isSearching = false
     }
 }

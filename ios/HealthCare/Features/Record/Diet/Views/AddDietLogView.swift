@@ -406,9 +406,7 @@ struct FoodSearchSheet: View {
                         .onSubmit { triggerSearch() }
                     if !viewModel.searchQuery.isEmpty {
                         Button {
-                            viewModel.searchQuery = ""
-                            viewModel.catalogResults = []
-                            viewModel.externalResults = []
+                            viewModel.clearSearch()
                         } label: {
                             Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
                         }
@@ -420,7 +418,7 @@ struct FoodSearchSheet: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .onChange(of: viewModel.searchQuery) { _ in
-                    triggerSearch()
+                    viewModel.scheduleSearch(apiClient: container.apiClient)
                 }
 
                 if viewModel.isSearching {
@@ -487,15 +485,98 @@ struct FoodSearchSheet: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+
+            // Codex 작업: 검색 결과가 없을 때 AI 영양 추정 플로우를 화면에 연결합니다.
+            if let estimate = viewModel.aiEstimateResult {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Label("AI 영양 추정", systemImage: "sparkles")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.brandPrimary)
+                        Spacer()
+                        Text("신뢰도 \(Int(estimate.confidence * 100))%")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Text(estimate.foodName)
+                        .font(.headline)
+
+                    if let category = estimate.category {
+                        Text(category.displayName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 10) {
+                        aiMacro("열량", value: estimate.caloriesPer100g, unit: "kcal")
+                        aiMacro("단백질", value: estimate.proteinPer100g, unit: "g")
+                        aiMacro("탄수", value: estimate.carbsPer100g, unit: "g")
+                        aiMacro("지방", value: estimate.fatPer100g, unit: "g")
+                    }
+
+                    Text(estimate.disclaimer)
+                        .font(.caption)
+                        .foregroundColor(.orange)
+
+                    Button {
+                        Task {
+                            await viewModel.addAiEstimatedFood(apiClient: container.apiClient)
+                        }
+                    } label: {
+                        Label("추정값으로 추가", systemImage: "plus.circle.fill")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.brandPrimary)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                Button {
+                    Task {
+                        await viewModel.estimateWithAI(apiClient: container.apiClient)
+                    }
+                } label: {
+                    if viewModel.isAiEstimating {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Label("AI로 영양 추정", systemImage: "sparkles")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.brandPrimary)
+                .disabled(viewModel.isAiEstimating)
+            }
+
             Spacer()
         }
         .padding(32)
     }
 
-    private func triggerSearch() {
-        Task {
-            await viewModel.searchAll(apiClient: container.apiClient)
+    private func aiMacro(_ title: String, value: Double, unit: String) -> some View {
+        VStack(spacing: 2) {
+            Text(String(format: "%.0f%@", value, unit))
+                .font(.caption.bold())
+                .foregroundColor(.primary)
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color.brandSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func triggerSearch() {
+        viewModel.triggerImmediateSearch(apiClient: container.apiClient)
     }
 }
 

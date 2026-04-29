@@ -209,3 +209,19 @@ struct PersonalRecordInfo: Decodable, Sendable {
 
     var displayName: String { exerciseNameKo ?? exerciseName }
 }
+
+// MARK: - AI 운동 추정 응답
+
+struct AiExerciseEstimateResponse: Decodable {
+    let exerciseName: String
+    let muscleGroup: String
+    let exerciseType: String
+    let metValue: Double
+    let confidence: Double
+    let disclaimer: String
+    let isAiEstimated: Bool
+}
+
+struct AiExerciseEstimateRequest: Encodable {
+    let exerciseName: String
+}

@@ -76,7 +76,10 @@ targets:
       - target: HealthCare
     settings:
       base:
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        PRODUCT_MODULE_NAME: HealthCareTests
         PRODUCT_BUNDLE_IDENTIFIER: com.healthcare.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
 
   HealthCareUITests:
     type: bundle.ui-testing
@@ -87,7 +90,10 @@ targets:
       - target: HealthCare
     settings:
       base:
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        PRODUCT_MODULE_NAME: HealthCareUITests
         PRODUCT_BUNDLE_IDENTIFIER: com.healthcare.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
 
 schemes:
   HealthCare:

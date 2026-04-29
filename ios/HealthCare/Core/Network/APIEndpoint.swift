@@ -22,6 +22,7 @@ enum APIEndpoint {
     case getExerciseSession(id: Int)
     case deleteExerciseSession(id: Int)
     case getExerciseCatalog(query: String?)
+    case createCustomExercise(body: Data)
 
     // Diet - Logs
     case createDietLog(body: Data)
@@ -34,6 +35,7 @@ enum APIEndpoint {
     case confirmMealPhotoAnalysis(id: Int, body: Data)
     // Diet - Catalog
     case getFoodCatalog(query: String?)
+    case createCustomFood(body: Data)
     // Diet - External Foods
     case searchExternalFoods(query: String, source: String, page: Int, size: Int)
     case importExternalFood(body: Data)
@@ -58,6 +60,10 @@ enum APIEndpoint {
     case deleteGoal(id: Int)
     case getGoalProgress(id: Int)
 
+    // AI Estimation
+    case aiEstimateFood(body: Data)
+    case aiEstimateExercise(body: Data)
+
     // Insights
     case getWeeklySummary(weekOffset: Int)
     case getChangeAnalysis(from: String, to: String)
@@ -76,7 +82,7 @@ extension APIEndpoint {
                                                  return "/api/v1/exercise/sessions"
         case .getExerciseSession(let id),
              .deleteExerciseSession(let id):     return "/api/v1/exercise/sessions/\(id)"
-        case .getExerciseCatalog:                return "/api/v1/exercise/catalog"
+        case .getExerciseCatalog, .createCustomExercise: return "/api/v1/exercise/catalog"
         case .createDietLog, .getDietLogs:       return "/api/v1/diet/logs"
         case .getDietLog(let id),
              .deleteDietLog(let id):             return "/api/v1/diet/logs/\(id)"
@@ -85,7 +91,7 @@ extension APIEndpoint {
         case .getMealPhotoAnalysis(let id):      return "/api/v1/diet/photo-analyses/\(id)"
         case .confirmMealPhotoAnalysis(let id, _):
                                                  return "/api/v1/diet/photo-analyses/\(id)/confirm"
-        case .getFoodCatalog:                    return "/api/v1/diet/catalog"
+        case .getFoodCatalog, .createCustomFood: return "/api/v1/diet/catalog"
         case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
         case .importExternalFood:                return "/api/v1/diet/external-foods/import"
         case .createBodyMeasurement, .getBodyMeasurements:
@@ -103,6 +109,8 @@ extension APIEndpoint {
              .updateGoal(let id, _),
              .deleteGoal(let id):                return "/api/v1/goals/\(id)"
         case .getGoalProgress(let id):           return "/api/v1/goals/\(id)/progress"
+        case .aiEstimateFood:                    return "/api/v1/diet/ai-estimate"
+        case .aiEstimateExercise:                return "/api/v1/exercise/ai-estimate"
         case .getWeeklySummary:                  return "/api/v1/insights/weekly-summary"
         case .getChangeAnalysis:                 return "/api/v1/insights/change-analysis"
         }
@@ -113,7 +121,8 @@ extension APIEndpoint {
         case .register, .login, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
              .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
-             .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal:
+             .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
+             .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise:
             return .POST
         case .updateProfile, .updateGoal:
             return .PATCH
@@ -134,7 +143,9 @@ extension APIEndpoint {
              .analyzeMealPhoto(_, let b), .confirmMealPhotoAnalysis(_, let b),
              .importExternalFood(let b),
              .createBodyMeasurement(let b), .initiatePhotoUpload(let b), .registerProgressPhoto(let b),
-             .createGoal(let b), .updateGoal(_, let b):
+             .createGoal(let b), .updateGoal(_, let b),
+             .aiEstimateFood(let b), .aiEstimateExercise(let b),
+             .createCustomFood(let b), .createCustomExercise(let b):
             return b
         default:
             return nil

@@ -16,6 +16,10 @@ final class AddExerciseSessionViewModel: ObservableObject {
     @Published var isSearchingCatalog = false
     @Published var showCatalogPicker = false
 
+    // MARK: - AI 추정
+    @Published var aiEstimateResult: AiExerciseEstimateResponse?
+    @Published var isAiEstimating = false
+
     // MARK: - Draft sets (grouped by exercise)
     @Published var exerciseGroups: [ExerciseGroup] = []
 
@@ -101,6 +105,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
     func searchCatalog(apiClient: APIClient) async {
         let q = catalogQuery.trimmingCharacters(in: .whitespaces)
         isSearchingCatalog = true
+        aiEstimateResult = nil
         defer { isSearchingCatalog = false }
 
         do {
@@ -110,6 +115,56 @@ final class AddExerciseSessionViewModel: ObservableObject {
             catalogResults = results
         } catch {
             catalogResults = []
+        }
+    }
+
+    func clearCatalogSearch() {
+        catalogQuery = ""
+        catalogResults = []
+        aiEstimateResult = nil
+        isAiEstimating = false
+    }
+
+    // MARK: - AI 운동 추정 (카탈로그 검색 결과 없을 때 폴백)
+    func estimateWithAI(apiClient: APIClient) async {
+        let query = catalogQuery.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return }
+
+        isAiEstimating = true
+        defer { isAiEstimating = false }
+
+        do {
+            let request = AiExerciseEstimateRequest(exerciseName: query)
+            let body = try JSONEncoder().encode(request)
+            let result: AiExerciseEstimateResponse = try await apiClient.request(
+                .aiEstimateExercise(body: body)
+            )
+            aiEstimateResult = result
+        } catch {
+            errorMessage = "AI 운동 추정에 실패했습니다. 직접 입력해 주세요."
+        }
+    }
+
+    // MARK: - AI 추정 결과로 커스텀 운동 생성 후 추가
+    func addAiEstimatedExercise(apiClient: APIClient) async {
+        guard let estimate = aiEstimateResult else { return }
+
+        do {
+            let payload: [String: Any?] = [
+                "name": estimate.exerciseName,
+                "nameKo": estimate.exerciseName,
+                "muscleGroup": estimate.muscleGroup,
+                "exerciseType": estimate.exerciseType,
+                "metValue": estimate.metValue
+            ]
+            let body = try JSONSerialization.data(withJSONObject: payload.compactMapValues { $0 })
+            let catalogItem: ExerciseCatalogItem = try await apiClient.request(
+                .createCustomExercise(body: body)
+            )
+            addExercise(catalogItem)
+            aiEstimateResult = nil
+        } catch {
+            errorMessage = "AI 추정 운동 저장에 실패했습니다."
         }
     }
 
