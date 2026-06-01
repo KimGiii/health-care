@@ -410,6 +410,7 @@ private struct DraftEntryCard: View {
                     .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                    .numericKeyboardToolbar()
                 Text("g")
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
@@ -480,6 +481,7 @@ struct MacroCell: View {
 struct FoodSearchSheet: View {
     @EnvironmentObject private var container: AppContainer
     @ObservedObject var viewModel: AddDietLogViewModel
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -489,6 +491,7 @@ struct FoodSearchSheet: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(Color.textSecondary)
                     TextField("식품명 검색", text: $viewModel.searchQuery)
+                        .focused($searchFocused)
                         .submitLabel(.search)
                         .onSubmit { triggerSearch() }
                     if !viewModel.searchQuery.isEmpty {
@@ -709,6 +712,7 @@ struct FoodSearchSheet: View {
     }
 
     private func triggerSearch() {
+        searchFocused = false
         viewModel.triggerImmediateSearch(apiClient: container.apiClient)
     }
 }
@@ -890,6 +894,7 @@ private struct AddCustomFoodView: View {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 90)
+                .numericKeyboardToolbar()
             Text(unit)
                 .font(.caption)
                 .foregroundColor(Color.textSecondary)

@@ -1,3 +1,7 @@
-BASE_URL = https:/$()/api.gainsy.site
-BASE_URL[sdk=iphonesimulator*] = https:/$()/api.gainsy.site
-BASE_URL[sdk=iphoneos*] = https:/$()/api.gainsy.site
+// 시뮬레이터: localhost 사용
+// 실기기: LOCAL_IP를 Mac의 로컬 IP로 변경 (예: 192.168.0.10)
+LOCAL_IP = localhost
+
+BASE_URL = http:/$()/$(LOCAL_IP):8080
+BASE_URL[sdk=iphonesimulator*] = http:/$()/localhost:8080
+BASE_URL[sdk=iphoneos*] = http:/$()/$(LOCAL_IP):8080
