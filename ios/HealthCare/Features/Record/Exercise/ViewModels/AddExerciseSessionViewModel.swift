@@ -108,7 +108,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
     // MARK: - Catalog Search
 
     func searchCatalog(apiClient: APIClient) async {
-        let q = catalogQuery.trimmingCharacters(in: .whitespaces)
+        let q = catalogQuery.components(separatedBy: .whitespaces).joined()
         guard !q.isEmpty || selectedMuscleGroup != nil else {
             catalogResults = []
             return

@@ -437,6 +437,7 @@ private struct DraftSetRow: View {
                 .keyboardType(keyboard)
                 .font(.bodyLarge).fontWeight(.medium)
                 .multilineTextAlignment(.trailing)
+                .numericKeyboardToolbar()
             Text(unit).font(.caption).foregroundStyle(Color.textSecondary)
         }
         .padding(.horizontal, Spacing.md).padding(.vertical, Spacing.md)
@@ -508,6 +509,7 @@ struct ExerciseCatalogPickerView: View {
                 .focused($searchFocused)
                 .submitLabel(.search)
                 .onSubmit {
+                    searchFocused = false
                     Task { await viewModel.searchCatalog(apiClient: container.apiClient) }
                 }
 

@@ -219,7 +219,7 @@ struct AiExerciseEstimateResponse: Decodable {
     let metValue: Double
     let confidence: Double
     let disclaimer: String
-    let isAiEstimated: Bool
+    let aiEstimated: Bool
 }
 
 struct AiExerciseEstimateRequest: Encodable {

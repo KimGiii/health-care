@@ -100,7 +100,9 @@ final class MyPageViewModel: ObservableObject {
     }
 
     func load(apiClient: any MyPageProfileManaging, authState: AuthState? = nil) async {
+        guard !isLoading else { return }
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
         do {
             let fetched = try await apiClient.loadProfile()

@@ -82,6 +82,15 @@ enum ProgressRingSize {
         case .hero:     return 1.0
         }
     }
+
+    /// 링 내부 텍스트가 넘치지 않도록 허용하는 최대 너비
+    var innerWidth: CGFloat {
+        switch self {
+        case .compact:  return diameter - strokeWidth * 2 - 4
+        case .standard: return diameter - strokeWidth * 2 - 8
+        case .hero:     return diameter - strokeWidth * 2 - 16
+        }
+    }
 }
 
 // MARK: - ProgressRing View
@@ -184,15 +193,18 @@ struct ProgressRing: View {
                     Text(value)
                         .font(size.valueFont)
                         .foregroundStyle(Color.textPrimary)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.6)
                         .lineLimit(1)
 
                     if let unit, size != .compact {
                         Text(unit)
                             .font(size.unitFont)
                             .foregroundStyle(Color.textSecondary)
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
                     }
                 }
+                .frame(maxWidth: size.innerWidth)
 
                 // compact에서는 단위를 수치 아래에 표시
                 if let unit, size == .compact {
@@ -201,6 +213,7 @@ struct ProgressRing: View {
                         .foregroundStyle(Color.textSecondary)
                 }
             }
+            .frame(maxWidth: size.innerWidth)
         }
     }
 

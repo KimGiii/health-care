@@ -56,6 +56,11 @@ management:
   metrics:
     tags:
       application: healthcare-api
+    distribution:
+      # HTTP 요청 지연 percentile(p95/p99) 계산용 히스토그램 버킷 노출.
+      # 미설정 시 _bucket 메트릭이 없어 Grafana 지연 패널이 No data.
+      percentiles-histogram:
+        http.server.requests: true
   prometheus:
     metrics:
       export:
