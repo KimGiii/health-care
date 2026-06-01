@@ -339,7 +339,7 @@ private struct CalendarPickerSheet: View {
             Divider()
             weekdayRow
             calendarGrid
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Spacing.sm)
             Spacer(minLength: 0)
         }
         .overlay {
@@ -387,8 +387,8 @@ private struct CalendarPickerSheet: View {
                     .frame(width: 44, height: 44)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.md)
     }
 
     // MARK: - Weekday Row
@@ -402,8 +402,8 @@ private struct CalendarPickerSheet: View {
                     .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Calendar Grid
@@ -455,9 +455,9 @@ private struct CalendarPickerSheet: View {
                         .foregroundStyle(Color.textPrimary)
                     Spacer()
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
+                .padding(.horizontal, Spacing.xl)
+                .padding(.top, Spacing.xl)
+                .padding(.bottom, Spacing.sm)
 
                 HStack(spacing: 0) {
                     Picker("연도", selection: $pickerYear) {
@@ -487,14 +487,14 @@ private struct CalendarPickerSheet: View {
                     Text("선택")
                         .font(.bodyMedium).fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
+                        .padding(.vertical, Spacing.md)
                         .background(Color.brandPrimary)
                         .foregroundStyle(.white)
                 }
             }
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal, 32)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+            .padding(.horizontal, 32) // design-lint:ignore — modal overlay horizontal inset (28·40 모두 부적합)
         }
     }
 
