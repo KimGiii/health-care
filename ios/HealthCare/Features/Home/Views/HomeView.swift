@@ -102,11 +102,12 @@ struct HomeView: View {
                     )
                 }
             }
-            // 매 등장 시 갱신 — 다른 탭/시트에서 목표·프로필을 바꾼 뒤 돌아왔을 때도 반영.
-            // ViewModel.loadDashboard의 isLoading 가드가 중복 호출을 차단한다.
-            .onAppear {
-                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
-            }
+            // .task는 view 생명주기에 묶여 있어 NavigationLink pop 시 재실행되지 않는다.
+            // resetTab이 탭 전환마다 homeId를 새 UUID로 교체해 view를 재생성하므로
+            // 탭 전환 시에는 항상 새로 로드된다. 이전의 .onAppear는 child push→pop 시에도
+            // 재실행되어 두 번째 loadDashboard가 실패하면 데이터는 있는데 에러 alert이 뜨는
+            // 버그를 일으켰다.
+            .task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             .refreshable {
                 await viewModel.loadDashboard(apiClient: container.apiClient)
                 // pull-to-refresh로 인한 실패는 alert으로 알리지 않음(기존 화면 데이터 유지).

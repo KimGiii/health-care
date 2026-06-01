@@ -119,18 +119,22 @@ final class ExerciseRecordViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // 세션 + 프로필 + 활성 목표 병렬 로딩
+            // 세 요청을 동시에 시작
             async let sessionFetch: SessionListResponse = apiClient.request(
                 .getExerciseSessions(from: fromDate, to: nil, page: 0, size: 50)
             )
             async let profileFetch: UserProfile = apiClient.request(.getProfile)
             async let goalsFetch: GoalListResponse = apiClient.request(.getGoals)
 
-            let (response, profile, goals) = try await (sessionFetch, profileFetch, goalsFetch)
-
+            // 세션은 핵심 데이터 — 실패 시 에러 표시
+            let response = try await sessionFetch
             sessions = response.content
-            userProfile = profile
-            activeGoal = goals.content.first { $0.status == .ACTIVE }
+
+            // 프로필·목표는 보조 데이터 — 실패해도 세션 표시는 유지
+            if let profile = try? await profileFetch { userProfile = profile }
+            if let goals = try? await goalsFetch {
+                activeGoal = goals.content.first { $0.status == .ACTIVE }
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
