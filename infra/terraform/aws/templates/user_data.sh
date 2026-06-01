@@ -57,7 +57,7 @@ server {
     }
 
     location /actuator/health {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8081;
     }
 
     # Grafana (모니터링 대시보드) — 경로 기반. 컨테이너는 127.0.0.1:3000에만 바인딩.
@@ -75,7 +75,7 @@ server {
     }
 
     location / {
-        proxy_pass         http://127.0.0.1:8080;
+        proxy_pass         http://127.0.0.1:8081;
         proxy_http_version 1.1;
         proxy_set_header   Host              \$host;
         proxy_set_header   X-Real-IP         \$remote_addr;
