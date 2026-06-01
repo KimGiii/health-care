@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>지원 — Gainsy</title>
+  <meta name="description" content="Gainsy 사용 중 궁금하신 점이나 문제를 해결하세요." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌿%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --color-bg: oklch(98% 0.015 145);
+      --color-surface: oklch(100% 0 0);
+      --color-ink: oklch(22% 0.02 150);
+      --color-muted: oklch(45% 0.02 150);
+      --color-accent: oklch(58% 0.14 150);
+      --color-accent-soft: oklch(92% 0.05 150);
+      --color-border: oklch(90% 0.02 150);
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-soft: 0 10px 40px -20px oklch(40% 0.1 150 / 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Helvetica Neue", sans-serif;
+      background: var(--color-bg);
+      color: var(--color-ink);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--color-border);
+      background: oklch(98% 0.015 145 / 0.85);
+      backdrop-filter: saturate(140%) blur(12px);
+      -webkit-backdrop-filter: saturate(140%) blur(12px);
+    }
+
+    .nav { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--color-accent), oklch(70% 0.16 145));
+      display: grid; place-items: center; color: white; font-size: 0.85rem;
+    }
+
+    main { padding: 64px 0 80px; }
+
+    .hero-section { text-align: center; margin-bottom: 56px; }
+
+    h1 {
+      font-size: clamp(2rem, 1.4rem + 2vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+
+    .hero-section p {
+      color: var(--color-muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .contact-card {
+      background: var(--color-surface);
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      margin-bottom: 48px;
+      box-shadow: var(--shadow-soft);
+      text-align: center;
+    }
+
+    .contact-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .contact-card p {
+      color: var(--color-muted);
+      margin-bottom: 20px;
+    }
+
+    .btn-email {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      background: var(--color-ink);
+      color: var(--color-bg);
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-email:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 50px -18px oklch(20% 0.05 150 / 0.5);
+    }
+
+    .response-time {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--color-muted);
+    }
+
+    h2.section-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .faq-item {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 0;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+
+    .faq-item[open] {
+      border-color: var(--color-accent);
+    }
+
+    .faq-item summary {
+      padding: 18px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-item summary::after {
+      content: '+';
+      font-size: 1.3rem;
+      color: var(--color-muted);
+      font-weight: 400;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item[open] summary::after {
+      content: '−';
+    }
+
+    .faq-item .answer {
+      padding: 0 24px 20px;
+      color: oklch(35% 0.02 150);
+    }
+
+    .faq-item .answer p { margin-bottom: 8px; }
+    .faq-item .answer p:last-child { margin-bottom: 0; }
+
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--color-border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--color-muted); margin: 0 12px; }
+    footer a:hover { color: var(--color-ink); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="logo" href="/">
+        <span class="logo-mark">G</span>
+        <span>Gainsy</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="hero-section">
+        <h1>지원 센터</h1>
+        <p>Gainsy 사용 중 궁금하신 점이나 문제가 있으시면 언제든 문의해 주세요.</p>
+      </div>
+
+      <div class="contact-card">
+        <h2>문의하기</h2>
+        <p>아래 이메일로 메시지를 보내주시면 빠르게 답변드립니다.</p>
+        <a class="btn-email" href="mailto:gibo9809@gmail.com?subject=%5BGainsy%5D%20%EB%AC%B8%EC%9D%98">
+          ✉️ gibo9809@gmail.com
+        </a>
+        <p class="response-time">평균 응답 시간: 영업일 기준 1~2일 이내</p>
+      </div>
+
+      <h2 class="section-title">자주 묻는 질문</h2>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>회원 탈퇴는 어떻게 하나요?</summary>
+          <div class="answer">
+            <p>앱 내 <strong>마이페이지 → 계정 삭제</strong>에서 즉시 탈퇴하실 수 있습니다. 탈퇴 시 모든 기록과 사진이 영구적으로 삭제되며 복구되지 않습니다.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>기록한 데이터는 어디에 저장되나요?</summary>
+          <div class="answer">
+            <p>모든 데이터는 AWS 서울 리전(ap-northeast-2)의 보안 인프라에 암호화되어 저장됩니다. 전송 구간은 HTTPS로 암호화되며, 비밀번호는 단방향 해시로 저장됩니다.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>운동/식단 기록을 잘못 입력했어요. 수정이 가능한가요?</summary>
+          <div class="answer">
+            <p>네. 각 기록 항목은 다이어리 탭에서 해당 날짜의 항목을 선택해 자유롭게 수정·삭제하실 수 있습니다.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>비밀번호를 잊어버렸어요.</summary>
+          <div class="answer">
+            <p>현재는 이메일을 통한 비밀번호 재설정 기능을 준비 중입니다. 빠른 처리를 원하시면 위 이메일로 가입 이메일 주소를 알려주세요.</p>
+            <p>Apple/Google 소셜 로그인을 사용 중이시라면 해당 플랫폼의 로그인 흐름을 그대로 이용하시면 됩니다.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>음식 영양 정보가 정확한가요?</summary>
+          <div class="answer">
+            <p>Gainsy는 식품의약품안전처 영양표시기준 10종 영양소를 기반으로 공공 데이터와 매핑된 정보를 제공합니다. 일부 가공식품의 경우 제조사 표기와 차이가 있을 수 있으니, 정확한 정보는 제품 라벨을 참고해 주세요.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>진행 사진은 누가 볼 수 있나요?</summary>
+          <div class="answer">
+            <p>진행 사진은 본인만 열람할 수 있으며 제3자에게 공개되지 않습니다. 회원 탈퇴 시 즉시 영구 삭제됩니다.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>버그를 발견했어요. 어떻게 알리나요?</summary>
+          <div class="answer">
+            <p>위의 문의 이메일로 다음 정보를 함께 보내주시면 빠른 해결에 큰 도움이 됩니다.</p>
+            <p>• 사용 기기 및 iOS 버전<br>• 앱 버전 (마이페이지 하단)<br>• 재현 절차<br>• 가능하다면 스크린샷 또는 화면 녹화</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>의료적 결정을 Gainsy 기록을 근거로 해도 되나요?</summary>
+          <div class="answer">
+            <p><strong>아니요.</strong> Gainsy는 건강 관리 보조 도구이며 의료기기가 아닙니다. 건강 상태에 대한 진단이나 치료 결정은 반드시 의료 전문가와 상담하시기 바랍니다.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Gainsy. All rights reserved.</p>
+      <p style="margin-top: 12px;">
+        <a href="/">홈</a>
+        <a href="/privacy">개인정보처리방침</a>
+        <a href="/terms">이용약관</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

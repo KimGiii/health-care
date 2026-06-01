@@ -196,14 +196,14 @@ struct MyPageView: View {
                     icon: "doc.text",
                     iconColor: Color.brandSecondary,
                     label: "이용약관",
-                    url: URL(string: "https://kimgiii.github.io/Gainsy/docs/legal/terms.html")!
+                    url: URL(string: "https://gainsy.site/terms")!
                 )
                 Divider().padding(.leading, 60) // design-lint:ignore — micro/hero spacing
                 MenuLinkRow(
                     icon: "hand.raised",
                     iconColor: Color.brandSecondary,
                     label: "개인정보처리방침",
-                    url: URL(string: "https://kimgiii.github.io/Gainsy/docs/legal/privacy.html")!
+                    url: URL(string: "https://gainsy.site/privacy")!
                 )
             }
 

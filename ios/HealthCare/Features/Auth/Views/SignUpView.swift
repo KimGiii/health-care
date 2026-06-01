@@ -8,8 +8,8 @@ struct SignUpView: View {
     @State private var isTermsAgreed = false
     @State private var isPrivacyAgreed = false
 
-    private let termsURL = URL(string: "https://kimgiii.github.io/Gainsy/docs/legal/terms.html")!
-    private let privacyURL = URL(string: "https://kimgiii.github.io/Gainsy/docs/legal/privacy.html")!
+    private let termsURL = URL(string: "https://gainsy.site/terms")!
+    private let privacyURL = URL(string: "https://gainsy.site/privacy")!
 
     private var canSubmit: Bool {
         !viewModel.isLoading && isTermsAgreed && isPrivacyAgreed
