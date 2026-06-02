@@ -92,13 +92,16 @@ struct MainTabView: View {
         handlePushRoute(type: type)
     }
 
-    /// 탭을 선택할 때마다 항상 해당 탭의 path와 root view id를 리셋한다.
-    /// 같은 탭을 다시 눌러도 set이 호출되므로, 사용자가 어디까지 들어갔든 항상 시작점 페이지로 돌아간다.
+    /// 같은 탭을 다시 눌렀을 때만 path/view id를 리셋한다(root로 돌아가기).
+    /// 다른 탭에서 전환해 들어오는 경우엔 기존 view를 유지해 캐시된 데이터가 즉시 보이도록 하고,
+    /// 매번 4개 병렬 API 호출이 발생해 cold-start 부담이 누적되는 문제를 막는다.
     private var tabBinding: Binding<Tab> {
         Binding(
             get: { selectedTab },
             set: { newTab in
-                resetTab(newTab)
+                if newTab == selectedTab {
+                    resetTab(newTab)
+                }
                 selectedTab = newTab
             }
         )

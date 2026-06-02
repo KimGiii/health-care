@@ -58,6 +58,7 @@ struct AddDietLogView: View {
                         .foregroundColor(Color.brandAccent)
                 }
             }
+            .numericKeyboardToolbar()
             .sheet(isPresented: $viewModel.showFoodSearch) {
                 FoodSearchSheet(viewModel: viewModel)
             }
@@ -410,7 +411,6 @@ private struct DraftEntryCard: View {
                     .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                    .numericKeyboardToolbar()
                 Text("g")
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
@@ -856,6 +856,7 @@ private struct AddCustomFoodView: View {
                     .disabled(!canSubmit || viewModel.isSubmittingCustomFood)
                 }
             }
+            .numericKeyboardToolbar()
             .onAppear {
                 if name.isEmpty {
                     name = viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -894,7 +895,6 @@ private struct AddCustomFoodView: View {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 90)
-                .numericKeyboardToolbar()
             Text(unit)
                 .font(.caption)
                 .foregroundColor(Color.textSecondary)

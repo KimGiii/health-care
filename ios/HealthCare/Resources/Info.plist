@@ -211,6 +211,8 @@
 	</array>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>맞춤 광고를 보여드리기 위해 광고 추적 권한을 요청합니다. 거부하셔도 광고는 표시되지만 관련성이 낮을 수 있습니다.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>개발 중 Mac에서 실행 중인 로컬 API 서버에 연결하기 위해 로컬 네트워크 접근이 필요합니다.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -222,8 +224,6 @@
 	<string>진행 사진을 찍기 위해 카메라 접근 권한이 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>진행 사진을 저장하기 위해 사진 라이브러리 접근 권한이 필요합니다.</string>
-	<key>NSUserNotificationUsageDescription</key>
-	<string>주간 건강 요약 및 목표 달성 알림을 받습니다.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

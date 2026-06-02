@@ -48,6 +48,7 @@ struct AddExerciseSessionView: View {
                         .foregroundStyle(Color.textSecondary)
                 }
             }
+            .numericKeyboardToolbar()
             .alert("오류", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
@@ -437,7 +438,6 @@ private struct DraftSetRow: View {
                 .keyboardType(keyboard)
                 .font(.bodyLarge).fontWeight(.medium)
                 .multilineTextAlignment(.trailing)
-                .numericKeyboardToolbar()
             Text(unit).font(.caption).foregroundStyle(Color.textSecondary)
         }
         .padding(.horizontal, Spacing.md).padding(.vertical, Spacing.md)
