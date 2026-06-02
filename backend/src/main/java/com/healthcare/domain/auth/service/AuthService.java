@@ -23,6 +23,7 @@ import com.healthcare.security.oauth.OAuthIdTokenVerifier;
 import com.healthcare.security.oauth.OAuthUserInfo;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
@@ -192,8 +194,10 @@ public class AuthService {
             User user = existing.get();
             refreshTokenRepository.revokeAllByUserId(user.getId());
             socialLoginSuccessCounter.increment();
+            log.info("[social-login] check success provider={} userId={} newUser=false", provider, user.getId());
             return SocialLoginCheckResponse.existing(issueTokens(user));
         }
+        log.info("[social-login] check → pending consent (new user) provider={}", provider);
         return SocialLoginCheckResponse.pendingConsent();
     }
 
@@ -220,6 +224,7 @@ public class AuthService {
 
         refreshTokenRepository.revokeAllByUserId(user.getId());
         socialLoginSuccessCounter.increment();
+        log.info("[social-login] commit success provider={} userId={}", provider, user.getId());
         return issueTokens(user);
     }
 
