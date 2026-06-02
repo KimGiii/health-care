@@ -85,6 +85,18 @@ struct LoginView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $viewModel.pendingConsent) { pending in
+            SocialConsentSheet(
+                provider: pending.provider,
+                isLoading: viewModel.isLoading,
+                onAgree: {
+                    Task { await viewModel.completeSocialSignUp(apiClient: container.apiClient, authState: authState) }
+                },
+                onCancel: {
+                    viewModel.cancelSocialSignUp()
+                }
+            )
+        }
     }
 }
 

@@ -9,6 +9,9 @@ final class SignUpViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    /// 신규 소셜 가입자 약관 동의 sheet 트리거.
+    @Published var pendingConsent: PendingSocialConsent?
+
     func register(apiClient: APIClient, authState: AuthState) async {
         guard password == passwordConfirm else {
             errorMessage = "비밀번호가 일치하지 않습니다."
@@ -45,9 +48,7 @@ final class SignUpViewModel: ObservableObject {
         }
     }
 
-    /// 소셜로그인은 회원가입 흐름에서도 동일하게 사용한다.
-    /// 백엔드는 (provider, sub) 가 처음이면 신규 가입, 기존이면 로그인으로 처리한다.
-    /// onboardingCompleted=false 인 신규 계정은 자동으로 ProfileSetupView 로 전환된다.
+    /// 2-step 소셜 가입: 토큰 fetch → /check → 신규면 약관 동의 sheet 트리거, 기존이면 즉시 로그인.
     func signInWithSocialProvider(
         _ provider: SocialAuthProvider,
         tokenProvider: SocialIdentityTokenProvider,
@@ -60,11 +61,16 @@ final class SignUpViewModel: ObservableObject {
 
         do {
             let idToken = try await tokenProvider.fetchIdToken()
+            await NetworkPathWaiter.waitForLocalNetwork()
             let body = try apiClient.encode(SocialLoginRequest(idToken: idToken))
-            let tokenResponse: TokenResponse = try await apiClient.request(
-                .socialLogin(provider: provider, body: body)
+            let check: SocialLoginCheckResponse = try await apiClient.request(
+                .socialLoginCheck(provider: provider, body: body)
             )
-            authState.saveAndAuthenticate(tokenResponse: tokenResponse)
+            if !check.newUser, let tokens = check.tokens {
+                authState.saveAndAuthenticate(tokenResponse: tokens)
+            } else {
+                pendingConsent = PendingSocialConsent(provider: provider, idToken: idToken)
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch is CancellationError {
@@ -75,5 +81,36 @@ final class SignUpViewModel: ObservableObject {
             case .google: errorMessage = "Google 가입에 실패했습니다."
             }
         }
+    }
+
+    func completeSocialSignUp(apiClient: APIClient, authState: AuthState) async {
+        guard let pending = pendingConsent else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let body = try apiClient.encode(SocialLoginCommitRequest(
+                idToken: pending.idToken,
+                agreedToTerms: true,
+                agreedToPrivacy: true
+            ))
+            let tokenResponse: TokenResponse = try await apiClient.request(
+                .socialLoginCommit(provider: pending.provider, body: body)
+            )
+            pendingConsent = nil
+            authState.saveAndAuthenticate(tokenResponse: tokenResponse)
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch {
+            switch pending.provider {
+            case .apple:  errorMessage = "Apple 가입에 실패했습니다."
+            case .google: errorMessage = "Google 가입에 실패했습니다."
+            }
+        }
+    }
+
+    func cancelSocialSignUp() {
+        pendingConsent = nil
     }
 }

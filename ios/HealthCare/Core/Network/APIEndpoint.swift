@@ -15,6 +15,8 @@ enum APIEndpoint {
     case register(body: Data)
     case login(body: Data)
     case socialLogin(provider: SocialAuthProvider, body: Data)
+    case socialLoginCheck(provider: SocialAuthProvider, body: Data)
+    case socialLoginCommit(provider: SocialAuthProvider, body: Data)
     case refreshToken(body: Data)
     case logout
 
@@ -91,6 +93,8 @@ extension APIEndpoint {
         case .register:                          return "/api/v1/auth/register"
         case .login:                             return "/api/v1/auth/login"
         case .socialLogin(let provider, _):      return "/api/v1/auth/social-login/\(provider.rawValue)"
+        case .socialLoginCheck(let provider, _): return "/api/v1/auth/social-login/\(provider.rawValue)/check"
+        case .socialLoginCommit(let provider, _):return "/api/v1/auth/social-login/\(provider.rawValue)/commit"
         case .refreshToken:                      return "/api/v1/auth/token/refresh"
         case .logout:                            return "/api/v1/auth/logout"
         case .getProfile, .updateProfile, .deleteAccount:
@@ -142,7 +146,7 @@ extension APIEndpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .register, .login, .socialLogin, .refreshToken, .logout,
+        case .register, .login, .socialLogin, .socialLoginCheck, .socialLoginCommit, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
              .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
@@ -164,7 +168,8 @@ extension APIEndpoint {
 
     var body: Data? {
         switch self {
-        case .register(let b), .login(let b), .socialLogin(_, let b), .refreshToken(let b),
+        case .register(let b), .login(let b), .socialLogin(_, let b),
+             .socialLoginCheck(_, let b), .socialLoginCommit(_, let b), .refreshToken(let b),
              .updateProfile(let b),
              .createExerciseSession(let b),
              .createDietLog(let b), .updateDietLog(_, let b), .initiateMealPhotoAnalysis(let b),
@@ -246,7 +251,7 @@ extension APIEndpoint {
 
     var requiresAuth: Bool {
         switch self {
-        case .register, .login, .socialLogin, .refreshToken: return false
+        case .register, .login, .socialLogin, .socialLoginCheck, .socialLoginCommit, .refreshToken: return false
         default: return true
         }
     }
