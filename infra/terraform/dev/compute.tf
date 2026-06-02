@@ -70,7 +70,7 @@ resource "aws_security_group" "dev" {
   description = "Dev EC2 security group"
 
   ingress {
-    description = "HTTP (Let's Encrypt challenge)"
+    description = "HTTP (Lets Encrypt challenge)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
