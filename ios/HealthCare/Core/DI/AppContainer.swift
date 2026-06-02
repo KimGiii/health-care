@@ -15,6 +15,11 @@ final class AppContainer: ObservableObject {
             ?? Self.makeBaseURL(from: configuredBaseURL)
             ?? Self.makeBaseURL(from: Constants.API.defaultBaseURL)!
 
+        // 진단 로그 — 어떤 BASE_URL이 적용됐는지 확인
+        NSLog("[AppContainer] Info.plist API_BASE_URL=\(configuredBaseURL ?? "<nil>")")
+        NSLog("[AppContainer] env BASE_URL=\(environmentBaseURL ?? "<nil>")")
+        NSLog("[AppContainer] resolved baseURL=\(baseURL.absoluteString)")
+
         let apiClient = APIClient(baseURL: baseURL, tokenStore: tokenStore)
         self.tokenStore = tokenStore
         self.apiClient  = apiClient
