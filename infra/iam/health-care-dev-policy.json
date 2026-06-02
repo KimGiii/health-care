@@ -2,30 +2,18 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "StsAndGlobalReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "EC2DescribeAll",
       "Effect": "Allow",
       "Action": "ec2:Describe*",
       "Resource": "*"
-    },
-    {
-      "Sid": "EcrAuthToken",
-      "Effect": "Allow",
-      "Action": "ecr:GetAuthorizationToken",
-      "Resource": "*"
-    },
-    {
-      "Sid": "EcrPushPull",
-      "Effect": "Allow",
-      "Action": [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage",
-        "ecr:PutImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload"
-      ],
-      "Resource": "arn:aws:ecr:ap-northeast-2:621770702801:repository/healthcare-api"
     },
     {
       "Sid": "EC2DevMutate",
@@ -42,6 +30,8 @@
         "ec2:RevokeSecurityGroupIngress",
         "ec2:RevokeSecurityGroupEgress",
         "ec2:ModifySecurityGroupRules",
+        "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+        "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
         "ec2:AllocateAddress",
         "ec2:ReleaseAddress",
         "ec2:AssociateAddress",
@@ -49,9 +39,17 @@
         "ec2:CreateTags",
         "ec2:DeleteTags",
         "ec2:ModifyInstanceAttribute",
+        "ec2:ResetInstanceAttribute",
+        "ec2:MonitorInstances",
+        "ec2:UnmonitorInstances",
         "ec2:ModifyVolume",
+        "ec2:CreateVolume",
+        "ec2:DeleteVolume",
         "ec2:AttachVolume",
-        "ec2:DetachVolume"
+        "ec2:DetachVolume",
+        "ec2:CreateKeyPair",
+        "ec2:DeleteKeyPair",
+        "ec2:ImportKeyPair"
       ],
       "Resource": "*",
       "Condition": {
@@ -61,24 +59,40 @@
       }
     },
     {
+      "Sid": "EcrAuthToken",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "EcrRepoFull",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:GetRepositoryPolicy",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:BatchDeleteImage"
+      ],
+      "Resource": "arn:aws:ecr:ap-northeast-2:621770702801:repository/healthcare-api"
+    },
+    {
       "Sid": "Route53DevRecord",
       "Effect": "Allow",
       "Action": [
         "route53:ChangeResourceRecordSets",
         "route53:GetChange",
-        "route53:ListResourceRecordSets"
-      ],
-      "Resource": [
-        "arn:aws:route53:::hostedzone/Z03929631UCOQNSN4RL8M",
-        "arn:aws:route53:::change/*"
-      ]
-    },
-    {
-      "Sid": "Route53ReadOnly",
-      "Effect": "Allow",
-      "Action": [
+        "route53:ListResourceRecordSets",
         "route53:GetHostedZone",
-        "route53:ListHostedZones"
+        "route53:ListHostedZones",
+        "route53:ListTagsForResource"
       ],
       "Resource": "*"
     },
@@ -103,11 +117,13 @@
         "s3:PutBucketPolicy",
         "s3:DeleteBucketPolicy",
         "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
         "s3:GetBucketObjectLockConfiguration",
         "s3:GetBucketRequestPayment",
         "s3:GetBucketWebsite",
         "s3:GetBucketLogging",
         "s3:GetLifecycleConfiguration",
+        "s3:PutLifecycleConfiguration",
         "s3:GetReplicationConfiguration",
         "s3:GetAccelerateConfiguration",
         "s3:GetObject",
@@ -138,6 +154,7 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:ListAttachedRolePolicies",
+        "iam:ListRoleTags",
         "iam:CreateInstanceProfile",
         "iam:DeleteInstanceProfile",
         "iam:GetInstanceProfile",
@@ -145,6 +162,7 @@
         "iam:RemoveRoleFromInstanceProfile",
         "iam:TagInstanceProfile",
         "iam:UntagInstanceProfile",
+        "iam:ListInstanceProfileTags",
         "iam:ListInstanceProfilesForRole"
       ],
       "Resource": [
