@@ -25,7 +25,9 @@
       ],
       "Resource": [
         "arn:aws:s3:::healthcare-photos-dev",
-        "arn:aws:s3:::healthcare-photos-prod"
+        "arn:aws:s3:::healthcare-photos-prod",
+        "arn:aws:s3:::healthcare-dev-progress-photos-621770702801",
+        "arn:aws:s3:::healthcare-prod-progress-photos-621770702801"
       ]
     },
     {
@@ -38,7 +40,9 @@
       ],
       "Resource": [
         "arn:aws:s3:::healthcare-photos-dev/*",
-        "arn:aws:s3:::healthcare-photos-prod/*"
+        "arn:aws:s3:::healthcare-photos-prod/*",
+        "arn:aws:s3:::healthcare-dev-progress-photos-621770702801/*",
+        "arn:aws:s3:::healthcare-prod-progress-photos-621770702801/*"
       ]
     },
     {
@@ -56,8 +60,51 @@
         "iam:UntagPolicy"
       ],
       "Resource": [
-        "arn:aws:iam::*:policy/healthcare-dev-progress-photo-bucket-access",
-        "arn:aws:iam::*:policy/healthcare-prod-progress-photo-bucket-access"
+        "arn:aws:iam::621770702801:policy/healthcare-dev-progress-photo-bucket-access",
+        "arn:aws:iam::621770702801:policy/healthcare-prod-progress-photo-bucket-access"
+      ]
+    },
+    {
+      "Sid": "IamRoleLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:UpdateRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:PassRole",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:PutRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::621770702801:role/healthcare-dev-ec2-role",
+        "arn:aws:iam::621770702801:role/healthcare-prod-*"
+      ]
+    },
+    {
+      "Sid": "IamInstanceProfileLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateInstanceProfile",
+        "iam:DeleteInstanceProfile",
+        "iam:GetInstanceProfile",
+        "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:TagInstanceProfile",
+        "iam:UntagInstanceProfile",
+        "iam:ListInstanceProfilesForRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::621770702801:instance-profile/healthcare-dev-ec2-profile",
+        "arn:aws:iam::621770702801:instance-profile/healthcare-prod-*"
       ]
     }
   ]
