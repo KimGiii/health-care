@@ -133,7 +133,7 @@ jobs:
               --memory-swap 1500m \
               -p 8084:8080 \
               ${COMPOSE_NETWORK:+--network $COMPOSE_NETWORK} \
-              -e SPRING_PROFILES_ACTIVE=prod \
+              -e SPRING_PROFILES_ACTIVE=dev \
               -e JAVA_OPTS="-Xmx400m -Xms256m" \
               -e DB_URL="jdbc:postgresql://postgres:5432/healthcare_dev" \
               -e DB_USERNAME="healthcare" \

@@ -1,3 +1,8 @@
+server:
+  # Nginx 뒤에 위치하므로 X-Forwarded-* 헤더를 신뢰해
+  # Spring이 원본 scheme(https), host, client-ip를 정확히 인식하도록 한다.
+  forward-headers-strategy: native
+
 spring:
   datasource:
     url: ${DB_URL}
@@ -12,14 +17,23 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   s3:
-    bucket: healthcare-photos-dev
+    bucket: ${S3_BUCKET}
     region: ap-northeast-2
-    endpoint: ${S3_ENDPOINT:http://localhost:4566}
+    endpoint: ${S3_ENDPOINT:}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:}
-    path-style-access: ${S3_PATH_STYLE_ACCESS:true}
+    path-style-access: ${S3_PATH_STYLE_ACCESS:false}
   fcm:
     credentials-path: ${FCM_CREDENTIALS_PATH}
+  cors:
+    # 모바일 네이티브 클라이언트는 CORS 무관하지만, 시작 단계 검증을 통과하려면 명시 필요.
+    # 누락 시 IllegalStateException으로 부팅 실패.
+    allowed-origins: "https://dev.api.gainsy.site"
+  rate-limit:
+    # Nginx 뒤에 있으므로 X-Forwarded-For 신뢰 (server.forward-headers-strategy=native와 페어).
+    trust-forwarded-headers: true
 
 logging:
   level:
     com.healthcare: DEBUG
+  pattern:
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%p","logger":"%logger{36}","message":"%msg"}%n'
