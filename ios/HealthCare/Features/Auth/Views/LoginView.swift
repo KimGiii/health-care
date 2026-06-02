@@ -57,12 +57,27 @@ struct LoginView: View {
                 Spacer()
 
                 // CTA
-                PrimaryButton(
-                    "로그인하기",
-                    isEnabled: !viewModel.email.isEmpty && !viewModel.password.isEmpty,
-                    isLoading: viewModel.isLoading
-                ) {
-                    Task { await viewModel.login(apiClient: container.apiClient, authState: authState) }
+                VStack(spacing: Spacing.md) {
+                    PrimaryButton(
+                        "로그인하기",
+                        isEnabled: !viewModel.email.isEmpty && !viewModel.password.isEmpty,
+                        isLoading: viewModel.isLoading
+                    ) {
+                        Task { await viewModel.login(apiClient: container.apiClient, authState: authState) }
+                    }
+
+                    OrDivider()
+
+                    AppleSignInButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.signInWithSocialProvider(
+                                .apple,
+                                tokenProvider: AppleSignInCoordinator(),
+                                apiClient: container.apiClient,
+                                authState: authState
+                            )
+                        }
+                    }
                 }
                 .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
                 .padding(.bottom, 48) // design-lint:ignore — micro/hero spacing

@@ -116,26 +116,70 @@ final class DiaryViewModel: ObservableObject {
         let fromDate = dateFormatter.string(from: monthStart)
         let toDate = dateFormatter.string(from: monthEnd)
 
-        do {
-            // 운동·식단·신체 측정 기록을 병렬로 로드
-            async let exerciseResponse: SessionListResponse = apiClient.request(
-                .getExerciseSessions(from: fromDate, to: toDate, page: 0, size: 100)
-            )
-            async let dietResponse: DietLogListResponse = apiClient.request(
-                .getDietLogs(from: fromDate, to: toDate, page: 0, size: 100)
-            )
-            async let measurementResponse: [MeasurementResponse] = apiClient.request(
-                .getBodyMeasurementsRange(from: fromDate, to: toDate)
-            )
+        // 운동·식단·신체 측정 기록을 병렬로 로드하되, 한 요청의 실패가 전체 캘린더를 비우지 않게 처리한다.
+        async let exerciseResponse: SessionListResponse? = loadExerciseSessions(
+            apiClient: apiClient,
+            fromDate: fromDate,
+            toDate: toDate
+        )
+        async let dietResponse: DietLogListResponse? = loadDietLogs(
+            apiClient: apiClient,
+            fromDate: fromDate,
+            toDate: toDate
+        )
+        async let measurementResponse: [MeasurementResponse]? = loadMeasurements(
+            apiClient: apiClient,
+            fromDate: fromDate,
+            toDate: toDate
+        )
 
-            let (exercises, diets, measurements) = try await (exerciseResponse, dietResponse, measurementResponse)
+        let (exercises, diets, measurements) = await (exerciseResponse, dietResponse, measurementResponse)
+        var failedSources: [String] = []
+
+        if let exercises {
             exerciseSessions = exercises.content
-            dietLogs = diets.content
-            bodyMeasurements = measurements
-        } catch let error as APIError {
-            errorMessage = error.errorDescription
-        } catch {
-            errorMessage = "기록을 불러오지 못했습니다."
+        } else {
+            failedSources.append("운동")
         }
+
+        if let diets {
+            dietLogs = diets.content
+        } else {
+            failedSources.append("식단")
+        }
+
+        if let measurements {
+            bodyMeasurements = measurements
+        } else {
+            failedSources.append("신체 측정")
+        }
+
+        if !failedSources.isEmpty {
+            errorMessage = "일부 기록을 불러오지 못했습니다: \(failedSources.joined(separator: ", "))"
+        }
+    }
+
+    private func loadExerciseSessions(
+        apiClient: APIClient,
+        fromDate: String,
+        toDate: String
+    ) async -> SessionListResponse? {
+        try? await apiClient.request(.getExerciseSessions(from: fromDate, to: toDate, page: 0, size: 100))
+    }
+
+    private func loadDietLogs(
+        apiClient: APIClient,
+        fromDate: String,
+        toDate: String
+    ) async -> DietLogListResponse? {
+        try? await apiClient.request(.getDietLogs(from: fromDate, to: toDate, page: 0, size: 100))
+    }
+
+    private func loadMeasurements(
+        apiClient: APIClient,
+        fromDate: String,
+        toDate: String
+    ) async -> [MeasurementResponse]? {
+        try? await apiClient.request(.getBodyMeasurementsRange(from: fromDate, to: toDate))
     }
 }

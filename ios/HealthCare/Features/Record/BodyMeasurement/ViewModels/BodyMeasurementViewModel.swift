@@ -24,23 +24,20 @@ final class BodyMeasurementViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             async let listResponse: MeasurementListResponse = apiClient.request(.getBodyMeasurements(page: 0, size: 50))
-            async let latestResponse: MeasurementResponse = apiClient.request(.getLatestBodyMeasurement)
+            async let latestResponse = loadLatestMeasurement(apiClient: apiClient)
 
-            let (list, latest) = try await (listResponse, latestResponse)
+            let list = try await listResponse
             measurements = list.content
-            latestMeasurement = latest
+            latestMeasurement = await latestResponse
             await loadActiveGoal(apiClient: apiClient)
             await loadTrendData(apiClient: apiClient)
         } catch {
-            if case APIError.serverError(let code, _, _) = error, code == 404 {
-                measurements = []
-                latestMeasurement = nil
-                trendPoints = []
-                await loadActiveGoal(apiClient: apiClient)
-            } else {
-                errorMessage = error.localizedDescription
-            }
+            errorMessage = error.localizedDescription
         }
+    }
+
+    private func loadLatestMeasurement(apiClient: APIClient) async -> MeasurementResponse? {
+        try? await apiClient.request(.getLatestBodyMeasurement)
     }
 
     private func loadActiveGoal(apiClient: APIClient) async {

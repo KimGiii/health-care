@@ -33,9 +33,11 @@ final class DietLogDetailViewModel: ObservableObject {
         do {
             async let detailRequest: DietLogDetailResponse = apiClient.request(.getDietLog(id: id))
             async let profileRequest: UserProfile = apiClient.request(.getProfile)
-            let (loadedDetail, profile) = try await (detailRequest, profileRequest)
+            let loadedDetail = try await detailRequest
             detail = loadedDetail
-            userProfile = profile
+            if let profile = try? await profileRequest {
+                userProfile = profile
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {

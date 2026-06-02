@@ -87,9 +87,11 @@ final class DietRecordViewModel: ObservableObject {
             )
             async let profileRequest: UserProfile = apiClient.request(.getProfile)
 
-            let (logsResponse, profile) = try await (logsRequest, profileRequest)
+            let logsResponse = try await logsRequest
             logs = logsResponse.content
-            userProfile = profile
+            if let profile = try? await profileRequest {
+                userProfile = profile
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {

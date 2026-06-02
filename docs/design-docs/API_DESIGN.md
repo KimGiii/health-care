@@ -272,6 +272,31 @@ Access tokens expire after 24 hours. The client should use the refresh token end
 
 ---
 
+### POST /api/v1/auth/social-login/{provider} (V19, 2026-06-01)
+
+**Auth required:** No
+**Path:** `provider` ∈ {`APPLE`, `GOOGLE`} (Google verifier exists but iOS SDK not yet wired)
+**Description:** Verifies the OIDC ID token from Apple/Google JWKS, then logs in or auto-registers. Returns the same `TokenResponse` envelope as `/login`. iOS `AuthState` branches on `onboardingCompleted` to route new users into `ProfileSetupView`.
+
+Verification rules (per provider):
+- Apple: `iss=https://appleid.apple.com`, `aud=${APPLE_BUNDLE_ID}` (default `com.kingloo.gainsy.ios`), signature via `https://appleid.apple.com/auth/keys`
+- Google: `iss in {accounts.google.com, https://accounts.google.com}`, `aud=${GOOGLE_IOS_CLIENT_ID}`, signature via `https://www.googleapis.com/oauth2/v3/certs`
+
+Identity resolution and orphan handling: see `docs/design-docs/DB_SCHEMA.md` §2.2A.
+
+**Request Body:**
+```json
+{ "idToken": "eyJhbGciOiJSUzI1NiIs..." }
+```
+
+**Response: 200 OK** — same shape as `/login` (accessToken, refreshToken, expiresIn, onboardingCompleted, userId, email, displayName).
+
+**Key Error Codes:**
+- `400 VALIDATION_FAILED` — unsupported provider or missing idToken
+- `401 UNAUTHORIZED` — signature, issuer, audience, or expiration check failed
+
+---
+
 ### POST /api/v1/auth/logout
 
 **Auth required:** Yes

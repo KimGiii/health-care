@@ -102,6 +102,21 @@ struct SignUpView: View {
                     ) {
                         Task { await viewModel.register(apiClient: container.apiClient, authState: authState) }
                     }
+
+                    OrDivider()
+
+                    AppleSignInButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.signInWithSocialProvider(
+                                .apple,
+                                tokenProvider: AppleSignInCoordinator(),
+                                apiClient: container.apiClient,
+                                authState: authState
+                            )
+                        }
+                    }
+                    .opacity(canSubmit ? 1 : 0.45)
+                    .disabled(!canSubmit)
                 }
                 .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
                 .padding(.bottom, 48) // design-lint:ignore — micro/hero spacing

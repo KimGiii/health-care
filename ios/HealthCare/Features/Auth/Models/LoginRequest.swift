@@ -11,6 +11,10 @@ struct RegisterRequest: Encodable {
     let displayName: String
 }
 
+struct SocialLoginRequest: Encodable {
+    let idToken: String
+}
+
 struct TokenResponse: Decodable {
     let accessToken: String
     let refreshToken: String

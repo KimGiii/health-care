@@ -133,6 +133,56 @@ final class HealthCareTests: XCTestCase {
         XCTAssertEqual(store.refreshToken, "new-refresh")
     }
 
+    func testAPIClientRetriesWithCurrentTokenWhenUnauthorizedRequestUsedStaleToken() async throws {
+        let store = TokenStore()
+        store.clearTokens()
+        let initialAccessToken = Self.jwt(expiringIn: 3600)
+        let refreshedAccessToken = Self.jwt(expiringIn: 7200)
+        store.save(accessToken: initialAccessToken, refreshToken: "old-refresh")
+
+        let profileRequestCount = LockedCounter()
+        let refreshRequestCount = LockedCounter()
+        let session = Self.stubbedSession { request in
+            switch request.url?.path {
+            case "/api/v1/users/me":
+                let count = profileRequestCount.increment()
+                if count == 1 {
+                    XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer \(initialAccessToken)")
+                    store.save(accessToken: refreshedAccessToken, refreshToken: "new-refresh")
+                    return Self.jsonResponse(statusCode: 401, path: request.url?.path, body: """
+                    {
+                      "success": false,
+                      "code": "UNAUTHORIZED",
+                      "message": "만료된 토큰입니다."
+                    }
+                    """)
+                }
+
+                XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer \(refreshedAccessToken)")
+                return Self.jsonResponse(path: request.url?.path, body: """
+                {
+                  "success": true,
+                  "data": { "value": "retried-with-current-token" },
+                  "message": null
+                }
+                """)
+            case "/api/v1/auth/token/refresh":
+                refreshRequestCount.increment()
+                return Self.jsonResponse(statusCode: 500, path: request.url?.path, body: "{}")
+            default:
+                XCTFail("예상하지 못한 요청: \(request.url?.absoluteString ?? "nil")")
+                return Self.jsonResponse(statusCode: 404, path: request.url?.path, body: "{}")
+            }
+        }
+
+        let client = APIClient(baseURL: Self.baseURL, tokenStore: store, session: session)
+        let response: StubPayload = try await client.request(.getProfile)
+
+        XCTAssertEqual(response.value, "retried-with-current-token")
+        XCTAssertEqual(profileRequestCount.value, 2)
+        XCTAssertEqual(refreshRequestCount.value, 0)
+    }
+
     func testAPIClientDoesNotRetryUnauthorizedResponseAfterRefreshAttempt() async throws {
         let store = TokenStore()
         store.clearTokens()
@@ -178,6 +228,26 @@ final class HealthCareTests: XCTestCase {
             XCTFail("401 재시도 후에도 실패하면 unauthorized 에러를 던져야 합니다.")
         } catch APIError.unauthorized {
             XCTAssertEqual(profileRequestCount.value, 2)
+        } catch {
+            XCTFail("예상하지 못한 에러: \(error)")
+        }
+    }
+
+    func testAPIClientMapsURLErrorToNoNetwork() async throws {
+        let store = TokenStore()
+        store.clearTokens()
+
+        let session = Self.stubbedSession { _ in
+            throw URLError(.notConnectedToInternet)
+        }
+
+        let client = APIClient(baseURL: Self.baseURL, tokenStore: store, session: session)
+
+        do {
+            let _: StubPayload = try await client.request(.login(body: Data()))
+            XCTFail("URLSession 네트워크 실패는 noNetwork로 변환되어야 합니다.")
+        } catch APIError.noNetwork {
+            // Expected.
         } catch {
             XCTFail("예상하지 못한 에러: \(error)")
         }

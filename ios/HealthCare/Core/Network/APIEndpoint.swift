@@ -4,10 +4,17 @@ enum HTTPMethod: String {
     case GET, POST, PUT, PATCH, DELETE
 }
 
+/// 소셜로그인 제공자. raw value 는 백엔드 path variable 로 사용된다 (`/api/v1/auth/social-login/{provider}`).
+enum SocialAuthProvider: String, Sendable {
+    case apple = "APPLE"
+    case google = "GOOGLE"
+}
+
 enum APIEndpoint {
     // Auth
     case register(body: Data)
     case login(body: Data)
+    case socialLogin(provider: SocialAuthProvider, body: Data)
     case refreshToken(body: Data)
     case logout
 
@@ -83,6 +90,7 @@ extension APIEndpoint {
         switch self {
         case .register:                          return "/api/v1/auth/register"
         case .login:                             return "/api/v1/auth/login"
+        case .socialLogin(let provider, _):      return "/api/v1/auth/social-login/\(provider.rawValue)"
         case .refreshToken:                      return "/api/v1/auth/token/refresh"
         case .logout:                            return "/api/v1/auth/logout"
         case .getProfile, .updateProfile, .deleteAccount:
@@ -134,7 +142,7 @@ extension APIEndpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .register, .login, .refreshToken, .logout,
+        case .register, .login, .socialLogin, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
              .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
@@ -156,7 +164,7 @@ extension APIEndpoint {
 
     var body: Data? {
         switch self {
-        case .register(let b), .login(let b), .refreshToken(let b),
+        case .register(let b), .login(let b), .socialLogin(_, let b), .refreshToken(let b),
              .updateProfile(let b),
              .createExerciseSession(let b),
              .createDietLog(let b), .updateDietLog(_, let b), .initiateMealPhotoAnalysis(let b),
@@ -238,7 +246,7 @@ extension APIEndpoint {
 
     var requiresAuth: Bool {
         switch self {
-        case .register, .login, .refreshToken: return false
+        case .register, .login, .socialLogin, .refreshToken: return false
         default: return true
         }
     }

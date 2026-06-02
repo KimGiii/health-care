@@ -74,6 +74,13 @@ app:
     # Access token TTL은 짧게(1h) — refresh token으로 재발급 (iOS APIClient가 자동 처리).
     access-token-expiry-hours: 1
     refresh-token-expiry-days: 30
+  oauth:
+    # iOS 앱 Bundle ID (Apple Sign In aud 클레임)
+    apple:
+      audience: ${APPLE_BUNDLE_ID:com.kingloo.gainsy.ios}
+    # GCP OAuth 2.0 iOS 클라이언트 ID (Google Sign In aud 클레임)
+    google:
+      audience: ${GOOGLE_IOS_CLIENT_ID:}
   s3:
     bucket: ${S3_BUCKET:healthcare-photos-local}
     region: ${S3_REGION:ap-northeast-2}

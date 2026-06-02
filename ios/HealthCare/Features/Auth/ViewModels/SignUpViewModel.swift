@@ -44,4 +44,36 @@ final class SignUpViewModel: ObservableObject {
             errorMessage = "회원가입 중 오류가 발생했습니다."
         }
     }
+
+    /// 소셜로그인은 회원가입 흐름에서도 동일하게 사용한다.
+    /// 백엔드는 (provider, sub) 가 처음이면 신규 가입, 기존이면 로그인으로 처리한다.
+    /// onboardingCompleted=false 인 신규 계정은 자동으로 ProfileSetupView 로 전환된다.
+    func signInWithSocialProvider(
+        _ provider: SocialAuthProvider,
+        tokenProvider: SocialIdentityTokenProvider,
+        apiClient: APIClient,
+        authState: AuthState
+    ) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let idToken = try await tokenProvider.fetchIdToken()
+            let body = try apiClient.encode(SocialLoginRequest(idToken: idToken))
+            let tokenResponse: TokenResponse = try await apiClient.request(
+                .socialLogin(provider: provider, body: body)
+            )
+            authState.saveAndAuthenticate(tokenResponse: tokenResponse)
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch is CancellationError {
+            errorMessage = nil
+        } catch {
+            switch provider {
+            case .apple:  errorMessage = "Apple 가입에 실패했습니다."
+            case .google: errorMessage = "Google 가입에 실패했습니다."
+            }
+        }
+    }
 }
