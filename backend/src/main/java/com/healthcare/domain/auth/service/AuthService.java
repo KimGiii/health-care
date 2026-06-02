@@ -6,6 +6,8 @@ import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.auth.dto.LoginRequest;
 import com.healthcare.domain.auth.dto.RefreshTokenRequest;
 import com.healthcare.domain.auth.dto.RegisterRequest;
+import com.healthcare.domain.auth.dto.SocialLoginCheckResponse;
+import com.healthcare.domain.auth.dto.SocialLoginCommitRequest;
 import com.healthcare.domain.auth.dto.SocialLoginRequest;
 import com.healthcare.domain.auth.dto.TokenResponse;
 import com.healthcare.domain.auth.entity.RefreshToken;
@@ -145,7 +147,11 @@ public class AuthService {
      *   <li>그 외에는 신규 User + UserIdentity 생성 (passwordHash=null, onboardingCompleted=false)</li>
      * </ol>
      * 검증되지 않은 이메일을 가진 토큰은 자동 연결하지 않고 항상 신규 계정으로 분리한다 (계정 탈취 방지).
+     *
+     * @deprecated 2-step 흐름 {@link #socialLoginCheck} + {@link #socialLoginCommit} 사용을 권장.
+     *             기존 클라이언트(v1.1.x) 호환을 위해 유지하되 약관 동의 시각이 기록되지 않는다.
      */
+    @Deprecated
     @Transactional
     public TokenResponse socialLogin(String providerRaw, SocialLoginRequest request) {
         UserIdentity.Provider provider = parseProvider(providerRaw);
@@ -153,6 +159,64 @@ public class AuthService {
 
         User user = resolveExistingUser(provider, info.subject())
             .orElseGet(() -> linkOrCreateUser(provider, info));
+
+        refreshTokenRepository.revokeAllByUserId(user.getId());
+        socialLoginSuccessCounter.increment();
+        return issueTokens(user);
+    }
+
+    /**
+     * 2-step 소셜로그인 1단계: ID 토큰 검증 후 기존/신규 판별.
+     * <ul>
+     *   <li>기존 사용자(또는 email_verified=true 자동 연결 대상): 토큰 즉시 발급</li>
+     *   <li>신규 사용자: 토큰 발급 없이 {@code isNew=true} 만 반환. 클라이언트는 약관 동의 UI 노출 후
+     *       {@link #socialLoginCommit} 호출.</li>
+     * </ul>
+     * 신규 판별 단계에서는 어떤 row 도 생성하지 않는다.
+     */
+    @Transactional
+    public SocialLoginCheckResponse socialLoginCheck(String providerRaw, SocialLoginRequest request) {
+        UserIdentity.Provider provider = parseProvider(providerRaw);
+        OAuthUserInfo info = verifierFor(provider).verify(request.getIdToken());
+
+        Optional<User> existing = resolveExistingUser(provider, info.subject());
+        if (existing.isEmpty() && info.email() != null && info.emailVerified()) {
+            existing = userRepository.findByEmailAndDeletedAtIsNull(info.email());
+            if (existing.isPresent()) {
+                // 자동 연결: identity 만 추가하고 즉시 로그인 (약관은 LOCAL 가입 시 이미 동의했다고 본다)
+                userIdentityRepository.save(UserIdentity.create(existing.get(), provider, info.subject()));
+            }
+        }
+
+        if (existing.isPresent()) {
+            User user = existing.get();
+            refreshTokenRepository.revokeAllByUserId(user.getId());
+            socialLoginSuccessCounter.increment();
+            return SocialLoginCheckResponse.existing(issueTokens(user));
+        }
+        return SocialLoginCheckResponse.pendingConsent();
+    }
+
+    /**
+     * 2-step 소셜로그인 2단계: 약관 동의 확인 후 신규 사용자 생성.
+     * <p>
+     * 클라이언트는 {@link #socialLoginCheck} 가 {@code isNew=true} 를 반환한 경우에만 호출한다.
+     * 동일 토큰을 다시 검증하며(짧은 유효시간 내라 안전), 동시성 race 로 그사이 identity 가 만들어졌다면
+     * 그 사용자 토큰을 발급한다(중복 가입 방지).
+     */
+    @Transactional
+    public TokenResponse socialLoginCommit(String providerRaw, SocialLoginCommitRequest request) {
+        UserIdentity.Provider provider = parseProvider(providerRaw);
+        OAuthUserInfo info = verifierFor(provider).verify(request.getIdToken());
+
+        // race 가드: check 와 commit 사이에 다른 디바이스에서 동일 (provider, subject) 가입이 완료됐을 수 있다.
+        User user = resolveExistingUser(provider, info.subject())
+            .orElseGet(() -> {
+                User created = linkOrCreateUser(provider, info);
+                OffsetDateTime now = OffsetDateTime.now();
+                created.recordConsents(now, now);
+                return created;
+            });
 
         refreshTokenRepository.revokeAllByUserId(user.getId());
         socialLoginSuccessCounter.increment();

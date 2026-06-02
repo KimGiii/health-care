@@ -4,6 +4,8 @@ import com.healthcare.common.response.ApiResponse;
 import com.healthcare.domain.auth.dto.LoginRequest;
 import com.healthcare.domain.auth.dto.RefreshTokenRequest;
 import com.healthcare.domain.auth.dto.RegisterRequest;
+import com.healthcare.domain.auth.dto.SocialLoginCheckResponse;
+import com.healthcare.domain.auth.dto.SocialLoginCommitRequest;
 import com.healthcare.domain.auth.dto.SocialLoginRequest;
 import com.healthcare.domain.auth.dto.TokenResponse;
 import com.healthcare.domain.auth.service.AuthService;
@@ -33,10 +35,25 @@ public class AuthController {
     }
 
     @PostMapping("/social-login/{provider}")
+    @Deprecated
     public ResponseEntity<ApiResponse<TokenResponse>> socialLogin(
             @PathVariable String provider,
             @Valid @RequestBody SocialLoginRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(authService.socialLogin(provider, request)));
+    }
+
+    @PostMapping("/social-login/{provider}/check")
+    public ResponseEntity<ApiResponse<SocialLoginCheckResponse>> socialLoginCheck(
+            @PathVariable String provider,
+            @Valid @RequestBody SocialLoginRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.socialLoginCheck(provider, request)));
+    }
+
+    @PostMapping("/social-login/{provider}/commit")
+    public ResponseEntity<ApiResponse<TokenResponse>> socialLoginCommit(
+            @PathVariable String provider,
+            @Valid @RequestBody SocialLoginCommitRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.socialLoginCommit(provider, request)));
     }
 
     @PostMapping("/token/refresh")

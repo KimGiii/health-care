@@ -1,6 +1,8 @@
 package com.healthcare.domain.auth.service;
 
 import com.healthcare.common.exception.ValidationException;
+import com.healthcare.domain.auth.dto.SocialLoginCheckResponse;
+import com.healthcare.domain.auth.dto.SocialLoginCommitRequest;
 import com.healthcare.domain.auth.dto.SocialLoginRequest;
 import com.healthcare.domain.auth.dto.TokenResponse;
 import com.healthcare.domain.auth.entity.RefreshToken;
@@ -202,6 +204,123 @@ class AuthServiceSocialLoginTest {
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getEmail()).isEqualTo("orphan@example.com");
         assertThat(res.getUserId()).isEqualTo(100L);
+    }
+
+    // ---------- 2-step 흐름: check / commit ----------
+
+    @Test
+    @DisplayName("check: 기존 사용자면 토큰 즉시 발급한다 (isNew=false)")
+    void socialLoginCheck_existingUser_issuesTokens() {
+        OAuthUserInfo info = new OAuthUserInfo("apple-sub-c1", "c1@example.com", true, "지수");
+        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+
+        User user = userWithId(50L, "c1@example.com", true);
+        UserIdentity identity = UserIdentity.builder()
+                .user(user).provider(UserIdentity.Provider.APPLE).providerSubject("apple-sub-c1").build();
+        given(userIdentityRepository.findByProviderAndProviderSubject(
+                UserIdentity.Provider.APPLE, "apple-sub-c1")).willReturn(Optional.of(identity));
+        given(userRepository.findByIdAndDeletedAtIsNull(50L)).willReturn(Optional.of(user));
+        given(jwtTokenProvider.generateAccessToken(50L, "c1@example.com")).willReturn("a");
+        given(jwtTokenProvider.generateRefreshToken(50L, "c1@example.com")).willReturn("r");
+        given(refreshTokenRepository.save(any(RefreshToken.class))).willAnswer(inv -> inv.getArgument(0));
+
+        SocialLoginCheckResponse res = authService.socialLoginCheck("APPLE", new SocialLoginRequest("t"));
+
+        assertThat(res.newUser()).isFalse();
+        assertThat(res.tokens()).isNotNull();
+        assertThat(res.tokens().getUserId()).isEqualTo(50L);
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("check: 신규 사용자면 어떤 row 도 생성하지 않고 newUser=true 만 반환한다")
+    void socialLoginCheck_newUser_doesNotPersist() {
+        OAuthUserInfo info = new OAuthUserInfo("apple-sub-new", "new@example.com", true, null);
+        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(userIdentityRepository.findByProviderAndProviderSubject(
+                UserIdentity.Provider.APPLE, "apple-sub-new")).willReturn(Optional.empty());
+        given(userRepository.findByEmailAndDeletedAtIsNull("new@example.com")).willReturn(Optional.empty());
+
+        SocialLoginCheckResponse res = authService.socialLoginCheck("APPLE", new SocialLoginRequest("t"));
+
+        assertThat(res.newUser()).isTrue();
+        assertThat(res.tokens()).isNull();
+        verify(userRepository, never()).save(any(User.class));
+        verify(userIdentityRepository, never()).save(any(UserIdentity.class));
+        verify(refreshTokenRepository, never()).revokeAllByUserId(any());
+    }
+
+    @Test
+    @DisplayName("check: email_verified=true 자동 연결 대상이면 isNew=false 로 즉시 로그인된다")
+    void socialLoginCheck_emailAutoLink_issuesTokens() {
+        OAuthUserInfo info = new OAuthUserInfo("apple-sub-link", "link@example.com", true, null);
+        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(userIdentityRepository.findByProviderAndProviderSubject(
+                UserIdentity.Provider.APPLE, "apple-sub-link")).willReturn(Optional.empty());
+        User existing = userWithId(60L, "link@example.com", true);
+        given(userRepository.findByEmailAndDeletedAtIsNull("link@example.com")).willReturn(Optional.of(existing));
+        given(jwtTokenProvider.generateAccessToken(60L, "link@example.com")).willReturn("a");
+        given(jwtTokenProvider.generateRefreshToken(60L, "link@example.com")).willReturn("r");
+        given(refreshTokenRepository.save(any(RefreshToken.class))).willAnswer(inv -> inv.getArgument(0));
+
+        SocialLoginCheckResponse res = authService.socialLoginCheck("APPLE", new SocialLoginRequest("t"));
+
+        assertThat(res.newUser()).isFalse();
+        verify(userIdentityRepository).save(any(UserIdentity.class));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("commit: 신규 사용자 생성 시 termsAgreedAt/privacyAgreedAt 가 기록된다")
+    void socialLoginCommit_newUser_recordsConsentTimestamps() {
+        OAuthUserInfo info = new OAuthUserInfo("apple-sub-commit", "commit@example.com", true, "테스터");
+        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(userIdentityRepository.findByProviderAndProviderSubject(
+                UserIdentity.Provider.APPLE, "apple-sub-commit")).willReturn(Optional.empty());
+        given(userRepository.findByEmailAndDeletedAtIsNull("commit@example.com")).willReturn(Optional.empty());
+        given(userRepository.save(any(User.class))).willAnswer(inv -> {
+            User u = inv.getArgument(0);
+            setField(u, "id", 70L);
+            return u;
+        });
+        given(jwtTokenProvider.generateAccessToken(70L, "commit@example.com")).willReturn("a");
+        given(jwtTokenProvider.generateRefreshToken(70L, "commit@example.com")).willReturn("r");
+        given(refreshTokenRepository.save(any(RefreshToken.class))).willAnswer(inv -> inv.getArgument(0));
+
+        TokenResponse res = authService.socialLoginCommit("APPLE",
+                new SocialLoginCommitRequest("t", true, true));
+
+        assertThat(res.getUserId()).isEqualTo(70L);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User saved = userCaptor.getValue();
+        assertThat(saved.getTermsAgreedAt()).isNotNull();
+        assertThat(saved.getPrivacyAgreedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("commit: check 와 commit 사이 다른 디바이스에서 가입이 완료된 경우 그 사용자 토큰을 발급한다 (중복 가입 방지)")
+    void socialLoginCommit_raceWithOtherDevice_returnsExistingUser() {
+        OAuthUserInfo info = new OAuthUserInfo("apple-sub-race", "race@example.com", true, null);
+        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+
+        User user = userWithId(80L, "race@example.com", false);
+        UserIdentity identity = UserIdentity.builder()
+                .user(user).provider(UserIdentity.Provider.APPLE).providerSubject("apple-sub-race").build();
+        given(userIdentityRepository.findByProviderAndProviderSubject(
+                UserIdentity.Provider.APPLE, "apple-sub-race")).willReturn(Optional.of(identity));
+        given(userRepository.findByIdAndDeletedAtIsNull(80L)).willReturn(Optional.of(user));
+        given(jwtTokenProvider.generateAccessToken(80L, "race@example.com")).willReturn("a");
+        given(jwtTokenProvider.generateRefreshToken(80L, "race@example.com")).willReturn("r");
+        given(refreshTokenRepository.save(any(RefreshToken.class))).willAnswer(inv -> inv.getArgument(0));
+
+        TokenResponse res = authService.socialLoginCommit("APPLE",
+                new SocialLoginCommitRequest("t", true, true));
+
+        assertThat(res.getUserId()).isEqualTo(80L);
+        verify(userRepository, never()).save(any(User.class));
+        // 기존 사용자라 동의 시각은 기록되지 않는다
+        assertThat(user.getTermsAgreedAt()).isNull();
     }
 
     @Test

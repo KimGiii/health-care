@@ -294,6 +294,66 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("소셜로그인 check — 기존 사용자면 isNew=false 와 토큰 반환")
+    void socialLoginCheck_existingUser_returnsTokens() throws Exception {
+        given(authService.socialLoginCheck(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class)))
+                .willReturn(com.healthcare.domain.auth.dto.SocialLoginCheckResponse.existing(buildTokenResponse()));
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUser").value(false))
+                .andExpect(jsonPath("$.data.tokens.accessToken").value("access.token"));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 check — 신규 사용자면 newUser=true, tokens=null")
+    void socialLoginCheck_newUser_returnsPending() throws Exception {
+        given(authService.socialLoginCheck(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class)))
+                .willReturn(com.healthcare.domain.auth.dto.SocialLoginCheckResponse.pendingConsent());
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUser").value(true))
+                .andExpect(jsonPath("$.data.tokens").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 약관·개인정보 동의 시 토큰 반환")
+    void socialLoginCommit_withConsents_returns200() throws Exception {
+        given(authService.socialLoginCommit(ArgumentMatchers.eq("APPLE"),
+                any(com.healthcare.domain.auth.dto.SocialLoginCommitRequest.class)))
+                .willReturn(buildTokenResponse());
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":true,\"agreedToPrivacy\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").value("access.token"));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 약관 미동의면 400 (검증 실패)")
+    void socialLoginCommit_termsNotAgreed_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":false,\"agreedToPrivacy\":true}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 개인정보처리방침 미동의면 400 (검증 실패)")
+    void socialLoginCommit_privacyNotAgreed_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":true,\"agreedToPrivacy\":false}"))
+                .andExpect(status().isBadRequest());
+    }
+
     private TokenResponse buildTokenResponse() {
         return TokenResponse.builder()
                 .userId(USER_ID)
