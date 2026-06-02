@@ -129,11 +129,9 @@ schemes:
         HealthCareTests: [test]
         HealthCareUITests: [test]
     run:
+      # BASE_URL은 Debug.xcconfig(localhost/LAN) → Info.plist $(BASE_URL)로 주입.
+      # env 변수로 덮어쓰지 않는다 (덮어쓰면 xcconfig 환경 분리가 무력화됨).
       config: Debug
-      environmentVariables:
-        - variable: BASE_URL
-          value: https://api.gainsy.site
-          isEnabled: true
     test:
       config: Debug
       targets:
@@ -153,11 +151,9 @@ schemes:
       targets:
         HealthCare: all
     run:
+      # BASE_URL은 Staging.xcconfig(dev.api.gainsy.site) → Info.plist $(BASE_URL)로 주입.
+      # env 변수로 덮어쓰지 않는다 (이전에 prod URL이 박혀 dev 분리가 깨졌던 버그).
       config: Staging
-      environmentVariables:
-        - variable: BASE_URL
-          value: https://api.gainsy.site
-          isEnabled: true
     profile:
       config: Staging
     analyze:
