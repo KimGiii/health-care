@@ -20,8 +20,7 @@
         "s3:PutBucketPublicAccessBlock",
         "s3:DeleteBucketPublicAccessBlock",
         "s3:GetBucketCORS",
-        "s3:PutBucketCORS",
-        "s3:DeleteBucketCORS"
+        "s3:PutBucketCORS"
       ],
       "Resource": [
         "arn:aws:s3:::healthcare-photos-dev",
