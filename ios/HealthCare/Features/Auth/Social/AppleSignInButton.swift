@@ -14,7 +14,7 @@ struct AppleSignInButton: View {
                         .tint(.white)
                 } else {
                     Image(systemName: "applelogo")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 18, weight: .medium)) // design-lint:ignore Apple HIG 요구사항
                 }
                 Text("Apple로 계속하기")
                     .font(.cta)
