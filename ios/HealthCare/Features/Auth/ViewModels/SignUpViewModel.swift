@@ -60,16 +60,20 @@ final class SignUpViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let idToken = try await tokenProvider.fetchIdToken()
+            let identity = try await tokenProvider.fetchIdToken()
             await NetworkPathWaiter.waitForLocalNetwork()
-            let body = try apiClient.encode(SocialLoginRequest(idToken: idToken))
-            let check: SocialLoginCheckResponse = try await apiClient.request(
-                .socialLoginCheck(provider: provider, body: body)
+            let body = try apiClient.encode(
+                SocialLoginRequest(idToken: identity.idToken, nonce: identity.rawNonce)
             )
+            let check: SocialLoginCheckResponse = try await retryingSocialConflict {
+                try await apiClient.request(.socialLoginCheck(provider: provider, body: body))
+            }
             if !check.newUser, let tokens = check.tokens {
                 authState.saveAndAuthenticate(tokenResponse: tokens)
             } else {
-                pendingConsent = PendingSocialConsent(provider: provider, idToken: idToken)
+                pendingConsent = PendingSocialConsent(
+                    provider: provider, idToken: identity.idToken, rawNonce: identity.rawNonce
+                )
             }
         } catch let error as APIError {
             errorMessage = error.errorDescription
@@ -92,12 +96,13 @@ final class SignUpViewModel: ObservableObject {
         do {
             let body = try apiClient.encode(SocialLoginCommitRequest(
                 idToken: pending.idToken,
+                nonce: pending.rawNonce,
                 agreedToTerms: true,
                 agreedToPrivacy: true
             ))
-            let tokenResponse: TokenResponse = try await apiClient.request(
-                .socialLoginCommit(provider: pending.provider, body: body)
-            )
+            let tokenResponse: TokenResponse = try await retryingSocialConflict {
+                try await apiClient.request(.socialLoginCommit(provider: pending.provider, body: body))
+            }
             pendingConsent = nil
             authState.saveAndAuthenticate(tokenResponse: tokenResponse)
         } catch let error as APIError {

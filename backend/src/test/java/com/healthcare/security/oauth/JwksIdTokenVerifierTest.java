@@ -60,7 +60,7 @@ class JwksIdTokenVerifierTest {
         String token = buildToken(ISSUER, AUDIENCE, "sub-123", "user@example.com", true, "홍길동",
                 Instant.now().plusSeconds(60));
 
-        OAuthUserInfo info = verifier.verify(token);
+        OAuthUserInfo info = verifier.verify(token, null);
 
         assertThat(info.subject()).isEqualTo("sub-123");
         assertThat(info.email()).isEqualTo("user@example.com");
@@ -74,7 +74,7 @@ class JwksIdTokenVerifierTest {
         String token = buildToken(ISSUER, AUDIENCE, "sub-1", "u@e.com", "true", null,
                 Instant.now().plusSeconds(60));
 
-        OAuthUserInfo info = verifier.verify(token);
+        OAuthUserInfo info = verifier.verify(token, null);
 
         assertThat(info.emailVerified()).isTrue();
     }
@@ -85,7 +85,7 @@ class JwksIdTokenVerifierTest {
         String token = buildToken("https://evil.com", AUDIENCE, "sub-1", "u@e.com", true, null,
                 Instant.now().plusSeconds(60));
 
-        assertThatThrownBy(() -> verifier.verify(token))
+        assertThatThrownBy(() -> verifier.verify(token, null))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("issuer");
     }
@@ -96,7 +96,7 @@ class JwksIdTokenVerifierTest {
         String token = buildToken(ISSUER, "other.app", "sub-1", "u@e.com", true, null,
                 Instant.now().plusSeconds(60));
 
-        assertThatThrownBy(() -> verifier.verify(token))
+        assertThatThrownBy(() -> verifier.verify(token, null))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
@@ -106,7 +106,7 @@ class JwksIdTokenVerifierTest {
         String token = buildToken(ISSUER, AUDIENCE, "sub-1", "u@e.com", true, null,
                 Instant.now().minusSeconds(60));
 
-        assertThatThrownBy(() -> verifier.verify(token))
+        assertThatThrownBy(() -> verifier.verify(token, null))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
@@ -124,17 +124,58 @@ class JwksIdTokenVerifierTest {
                 .signWith((RSAPrivateKey) keyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
 
-        assertThatThrownBy(() -> verifier.verify(token))
+        assertThatThrownBy(() -> verifier.verify(token, null))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
     @DisplayName("빈/null 토큰은 401")
     void verify_blankToken_throwsUnauthorized() {
-        assertThatThrownBy(() -> verifier.verify(""))
+        assertThatThrownBy(() -> verifier.verify("", null))
                 .isInstanceOf(UnauthorizedException.class);
-        assertThatThrownBy(() -> verifier.verify(null))
+        assertThatThrownBy(() -> verifier.verify(null, null))
                 .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    @DisplayName("expectedNonce 와 토큰 nonce 가 일치하면 통과")
+    void verify_matchingNonce_ok() {
+        String token = buildTokenWithNonce("sub-1", "nonce-abc");
+
+        OAuthUserInfo info = verifier.verify(token, "nonce-abc");
+
+        assertThat(info.subject()).isEqualTo("sub-1");
+    }
+
+    @Test
+    @DisplayName("expectedNonce 가 토큰 nonce 와 다르면 401")
+    void verify_nonceMismatch_throwsUnauthorized() {
+        String token = buildTokenWithNonce("sub-1", "nonce-abc");
+
+        assertThatThrownBy(() -> verifier.verify(token, "nonce-xyz"))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("nonce");
+    }
+
+    @Test
+    @DisplayName("expectedNonce 를 요구하는데 토큰에 nonce 가 없으면 401")
+    void verify_missingNonceWhenExpected_throwsUnauthorized() {
+        String token = buildToken(ISSUER, AUDIENCE, "sub-1", "u@e.com", true, null,
+                Instant.now().plusSeconds(60));
+
+        assertThatThrownBy(() -> verifier.verify(token, "nonce-abc"))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("nonce");
+    }
+
+    @Test
+    @DisplayName("expectedNonce 가 null 이면 nonce 검증을 건너뛴다 (하위호환)")
+    void verify_nullExpectedNonce_skipsCheck() {
+        String token = buildTokenWithNonce("sub-1", "nonce-abc");
+
+        OAuthUserInfo info = verifier.verify(token, null);
+
+        assertThat(info.subject()).isEqualTo("sub-1");
     }
 
     @Test
@@ -153,7 +194,7 @@ class JwksIdTokenVerifierTest {
                 .signWith((RSAPrivateKey) attacker.getPrivate(), Jwts.SIG.RS256)
                 .compact();
 
-        assertThatThrownBy(() -> verifier.verify(token))
+        assertThatThrownBy(() -> verifier.verify(token, null))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
@@ -185,6 +226,19 @@ class JwksIdTokenVerifierTest {
             builder.claim("name", name);
         }
         return builder.signWith((RSAPrivateKey) keyPair.getPrivate(), Jwts.SIG.RS256).compact();
+    }
+
+    private String buildTokenWithNonce(String subject, String nonce) {
+        return Jwts.builder()
+                .header().keyId(KID).and()
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
+                .subject(subject)
+                .claim("nonce", nonce)
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith((RSAPrivateKey) keyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
     }
 
     @SuppressWarnings("unused")

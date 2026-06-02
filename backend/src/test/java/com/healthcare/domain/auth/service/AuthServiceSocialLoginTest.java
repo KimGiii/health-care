@@ -67,7 +67,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("기존 UserIdentity 가 있으면 그 사용자로 토큰을 발급한다 (Google 재로그인)")
     void socialLogin_existingIdentity_reusesUser() {
         OAuthUserInfo info = new OAuthUserInfo("google-sub-1", "g@example.com", true, "지수");
-        given(googleIdTokenVerifier.verify("idtoken")).willReturn(info);
+        given(googleIdTokenVerifier.verify("idtoken", null)).willReturn(info);
 
         User user = userWithId(10L, "g@example.com", true);
         UserIdentity identity = UserIdentity.builder()
@@ -96,7 +96,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("동일 이메일의 LOCAL 계정이 있고 email_verified=true 면 자동 연결한다")
     void socialLogin_emailVerifiedMatchesExisting_linksIdentity() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-1", "u@example.com", true, null);
-        given(appleIdTokenVerifier.verify("idtoken")).willReturn(info);
+        given(appleIdTokenVerifier.verify("idtoken", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.APPLE, "apple-sub-1")).willReturn(Optional.empty());
 
@@ -122,7 +122,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("email_verified=false 면 동일 이메일이 있어도 신규 계정으로 만든다")
     void socialLogin_emailNotVerified_createsNewUser() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-2", "u@example.com", false, null);
-        given(appleIdTokenVerifier.verify("idtoken")).willReturn(info);
+        given(appleIdTokenVerifier.verify("idtoken", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.APPLE, "apple-sub-2")).willReturn(Optional.empty());
         given(userRepository.save(any(User.class))).willAnswer(inv -> {
@@ -148,7 +148,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("신규 Google 가입 — email 이 없는 토큰도 합성 이메일로 생성된다")
     void socialLogin_newUserWithoutEmail_synthesizesPlaceholder() {
         OAuthUserInfo info = new OAuthUserInfo("google-sub-2", null, false, "테스터");
-        given(googleIdTokenVerifier.verify("idtoken")).willReturn(info);
+        given(googleIdTokenVerifier.verify("idtoken", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.GOOGLE, "google-sub-2")).willReturn(Optional.empty());
         given(userRepository.save(any(User.class))).willAnswer(inv -> {
@@ -172,7 +172,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("identity 는 있지만 user 가 soft-delete 됐다면 고아 identity 를 삭제하고 신규 가입한다")
     void socialLogin_orphanedIdentity_deletesAndCreatesNew() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-orphan", "orphan@example.com", true, null);
-        given(appleIdTokenVerifier.verify("idtoken")).willReturn(info);
+        given(appleIdTokenVerifier.verify("idtoken", null)).willReturn(info);
 
         User deletedUser = userWithId(99L, "orphan@example.com", true);
         UserIdentity orphan = UserIdentity.builder()
@@ -212,7 +212,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("check: 기존 사용자면 토큰 즉시 발급한다 (isNew=false)")
     void socialLoginCheck_existingUser_issuesTokens() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-c1", "c1@example.com", true, "지수");
-        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(appleIdTokenVerifier.verify("t", null)).willReturn(info);
 
         User user = userWithId(50L, "c1@example.com", true);
         UserIdentity identity = UserIdentity.builder()
@@ -236,7 +236,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("check: 신규 사용자면 어떤 row 도 생성하지 않고 newUser=true 만 반환한다")
     void socialLoginCheck_newUser_doesNotPersist() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-new", "new@example.com", true, null);
-        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(appleIdTokenVerifier.verify("t", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.APPLE, "apple-sub-new")).willReturn(Optional.empty());
         given(userRepository.findByEmailAndDeletedAtIsNull("new@example.com")).willReturn(Optional.empty());
@@ -254,7 +254,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("check: email_verified=true 자동 연결 대상이면 isNew=false 로 즉시 로그인된다")
     void socialLoginCheck_emailAutoLink_issuesTokens() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-link", "link@example.com", true, null);
-        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(appleIdTokenVerifier.verify("t", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.APPLE, "apple-sub-link")).willReturn(Optional.empty());
         User existing = userWithId(60L, "link@example.com", true);
@@ -274,7 +274,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("commit: 신규 사용자 생성 시 termsAgreedAt/privacyAgreedAt 가 기록된다")
     void socialLoginCommit_newUser_recordsConsentTimestamps() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-commit", "commit@example.com", true, "테스터");
-        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(appleIdTokenVerifier.verify("t", null)).willReturn(info);
         given(userIdentityRepository.findByProviderAndProviderSubject(
                 UserIdentity.Provider.APPLE, "apple-sub-commit")).willReturn(Optional.empty());
         given(userRepository.findByEmailAndDeletedAtIsNull("commit@example.com")).willReturn(Optional.empty());
@@ -302,7 +302,7 @@ class AuthServiceSocialLoginTest {
     @DisplayName("commit: check 와 commit 사이 다른 디바이스에서 가입이 완료된 경우 그 사용자 토큰을 발급한다 (중복 가입 방지)")
     void socialLoginCommit_raceWithOtherDevice_returnsExistingUser() {
         OAuthUserInfo info = new OAuthUserInfo("apple-sub-race", "race@example.com", true, null);
-        given(appleIdTokenVerifier.verify("t")).willReturn(info);
+        given(appleIdTokenVerifier.verify("t", null)).willReturn(info);
 
         User user = userWithId(80L, "race@example.com", false);
         UserIdentity identity = UserIdentity.builder()

@@ -157,7 +157,8 @@ public class AuthService {
     @Transactional
     public TokenResponse socialLogin(String providerRaw, SocialLoginRequest request) {
         UserIdentity.Provider provider = parseProvider(providerRaw);
-        OAuthUserInfo info = verifierFor(provider).verify(request.getIdToken());
+        OAuthUserInfo info = verifierFor(provider)
+            .verify(request.getIdToken(), expectedNonce(provider, request.getNonce()));
 
         User user = resolveExistingUser(provider, info.subject())
             .orElseGet(() -> linkOrCreateUser(provider, info));
@@ -179,7 +180,8 @@ public class AuthService {
     @Transactional
     public SocialLoginCheckResponse socialLoginCheck(String providerRaw, SocialLoginRequest request) {
         UserIdentity.Provider provider = parseProvider(providerRaw);
-        OAuthUserInfo info = verifierFor(provider).verify(request.getIdToken());
+        OAuthUserInfo info = verifierFor(provider)
+            .verify(request.getIdToken(), expectedNonce(provider, request.getNonce()));
 
         Optional<User> existing = resolveExistingUser(provider, info.subject());
         if (existing.isEmpty() && info.email() != null && info.emailVerified()) {
@@ -211,7 +213,8 @@ public class AuthService {
     @Transactional
     public TokenResponse socialLoginCommit(String providerRaw, SocialLoginCommitRequest request) {
         UserIdentity.Provider provider = parseProvider(providerRaw);
-        OAuthUserInfo info = verifierFor(provider).verify(request.getIdToken());
+        OAuthUserInfo info = verifierFor(provider)
+            .verify(request.getIdToken(), expectedNonce(provider, request.getNonce()));
 
         // race 가드: check 와 commit 사이에 다른 디바이스에서 동일 (provider, subject) 가입이 완료됐을 수 있다.
         User user = resolveExistingUser(provider, info.subject())
@@ -284,6 +287,39 @@ public class AuthService {
         userRepository.save(newUser);
         userIdentityRepository.save(UserIdentity.create(newUser, provider, info.subject()));
         return newUser;
+    }
+
+    /**
+     * 클라이언트가 보낸 원본 nonce 를 제공자 규칙에 맞춰 ID 토큰의 nonce 클레임 기대값으로 변환한다.
+     * <ul>
+     *   <li>Apple — 인증 요청에 {@code SHA256(rawNonce)} 의 16진수 문자열을 넣으므로 토큰 nonce 도 그 값</li>
+     *   <li>Google — nonce 를 변환 없이 그대로 토큰에 담으므로 원본 그대로 비교</li>
+     * </ul>
+     * 원본 nonce 가 비어있으면(구버전 클라이언트) {@code null} 을 반환해 검증을 건너뛴다.
+     */
+    private String expectedNonce(UserIdentity.Provider provider, String rawNonce) {
+        if (rawNonce == null || rawNonce.isBlank()) {
+            return null;
+        }
+        return switch (provider) {
+            case APPLE -> sha256Hex(rawNonce);
+            case GOOGLE -> rawNonce;
+        };
+    }
+
+    private static String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(bytes.length * 2);
+            for (byte b : bytes) {
+                sb.append(Character.forDigit((b >> 4) & 0xF, 16));
+                sb.append(Character.forDigit(b & 0xF, 16));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
     }
 
     private OAuthIdTokenVerifier verifierFor(UserIdentity.Provider provider) {

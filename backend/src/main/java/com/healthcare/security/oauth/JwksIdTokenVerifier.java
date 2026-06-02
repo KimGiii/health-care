@@ -14,7 +14,9 @@ import io.jsonwebtoken.ProtectedHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.util.Set;
 
 /**
@@ -26,6 +28,7 @@ import java.util.Set;
  *   <li>iss = expectedIssuers 중 하나</li>
  *   <li>aud = expectedAudience</li>
  *   <li>exp (JJWT 가 자동 검증)</li>
+ *   <li>nonce = expectedNonce (전달된 경우, 재생 공격 방지)</li>
  * </ul>
  */
 @Slf4j
@@ -37,7 +40,7 @@ public abstract class JwksIdTokenVerifier implements OAuthIdTokenVerifier {
     private final String expectedAudience;
 
     @Override
-    public OAuthUserInfo verify(String idToken) {
+    public OAuthUserInfo verify(String idToken, String expectedNonce) {
         if (idToken == null || idToken.isBlank()) {
             throw new UnauthorizedException("ID 토큰이 비어있습니다.");
         }
@@ -65,12 +68,31 @@ public abstract class JwksIdTokenVerifier implements OAuthIdTokenVerifier {
             throw new UnauthorizedException("ID 토큰에 subject 가 없습니다.");
         }
 
+        verifyNonce(claims.get("nonce", String.class), expectedNonce);
+
         return new OAuthUserInfo(
                 subject,
                 claims.get("email", String.class),
                 parseEmailVerified(claims.get("email_verified")),
                 claims.get("name", String.class)
         );
+    }
+
+    /**
+     * 재생(replay) 공격 방지용 nonce 검증.
+     * {@code expectedNonce} 가 {@code null} 이면(구버전 클라이언트) 건너뛴다.
+     * 타이밍 공격을 피하기 위해 상수시간 비교를 사용한다.
+     */
+    private static void verifyNonce(String tokenNonce, String expectedNonce) {
+        if (expectedNonce == null) {
+            return;
+        }
+        if (tokenNonce == null
+                || !MessageDigest.isEqual(
+                        tokenNonce.getBytes(StandardCharsets.UTF_8),
+                        expectedNonce.getBytes(StandardCharsets.UTF_8))) {
+            throw new UnauthorizedException("nonce 가 일치하지 않습니다.");
+        }
     }
 
     private Locator<Key> keyLocator() {

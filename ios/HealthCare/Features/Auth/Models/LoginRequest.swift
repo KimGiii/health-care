@@ -13,10 +13,13 @@ struct RegisterRequest: Encodable {
 
 struct SocialLoginRequest: Encodable {
     let idToken: String
+    /// 재생 공격 방지용 원본 nonce. 미지원 제공자에서는 nil → 인코딩 시 생략된다.
+    var nonce: String? = nil
 }
 
 struct SocialLoginCommitRequest: Encodable {
     let idToken: String
+    var nonce: String? = nil
     let agreedToTerms: Bool
     let agreedToPrivacy: Bool
 }
