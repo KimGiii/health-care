@@ -25,3 +25,4 @@ resource "aws_route53_record" "api" {
 }
 
 # ── (선택) 루트 도메인은 추후 랜딩 페이지가 생기면 별도 레코드를 추가한다.
+# dev.api.gainsy.site DNS는 infra/terraform/dev/ 에서 관리한다.

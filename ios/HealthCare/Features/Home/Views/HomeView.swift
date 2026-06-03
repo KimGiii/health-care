@@ -82,7 +82,7 @@ struct HomeView: View {
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Radius.lg))
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
@@ -131,17 +131,17 @@ private struct DashboardHeaderBar: View {
     private var greetingText: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 5..<12:  return "좋은 아침이에요"
-        case 12..<17: return "활기찬 오후예요"
-        case 17..<21: return "수고했어요"
-        default:      return "오늘도 잘 했어요"
+        case 5..<12:  return String(localized: "home.greeting.morning")
+        case 12..<17: return String(localized: "home.greeting.afternoon")
+        case 17..<21: return String(localized: "home.greeting.evening")
+        default:      return String(localized: "home.greeting.night")
         }
     }
 
     private var dateText: String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.shared.effectiveLocale
+        f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
 
@@ -215,7 +215,11 @@ private struct NotificationBellButton: View {
                 }
                 .elevation(.low)
         }
-        .accessibilityLabel(unreadCount > 0 ? "알림 \(unreadCount)개" : "알림")
+        .accessibilityLabel(
+            unreadCount > 0
+                ? String(format: String(localized: "home.notification.bell.unread"), unreadCount)
+                : String(localized: "home.notification.bell.empty")
+        )
     }
 }
 
@@ -226,7 +230,7 @@ private struct MealsSectionCompact: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(title: "오늘 식단", eyebrow: "MEALS")
+            SectionLabel(title: String(localized: "home.section.meals.title"), eyebrow: "MEALS")
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -356,7 +360,7 @@ private struct WorkoutSectionCompact: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(title: "오늘 운동", eyebrow: "EXERCISE")
+            SectionLabel(title: String(localized: "home.section.exercise.title"), eyebrow: "EXERCISE")
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
             NavigationLink(destination: ExerciseRecordView()) {
@@ -388,7 +392,11 @@ private struct WorkoutCompactCard: View {
                             .eyebrowStyle(Color.brandAccentGlow)
                         HStack(spacing: 10) {
                             if let dur = session.durationMinutes {
-                                WorkoutChip(icon: "clock.fill", value: "\(dur)", unit: "분")
+                                WorkoutChip(
+                                    icon: "clock.fill",
+                                    value: "\(dur)",
+                                    unit: String(localized: "home.workout.duration.unit")
+                                )
                             }
                             if let cal = session.caloriesBurned {
                                 WorkoutChip(icon: "flame.fill", value: String(format: "%.0f", cal), unit: "kcal")

@@ -20,8 +20,8 @@ struct NotificationsView: View {
             } else if viewModel.items.isEmpty {
                 EmptyState(
                     icon: "bell.slash",
-                    title: "받은 알림이 아직 없어요",
-                    message: "주간 회고나 일일 기록 리마인더가 도착하면\n여기에 모입니다"
+                    title: String(localized: "notifications.empty.title"),
+                    message: String(localized: "notifications.empty.message")
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -29,12 +29,12 @@ struct NotificationsView: View {
             }
         }
         .background(Color.backgroundPage)
-        .navigationTitle("알림")
+        .navigationTitle(Text("notifications.title"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             if viewModel.unreadCount > 0 {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("모두 읽음") {
+                    Button(String(localized: "notifications.markAllRead")) {
                         Task { await viewModel.markAllRead(apiClient: container.apiClient) }
                     }
                     .font(.bodyMedium)
@@ -42,11 +42,11 @@ struct NotificationsView: View {
                 }
             }
         }
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+            Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -69,18 +69,18 @@ struct NotificationsView: View {
                         Button(role: .destructive) {
                             Task { await viewModel.delete(item, apiClient: container.apiClient) }
                         } label: {
-                            Label("삭제", systemImage: "trash")
+                            Label(String(localized: "common.delete.button"), systemImage: "trash")
                         }
                     }
                     .contextMenu {
                         if !item.read {
                             Button {
                                 Task { _ = await viewModel.markRead(item, apiClient: container.apiClient) }
-                            } label: { Label("읽음으로 표시", systemImage: "envelope.open") }
+                            } label: { Label(String(localized: "notifications.action.markRead"), systemImage: "envelope.open") }
                         }
                         Button(role: .destructive) {
                             Task { await viewModel.delete(item, apiClient: container.apiClient) }
-                        } label: { Label("삭제", systemImage: "trash") }
+                        } label: { Label(String(localized: "common.delete.button"), systemImage: "trash") }
                     }
                     .onAppear {
                         // 마지막 아이템 보일 때 다음 페이지 로드
@@ -130,8 +130,9 @@ private struct NotificationRow: View {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ko_KR")
-        f.dateFormat = "M월 d일 a h:mm"
+        f.locale = LocaleManager.resolvedLocale
+        f.dateFormat = String(localized: "notifications.date.format")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 

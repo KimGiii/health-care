@@ -51,7 +51,7 @@ struct DiaryView: View {
                 .padding(.vertical, Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("다이어리")
+            .navigationTitle(Text("diary.title"))
             .navigationBarTitleDisplayMode(.large)
             .overlay(alignment: .center) {
                 if viewModel.isLoading {
@@ -64,11 +64,11 @@ struct DiaryView: View {
                 await viewModel.load(apiClient: container.apiClient)
                 viewModel.errorMessage = nil
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+                Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -164,8 +164,8 @@ private struct QuickAddSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 EEEE"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.shared.effectiveLocale
+        formatter.dateFormat = String(localized: "diary.dayHeader.format")
         return formatter.string(from: selectedDate)
     }
 
@@ -178,7 +178,7 @@ private struct QuickAddSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("빠른 기록")
+                        Text(String(localized: "diary.quickAdd"))
                             .font(.bodyLarge).fontWeight(.bold)
                             .foregroundStyle(Color.textPrimary)
                         Text(dateText)
@@ -192,7 +192,7 @@ private struct QuickAddSection: View {
                     if !hasExercise {
                         QuickAddButton(
                             icon: "figure.strengthtraining.traditional",
-                            title: "운동 추가",
+                            title: String(localized: "diary.quickAdd.exercise"),
                             tint: .green
                         ) {
                             onSelect(.exercise)
@@ -202,7 +202,7 @@ private struct QuickAddSection: View {
                     if !hasDiet {
                         QuickAddButton(
                             icon: "fork.knife",
-                            title: "식단 추가",
+                            title: String(localized: "diary.quickAdd.diet"),
                             tint: .orange
                         ) {
                             onSelect(.diet)
@@ -212,7 +212,7 @@ private struct QuickAddSection: View {
                     if !hasMeasurement {
                         QuickAddButton(
                             icon: "scalemass.fill",
-                            title: "측정 추가",
+                            title: String(localized: "diary.quickAdd.body"),
                             tint: Color.brandAccent
                         ) {
                             onSelect(.measurement)
@@ -264,7 +264,15 @@ private struct QuickAddButton: View {
 private struct CalendarGrid: View {
     @ObservedObject var viewModel: DiaryViewModel
 
-    private let weekdaySymbols = ["일", "월", "화", "수", "목", "금", "토"]
+    private let weekdaySymbols = [
+        String(localized: "common.weekday.sun"),
+        String(localized: "common.weekday.mon"),
+        String(localized: "common.weekday.tue"),
+        String(localized: "common.weekday.wed"),
+        String(localized: "common.weekday.thu"),
+        String(localized: "common.weekday.fri"),
+        String(localized: "common.weekday.sat"),
+    ]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
 
     var body: some View {
@@ -390,8 +398,9 @@ private struct ExerciseRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -403,7 +412,7 @@ private struct ExerciseRecordsSection: View {
                     .font(.bodyLarge)
                     .foregroundStyle(Color.green)
 
-                Text("운동 완료")
+                Text(String(localized: "diary.section.exercise"))
                     .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 
@@ -469,7 +478,7 @@ private struct ExerciseSessionSummaryCard: View {
                     if let dur = session.durationMinutes {
                         statChip(
                             icon: "clock",
-                            value: "\(dur)분"
+                            value: String(format: String(localized: "diary.session.duration"), dur)
                         )
                     }
                 }
@@ -519,8 +528,9 @@ private struct DietRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -532,7 +542,7 @@ private struct DietRecordsSection: View {
                     .font(.bodyLarge)
                     .foregroundStyle(Color.orange)
 
-                Text("식단 완료")
+                Text(String(localized: "diary.section.diet"))
                     .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 
@@ -573,8 +583,9 @@ private struct MeasurementRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -585,7 +596,7 @@ private struct MeasurementRecordsSection: View {
                     .font(.bodyLarge)
                     .foregroundStyle(Color.brandAccent)
 
-                Text("신체 변화")
+                Text(String(localized: "diary.section.body"))
                     .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 

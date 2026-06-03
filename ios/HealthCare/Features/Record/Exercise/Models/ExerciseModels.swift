@@ -11,34 +11,40 @@ struct ExerciseCatalogItem: Decodable, Identifiable, Sendable {
     let metValue: Double?
     let custom: Bool
 
-    var displayName: String { nameKo ?? name }
+    /// 현재 locale 이 한국어이면 nameKo 우선, 아니면 원본 영문 name.
+    /// `Locale.preferredLanguages.first` 가 AppleLanguages override 를 반영한다.
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
+        return name
+    }
 
     var muscleGroupLabel: String {
         switch muscleGroup {
-        case "CHEST":      return "가슴"
-        case "BACK":       return "등"
-        case "SHOULDERS":  return "어깨"
-        case "BICEPS":     return "이두"
-        case "TRICEPS":    return "삼두"
-        case "FOREARMS":   return "전완"
-        case "CORE":       return "코어"
-        case "QUADRICEPS": return "대퇴사두"
-        case "HAMSTRINGS": return "햄스트링"
-        case "GLUTES":     return "둔근"
-        case "CALVES":     return "종아리"
-        case "FULL_BODY":  return "전신"
-        case "CARDIO":     return "유산소"
-        default:           return "기타"
+        case "CHEST":      return String(localized: "exercise.muscle.chest")
+        case "BACK":       return String(localized: "exercise.muscle.back")
+        case "SHOULDERS":  return String(localized: "exercise.muscle.shoulders")
+        case "BICEPS":     return String(localized: "exercise.muscle.biceps")
+        case "TRICEPS":    return String(localized: "exercise.muscle.triceps")
+        case "FOREARMS":   return String(localized: "exercise.muscle.forearms")
+        case "CORE":       return String(localized: "exercise.muscle.core")
+        case "QUADRICEPS": return String(localized: "exercise.muscle.quadriceps")
+        case "HAMSTRINGS": return String(localized: "exercise.muscle.hamstrings")
+        case "GLUTES":     return String(localized: "exercise.muscle.glutes")
+        case "CALVES":     return String(localized: "exercise.muscle.calves")
+        case "FULL_BODY":  return String(localized: "exercise.muscle.fullBody")
+        case "CARDIO":     return String(localized: "exercise.muscle.cardio")
+        default:           return String(localized: "exercise.muscle.other")
         }
     }
 
     var exerciseTypeLabel: String {
         switch exerciseType {
-        case "STRENGTH":    return "근력"
-        case "CARDIO":      return "유산소"
-        case "BODYWEIGHT":  return "맨몸"
-        case "FLEXIBILITY": return "유연성"
-        case "SPORTS":      return "스포츠"
+        case "STRENGTH":    return String(localized: "exercise.type.strength")
+        case "CARDIO":      return String(localized: "exercise.type.cardio")
+        case "BODYWEIGHT":  return String(localized: "exercise.type.bodyweight")
+        case "FLEXIBILITY": return String(localized: "exercise.type.flexibility")
+        case "SPORTS":      return String(localized: "exercise.type.sports")
         default:            return exerciseType
         }
     }
@@ -70,11 +76,11 @@ struct SessionSummary: Decodable, Identifiable, Sendable {
     var formattedDate: String {
         let parser = DateFormatter()
         parser.dateFormat = "yyyy-MM-dd"
-        parser.locale = Locale(identifier: "ko_KR")
+        parser.locale = Locale(identifier: "en_US_POSIX")
         guard let date = parser.date(from: sessionDate) else { return sessionDate }
         let display = DateFormatter()
-        display.dateFormat = "M월 d일 (E)"
-        display.locale = Locale(identifier: "ko_KR")
+        display.locale = LocaleManager.resolvedLocale
+        display.dateFormat = String(localized: "diet.date.format.shortKR")
         return display.string(from: date)
     }
 }
@@ -98,11 +104,11 @@ struct SessionDetail: Decodable, Identifiable, Sendable {
     var formattedDate: String {
         let parser = DateFormatter()
         parser.dateFormat = "yyyy-MM-dd"
-        parser.locale = Locale(identifier: "ko_KR")
+        parser.locale = Locale(identifier: "en_US_POSIX")
         guard let date = parser.date(from: sessionDate) else { return sessionDate }
         let display = DateFormatter()
-        display.dateFormat = "yyyy년 M월 d일 (E)"
-        display.locale = Locale(identifier: "ko_KR")
+        display.locale = LocaleManager.resolvedLocale
+        display.dateFormat = String(localized: "diet.date.format.longKR")
         return display.string(from: date)
     }
 
@@ -139,24 +145,30 @@ struct SetDetail: Decodable, Identifiable, Sendable {
     let personalRecord: Bool
 
     var id: Int { setId }
-    var displayExerciseName: String { exerciseNameKo ?? exerciseName ?? "알 수 없음" }
+    var displayExerciseName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = exerciseNameKo, !ko.isEmpty { return ko }
+        return exerciseName ?? String(localized: "exercise.set.unknownName")
+    }
 
     var setDescription: String {
         switch setType {
         case "WEIGHTED":
-            let w = weightKg.map { String(format: "%.1f", $0) + "kg" } ?? ""
-            let r = reps.map { "\($0)회" } ?? ""
+            let w = weightKg.map { String(format: String(localized: "exercise.set.weight"), $0) } ?? ""
+            let r = reps.map { String(format: String(localized: "exercise.set.reps"), $0) } ?? ""
             return [w, r].filter { !$0.isEmpty }.joined(separator: " × ")
         case "BODYWEIGHT":
-            return reps.map { "\($0)회" } ?? "—"
+            return reps.map { String(format: String(localized: "exercise.set.reps"), $0) } ?? "—"
         case "CARDIO":
             var parts: [String] = []
             if let d = durationSeconds {
                 let m = d / 60, s = d % 60
-                parts.append(s > 0 ? "\(m)분 \(s)초" : "\(m)분")
+                parts.append(s > 0
+                    ? String(format: String(localized: "exercise.set.duration.minSec"), m, s)
+                    : String(format: String(localized: "exercise.set.duration.min"), m))
             }
             if let dist = distanceM {
-                parts.append(String(format: "%.0fm", dist))
+                parts.append(String(format: String(localized: "exercise.set.dist"), dist))
             }
             return parts.isEmpty ? "—" : parts.joined(separator: " / ")
         default:
@@ -207,7 +219,11 @@ struct PersonalRecordInfo: Decodable, Sendable {
     let weightKg: Double?
     let reps: Int?
 
-    var displayName: String { exerciseNameKo ?? exerciseName }
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = exerciseNameKo, !ko.isEmpty { return ko }
+        return exerciseName
+    }
 }
 
 // MARK: - AI 운동 추정 응답

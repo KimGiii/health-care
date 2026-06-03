@@ -36,11 +36,11 @@ final class ProfileSetupViewModel: ObservableObject {
 
     func submit(apiClient: APIClient, authState: AuthState) async {
         guard let height = Double(heightText), let weight = Double(weightText) else {
-            errorMessage = "키와 몸무게를 올바르게 입력해 주세요."
+            errorMessage = String(localized: "profile.error.heightWeightInvalid")
             return
         }
         guard dateOfBirth < Date() else {
-            errorMessage = "생년월일은 과거 날짜여야 합니다."
+            errorMessage = String(localized: "profile.error.dobFuture")
             return
         }
 
@@ -63,7 +63,7 @@ final class ProfileSetupViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "오류가 발생했습니다."
+            errorMessage = String(localized: "profile.error.general")
         }
     }
 }

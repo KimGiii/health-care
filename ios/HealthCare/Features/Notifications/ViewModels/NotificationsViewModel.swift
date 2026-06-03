@@ -97,6 +97,6 @@ final class NotificationsViewModel: ObservableObject {
            let message {
             return message
         }
-        return "알림을 불러오지 못했어요. 잠시 후 다시 시도해 주세요"
+        return String(localized: "notifications.error.load")
     }
 }

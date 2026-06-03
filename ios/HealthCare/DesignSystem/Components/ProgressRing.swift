@@ -220,7 +220,7 @@ struct ProgressRing: View {
     // MARK: - Accessibility
 
     private var accessibilityDescription: String {
-        label ?? "진행 링"
+        label ?? String(localized: "ds.progressRing.a11y")
     }
 
     private var accessibilityValue: String {

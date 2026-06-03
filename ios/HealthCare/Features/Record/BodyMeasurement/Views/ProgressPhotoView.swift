@@ -21,7 +21,7 @@ struct ProgressPhotoView: View {
             photoGrid
         }
         .background(Color.backgroundPage)
-        .navigationTitle("진행 사진")
+        .navigationTitle(Text("body.photo.title"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -31,7 +31,7 @@ struct ProgressPhotoView: View {
                             viewModel.toggleCompareMode()
                         }
                     } label: {
-                        Text(viewModel.isCompareMode ? "취소" : "비교")
+                        Text(viewModel.isCompareMode ? String(localized: "body.photo.compareToggle.cancel") : String(localized: "body.photo.compareToggle.compare"))
                             .font(.bodyMedium).fontWeight(.medium)
                             .foregroundStyle(viewModel.isCompareMode ? Color.textSecondary : Color.brandPrimary)
                     }
@@ -64,19 +64,19 @@ struct ProgressPhotoView: View {
                 )
             }
         }
-        .alert("사진 삭제", isPresented: Binding(
+        .alert(Text("body.photo.deleteConfirm.title"), isPresented: Binding(
             get: { photoToDelete != nil },
             set: { if !$0 { photoToDelete = nil } }
         )) {
-            Button("삭제", role: .destructive) {
+            Button(String(localized: "common.delete.button"), role: .destructive) {
                 if let photo = photoToDelete {
                     Task { await viewModel.deletePhoto(photoId: photo.photoId, apiClient: container.apiClient) }
                 }
                 photoToDelete = nil
             }
-            Button("취소", role: .cancel) { photoToDelete = nil }
+            Button(String(localized: "common.cancel"), role: .cancel) { photoToDelete = nil }
         } message: {
-            Text("이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다.")
+            Text(String(localized: "body.photo.deleteConfirm.message"))
         }
         .overlay {
             if viewModel.isLoading {
@@ -137,7 +137,7 @@ struct ProgressPhotoView: View {
                         .background(
                             viewModel.selectedType == type
                                 ? Color.brandPrimary
-                                : Color.surfacePrimary
+                                : Color.surfaceCard
                         )
                         .foregroundStyle(
                             viewModel.selectedType == type ? Color.white : Color.textSecondary
@@ -156,7 +156,7 @@ struct ProgressPhotoView: View {
             .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
             .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .overlay(
             Rectangle().fill(Color.hairline).frame(height: 0.5),
             alignment: .bottom
@@ -177,7 +177,7 @@ struct ProgressPhotoView: View {
             Button {
                 showCompareSheet = true
             } label: {
-                Text("비교 보기")
+                Text(String(localized: "body.photo.compare.show"))
                     .font(.bodyMedium).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
@@ -195,9 +195,9 @@ struct ProgressPhotoView: View {
 
     private var compareBarLabel: String {
         switch viewModel.compareSelection.count {
-        case 0: return "비교할 사진 2장을 선택하세요"
-        case 1: return "1장 선택됨 · 1장 더 선택하세요"
-        default: return "2장 선택됨"
+        case 0: return String(localized: "body.photo.compare.hint0")
+        case 1: return String(localized: "body.photo.compare.hint1")
+        default: return String(localized: "body.photo.compare.hint2")
         }
     }
 
@@ -232,7 +232,7 @@ struct ProgressPhotoView: View {
                                 Button(role: .destructive) {
                                     photoToDelete = photo
                                 } label: {
-                                    Label("삭제", systemImage: "trash")
+                                    Label(String(localized: "common.delete.button"), systemImage: "trash")
                                 }
                             }
                         }
@@ -250,9 +250,9 @@ struct ProgressPhotoView: View {
     private var emptyState: some View {
         EmptyState(
             icon: "camera",
-            title: "진행 사진이 아직 없어요",
-            message: "\(viewModel.selectedType.label) 사진을 추가해\n변화를 시각적으로 확인해 보세요",
-            action: .init(label: "사진 추가하기") {
+            title: String(localized: "body.photo.empty.title"),
+            message: String(format: String(localized: "body.photo.empty.message"), viewModel.selectedType.label),
+            action: .init(label: String(localized: "body.photo.empty.action")) {
                 showAddSheet = true
             }
         )
@@ -295,7 +295,7 @@ private struct PhotoGridCell: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     if photo.isBaseline {
-                        Text("기준")
+                        Text(String(localized: "body.photo.baseline"))
                             .font(.system(size: 9, weight: .heavy)) // design-lint:ignore — SF Symbol/hero
                             .foregroundStyle(Color.textHeadline)
                             .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
@@ -367,10 +367,10 @@ private struct PhotoDetailView: View {
                     .frame(maxWidth: .infinity)
 
                     VStack(alignment: .leading, spacing: 20) {
-                        infoRow("포즈", photo.photoType.label)
-                        infoRow("촬영일", photo.displayDate)
+                        infoRow(String(localized: "body.photo.detail.pose"), photo.photoType.label)
+                        infoRow(String(localized: "body.photo.detail.takenOn"), photo.displayDate)
                         if let w = photo.bodyWeightKg {
-                            infoRow("체중", String(format: "%.1f kg", w))
+                            infoRow(String(localized: "body.photo.detail.weight"), String(format: "%.1f kg", w))
                         }
                         if let wc = photo.waistCm {
                             infoRow("허리", String(format: "%.1f cm", wc))
@@ -415,7 +415,7 @@ private struct PhotoDetailView: View {
                 }
             }
             .alert("사진 삭제", isPresented: $showDeleteConfirm) {
-                Button("삭제", role: .destructive) {
+                Button(String(localized: "common.delete.button"), role: .destructive) {
                     Task {
                         await viewModel.deletePhoto(photoId: photo.photoId, apiClient: container.apiClient)
                         dismiss()
@@ -423,7 +423,7 @@ private struct PhotoDetailView: View {
                 }
                 Button("취소", role: .cancel) {}
             } message: {
-                Text("이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다.")
+                Text(String(localized: "body.photo.deleteConfirm.message"))
             }
         }
     }

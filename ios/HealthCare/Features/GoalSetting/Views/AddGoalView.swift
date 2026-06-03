@@ -34,19 +34,21 @@ struct AddGoalView: View {
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
                 .padding(.vertical, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("목표 설정")
-            .navigationBarTitleDisplayMode(.large)
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("goal.add.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.backgroundPage, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if viewModel.isLoading {
                         ProgressView()
                     } else {
-                        Button("저장") {
+                        Button(String(localized: "common.save.button")) {
                             Task {
                                 await viewModel.submit(apiClient: container.apiClient) { response in
                                     onSuccess(response)
@@ -71,7 +73,7 @@ private struct GoalTypeSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표 유형")
+            SectionLabel(title: String(localized: "goal.field.section.type"))
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -129,13 +131,13 @@ private struct TargetValueSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표값")
+            SectionLabel(title: String(localized: "goal.field.section.target"))
 
             FormCard {
                 VStack(spacing: 16) {
                     NumericField(
-                        label: "목표 \(type.displayName)",
-                        placeholder: "예: 70.0",
+                        label: String(format: String(localized: "goal.field.target.label"), type.displayName),
+                        placeholder: String(localized: "goal.field.target.placeholder"),
                         unit: type.displayUnit,
                         text: $valueText
                     )
@@ -143,13 +145,13 @@ private struct TargetValueSection: View {
                     Divider()
 
                     NumericField(
-                        label: "현재 값 (선택)",
-                        placeholder: type.displayUnit.isEmpty ? "현재 값 입력" : "현재 \(type.displayUnit) 입력",
+                        label: String(localized: "goal.field.startValue.label"),
+                        placeholder: type.displayUnit.isEmpty ? String(localized: "goal.field.startValue.placeholder") : String(format: String(localized: "goal.field.startValue.placeholderUnit"), type.displayUnit),
                         unit: type.displayUnit,
                         text: $startValueText
                     )
 
-                    Text("비워두면 가장 최근 신체 측정 기록으로 자동 채워집니다.")
+                    Text(String(localized: "goal.field.startValue.hint"))
                         .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -167,12 +169,12 @@ private struct TargetDateSection: View {
     let selectedType: GoalType
 
     private let presets: [(label: String, days: Int)] = [
-        ("4주", 28), ("8주", 56), ("12주", 84), ("24주", 168)
+        (String(localized: "goal.preset.4w"), 28), (String(localized: "goal.preset.8w"), 56), (String(localized: "goal.preset.12w"), 84), (String(localized: "goal.preset.24w"), 168)
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표 날짜")
+            SectionLabel(title: String(localized: "goal.field.section.date"))
 
             HStack(spacing: 8) {
                 ForEach(presets, id: \.days) { preset in
@@ -186,20 +188,20 @@ private struct TargetDateSection: View {
 
             FormCard {
                 DatePicker(
-                    "목표 날짜",
+                    String(localized: "goal.field.section.date"),
                     selection: $targetDate,
                     in: Date()...,
                     displayedComponents: .date
                 )
                 .datePickerStyle(.compact)
-                .environment(\.locale, Locale(identifier: "ko_KR"))
+                .environment(\.locale, LocaleManager.resolvedLocale)
             }
 
             if selectedType.supportsWeeklyRateTarget {
                 FormCard {
                     NumericField(
-                        label: "주간 목표 변화량 (선택)",
-                        placeholder: selectedType == .BODY_RECOMPOSITION ? "예: 0.25" : "예: 0.5",
+                        label: String(localized: "goal.field.weeklyRate.label"),
+                        placeholder: selectedType == .BODY_RECOMPOSITION ? String(localized: "goal.field.weeklyRate.placeholder.recomp") : String(localized: "goal.field.weeklyRate.placeholder"),
                         unit: selectedType.weeklyRateDisplayUnit,
                         text: $weeklyRateText
                     )
@@ -231,7 +233,7 @@ private struct FormCard<Content: View>: View {
     var body: some View {
         content()
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }

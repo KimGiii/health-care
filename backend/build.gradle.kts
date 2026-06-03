@@ -47,6 +47,9 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
+    // OAuth JWKS (Apple, Google ID 토큰 서명 검증)
+    implementation("com.auth0:jwks-rsa:0.22.1")
+
     // AWS SDK v2
     implementation(platform("software.amazon.awssdk:bom:2.26.12"))
     implementation("software.amazon.awssdk:s3")

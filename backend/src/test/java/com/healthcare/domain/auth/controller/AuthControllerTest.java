@@ -6,11 +6,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.healthcare.common.exception.DuplicateResourceException;
 import com.healthcare.common.exception.GlobalExceptionHandler;
 import com.healthcare.common.exception.UnauthorizedException;
+import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.auth.dto.LoginRequest;
 import com.healthcare.domain.auth.dto.RefreshTokenRequest;
 import com.healthcare.domain.auth.dto.RegisterRequest;
+import com.healthcare.domain.auth.dto.SocialLoginRequest;
 import com.healthcare.domain.auth.dto.TokenResponse;
 import com.healthcare.domain.auth.service.AuthService;
+import org.mockito.ArgumentMatchers;
 import com.healthcare.security.CurrentUserIdArgumentResolver;
 import com.healthcare.support.SecurityTestSupport;
 import org.junit.jupiter.api.AfterEach;
@@ -240,6 +243,115 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 성공 — 200, 토큰 반환 (Apple)")
+    void socialLogin_apple_success_returns200() throws Exception {
+        given(authService.socialLogin(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class)))
+                .willReturn(buildTokenResponse());
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("access.token"));
+
+        verify(authService).socialLogin(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 — idToken 누락이면 400")
+    void socialLogin_missingIdToken_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/social-login/GOOGLE")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 — 지원하지 않는 provider 면 ValidationException → 400")
+    void socialLogin_unsupportedProvider_returns400() throws Exception {
+        given(authService.socialLogin(ArgumentMatchers.eq("KAKAO"), any(SocialLoginRequest.class)))
+                .willThrow(new ValidationException("지원하지 않는 provider 입니다: KAKAO"));
+
+        mockMvc.perform(post("/api/v1/auth/social-login/KAKAO")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 — 유효하지 않은 ID 토큰이면 401")
+    void socialLogin_invalidIdToken_returns401() throws Exception {
+        given(authService.socialLogin(ArgumentMatchers.eq("GOOGLE"), any(SocialLoginRequest.class)))
+                .willThrow(new UnauthorizedException("유효하지 않은 ID 토큰입니다."));
+
+        mockMvc.perform(post("/api/v1/auth/social-login/GOOGLE")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"bad\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 check — 기존 사용자면 isNew=false 와 토큰 반환")
+    void socialLoginCheck_existingUser_returnsTokens() throws Exception {
+        given(authService.socialLoginCheck(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class)))
+                .willReturn(com.healthcare.domain.auth.dto.SocialLoginCheckResponse.existing(buildTokenResponse()));
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUser").value(false))
+                .andExpect(jsonPath("$.data.tokens.accessToken").value("access.token"));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 check — 신규 사용자면 newUser=true, tokens=null")
+    void socialLoginCheck_newUser_returnsPending() throws Exception {
+        given(authService.socialLoginCheck(ArgumentMatchers.eq("APPLE"), any(SocialLoginRequest.class)))
+                .willReturn(com.healthcare.domain.auth.dto.SocialLoginCheckResponse.pendingConsent());
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.newUser").value(true))
+                .andExpect(jsonPath("$.data.tokens").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 약관·개인정보 동의 시 토큰 반환")
+    void socialLoginCommit_withConsents_returns200() throws Exception {
+        given(authService.socialLoginCommit(ArgumentMatchers.eq("APPLE"),
+                any(com.healthcare.domain.auth.dto.SocialLoginCommitRequest.class)))
+                .willReturn(buildTokenResponse());
+
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":true,\"agreedToPrivacy\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").value("access.token"));
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 약관 미동의면 400 (검증 실패)")
+    void socialLoginCommit_termsNotAgreed_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":false,\"agreedToPrivacy\":true}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("소셜로그인 commit — 개인정보처리방침 미동의면 400 (검증 실패)")
+    void socialLoginCommit_privacyNotAgreed_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/social-login/APPLE/commit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idToken\":\"id.tok\",\"agreedToTerms\":true,\"agreedToPrivacy\":false}"))
+                .andExpect(status().isBadRequest());
     }
 
     private TokenResponse buildTokenResponse() {

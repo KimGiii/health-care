@@ -31,9 +31,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private UserDetails toUserDetails(User user) {
+        // 소셜로그인 전용 사용자는 passwordHash 가 null 이다.
+        // Spring Security 의 User 생성자는 null/empty password 를 거부하므로 빈 문자열로 대체한다.
+        // JWT 기반 인증이라 password 매칭이 일어나지 않고, 이 값은 단순 자리표시자.
+        String password = user.getPasswordHash() != null ? user.getPasswordHash() : "";
         return new org.springframework.security.core.userdetails.User(
             user.getId().toString(),
-            user.getPasswordHash(),
+            password,
             Collections.emptyList()
         );
     }

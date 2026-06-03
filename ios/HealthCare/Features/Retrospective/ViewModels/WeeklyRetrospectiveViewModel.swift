@@ -17,7 +17,7 @@ final class WeeklyRetrospectiveViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "주간 요약을 불러오는 중 오류가 발생했습니다."
+            errorMessage = String(localized: "retro.error.load")
         }
     }
 

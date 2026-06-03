@@ -27,19 +27,19 @@ struct AddMeasurementView: View {
                 .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("신체 측정 기록")
+            .navigationTitle(Text("body.add.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -52,7 +52,7 @@ struct AddMeasurementView: View {
         Button {
             showSources = true
         } label: {
-            Label("BMI 계산식 및 분류 기준 출처 보기 (WHO·대한비만학회)", systemImage: "info.circle")
+            Label(String(localized: "body.add.bmi.sources"), systemImage: "info.circle")
                 .font(.caption)
                 .foregroundStyle(Color.brandPrimary)
         }
@@ -63,8 +63,8 @@ struct AddMeasurementView: View {
     // MARK: - Date
 
     private var dateSection: some View {
-        FormCard(title: "측정일") {
-            DatePicker("측정일", selection: $viewModel.measuredAt, in: ...Date(), displayedComponents: .date)
+        FormCard(title: String(localized: "body.add.section.date")) {
+            DatePicker(String(localized: "body.add.section.date"), selection: $viewModel.measuredAt, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .labelsHidden()
                 .tint(Color.brandPrimary)
@@ -74,12 +74,12 @@ struct AddMeasurementView: View {
     // MARK: - Body Composition
 
     private var bodyCompositionSection: some View {
-        FormCard(title: "신체 구성") {
+        FormCard(title: String(localized: "body.add.section.composition")) {
             VStack(spacing: 0) {
                 MeasurementField(
                     icon: "scalemass.fill",
                     iconColor: Color(hex: "#2563EB"),
-                    label: "체중",
+                    label: String(localized: "body.metric.weight"),
                     unit: "kg",
                     text: $viewModel.weightKg
                 )
@@ -87,7 +87,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "percent",
                     iconColor: Color(hex: "#7C3AED"),
-                    label: "체지방률",
+                    label: String(localized: "body.metric.bodyFatPct"),
                     unit: "%",
                     text: $viewModel.bodyFatPct
                 )
@@ -95,7 +95,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "figure.arms.open",
                     iconColor: Color.brandPrimary,
-                    label: "근육량",
+                    label: String(localized: "body.metric.muscleMass"),
                     unit: "kg",
                     text: $viewModel.muscleMassKg
                 )
@@ -118,12 +118,12 @@ struct AddMeasurementView: View {
     // MARK: - Circumference
 
     private var circumferenceSection: some View {
-        FormCard(title: "둘레 측정") {
+        FormCard(title: String(localized: "body.add.section.circumference")) {
             VStack(spacing: 0) {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#0EA5E9"),
-                    label: "가슴",
+                    label: String(localized: "body.circ.chest"),
                     unit: "cm",
                     text: $viewModel.chestCm
                 )
@@ -131,7 +131,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#DC2626"),
-                    label: "허리",
+                    label: String(localized: "body.circ.waist"),
                     unit: "cm",
                     text: $viewModel.waistCm
                 )
@@ -139,7 +139,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#D97706"),
-                    label: "엉덩이",
+                    label: String(localized: "body.circ.hip"),
                     unit: "cm",
                     text: $viewModel.hipCm
                 )
@@ -147,7 +147,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#059669"),
-                    label: "허벅지",
+                    label: String(localized: "body.circ.thigh"),
                     unit: "cm",
                     text: $viewModel.thighCm
                 )
@@ -155,7 +155,7 @@ struct AddMeasurementView: View {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#7C3AED"),
-                    label: "팔",
+                    label: String(localized: "body.circ.arm"),
                     unit: "cm",
                     text: $viewModel.armCm
                 )
@@ -166,8 +166,8 @@ struct AddMeasurementView: View {
     // MARK: - Notes
 
     private var notesSection: some View {
-        FormCard(title: "메모") {
-            TextField("특이사항이나 컨디션을 기록하세요 (선택)", text: $viewModel.notes, axis: .vertical)
+        FormCard(title: String(localized: "body.add.section.notes")) {
+            TextField(String(localized: "body.add.notes.placeholder"), text: $viewModel.notes, axis: .vertical)
                 .lineLimit(3...5)
                 .font(.bodyMedium)
                 .foregroundStyle(Color.textPrimary)
@@ -184,7 +184,7 @@ struct AddMeasurementView: View {
                 if viewModel.isSubmitting {
                     ProgressView().tint(.white)
                 } else {
-                    Text("저장")
+                    Text(String(localized: "body.add.save"))
                         .font(.bodyLarge).fontWeight(.semibold)
                         .foregroundStyle(.white)
                 }
@@ -215,7 +215,7 @@ private struct FormCard<Content: View>: View {
                 content()
             }
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         }
@@ -238,7 +238,7 @@ private struct AutoCalculatedBMIRow: View {
                 Text("BMI")
                     .font(.bodyMedium).fontWeight(.medium)
                     .foregroundStyle(Color.textPrimary)
-                Text("키 기반 자동 계산")
+                Text(String(localized: "body.add.bmi.autoCalc"))
                     .font(.captionXSmall)
                     .foregroundStyle(Color.textSecondary)
             }

@@ -25,13 +25,13 @@ struct ChangeAnalysisView: View {
             .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
         }
         .background(Color.backgroundPage)
-        .navigationTitle("변화 분석")
+        .navigationTitle(Text("change.title"))
         .navigationBarTitleDisplayMode(.large)
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -51,12 +51,12 @@ private struct DateRangeSection: View {
     let onAnalyze: () -> Void
 
     private let presets: [(label: String, months: Int)] = [
-        ("1개월", 1), ("3개월", 3), ("6개월", 6)
+        (String(localized: "change.period.1m"), 1), (String(localized: "change.period.3m"), 3), (String(localized: "change.period.6m"), 6)
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("기간 선택")
+            Text(String(localized: "change.section.range"))
                 .font(.headingSmall)
                 .foregroundStyle(Color.textPrimary)
 
@@ -85,12 +85,12 @@ private struct DateRangeSection: View {
             }
 
             VStack(spacing: 0) {
-                DatePicker("시작일", selection: $fromDate, in: ...toDate, displayedComponents: .date)
-                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                DatePicker(String(localized: "change.field.from"), selection: $fromDate, in: ...toDate, displayedComponents: .date)
+                    .environment(\.locale, LocaleManager.resolvedLocale)
                     .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 Divider().padding(.horizontal, Spacing.lg)
-                DatePicker("종료일", selection: $toDate, in: fromDate..., displayedComponents: .date)
-                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                DatePicker(String(localized: "change.field.to"), selection: $toDate, in: fromDate..., displayedComponents: .date)
+                    .environment(\.locale, LocaleManager.resolvedLocale)
                     .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.surfaceCard)
@@ -98,7 +98,7 @@ private struct DateRangeSection: View {
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
 
             Button(action: onAnalyze) {
-                Text("분석하기")
+                Text(String(localized: "change.analyze.button"))
                     .font(.headingSmall)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -136,22 +136,22 @@ private struct BodyChangeCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "arrow.up.arrow.down.circle.fill")
                     .foregroundStyle(Color.brandPrimary)
-                Text("신체 변화")
+                Text(String(localized: "change.body.section"))
                     .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
             }
 
             VStack(spacing: 12) {
-                ChangeRow(label: "체중",
+                ChangeRow(label: String(localized: "change.row.weight"),
                           delta: analysis.formattedDelta(analysis.weightChangeKg, unit: "kg", positiveIsGood: false))
-                ChangeRow(label: "체지방률",
+                ChangeRow(label: String(localized: "change.row.bodyFatPct"),
                           delta: analysis.formattedDelta(analysis.bodyFatPctChange, unit: "%", positiveIsGood: false))
-                ChangeRow(label: "근육량",
+                ChangeRow(label: String(localized: "change.row.muscleMass"),
                           delta: analysis.formattedDelta(analysis.muscleMassChangeKg, unit: "kg", positiveIsGood: true))
                 ChangeRow(label: "BMI",
                           delta: analysis.formattedDelta(analysis.bmiChange, unit: "", positiveIsGood: false))
                 if analysis.waistChangeCm != nil {
-                    ChangeRow(label: "허리 둘레",
+                    ChangeRow(label: String(localized: "change.row.waist"),
                               delta: analysis.formattedDelta(analysis.waistChangeCm, unit: "cm", positiveIsGood: false))
                 }
             }
@@ -196,10 +196,10 @@ private struct ExerciseActivityCard: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 4) {
-                Text("\(analysis.exerciseSessionCount)회")
+                Text(String(format: String(localized: "change.stat.sessions"), analysis.exerciseSessionCount))
                     .font(.headingLarge)
                     .foregroundStyle(.cyan)
-                Text("운동 세션")
+                Text(String(localized: "change.stat.sessions.label"))
                     .font(.caption)
                     .foregroundStyle(Color.textSecondary)
             }
@@ -208,10 +208,10 @@ private struct ExerciseActivityCard: View {
             Divider().frame(height: 44)
 
             VStack(spacing: 4) {
-                Text("\(analysis.totalExerciseMinutes)분")
+                Text(String(format: String(localized: "change.stat.totalMin"), analysis.totalExerciseMinutes))
                     .font(.headingLarge)
                     .foregroundStyle(.cyan)
-                Text("총 운동 시간")
+                Text(String(localized: "change.stat.totalMin.label"))
                     .font(.caption)
                     .foregroundStyle(Color.textSecondary)
             }
@@ -232,7 +232,7 @@ private struct SnapshotComparisonCard: View {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -241,20 +241,20 @@ private struct SnapshotComparisonCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "calendar.badge.clock")
                     .foregroundStyle(.purple)
-                Text("측정값 비교")
+                Text(String(localized: "change.compare.title"))
                     .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
             }
 
             HStack(alignment: .top, spacing: 16) {
                 if let from = analysis.fromSnapshot {
-                    SnapshotColumn(title: "시작", snapshot: from)
+                    SnapshotColumn(title: String(localized: "change.compare.start"), snapshot: from)
                 }
                 if analysis.fromSnapshot != nil && analysis.toSnapshot != nil {
                     Divider()
                 }
                 if let to = analysis.toSnapshot {
-                    SnapshotColumn(title: "종료", snapshot: to)
+                    SnapshotColumn(title: String(localized: "change.compare.end"), snapshot: to)
                 }
             }
         }
@@ -280,12 +280,12 @@ private struct SnapshotColumn: View {
                     .foregroundStyle(Color.textPrimary)
             }
             if let bf = snapshot.bodyFatPct {
-                Text(String(format: "체지방 %.1f%%", bf))
+                Text(String(format: String(localized: "change.snapshot.bodyFat"), bf))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
             if let mm = snapshot.muscleMassKg {
-                Text(String(format: "근육 %.1f kg", mm))
+                Text(String(format: String(localized: "change.snapshot.muscle"), mm))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
@@ -300,7 +300,7 @@ private struct ChangeEmptyState: View {
             Image(systemName: "waveform.path.ecg")
                 .font(.system(size: 48)) // design-lint:ignore — SF Symbol or special
                 .foregroundStyle(Color.textSecondary.opacity(0.5))
-            Text("기간을 선택하고 분석을 시작하세요")
+            Text(String(localized: "change.empty"))
                 .font(.bodyLarge).fontWeight(.medium)
                 .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)

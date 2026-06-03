@@ -272,6 +272,71 @@ Access tokens expire after 24 hours. The client should use the refresh token end
 
 ---
 
+### POST /api/v1/auth/social-login/{provider} (DEPRECATED — V19, 2026-06-01)
+
+**Status:** Deprecated 2026-06-02. 새 클라이언트는 `/check` + `/commit` 2-step 흐름을 사용. v1.1.x 호환을 위해 유지하며 약관 동의 시각이 기록되지 않는다.
+**Auth required:** No
+**Path:** `provider` ∈ {`APPLE`, `GOOGLE`} (Google verifier exists but iOS SDK not yet wired)
+**Description:** Verifies the OIDC ID token from Apple/Google JWKS, then logs in or auto-registers. Returns the same `TokenResponse` envelope as `/login`. iOS `AuthState` branches on `onboardingCompleted` to route new users into `ProfileSetupView`.
+
+Verification rules (per provider):
+- Apple: `iss=https://appleid.apple.com`, `aud=${APPLE_BUNDLE_ID}` (default `com.kingloo.gainsy.ios`), signature via `https://appleid.apple.com/auth/keys`
+- Google: `iss in {accounts.google.com, https://accounts.google.com}`, `aud=${GOOGLE_IOS_CLIENT_ID}`, signature via `https://www.googleapis.com/oauth2/v3/certs`
+
+Identity resolution and orphan handling: see `docs/design-docs/DB_SCHEMA.md` §2.2A.
+
+**Request Body:**
+```json
+{ "idToken": "eyJhbGciOiJSUzI1NiIs..." }
+```
+
+**Response: 200 OK** — same shape as `/login` (accessToken, refreshToken, expiresIn, onboardingCompleted, userId, email, displayName).
+
+**Key Error Codes:**
+- `400 VALIDATION_FAILED` — unsupported provider or missing idToken
+- `401 UNAUTHORIZED` — signature, issuer, audience, or expiration check failed
+
+---
+
+### POST /api/v1/auth/social-login/{provider}/check (V20, 2026-06-02)
+
+**Auth required:** No
+**Description:** 2-step 소셜로그인의 1단계. ID 토큰을 검증해 기존 사용자면 즉시 토큰 발급, 신규면 `newUser=true` 만 반환하고 어떤 row 도 생성하지 않는다. 클라이언트는 `newUser=true` 인 경우 약관 동의 UI 를 노출한 뒤 `/commit` 을 호출해야 한다.
+
+**Request Body:** `{ "idToken": "..." }`
+
+**Response: 200 OK**
+```json
+// 기존 사용자
+{ "success": true, "data": { "newUser": false, "tokens": { "accessToken": "...", "refreshToken": "...", ... } } }
+// 신규 사용자
+{ "success": true, "data": { "newUser": true, "tokens": null } }
+```
+
+email_verified=true 인 동일 이메일 LOCAL 계정 자동 연결도 1단계에서 처리되며, 이 경우 `newUser=false` 로 즉시 로그인된다.
+
+### POST /api/v1/auth/social-login/{provider}/commit (V20, 2026-06-02)
+
+**Auth required:** No
+**Description:** 2-step 소셜로그인의 2단계. 신규 가입자 생성 + 약관/개인정보 동의 시각 기록 + 토큰 발급. `/check` 와 `/commit` 사이 race 로 다른 디바이스에서 가입이 완료됐다면 그 사용자 토큰을 발급한다(중복 가입 방지).
+
+**Request Body:**
+```json
+{
+  "idToken": "...",
+  "agreedToTerms": true,
+  "agreedToPrivacy": true
+}
+```
+
+**Response: 200 OK** — `/login` 과 동일한 `TokenResponse` 봉투.
+
+**Key Error Codes:**
+- `400 VALIDATION_FAILED` — agreedToTerms 또는 agreedToPrivacy 가 false / idToken 누락 / 미지원 provider
+- `401 UNAUTHORIZED` — 서명·iss·aud·exp 검증 실패
+
+---
+
 ### POST /api/v1/auth/logout
 
 **Auth required:** Yes

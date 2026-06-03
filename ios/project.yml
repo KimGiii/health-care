@@ -69,6 +69,13 @@ targets:
         API_BASE_URL: "$(BASE_URL)"
         GADApplicationIdentifier: "ca-app-pub-6600084915621974~8422643430"
         NSUserTrackingUsageDescription: "맞춤 광고를 보여드리기 위해 광고 추적 권한을 요청합니다. 거부하셔도 광고는 표시되지만 관련성이 낮을 수 있습니다."
+        NSLocalNetworkUsageDescription: "개발 중 Mac에서 실행 중인 로컬 API 서버에 연결하기 위해 로컬 네트워크 접근이 필요합니다."
+    entitlements:
+      path: HealthCare/HealthCare.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+        aps-environment: development
     settings:
       base:
         INFOPLIST_FILE: HealthCare/Resources/Info.plist
@@ -122,11 +129,9 @@ schemes:
         HealthCareTests: [test]
         HealthCareUITests: [test]
     run:
+      # BASE_URL은 Debug.xcconfig(localhost/LAN) → Info.plist $(BASE_URL)로 주입.
+      # env 변수로 덮어쓰지 않는다 (덮어쓰면 xcconfig 환경 분리가 무력화됨).
       config: Debug
-      environmentVariables:
-        - variable: BASE_URL
-          value: https://api.gainsy.site
-          isEnabled: true
     test:
       config: Debug
       targets:
@@ -146,11 +151,9 @@ schemes:
       targets:
         HealthCare: all
     run:
+      # BASE_URL은 Staging.xcconfig(dev.api.gainsy.site) → Info.plist $(BASE_URL)로 주입.
+      # env 변수로 덮어쓰지 않는다 (이전에 prod URL이 박혀 dev 분리가 깨졌던 버그).
       config: Staging
-      environmentVariables:
-        - variable: BASE_URL
-          value: https://api.gainsy.site
-          isEnabled: true
     profile:
       config: Staging
     analyze:

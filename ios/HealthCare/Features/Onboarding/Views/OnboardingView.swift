@@ -47,11 +47,11 @@ struct OnboardingView: View {
                     // CTA Buttons
                     VStack(spacing: 12) {
                         NavigationLink(destination: LoginView()) {
-                            PrimaryButtonLabel(title: "로그인하기")
+                            PrimaryButtonLabel(title: String(localized: "auth.login.button"))
                         }
 
                         NavigationLink(destination: SignUpView()) {
-                            SecondaryButtonLabel(title: "계정이 없어요, 가입하기")
+                            SecondaryButtonLabel(title: String(localized: "onboarding.signup.button"))
                         }
                     }
                     .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing

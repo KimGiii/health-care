@@ -58,7 +58,9 @@ struct StyledSecureField: View {
             } label: {
                 Image(systemName: isVisible ? "eye.slash" : "eye")
                     .foregroundStyle(Color.textSecondary)
-                    .accessibilityLabel(isVisible ? "비밀번호 가리기" : "비밀번호 보이기")
+                    .accessibilityLabel(isVisible
+                        ? String(localized: "auth.password.toggleVisibility.hide")
+                        : String(localized: "auth.password.toggleVisibility.show"))
             }
         }
         .styledFieldBackground()

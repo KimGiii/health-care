@@ -9,11 +9,11 @@ enum PhotoType: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .FRONT:      return "정면"
-        case .BACK:       return "후면"
-        case .SIDE_LEFT:  return "좌측"
-        case .SIDE_RIGHT: return "우측"
-        case .DETAIL:     return "부위"
+        case .FRONT:      return String(localized: "body.pose.front")
+        case .BACK:       return String(localized: "body.pose.back")
+        case .SIDE_LEFT:  return String(localized: "body.pose.left")
+        case .SIDE_RIGHT: return String(localized: "body.pose.right")
+        case .DETAIL:     return String(localized: "body.pose.detail")
         }
     }
 

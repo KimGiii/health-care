@@ -14,7 +14,7 @@ final class ExerciseRecordViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -138,7 +138,7 @@ final class ExerciseRecordViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "운동 기록을 불러오지 못했습니다."
+            errorMessage = String(localized: "exercise.error.loadList")
         }
     }
 
@@ -149,7 +149,7 @@ final class ExerciseRecordViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "exercise.error.delete")
         }
     }
 

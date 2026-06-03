@@ -10,7 +10,7 @@ extension Array {
 extension Date {
     func formatted(_ format: String) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.resolvedLocale
         formatter.dateFormat = format
         return formatter.string(from: self)
     }

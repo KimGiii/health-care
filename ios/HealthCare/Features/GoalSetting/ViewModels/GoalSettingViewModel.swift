@@ -19,7 +19,7 @@ final class GoalSettingViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "목표를 불러오지 못했습니다."
+            errorMessage = String(localized: "goal.error.loadList")
         }
     }
 
@@ -30,7 +30,7 @@ final class GoalSettingViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "목표 포기 처리 중 오류가 발생했습니다."
+            errorMessage = String(localized: "goal.error.abandon")
         }
     }
 

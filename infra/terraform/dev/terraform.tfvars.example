@@ -1,0 +1,6 @@
+aws_region       = "ap-northeast-2"
+ec2_key_name     = "your-key-pair-name"          # prod와 동일 키 사용 가능
+root_domain      = "gainsy.site"
+route53_zone_id  = "Z03929631UCOQNSN4RL8M"       # prod terraform output에서 확인
+ecr_registry     = "621770702801.dkr.ecr.ap-northeast-2.amazonaws.com"
+allowed_ssh_cidrs = ["YOUR_IP/32"]

@@ -37,14 +37,14 @@ struct ExerciseSessionDetailView: View {
                 }
             }
         }
-        .confirmationDialog("운동 기록을 삭제할까요?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button("삭제", role: .destructive) {
+        .confirmationDialog(Text("exercise.confirm.delete"), isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button(String(localized: "common.delete.button"), role: .destructive) {
                 Task {
                     await viewModel.deleteSession(id: sessionId, apiClient: container.apiClient)
                     dismiss()
                 }
             }
-            Button("취소", role: .cancel) {}
+            Button(String(localized: "common.cancel"), role: .cancel) {}
         }
         .task { await viewModel.loadSession(id: sessionId, apiClient: container.apiClient) }
     }
@@ -108,7 +108,7 @@ struct ExerciseSessionDetailView: View {
                         icon: "scalemass.fill",
                         value: session.totalVolumeKg.map { String(format: "%.0f", $0) } ?? "—",
                         unit: "kg",
-                        label: "총 볼륨",
+                        label: String(localized: "exercise.detail.totalVolume"),
                         color: Color.brandAccent
                     )
                     Divider().frame(height: 44)
@@ -116,23 +116,23 @@ struct ExerciseSessionDetailView: View {
                         icon: "flame.fill",
                         value: session.caloriesBurned.map { String(format: "%.0f", $0) } ?? "—",
                         unit: "kcal",
-                        label: "소모 칼로리",
+                        label: String(localized: "exercise.detail.burnedKcal"),
                         color: .orange
                     )
                     Divider().frame(height: 44)
                     detailStat(
                         icon: "clock.fill",
                         value: session.durationMinutes.map { "\($0)" } ?? "—",
-                        unit: "분",
-                        label: "운동 시간",
+                        unit: String(localized: "exercise.detail.unit.min"),
+                        label: String(localized: "exercise.detail.duration"),
                         color: Color.brandAccent
                     )
                     Divider().frame(height: 44)
                     detailStat(
                         icon: "list.number",
                         value: "\(session.sets.count)",
-                        unit: "세트",
-                        label: "총 세트",
+                        unit: String(localized: "exercise.detail.unit.sets"),
+                        label: String(localized: "exercise.detail.totalSets"),
                         color: Color.brandAccent
                     )
                 }
@@ -223,7 +223,7 @@ struct ExerciseSessionDetailView: View {
                 .font(.bodyMedium)
                 .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("다시 시도") {
+            Button(String(localized: "exercise.retry")) {
                 Task { await viewModel.loadSession(id: sessionId, apiClient: container.apiClient) }
             }
             .foregroundStyle(Color.brandAccent)
@@ -285,7 +285,7 @@ private struct ExerciseGroupCard: View {
                     .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
-                Text("\(sets.count)세트")
+                Text(String(format: String(localized: "exercise.set.count"), sets.count))
                     .font(.caption).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
                     .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
@@ -370,7 +370,7 @@ final class ExerciseSessionDetailViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "운동 상세를 불러오지 못했습니다."
+            errorMessage = String(localized: "exercise.error.loadDetail")
         }
     }
 
@@ -380,7 +380,7 @@ final class ExerciseSessionDetailViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "exercise.error.delete")
         }
     }
 }

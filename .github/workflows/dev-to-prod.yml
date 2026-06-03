@@ -98,6 +98,7 @@ jobs:
               -e FCM_CREDENTIALS_PATH="/app/fcm-credentials.json" \
               -e OPENAI_API_KEY="${{ secrets.PROD_OPENAI_API_KEY }}" \
               -e PUBLIC_FOOD_API_KEY="${{ secrets.PROD_PUBLIC_FOOD_API_KEY }}" \
+              -e GOOGLE_IOS_CLIENT_ID="${{ secrets.GOOGLE_IOS_CLIENT_ID }}" \
               -v /etc/healthcare/fcm-credentials.json:/app/fcm-credentials.json:ro \
               ${{ env.IMAGE }}
 

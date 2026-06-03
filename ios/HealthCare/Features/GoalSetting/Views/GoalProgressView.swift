@@ -14,7 +14,7 @@ struct GoalProgressView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.surfaceGrouped.ignoresSafeArea()
+            Color.backgroundPage.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -57,11 +57,11 @@ struct GoalProgressView: View {
                 }
             }
         }
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -92,7 +92,7 @@ private struct ProgressHeroSection: View {
                             .clipShape(Circle())
                     }
                     Spacer()
-                    Text("목표 진행률")
+                    Text(String(localized: "goal.progress.title"))
                         .font(.numeralMedium).fontWeight(.bold)
                         .foregroundStyle(.white)
                     Spacer()
@@ -133,7 +133,7 @@ private struct ProgressWaveBackground: View {
                     .offset(x: geo.size.width * 0.28, y: -geo.size.height * 0.08)
                     .rotationEffect(.degrees(-18))
                 GoalWaveCurveShape()
-                    .fill(Color.surfaceGrouped)
+                    .fill(Color.backgroundPage)
                     .frame(height: 64)
                     .frame(maxWidth: .infinity)
                     .offset(y: geo.size.height - 32)
@@ -186,7 +186,7 @@ private struct HeroProgressRing: View {
                     Text(String(format: "%.0f%%", (progress.percentComplete ?? 0)))
                         .font(.numeralLarge)
                         .foregroundStyle(.white)
-                    Text("달성")
+                    Text(String(localized: "goal.summary.achieved"))
                         .font(.captionXSmall)
                         .foregroundStyle(.white.opacity(0.65))
                 }
@@ -200,7 +200,7 @@ private struct HeroProgressRing: View {
                     }
                     .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(.white)
-                    Text("목표: \(progress.formattedValue(progress.targetValue))")
+                    Text(String(format: String(localized: "goal.progress.target"), progress.formattedValue(progress.targetValue)))
                         .font(.bodySmall)
                         .foregroundStyle(.white.opacity(0.75))
                 }
@@ -259,15 +259,15 @@ private struct TrackingStatusCard: View {
                     .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Text(progress.isOnTrack
-                     ? "현재 페이스로 목표를 달성할 수 있어요"
-                     : "목표 날짜까지 페이스를 높여보세요")
+                     ? String(localized: "goal.progress.message.onTrack")
+                     : String(localized: "goal.progress.message.behind"))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
             Spacer()
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
     }
@@ -280,13 +280,13 @@ private struct ValueProgressCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("수치 변화")
+            Text(String(localized: "goal.progress.section.values"))
                 .font(.headingSmall).fontWeight(.bold)
                 .foregroundStyle(Color.textPrimary)
 
             HStack(spacing: 0) {
                 ValueColumn(
-                    label: "시작",
+                    label: String(localized: "goal.progress.value.start"),
                     value: progress.formattedValue(progress.startValue),
                     color: Color.textSecondary
                 )
@@ -296,7 +296,7 @@ private struct ValueProgressCard: View {
                     .foregroundStyle(Color.textSecondary)
                 Spacer()
                 ValueColumn(
-                    label: "현재",
+                    label: String(localized: "goal.progress.value.current"),
                     value: progress.formattedValue(progress.currentValue),
                     color: .brandPrimary,
                     isBold: true
@@ -307,7 +307,7 @@ private struct ValueProgressCard: View {
                     .foregroundStyle(Color.textSecondary)
                 Spacer()
                 ValueColumn(
-                    label: "목표",
+                    label: String(localized: "goal.progress.value.target"),
                     value: progress.formattedValue(progress.targetValue),
                     color: Color.brandAccent
                 )
@@ -331,7 +331,7 @@ private struct ValueProgressCard: View {
             .frame(height: 8)
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
     }
@@ -363,35 +363,35 @@ private struct TimelineCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("일정")
+            Text(String(localized: "goal.progress.section.schedule"))
                 .font(.headingSmall).fontWeight(.bold)
                 .foregroundStyle(Color.textPrimary)
 
             HStack(spacing: 0) {
                 TimelineItem(
                     icon: "calendar.badge.clock",
-                    label: "마감일",
+                    label: String(localized: "goal.progress.schedule.deadline"),
                     value: progress.formattedTargetDate,
                     color: Color.brandPrimary
                 )
                 Divider().frame(height: 44)
                 TimelineItem(
                     icon: "clock.arrow.trianglehead.counterclockwise.rotate.90",
-                    label: "남은 날",
-                    value: progress.daysRemaining.map { $0 >= 0 ? "D-\($0)" : "기간 초과" } ?? "-",
+                    label: String(localized: "goal.progress.schedule.daysLeft"),
+                    value: progress.daysRemaining.map { $0 >= 0 ? "D-\($0)" : String(localized: "goal.progress.timeOver") } ?? "-",
                     color: daysColor
                 )
                 Divider().frame(height: 44)
                 TimelineItem(
                     icon: "flag.checkered",
-                    label: "예상 완료",
+                    label: String(localized: "goal.progress.schedule.estimated"),
                     value: progress.formattedProjectedDate,
                     color: Color.brandAccent
                 )
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
     }
@@ -439,11 +439,11 @@ private struct CheckpointHistoryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("기록 히스토리")
+                Text(String(localized: "goal.progress.section.history"))
                     .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
-                Text("\(checkpoints.count)개")
+                Text(String(format: String(localized: "goal.progress.checkpoint.count"), checkpoints.count))
                     .font(.caption).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
             }
@@ -458,7 +458,7 @@ private struct CheckpointHistoryCard: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
     }
@@ -490,7 +490,7 @@ private struct CheckpointRow: View {
                         .font(.labelSmall)
                         .foregroundStyle(Color.textPrimary)
                     if checkpoint.isStartingPoint {
-                        Text("시작")
+                        Text(String(localized: "goal.progress.checkpoint.start"))
                             .font(.captionXSmall).fontWeight(.bold)
                             .foregroundStyle(Color.brandPrimary)
                             .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
@@ -500,7 +500,7 @@ private struct CheckpointRow: View {
                     }
                 }
                 if !checkpoint.isStartingPoint, let projected = checkpoint.projectedValue {
-                    Text("예상: \(String(format: "%.1f", projected))")
+                    Text(String(format: String(localized: "goal.progress.checkpoint.projected"), String(format: "%.1f", projected)))
                         .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
@@ -524,8 +524,8 @@ private struct EmptyProgressState: View {
     var body: some View {
         EmptyState(
             icon: "chart.line.uptrend.xyaxis",
-            title: "진행률 데이터가 아직 없어요",
-            message: "신체 측정 기록을 추가하면\n목표 진행률을 확인할 수 있어요"
+            title: String(localized: "goal.progress.empty.title"),
+            message: String(localized: "goal.progress.empty.message")
         )
     }
 }

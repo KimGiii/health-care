@@ -29,7 +29,7 @@ struct ExploreView: View {
                 .frame(height: 50)
         }
         .background(Color.backgroundPage)
-        .navigationTitle("탐색")
+        .navigationTitle(Text("explore.title"))
         .navigationBarTitleDisplayMode(.large)
         .navigationDestination(for: ExploreDestination.self) { dest in
             switch dest {
@@ -47,12 +47,12 @@ struct ExploreView: View {
 private struct InsightSectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("인사이트")
+            Text(String(localized: "explore.insights.title"))
                 .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
                 .textCase(.uppercase)
                 .tracking(0.5)
-            Text("나의 기록을 분석해보세요")
+            Text(String(localized: "explore.insights.subtitle"))
                 .font(.bodyMedium)
                 .foregroundStyle(Color.textSecondary)
         }
@@ -69,8 +69,8 @@ private struct InsightMenuGrid: View {
                 InsightMenuCard(
                     icon: "chart.bar.doc.horizontal",
                     iconColor: Color.brandAccent,
-                    title: "주간 회고",
-                    description: "이번 주 운동·식단·신체 변화를 한눈에"
+                    title: String(localized: "explore.card.retro.title"),
+                    description: String(localized: "explore.card.retro.desc")
                 )
             }
             .buttonStyle(.plain)
@@ -79,8 +79,8 @@ private struct InsightMenuGrid: View {
                 InsightMenuCard(
                     icon: "waveform.path.ecg",
                     iconColor: .purple,
-                    title: "변화 분석",
-                    description: "기간별 신체 지표 변화와 운동 통계"
+                    title: String(localized: "explore.card.change.title"),
+                    description: String(localized: "explore.card.change.desc")
                 )
             }
             .buttonStyle(.plain)

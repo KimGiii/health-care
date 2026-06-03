@@ -78,11 +78,11 @@ struct BodyMeasurementView: View {
             }
             .environmentObject(container)
         }
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -121,7 +121,7 @@ private struct BodyHeroSection: View {
                             .clipShape(Circle())
                     }
                     Spacer()
-                    Text("신체 변화")
+                    Text(String(localized: "body.title"))
                         .font(.headingMedium).fontWeight(.bold)
                         .foregroundStyle(.white)
                     Spacer()
@@ -147,19 +147,19 @@ private struct HeroStatsRow: View {
     var body: some View {
         HStack(spacing: 28) {
             if let w = measurement.weightKg {
-                HeroStatItem(value: String(format: "%.1f", w), unit: "kg", label: "체중")
+                HeroStatItem(value: String(format: "%.1f", w), unit: "kg", label: String(localized: "body.metric.weight"))
             }
             if measurement.weightKg != nil && measurement.bodyFatPct != nil {
                 Divider().frame(width: 1, height: 36).background(Color.white.opacity(0.2))
             }
             if let bf = measurement.bodyFatPct {
-                HeroStatItem(value: String(format: "%.1f", bf), unit: "%", label: "체지방")
+                HeroStatItem(value: String(format: "%.1f", bf), unit: "%", label: String(localized: "body.metric.bodyFat"))
             }
             if measurement.bodyFatPct != nil && measurement.muscleMassKg != nil {
                 Divider().frame(width: 1, height: 36).background(Color.white.opacity(0.2))
             }
             if let mm = measurement.muscleMassKg {
-                HeroStatItem(value: String(format: "%.1f", mm), unit: "kg", label: "근육량")
+                HeroStatItem(value: String(format: "%.1f", mm), unit: "kg", label: String(localized: "body.metric.muscleMass"))
             }
         }
         .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
@@ -196,7 +196,7 @@ private struct HeroEmptyState: View {
             Image(systemName: "scalemass.fill")
                 .font(.system(size: 30, weight: .semibold)) // design-lint:ignore — SF Symbol size
                 .foregroundStyle(.white.opacity(0.5))
-            Text("측정 기록이 아직 없어요")
+            Text(String(localized: "body.empty.title"))
                 .font(.bodySmall)
                 .foregroundStyle(.white.opacity(0.65))
         }
@@ -256,7 +256,7 @@ private struct LatestStatsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("최근 측정")
+                Text(String(localized: "body.recent.title"))
                     .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
@@ -271,15 +271,15 @@ private struct LatestStatsCard: View {
             ) {
                 if let v = measurement.weightKg {
                     StatCell(icon: "scalemass.fill", color: Color(hex: "#2563EB"),
-                             value: String(format: "%.1f", v), unit: "kg", label: "체중")
+                             value: String(format: "%.1f", v), unit: "kg", label: String(localized: "body.metric.weight"))
                 }
                 if let v = measurement.bodyFatPct {
                     StatCell(icon: "percent", color: Color(hex: "#7C3AED"),
-                             value: String(format: "%.1f", v), unit: "%", label: "체지방")
+                             value: String(format: "%.1f", v), unit: "%", label: String(localized: "body.metric.bodyFat"))
                 }
                 if let v = measurement.muscleMassKg {
                     StatCell(icon: "figure.arms.open", color: Color.brandPrimary,
-                             value: String(format: "%.1f", v), unit: "kg", label: "근육량")
+                             value: String(format: "%.1f", v), unit: "kg", label: String(localized: "body.metric.muscleMass"))
                 }
                 if let v = measurement.bmi {
                     StatCell(icon: "heart.fill", color: Color(hex: "#EA580C"),
@@ -287,29 +287,29 @@ private struct LatestStatsCard: View {
                 }
                 if let v = measurement.chestCm {
                     StatCell(icon: "ruler", color: Color(hex: "#0EA5E9"),
-                             value: String(format: "%.1f", v), unit: "cm", label: "가슴")
+                             value: String(format: "%.1f", v), unit: "cm", label: String(localized: "body.circ.chest"))
                 }
                 if let v = measurement.waistCm {
                     StatCell(icon: "ruler", color: Color(hex: "#DC2626"),
-                             value: String(format: "%.1f", v), unit: "cm", label: "허리")
+                             value: String(format: "%.1f", v), unit: "cm", label: String(localized: "body.circ.waist"))
                 }
                 if let v = measurement.hipCm {
                     StatCell(icon: "ruler", color: Color(hex: "#D97706"),
-                             value: String(format: "%.1f", v), unit: "cm", label: "엉덩이")
+                             value: String(format: "%.1f", v), unit: "cm", label: String(localized: "body.circ.hip"))
                 }
                 if let v = measurement.thighCm {
                     StatCell(icon: "ruler", color: Color(hex: "#059669"),
-                             value: String(format: "%.1f", v), unit: "cm", label: "허벅지")
+                             value: String(format: "%.1f", v), unit: "cm", label: String(localized: "body.circ.thigh"))
                 }
                 if let v = measurement.armCm {
                     StatCell(icon: "ruler", color: Color(hex: "#7C3AED"),
-                             value: String(format: "%.1f", v), unit: "cm", label: "팔")
+                             value: String(format: "%.1f", v), unit: "cm", label: String(localized: "body.circ.arm"))
                 }
             }
 
             if measurement.bmi != nil, let tap = onSourceTap {
                 Button(action: tap) {
-                    Label("BMI 분류 기준: WHO·대한비만학회 출처 보기", systemImage: "info.circle")
+                    Label(String(localized: "body.bmi.sources.short"), systemImage: "info.circle")
                         .font(.caption)
                         .foregroundStyle(Color.brandPrimary)
                 }
@@ -317,7 +317,7 @@ private struct LatestStatsCard: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
@@ -365,10 +365,10 @@ private struct MeasurementTrendSection: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("변화 추세")
+                    Text(String(localized: "body.trend.title"))
                         .font(.headingMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textPrimary)
-                    Text("선택한 기간 동안의 변화 흐름")
+                    Text(String(localized: "body.trend.subtitle"))
                         .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                 }
@@ -387,7 +387,7 @@ private struct MeasurementTrendSection: View {
                 }
             }
 
-            Picker("기간", selection: $viewModel.selectedRange) {
+            Picker(String(localized: "body.trend.picker"), selection: $viewModel.selectedRange) {
                 ForEach(MeasurementTrendRange.allCases) { range in
                     Text(range.title).tag(range)
                 }
@@ -468,12 +468,12 @@ private struct MeasurementTrendSection: View {
 
                     HStack(spacing: 12) {
                         TrendSummaryPill(
-                            title: "현재",
+                            title: String(localized: "body.compare.current"),
                             value: formattedValue(viewModel.displayTrendPoints.last?.value),
                             unit: viewModel.currentMetricUnit
                         )
                         TrendSummaryPill(
-                            title: "시작",
+                            title: String(localized: "body.compare.start"),
                             value: formattedValue(viewModel.displayTrendPoints.first?.value),
                             unit: viewModel.currentMetricUnit
                         )
@@ -484,10 +484,10 @@ private struct MeasurementTrendSection: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 22, weight: .semibold)) // design-lint:ignore — SF Symbol or special
                         .foregroundStyle(Color.textSecondary.opacity(0.6))
-                    Text("추세를 보여주기엔 기록이 조금 더 필요해요")
+                    Text(String(localized: "body.trend.needMore"))
                         .font(.bodyMedium).fontWeight(.semibold)
                         .foregroundStyle(Color.textPrimary)
-                    Text("선택한 기간 안에 \(viewModel.selectedMetric.title) 기록이 2개 이상 있으면 그래프로 보여드릴게요.")
+                    Text(String(format: String(localized: "body.trend.needMore.detail"), viewModel.selectedMetric.title))
                         .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                         .multilineTextAlignment(.center)
@@ -499,7 +499,7 @@ private struct MeasurementTrendSection: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
@@ -520,7 +520,7 @@ private struct MeasurementTrendSection: View {
     private static let axisDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.resolvedLocale
         return formatter
     }()
 }
@@ -594,7 +594,7 @@ private struct MeasurementHistorySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("측정 기록")
+            Text(String(localized: "body.records.title"))
                 .font(.headingMedium).fontWeight(.bold)
                 .foregroundStyle(Color.textPrimary)
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
@@ -613,8 +613,8 @@ private struct MeasurementHistorySection: View {
                     } label: {
                         HStack(spacing: 6) {
                             Text(isExpanded
-                                 ? "접기"
-                                 : "더보기 (\(measurements.count - visibleLimit)개)")
+                                 ? String(localized: "body.records.collapse")
+                                 : String(format: String(localized: "body.records.showMore"), measurements.count - visibleLimit))
                                 .font(.bodyMedium).fontWeight(.semibold)
                             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                                 .font(.captionBold)
@@ -661,23 +661,23 @@ private struct MeasurementRow: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
-        .confirmationDialog("기록 삭제", isPresented: $showDeleteConfirm) {
-            Button("삭제", role: .destructive) { onDelete() }
-            Button("취소", role: .cancel) {}
+        .confirmationDialog(Text("body.records.deleteConfirm.title"), isPresented: $showDeleteConfirm) {
+            Button(String(localized: "common.delete.button"), role: .destructive) { onDelete() }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
         } message: {
-            Text("이 측정 기록을 삭제하시겠습니까?")
+            Text(String(localized: "body.records.deleteConfirm.message"))
         }
     }
 
     private var summaryText: String {
         var parts: [String] = []
-        if let w = measurement.weightKg  { parts.append("체중 \(String(format: "%.1f", w))kg") }
-        if let bf = measurement.bodyFatPct { parts.append("체지방 \(String(format: "%.1f", bf))%") }
-        if let mm = measurement.muscleMassKg { parts.append("근육 \(String(format: "%.1f", mm))kg") }
-        return parts.isEmpty ? "기록 없음" : parts.joined(separator: "  ·  ")
+        if let w = measurement.weightKg  { parts.append(String(format: String(localized: "body.summary.weight"), w)) }
+        if let bf = measurement.bodyFatPct { parts.append(String(format: String(localized: "body.summary.bodyFat"), bf)) }
+        if let mm = measurement.muscleMassKg { parts.append(String(format: String(localized: "body.summary.muscle"), mm)) }
+        return parts.isEmpty ? String(localized: "body.summary.empty") : parts.joined(separator: "  ·  ")
     }
 }
 
@@ -696,16 +696,16 @@ private struct EmptyMeasurementCard: View {
                         .foregroundStyle(Color.brandPrimary)
                 }
                 VStack(spacing: 6) {
-                    Text("첫 번째 측정을 기록해 보세요")
+                    Text(String(localized: "body.empty.firstTitle"))
                         .font(.bodyLarge).fontWeight(.bold)
                         .foregroundStyle(Color.textPrimary)
-                    Text("체중, 체지방률, 근육량 등\n신체 변화를 꾸준히 기록하세요")
+                    Text(String(localized: "body.empty.firstMessage"))
                         .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }
-                Text("기록 추가하기")
+                Text(String(localized: "body.empty.firstAction"))
                     .font(.bodyMedium).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 30) // design-lint:ignore — micro/hero spacing
@@ -715,7 +715,7 @@ private struct EmptyMeasurementCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
             .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
         }

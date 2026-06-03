@@ -21,13 +21,13 @@ struct MainTabView: View {
     enum Tab: Int, CaseIterable {
         case home, diary, record, explore, myPage
 
-        var title: String {
+        var titleKey: LocalizedStringKey {
             switch self {
-            case .home:    return "대시보드"
-            case .diary:   return "다이어리"
-            case .record:  return "기록"
-            case .explore: return "탐색"
-            case .myPage:  return "마이"
+            case .home:    return "tab.home"
+            case .diary:   return "tab.diary"
+            case .record:  return "tab.record"
+            case .explore: return "tab.explore"
+            case .myPage:  return "tab.myPage"
             }
         }
 
@@ -47,31 +47,31 @@ struct MainTabView: View {
             NavigationStack(path: $homePath) {
                 HomeView().id(homeId)
             }
-            .tabItem { Label(Tab.home.title, systemImage: Tab.home.systemImage) }
+            .tabItem { Label(Tab.home.titleKey, systemImage: Tab.home.systemImage) }
             .tag(Tab.home)
 
             NavigationStack(path: $diaryPath) {
                 DiaryView().id(diaryId)
             }
-            .tabItem { Label(Tab.diary.title, systemImage: Tab.diary.systemImage) }
+            .tabItem { Label(Tab.diary.titleKey, systemImage: Tab.diary.systemImage) }
             .tag(Tab.diary)
 
             NavigationStack(path: $recordPath) {
                 RecordHubView(showsDismissButton: false).id(recordId)
             }
-            .tabItem { Label(Tab.record.title, systemImage: Tab.record.systemImage) }
+            .tabItem { Label(Tab.record.titleKey, systemImage: Tab.record.systemImage) }
             .tag(Tab.record)
 
             NavigationStack(path: $explorePath) {
                 ExploreView().id(exploreId)
             }
-            .tabItem { Label(Tab.explore.title, systemImage: Tab.explore.systemImage) }
+            .tabItem { Label(Tab.explore.titleKey, systemImage: Tab.explore.systemImage) }
             .tag(Tab.explore)
 
             NavigationStack(path: $myPagePath) {
                 MyPageView().id(myPageId)
             }
-            .tabItem { Label(Tab.myPage.title, systemImage: Tab.myPage.systemImage) }
+            .tabItem { Label(Tab.myPage.titleKey, systemImage: Tab.myPage.systemImage) }
             .tag(Tab.myPage)
         }
         .tint(Color.brandPrimary)
@@ -92,13 +92,16 @@ struct MainTabView: View {
         handlePushRoute(type: type)
     }
 
-    /// 탭을 선택할 때마다 항상 해당 탭의 path와 root view id를 리셋한다.
-    /// 같은 탭을 다시 눌러도 set이 호출되므로, 사용자가 어디까지 들어갔든 항상 시작점 페이지로 돌아간다.
+    /// 같은 탭을 다시 눌렀을 때만 path/view id를 리셋한다(root로 돌아가기).
+    /// 다른 탭에서 전환해 들어오는 경우엔 기존 view를 유지해 캐시된 데이터가 즉시 보이도록 하고,
+    /// 매번 4개 병렬 API 호출이 발생해 cold-start 부담이 누적되는 문제를 막는다.
     private var tabBinding: Binding<Tab> {
         Binding(
             get: { selectedTab },
             set: { newTab in
-                resetTab(newTab)
+                if newTab == selectedTab {
+                    resetTab(newTab)
+                }
                 selectedTab = newTab
             }
         )

@@ -64,7 +64,7 @@ private struct ActiveGoalContent: View {
                                     .font(.system(size: 10, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
                                     .foregroundStyle(Color.surfaceCard)
                             )
-                        Text("\(percentText)% 완료")
+                        Text(String(format: String(localized: "home.goal.percentComplete"), percentText))
                             .font(.caption).fontWeight(.medium)
                             .foregroundStyle(Color.textSecondary)
                     }
@@ -89,7 +89,13 @@ private struct ActiveGoalContent: View {
         )
         .elevation(.low)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("목표: \(goal.goalType.displayName), \(percentText)% 완료\(goal.daysRemaining.map { ", \($0)일 남음" } ?? "")")
+        .accessibilityLabel(
+            String(format: String(localized: "home.goal.a11y"),
+                   goal.goalType.displayName, percentText)
+            + (goal.daysRemaining.map {
+                ", " + String(format: String(localized: "home.goal.daysRemaining.a11y"), $0)
+            } ?? "")
+        )
     }
 }
 

@@ -48,7 +48,7 @@ struct GoalSettingView: View {
                 }
             }
             .ignoresSafeArea(edges: .top)
-            .background(Color.surfaceGrouped)
+            .background(Color.backgroundPage)
             .refreshable {
                 await viewModel.load(apiClient: container.apiClient)
                 viewModel.errorMessage = nil
@@ -73,11 +73,11 @@ struct GoalSettingView: View {
                 Task { await viewModel.goalCreated(apiClient: container.apiClient) }
             }
         }
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -106,7 +106,7 @@ private struct GoalHeroSection: View {
                             .clipShape(Circle())
                     }
                     Spacer()
-                    Text("나의 목표")
+                    Text(String(localized: "goal.settings.title"))
                         .font(.numeralMedium).fontWeight(.bold)
                         .foregroundStyle(.white)
                     Spacer()
@@ -136,7 +136,7 @@ private struct GoalWaveBackground: View {
                     .offset(x: geo.size.width * 0.3, y: -geo.size.height * 0.1)
                     .rotationEffect(.degrees(-15))
                 GoalWaveCurve()
-                    .fill(Color.surfaceGrouped)
+                    .fill(Color.backgroundPage)
                     .frame(height: 64)
                     .frame(maxWidth: .infinity)
                     .offset(y: geo.size.height - 32)
@@ -180,7 +180,7 @@ private struct GoalProgressRing: View {
                     Text(String(format: "%.0f%%", goal.progressRatio * 100))
                         .font(.numeralMedium).fontWeight(.bold)
                         .foregroundStyle(.white)
-                    Text("달성")
+                    Text(String(localized: "goal.summary.achieved"))
                         .font(.captionXSmall)
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -191,7 +191,7 @@ private struct GoalProgressRing: View {
                     Text(goal.goalType.displayName)
                         .font(.cta).fontWeight(.bold)
                         .foregroundStyle(.white)
-                    Text("목표: \(goal.targetText)")
+                    Text(String(format: String(localized: "goal.summary.target"), goal.targetText))
                         .font(.bodySmall)
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -237,7 +237,7 @@ private struct NoGoalPlaceholder: View {
             Image(systemName: "target")
                 .font(.system(size: 34)) // design-lint:ignore — SF Symbol size
                 .foregroundStyle(.white.opacity(0.45))
-            Text("목표가 아직 없어요")
+            Text(String(localized: "goal.summary.empty"))
                 .font(.bodyMedium)
                 .foregroundStyle(.white.opacity(0.65))
         }
@@ -264,7 +264,7 @@ private struct ActiveGoalCard<Destination: View>: View {
                         .background(Color.surfaceCard)
                         .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("진행 중인 목표")
+                        Text(String(localized: "goal.detail.active"))
                             .font(.captionXSmall)
                             .foregroundStyle(Color.textSecondary)
                         Text(goal.goalType.displayName)
@@ -286,14 +286,14 @@ private struct ActiveGoalCard<Destination: View>: View {
             Divider()
 
             HStack(spacing: 0) {
-                GoalStatItem(label: "목표", value: goal.targetText)
+                GoalStatItem(label: String(localized: "goal.detail.stat.target"), value: goal.targetText)
                 Spacer()
-                GoalStatItem(label: "마감일", value: goal.formattedTargetDate)
+                GoalStatItem(label: String(localized: "goal.detail.stat.deadline"), value: goal.formattedTargetDate)
                 Spacer()
                 if let days = goal.daysRemaining {
                     GoalStatItem(
-                        label: "남은 일수",
-                        value: "\(days)일",
+                        label: String(localized: "goal.detail.stat.daysLeft"),
+                        value: String(format: String(localized: "goal.detail.stat.daysLeft.value"), days),
                         valueColor: days >= 14 ? .textPrimary : .brandDanger
                     )
                 }
@@ -305,7 +305,7 @@ private struct ActiveGoalCard<Destination: View>: View {
                 HStack(spacing: 6) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.labelSmall)
-                    Text("상세 진행률 보기")
+                    Text(String(localized: "goal.detail.viewProgress"))
                         .font(.labelSmall)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -315,14 +315,14 @@ private struct ActiveGoalCard<Destination: View>: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
         .shadow(color: .black.opacity(0.07), radius: 10, x: 0, y: 4)
-        .confirmationDialog("목표 포기", isPresented: $showAbandonConfirm) {
-            Button("목표 포기", role: .destructive) { onAbandon() }
-            Button("취소", role: .cancel) {}
+        .confirmationDialog(Text("goal.abandon.title"), isPresented: $showAbandonConfirm) {
+            Button(String(localized: "goal.abandon.confirm"), role: .destructive) { onAbandon() }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
         } message: {
-            Text("현재 목표를 포기하시겠습니까?\n히스토리에는 계속 기록됩니다.")
+            Text(String(localized: "goal.abandon.message"))
         }
     }
 }
@@ -359,16 +359,16 @@ private struct EmptyGoalCard: View {
                         .foregroundStyle(Color.brandPrimary)
                 }
                 VStack(spacing: 6) {
-                    Text("목표를 설정해보세요")
+                    Text(String(localized: "goal.empty.title"))
                         .font(.bodyLarge).fontWeight(.bold)
                         .foregroundStyle(Color.textPrimary)
-                    Text("체중 감량, 근육 증가 등 나만의 목표를\n설정하고 달성률을 추적하세요.")
+                    Text(String(localized: "goal.empty.message"))
                         .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }
-                Text("목표 설정하기")
+                Text(String(localized: "goal.empty.action"))
                     .font(.bodyMedium).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 30) // design-lint:ignore — micro/hero spacing
@@ -378,7 +378,7 @@ private struct EmptyGoalCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
             .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
         }
@@ -393,7 +393,7 @@ private struct PastGoalsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("목표 히스토리")
+            Text(String(localized: "goal.history.title"))
                 .font(.headingMedium).fontWeight(.bold)
                 .foregroundStyle(Color.textPrimary)
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
@@ -439,7 +439,7 @@ private struct PastGoalRow: View {
                 .clipShape(Capsule())
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
     }
 }

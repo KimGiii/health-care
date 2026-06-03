@@ -12,7 +12,7 @@ final class DietRecordViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -87,13 +87,15 @@ final class DietRecordViewModel: ObservableObject {
             )
             async let profileRequest: UserProfile = apiClient.request(.getProfile)
 
-            let (logsResponse, profile) = try await (logsRequest, profileRequest)
+            let logsResponse = try await logsRequest
             logs = logsResponse.content
-            userProfile = profile
+            if let profile = try? await profileRequest {
+                userProfile = profile
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "식단 기록을 불러오지 못했습니다."
+            errorMessage = String(localized: "diet.error.loadList")
         }
     }
 
@@ -104,7 +106,7 @@ final class DietRecordViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "diet.error.delete")
         }
     }
 

@@ -62,7 +62,7 @@ final class HomeViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -211,30 +211,67 @@ final class HomeViewModel: ObservableObject {
         errorMessage = nil
         defer { isLoading = false }
 
-        do {
-            async let dietResponse     = apiClient.loadDietLogs(from: weekStart, to: today)
-            async let exerciseResponse = apiClient.loadExerciseSessions()
-            async let goalResponse     = apiClient.loadGoals()
-            async let profileResponse  = apiClient.loadUserProfile()
+        // 4개 병렬 호출 — 일부 실패가 전체 실패로 전파되지 않도록 개별 Task 로 격리한다.
+        // `try await (a, b, c, d)` 패턴은 a 가 실패하면 b/c/d 결과가 모두 버려지므로
+        // 화면이 빈 상태로 전환되어 "처음 진입 시 에러, 두 번째 시 성공" 패턴을 만든다.
+        async let dietResult     = result { try await apiClient.loadDietLogs(from: weekStart, to: today) }
+        async let exerciseResult = result { try await apiClient.loadExerciseSessions() }
+        async let goalResult     = result { try await apiClient.loadGoals() }
+        async let profileResult  = result { try await apiClient.loadUserProfile() }
 
-            let (diet, exercise, goals, profile) =
-                try await (dietResponse, exerciseResponse, goalResponse, profileResponse)
+        let (dietR, exerciseR, goalR, profileR) =
+            await (dietResult, exerciseResult, goalResult, profileResult)
 
+        var failedSources: [String] = []
+
+        switch dietR {
+        case .success(let diet):
             weekDietLogs   = diet.content
             todayDietLogs  = diet.content.filter { $0.logDate == today }
-            recentSessions = exercise.content
-            userProfile    = profile
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.diet"), diagnose(err)))
+        }
 
+        switch exerciseR {
+        case .success(let exercise): recentSessions = exercise.content
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.exercise"), diagnose(err)))
+        }
+
+        switch profileR {
+        case .success(let profile): userProfile = profile
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.profile"), diagnose(err)))
+        }
+
+        switch goalR {
+        case .success(let goals):
             if let goal = goals.content.first(where: { $0.status == .ACTIVE }) {
                 activeGoal = await enrichedActiveGoal(goal, apiClient: apiClient)
             } else {
                 activeGoal = nil
             }
-        } catch let error as APIError {
-            errorMessage = error.errorDescription
-        } catch {
-            errorMessage = "데이터를 불러오지 못했습니다."
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.goal"), diagnose(err)))
         }
+
+        if !failedSources.isEmpty {
+            errorMessage = String(format: String(localized: "home.error.partialLoad"),
+                                  failedSources.joined(separator: ", "))
+        }
+    }
+
+    /// 비동기 throw 호출을 Result 로 감싸 일부 실패가 다른 결과를 휘말리게 하지 않도록 한다.
+    private nonisolated func result<T>(_ op: @Sendable () async throws -> T) async -> Result<T, Error> {
+        do { return .success(try await op()) }
+        catch { return .failure(error) }
+    }
+
+    private nonisolated func diagnose(_ error: Error) -> String {
+        if let apiError = error as? APIError {
+            return apiError.errorDescription ?? String(localized: "home.error.apiGeneric")
+        }
+        return String(describing: type(of: error))
     }
 
     private func enrichedActiveGoal(_ goal: GoalSummary, apiClient: any HomeDashboardLoading) async -> GoalSummary {

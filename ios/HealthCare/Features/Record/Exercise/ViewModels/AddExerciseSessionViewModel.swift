@@ -58,9 +58,9 @@ final class AddExerciseSessionViewModel: ObservableObject {
 
             var label: String {
                 switch self {
-                case .weighted:   return "중량"
-                case .bodyweight: return "맨몸"
-                case .cardio:     return "유산소"
+                case .weighted:   return String(localized: "exercise.setType.weighted")
+                case .bodyweight: return String(localized: "exercise.setType.bodyweight")
+                case .cardio:     return String(localized: "exercise.setType.cardio")
                 }
             }
         }
@@ -161,7 +161,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
             )
             aiEstimateResult = result
         } catch {
-            errorMessage = "AI 운동 추정에 실패했습니다. 직접 입력해 주세요."
+            errorMessage = String(localized: "exercise.error.aiEstimate")
         }
     }
 
@@ -184,7 +184,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
             addExercise(catalogItem)
             aiEstimateResult = nil
         } catch {
-            errorMessage = "AI 추정 운동 저장에 실패했습니다."
+            errorMessage = String(localized: "exercise.error.aiSave")
         }
     }
 
@@ -258,8 +258,8 @@ final class AddExerciseSessionViewModel: ObservableObject {
     func save(apiClient: APIClient, onSuccess: @escaping @MainActor (CreateSessionResponse) -> Void) async {
         guard canSave else {
             errorMessage = hasValidSessionTime
-                ? "모든 세트 정보를 올바르게 입력해 주세요."
-                : "운동 종료 시간은 시작 시간보다 늦어야 합니다."
+                ? String(localized: "exercise.error.invalidSets")
+                : String(localized: "exercise.error.endBeforeStart")
             return
         }
 
@@ -312,7 +312,7 @@ final class AddExerciseSessionViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "저장 중 오류가 발생했습니다."
+            errorMessage = String(localized: "exercise.error.save")
         }
     }
 

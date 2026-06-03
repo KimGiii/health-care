@@ -110,7 +110,7 @@ struct WeeklyTrendCard: View {
                     Image(systemName: "flame.fill")
                         .font(.captionXSmall).fontWeight(.bold)
                         .foregroundStyle(Color.brandEmber)
-                    Text("이번 주 \(Int(totalBurned)) kcal 소모")
+                    Text(String(format: String(localized: "home.weekly.burned.summary"), Int(totalBurned)))
                         .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
@@ -134,7 +134,15 @@ struct WeeklyTrendCard: View {
     private func shortLabel(_ dateStr: String) -> String {
         let parts = dateStr.split(separator: "-")
         guard parts.count == 3, let day = Int(parts[2]) else { return dateStr }
-        let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+        let weekdays = [
+            String(localized: "common.weekday.sun"),
+            String(localized: "common.weekday.mon"),
+            String(localized: "common.weekday.tue"),
+            String(localized: "common.weekday.wed"),
+            String(localized: "common.weekday.thu"),
+            String(localized: "common.weekday.fri"),
+            String(localized: "common.weekday.sat"),
+        ]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         if let date = formatter.date(from: dateStr) {

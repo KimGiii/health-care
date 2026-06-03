@@ -26,7 +26,18 @@ struct WeeklySummaryResponse: Codable, Sendable {
         let parts1 = weekStart.split(separator: "-")
         let parts2 = weekEnd.split(separator: "-")
         guard parts1.count == 3, parts2.count == 3 else { return "\(weekStart) ~ \(weekEnd)" }
-        return "\(parts1[1])월 \(parts1[2])일 ~ \(parts2[1])월 \(parts2[2])일"
+        // locale-aware week range
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        if let from = parser.date(from: "\(parts1[0])-\(parts1[1])-\(parts1[2])"),
+           let to   = parser.date(from: "\(parts2[0])-\(parts2[1])-\(parts2[2])") {
+            let d = DateFormatter()
+            d.locale = LocaleManager.resolvedLocale
+            d.dateFormat = String(localized: "diet.date.format.shortKR")
+            return "\(d.string(from: from)) ~ \(d.string(from: to))"
+        }
+        return "\(parts1[1])-\(parts1[2]) ~ \(parts2[1])-\(parts2[2])"
     }
 
     var weightChangeSummary: String {

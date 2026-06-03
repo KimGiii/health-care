@@ -27,21 +27,21 @@ struct MacroBreakdownCard: View {
 
             VStack(spacing: 10) {
                 MacroRow(
-                    label: "단백질",
+                    label: String(localized: "home.macros.protein"),
                     current: proteinG,
                     goal: proteinGoal,
                     color: Color.brandAccent,
                     unit: "g"
                 )
                 MacroRow(
-                    label: "탄수화물",
+                    label: String(localized: "home.macros.carbs"),
                     current: carbsG,
                     goal: carbsGoal,
                     color: Color.brandSunrise,
                     unit: "g"
                 )
                 MacroRow(
-                    label: "지방",
+                    label: String(localized: "home.macros.fat"),
                     current: fatG,
                     goal: fatGoal,
                     color: Color.brandEmber,
@@ -112,7 +112,7 @@ private struct MacroRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "\(label): \(String(format: "%.0f", current))\(unit) / \(Int(goal))\(unit)"
-            + (isExceeded ? ", 권장량 초과" : "")
+            + (isExceeded ? ", " + String(localized: "home.macros.exceeded.a11y") : "")
         )
     }
 }

@@ -1,26 +1,28 @@
 import Foundation
 
 enum ActivityLevelOption {
-    static let all: [(label: String, value: String)] = [
-        ("거의 안 움직임", "SEDENTARY"),
-        ("가벼운 활동", "LIGHTLY_ACTIVE"),
-        ("보통 활동", "MODERATELY_ACTIVE"),
-        ("활발한 활동", "VERY_ACTIVE"),
-        ("매우 활발", "EXTRA_ACTIVE"),
-    ]
+    static var all: [(label: String, value: String)] {
+        [
+            (String(localized: "mypage.activity.sedentary"), "SEDENTARY"),
+            (String(localized: "mypage.activity.light"),     "LIGHTLY_ACTIVE"),
+            (String(localized: "mypage.activity.moderate"),  "MODERATELY_ACTIVE"),
+            (String(localized: "mypage.activity.active"),    "VERY_ACTIVE"),
+            (String(localized: "mypage.activity.extra"),     "EXTRA_ACTIVE"),
+        ]
+    }
 
     static func label(for value: String?) -> String {
         switch value {
         case "SEDENTARY":
-            return "거의 안 움직임"
+            return String(localized: "mypage.activity.sedentary")
         case "LIGHTLY_ACTIVE", "LIGHT":
-            return "가벼운 활동"
+            return String(localized: "mypage.activity.light")
         case "MODERATELY_ACTIVE", "MODERATE":
-            return "보통 활동"
+            return String(localized: "mypage.activity.moderate")
         case "VERY_ACTIVE", "ACTIVE":
-            return "활발한 활동"
+            return String(localized: "mypage.activity.active")
         case "EXTRA_ACTIVE":
-            return "매우 활발"
+            return String(localized: "mypage.activity.extra")
         default:
             return "-"
         }
@@ -93,8 +95,8 @@ final class MyPageViewModel: ObservableObject {
 
     var sexLabel: String {
         switch profile?.sex {
-        case "MALE":   return "남성"
-        case "FEMALE": return "여성"
+        case "MALE":   return String(localized: "profile.sex.male")
+        case "FEMALE": return String(localized: "profile.sex.female")
         default:       return "-"
         }
     }
@@ -111,7 +113,7 @@ final class MyPageViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "프로필을 불러오지 못했습니다."
+            errorMessage = String(localized: "mypage.error.profileLoad")
         }
     }
 
@@ -143,7 +145,7 @@ final class MyPageViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "프로필 수정 중 오류가 발생했습니다."
+            errorMessage = String(localized: "mypage.error.profileSave")
         }
     }
 
@@ -156,7 +158,7 @@ final class MyPageViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "계정 삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "mypage.error.deleteAccount")
         }
     }
 

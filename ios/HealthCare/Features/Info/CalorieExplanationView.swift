@@ -24,31 +24,31 @@ struct CalorieExplanationView: View {
                     if let breakdown {
                         stepCard(
                             index: "1",
-                            title: "기초대사량 (BMR)",
+                            title: String(localized: "calorie.step.bmr.title"),
                             formula: "Mifflin-St Jeor (1990)\n\(breakdown.bmrFormula)",
-                            result: "\(breakdown.bmrText) kcal/일",
-                            note: "가만히 있어도 생명 유지에 쓰이는 최소 에너지입니다."
+                            result: "\(breakdown.bmrText) " + String(localized: "calorie.unit.perDay"),
+                            note: String(localized: "calorie.step.bmr.note")
                         )
                         stepCard(
                             index: "2",
-                            title: "활동대사량 (TDEE)",
-                            formula: "BMR × 활동계수\n\(breakdown.bmrText) × \(breakdown.activityFactorText) (\(breakdown.activityLabel))",
-                            result: "\(breakdown.tdeeText) kcal/일",
-                            note: "활동량까지 반영한 하루 총 소비 에너지입니다."
+                            title: String(localized: "calorie.step.tdee.title"),
+                            formula: String(format: String(localized: "calorie.step.tdee.formula"), breakdown.bmrText, breakdown.activityFactorText, breakdown.activityLabel),
+                            result: "\(breakdown.tdeeText) " + String(localized: "calorie.unit.perDay"),
+                            note: String(localized: "calorie.step.tdee.note")
                         )
                         stepCard(
                             index: "3",
-                            title: "목표 보정",
+                            title: String(localized: "calorie.step.adjust.title"),
                             formula: breakdown.goalAdjustmentFormula,
-                            result: "\(breakdown.adjustedText) kcal/일",
+                            result: "\(breakdown.adjustedText) " + String(localized: "calorie.unit.perDay"),
                             note: breakdown.goalNote
                         )
                         if breakdown.safetyFloorApplied {
                             stepCard(
                                 index: "4",
-                                title: "안전 하한 적용",
-                                formula: "건강을 위한 최소 섭취량(\(breakdown.sexIsFemale ? "여성 1,200" : "남성·기타 1,500") kcal) 미만으로 내려가지 않도록 보정했습니다.",
-                                result: "\(breakdown.finalText) kcal/일",
+                                title: String(localized: "calorie.step.safety.title"),
+                                formula: String(format: String(localized: "calorie.step.safety.formula"), breakdown.sexIsFemale ? String(localized: "calorie.safety.female") : String(localized: "calorie.safety.male")),
+                                result: "\(breakdown.finalText) " + String(localized: "calorie.unit.perDay"),
                                 note: nil
                             )
                         }
@@ -62,12 +62,12 @@ struct CalorieExplanationView: View {
                 }
                 .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("권장 칼로리 계산")
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("calorie.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("닫기") { dismiss() }
+                    Button(String(localized: "common.close")) { dismiss() }
                         .foregroundStyle(Color.brandPrimary)
                 }
             }
@@ -81,7 +81,7 @@ struct CalorieExplanationView: View {
             HStack(spacing: 8) {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(Color.brandAccent)
-                Text("권장 칼로리 산출 방식")
+                Text(String(localized: "calorie.section.title"))
                     .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
             }
@@ -90,19 +90,19 @@ struct CalorieExplanationView: View {
                     Text("\(target)")
                         .font(.system(size: 34, weight: .heavy, design: .rounded)) // design-lint:ignore — hero numeric
                         .foregroundStyle(Color.brandAccent)
-                    Text("kcal/일")
+                    Text(String(localized: "calorie.unit.perDay"))
                         .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            Text("아래 4단계로 회원님의 프로필과 목표에 맞춰 자동 계산한 값입니다. 프로필이나 목표를 바꾸면 다시 계산됩니다.")
+            Text(String(localized: "calorie.intro"))
                 .font(.bodySmall)
                 .foregroundStyle(Color.textSecondary)
                 .lineSpacing(3)
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -142,30 +142,30 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 
     private func macroCard(_ breakdown: CalorieBreakdown) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("매크로 분배")
+            Text(String(localized: "calorie.macro.title"))
                 .font(.headingSmall)
                 .foregroundStyle(Color.textPrimary)
-            Text("총 칼로리를 단백질 → 지방 → 탄수화물 순으로 배분합니다.\n• 단백질: 체중 1kg당 \(breakdown.proteinPerKgText)g\n• 지방: 총 칼로리의 \(breakdown.fatRatioText)%\n• 탄수화물: 나머지 칼로리")
+            Text(String(format: String(localized: "calorie.macro.body"), breakdown.proteinPerKgText, breakdown.fatRatioText))
                 .font(.bodySmall)
                 .foregroundStyle(Color.textSecondary)
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 12) {
-                macroChip("단백질", value: profile.proteinTargetG, color: .blue)
-                macroChip("탄수화물", value: profile.carbTargetG, color: .orange)
-                macroChip("지방", value: profile.fatTargetG, color: .pink)
+                macroChip(String(localized: "calorie.macro.protein"), value: profile.proteinTargetG, color: .blue)
+                macroChip(String(localized: "calorie.macro.carbs"), value: profile.carbTargetG, color: .orange)
+                macroChip(String(localized: "calorie.macro.fat"), value: profile.fatTargetG, color: .pink)
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -187,28 +187,28 @@ struct CalorieExplanationView: View {
             HStack(spacing: 8) {
                 Image(systemName: "person.crop.circle.badge.exclamationmark")
                     .foregroundStyle(Color.brandAccent)
-                Text("프로필을 완성해 주세요")
+                Text(String(localized: "calorie.profile.title"))
                     .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
             }
-            Text("성별·생년월일·키·체중·활동 수준이 모두 입력되면 회원님 맞춤 권장 칼로리를 Mifflin-St Jeor 공식으로 계산해 드립니다. 현재는 기본값(2,000 kcal)을 사용합니다.")
+            Text(String(localized: "calorie.profile.body"))
                 .font(.bodySmall)
                 .foregroundStyle(Color.textSecondary)
                 .lineSpacing(3)
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 
     private var sourcesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("계산식 출처")
+            Text(String(localized: "calorie.sources.title"))
                 .font(.headingSmall)
                 .foregroundStyle(Color.textPrimary)
-            Text("• BMR: Mifflin-St Jeor 공식 (1990) — 미국영양학회(ADA)·대한비만학회 표준\n• 활동계수: Harris-Benedict 활동 수준 표\n• 매크로: ACSM·국제스포츠영양학회(ISSN) 가이드라인")
+            Text(String(localized: "calorie.sources.body"))
                 .font(.bodySmall)
                 .foregroundStyle(Color.textSecondary)
                 .lineSpacing(3)
@@ -216,7 +216,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -226,13 +226,13 @@ struct CalorieExplanationView: View {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(Color(hex: "#D97706"))
-                Text("참고용 안내")
+                Text(String(localized: "calorie.disclaimer.title"))
                     .font(.headingSmall).fontWeight(.bold)
-                    .foregroundStyle(Color.textPrimary)
+                    .foregroundStyle(Color(hex: "#78350F"))
             }
-            Text("계산값은 일반적인 추정치이며 개인의 건강 상태에 따라 달라질 수 있습니다. 식이 조절이 필요한 경우 의료 전문가와 상의하시기 바랍니다.")
+            Text(String(localized: "calorie.disclaimer.body"))
                 .font(.bodySmall)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color(hex: "#92400E"))
                 .lineSpacing(3)
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
@@ -300,26 +300,26 @@ private struct CalorieBreakdown {
 
     var bmrFormula: String {
         sexIsFemale
-            ? "10×체중 + 6.25×키 − 5×나이 − 161"
-            : "10×체중 + 6.25×키 − 5×나이 + 5"
+            ? String(localized: "calorie.bmrFormula.female")
+            : String(localized: "calorie.bmrFormula.male")
     }
 
     var goalAdjustmentFormula: String {
         let delta = Self.goalDelta(goalType)
         guard delta != 0 else {
-            return "현재 목표(\(goalType?.displayName ?? "유지"))는 활동대사량을 그대로 유지합니다."
+            return String(format: String(localized: "calorie.adjust.maintain"), goalType?.displayName ?? String(localized: "calorie.goal.default"))
         }
         let sign = delta > 0 ? "+" : "−"
-        return "\(goalType?.displayName ?? "목표") → \(tdeeText) \(sign) \(Int(abs(delta)))"
+        return "\(goalType?.displayName ?? String(localized: "calorie.goal.label")) → \(tdeeText) \(sign) \(Int(abs(delta)))"
     }
 
     var goalNote: String {
         switch goalType {
-        case .WEIGHT_LOSS:        "주 약 0.5kg 감량을 위해 500 kcal 적자를 둡니다."
-        case .MUSCLE_GAIN:        "근육 증가(린벌크)를 위해 300 kcal를 더합니다."
-        case .BODY_RECOMPOSITION: "체형 개선을 위해 가벼운 200 kcal 적자를 둡니다."
-        case .ENDURANCE:          "글리코겐 회복을 위해 200 kcal를 더합니다."
-        case .GENERAL_HEALTH, .none: "활성 목표가 없거나 전반적 건강이면 유지 칼로리를 사용합니다."
+        case .WEIGHT_LOSS:        String(localized: "calorie.goal.note.weightLoss")
+        case .MUSCLE_GAIN:        String(localized: "calorie.goal.note.muscleGain")
+        case .BODY_RECOMPOSITION: String(localized: "calorie.goal.note.recomp")
+        case .ENDURANCE:          String(localized: "calorie.goal.note.endurance")
+        case .GENERAL_HEALTH, .none: String(localized: "calorie.goal.note.health")
         }
     }
 
@@ -354,12 +354,12 @@ private struct CalorieBreakdown {
 
     private static func activity(_ level: String) -> (Double, String) {
         switch level.uppercased() {
-        case "SEDENTARY":         (1.2, "비활동적")
-        case "LIGHTLY_ACTIVE":    (1.375, "가볍게 활동")
-        case "MODERATELY_ACTIVE": (1.55, "보통 활동")
-        case "VERY_ACTIVE":       (1.725, "활발히 활동")
-        case "EXTRA_ACTIVE":      (1.9, "매우 활발")
-        default:                  (1.2, "비활동적")
+        case "SEDENTARY":         (1.2, String(localized: "calorie.activity.sedentary"))
+        case "LIGHTLY_ACTIVE":    (1.375, String(localized: "calorie.activity.lightly"))
+        case "MODERATELY_ACTIVE": (1.55, String(localized: "calorie.activity.moderately"))
+        case "VERY_ACTIVE":       (1.725, String(localized: "calorie.activity.very"))
+        case "EXTRA_ACTIVE":      (1.9, String(localized: "calorie.activity.extra"))
+        default:                  (1.2, String(localized: "calorie.activity.sedentary"))
         }
     }
 
