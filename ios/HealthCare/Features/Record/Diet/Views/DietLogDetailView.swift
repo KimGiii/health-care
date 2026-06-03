@@ -41,7 +41,7 @@ final class DietLogDetailViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "상세 정보를 불러오지 못했습니다."
+            errorMessage = String(localized: "diet.detail.error.load")
         }
     }
 }
@@ -140,32 +140,32 @@ struct DietLogDetailView: View {
                         .font(.bodyMedium)
                         .foregroundStyle(Color.textSecondary)
                 }
-                .accessibilityLabel("영양 정보 출처 보기")
+                .accessibilityLabel(String(localized: "diet.detail.viewSources.a11y"))
             }
             HStack(spacing: 0) {
                 NutritionStatCell(
-                    label: "칼로리",
+                    label: String(localized: "diet.nutrient.calories"),
                     value: String(format: "%.0f", detail.totalCalories ?? 0),
                     unit: "kcal",
                     color: .brandAccent
                 )
                 Divider().frame(height: 40)
                 NutritionStatCell(
-                    label: "단백질",
+                    label: String(localized: "diet.nutrient.protein"),
                     value: String(format: "%.1f", detail.totalProteinG ?? 0),
                     unit: "g",
                     color: .blue
                 )
                 Divider().frame(height: 40)
                 NutritionStatCell(
-                    label: "탄수화물",
+                    label: String(localized: "diet.nutrient.carbs"),
                     value: String(format: "%.1f", detail.totalCarbsG ?? 0),
                     unit: "g",
                     color: .orange
                 )
                 Divider().frame(height: 40)
                 NutritionStatCell(
-                    label: "지방",
+                    label: String(localized: "diet.nutrient.fat"),
                     value: String(format: "%.1f", detail.totalFatG ?? 0),
                     unit: "g",
                     color: .pink
@@ -185,28 +185,28 @@ struct DietLogDetailView: View {
                 .foregroundColor(Color.brandAccent)
             VStack(spacing: 12) {
                 MacroProgressRow(
-                    label: "칼로리",
+                    label: String(localized: "diet.nutrient.calories"),
                     current: detail.totalCalories ?? 0,
                     goal: viewModel.dailyCalorieGoal,
                     unit: "kcal",
                     color: .brandAccent
                 )
                 MacroProgressRow(
-                    label: "단백질",
+                    label: String(localized: "diet.nutrient.protein"),
                     current: detail.totalProteinG ?? 0,
                     goal: viewModel.dailyProteinGoal,
                     unit: "g",
                     color: .blue
                 )
                 MacroProgressRow(
-                    label: "탄수화물",
+                    label: String(localized: "diet.nutrient.carbs"),
                     current: detail.totalCarbsG ?? 0,
                     goal: viewModel.dailyCarbsGoal,
                     unit: "g",
                     color: .orange
                 )
                 MacroProgressRow(
-                    label: "지방",
+                    label: String(localized: "diet.nutrient.fat"),
                     current: detail.totalFatG ?? 0,
                     goal: viewModel.dailyFatGoal,
                     unit: "g",
@@ -306,7 +306,7 @@ private struct MacroProgressRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "\(label): 권장량의 \(percent) 퍼센트, \(Int(current.rounded()))\(unit) / \(Int(goal))\(unit)"
-            + (isExceeded ? ", 권장량 초과" : "")
+            + (isExceeded ? ", " + String(localized: "diet.detail.macro.exceeded.a11y") : "")
         )
     }
 }
@@ -343,7 +343,18 @@ private struct DietDetailHeader: View {
     private func formattedDate(_ s: String) -> String {
         let parts = s.split(separator: "-")
         guard parts.count == 3 else { return s }
-        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+        return {
+            let parser = DateFormatter()
+            parser.dateFormat = "yyyy-MM-dd"
+            parser.locale = Locale(identifier: "en_US_POSIX")
+            guard let date = parser.date(from: "\(parts[0])-\(parts[1])-\(parts[2])") else {
+                return "\(parts[0])-\(parts[1])-\(parts[2])"
+            }
+            let display = DateFormatter()
+            display.locale = LocaleManager.shared.effectiveLocale
+            display.dateFormat = String(localized: "diet.date.format.longKR")
+            return display.string(from: date)
+        }()
     }
 }
 

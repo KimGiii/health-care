@@ -50,11 +50,11 @@ struct AddDietLogView: View {
                 }
                 saveButton
             }
-            .navigationTitle(viewModel.editingLogId != nil ? "식단 수정" : "식단 기록")
+            .navigationTitle(viewModel.editingLogId != nil ? String(localized: "diet.title.edit") : String(localized: "diet.title.add"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { onSaved() }
+                    Button(String(localized: "common.cancel")) { onSaved() }
                         .foregroundColor(Color.brandAccent)
                 }
             }
@@ -68,11 +68,11 @@ struct AddDietLogView: View {
             .sheet(isPresented: $viewModel.showPremiumPaywall) {
                 PremiumPaywallSheet(isPresented: $viewModel.showPremiumPaywall)
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -86,7 +86,7 @@ struct AddDietLogView: View {
                             apiClient: container.apiClient
                         )
                     } else {
-                        viewModel.errorMessage = "사진을 불러오지 못했습니다."
+                        viewModel.errorMessage = String(localized: "diet.error.photoLoad")
                     }
                     selectedPhotoItem = nil
                 }
@@ -131,7 +131,7 @@ struct AddDietLogView: View {
 
             if !viewModel.analysisWarnings.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("AI 추정치 안내", systemImage: "sparkles")
+                    Label(String(localized: "diet.button.aiHint"), systemImage: "sparkles")
                         .font(.subheadline.bold())
                         .foregroundColor(Color.brandAccent)
                     ForEach(viewModel.analysisWarnings, id: \.self) { warning in
@@ -160,11 +160,11 @@ struct AddDietLogView: View {
                     .foregroundColor(.brandAccent)
             }
             HStack(spacing: 0) {
-                MacroCell(label: "단백질", value: viewModel.totalProtein, color: .blue)
+                MacroCell(label: String(localized: "diet.nutrient.protein"), value: viewModel.totalProtein, color: .blue)
                 Divider().frame(height: 30)
-                MacroCell(label: "탄수화물", value: viewModel.totalCarbs, color: .orange)
+                MacroCell(label: String(localized: "diet.nutrient.carbs"), value: viewModel.totalCarbs, color: .orange)
                 Divider().frame(height: 30)
-                MacroCell(label: "지방", value: viewModel.totalFat, color: .pink)
+                MacroCell(label: String(localized: "diet.nutrient.fat"), value: viewModel.totalFat, color: .pink)
             }
             if let remainingBeforeMeal {
                 Divider()
@@ -185,7 +185,7 @@ struct AddDietLogView: View {
             Image(systemName: isExceeded ? "exclamationmark.triangle.fill" : "flame.fill")
                 .font(.caption)
                 .foregroundColor(isExceeded ? Color.brandDanger : Color.textSecondary)
-            Text(isExceeded ? "오늘 권장 초과" : "오늘 남은 칼로리")
+            Text(isExceeded ? String(localized: "diet.calories.exceeded") : String(localized: "diet.calories.remaining"))
                 .font(.caption)
                 .foregroundColor(Color.textSecondary)
             Spacer()
@@ -196,8 +196,8 @@ struct AddDietLogView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             isExceeded
-                ? "오늘 권장 칼로리를 \(String(format: "%.0f", abs(remaining))) 킬로칼로리 초과합니다."
-                : "오늘 남은 칼로리 \(String(format: "%.0f", remaining)) 킬로칼로리."
+                ? String(format: String(localized: "diet.calories.exceeded.a11y"), abs(remaining))
+                : String(format: String(localized: "diet.calories.remaining.a11y"), remaining)
         )
     }
 
@@ -289,7 +289,7 @@ struct AddDietLogView: View {
             Text("메모 (선택)")
                 .font(.subheadline.bold())
                 .foregroundColor(Color.textSecondary)
-            TextField("식사 메모를 입력하세요", text: $viewModel.notes, axis: .vertical)
+            TextField(String(localized: "diet.notes.placeholder"), text: $viewModel.notes, axis: .vertical)
                 .font(.body)
                 .lineLimit(3...6)
                 .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
@@ -429,7 +429,7 @@ private struct DraftEntryCard: View {
                 }
 
                 if entry.needsReview || entry.unknownOrUncertain != nil {
-                    Text(entry.unknownOrUncertain ?? "AI 추정 항목이라 저장 전 검토를 권장합니다.")
+                    Text(entry.unknownOrUncertain ?? String(localized: "diet.aiHint.review"))
                         .font(.caption)
                         .foregroundColor(.orange)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -490,7 +490,7 @@ struct FoodSearchSheet: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(Color.textSecondary)
-                    TextField("식품명 검색", text: $viewModel.searchQuery)
+                    TextField(String(localized: "diet.search.placeholder"), text: $viewModel.searchQuery)
                         .focused($searchFocused)
                         .submitLabel(.search)
                         .onSubmit { triggerSearch() }
@@ -513,17 +513,17 @@ struct FoodSearchSheet: View {
 
                 if viewModel.isSearching {
                     Spacer()
-                    ProgressView("검색 중...")
+                    ProgressView(String(localized: "diet.search.loading"))
                     Spacer()
                 } else {
                     combinedList
                 }
             }
-            .navigationTitle("식품 검색")
+            .navigationTitle(Text("diet.search.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { viewModel.showFoodSearch = false }
+                    Button(String(localized: "common.close")) { viewModel.showFoodSearch = false }
                         .foregroundColor(Color.brandAccent)
                 }
             }
@@ -536,7 +536,7 @@ struct FoodSearchSheet: View {
 
         return Group {
             if hasQuery && !hasAny {
-                emptyState(message: "검색 결과가 없습니다.")
+                emptyState(message: String(localized: "diet.search.empty"))
             } else {
                 List {
                     if !viewModel.catalogResults.isEmpty {
@@ -582,7 +582,7 @@ struct FoodSearchSheet: View {
                let item = estimate.firstItem {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Label("AI 영양 추정", systemImage: "sparkles")
+                        Label(String(localized: "diet.ai.estimateNutrition"), systemImage: "sparkles")
                             .font(.subheadline.bold())
                             .foregroundColor(Color.brandAccent)
                         Spacer()
@@ -612,20 +612,20 @@ struct FoodSearchSheet: View {
                     }
 
                     HStack(spacing: 10) {
-                        aiMacro("열량", value: item.nutrition.caloriesKcal, unit: "kcal")
-                        aiMacro("단백질", value: item.nutrition.proteinG, unit: "g")
-                        aiMacro("탄수", value: item.nutrition.carbohydrateG, unit: "g")
-                        aiMacro("지방", value: item.nutrition.fatG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.kcal"), value: item.nutrition.caloriesKcal, unit: "kcal")
+                        aiMacro(String(localized: "diet.macro.label.protein"), value: item.nutrition.proteinG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.carbs"), value: item.nutrition.carbohydrateG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.fat"), value: item.nutrition.fatG, unit: "g")
                     }
                     HStack(spacing: 10) {
-                        aiMacro("당류", value: item.nutrition.sugarsG, unit: "g")
-                        aiMacro("식이섬유", value: item.nutrition.dietaryFiberG, unit: "g")
-                        aiMacro("나트륨", value: item.nutrition.sodiumMg, unit: "mg")
-                        aiMacro("콜레스테롤", value: item.nutrition.cholesterolMg, unit: "mg")
+                        aiMacro(String(localized: "diet.macro.label.sugars"), value: item.nutrition.sugarsG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.fiber"), value: item.nutrition.dietaryFiberG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.sodium"), value: item.nutrition.sodiumMg, unit: "mg")
+                        aiMacro(String(localized: "diet.macro.label.cholesterol"), value: item.nutrition.cholesterolMg, unit: "mg")
                     }
 
                     if estimate.isMultiItem {
-                        Text("여러 음식이 인식되었습니다 (\(estimate.items.count)개). 현재는 첫 번째 항목만 추가됩니다.")
+                        Text(String(format: String(localized: "diet.ai.multiItem.warning"), estimate.items.count))
                             .font(.caption)
                             .foregroundColor(Color.textSecondary)
                     }
@@ -645,7 +645,7 @@ struct FoodSearchSheet: View {
                             await viewModel.addAiEstimatedFood(apiClient: container.apiClient)
                         }
                     } label: {
-                        Label("추정값으로 추가", systemImage: "plus.circle.fill")
+                        Label(String(localized: "diet.ai.addEstimate"), systemImage: "plus.circle.fill")
                             .font(.subheadline.bold())
                             .frame(maxWidth: .infinity)
                     }
@@ -667,7 +667,7 @@ struct FoodSearchSheet: View {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Label("AI로 영양 추정", systemImage: "sparkles")
+                            Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
                                 .font(.subheadline.bold())
                                 .frame(maxWidth: .infinity)
                         }
@@ -682,7 +682,7 @@ struct FoodSearchSheet: View {
                             viewModel.showCustomFoodForm = true
                         }
                     } label: {
-                        Label("직접 등록하기", systemImage: "plus.circle")
+                        Label(String(localized: "diet.ai.directAdd"), systemImage: "plus.circle")
                             .font(.subheadline.bold())
                             .frame(maxWidth: .infinity)
                     }
@@ -820,10 +820,10 @@ private struct AddCustomFoodView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("기본 정보") {
-                    TextField("식품명", text: $name)
+                Section(String(localized: "diet.foodEdit.section.basic")) {
+                    TextField(String(localized: "diet.foodEdit.field.name"), text: $name)
                         .textInputAutocapitalization(.never)
-                    Picker("카테고리", selection: $category) {
+                    Picker(String(localized: "diet.foodEdit.field.category"), selection: $category) {
                         ForEach(FoodCategory.allCases, id: \.self) { category in
                             Text(category.displayName).tag(category)
                         }

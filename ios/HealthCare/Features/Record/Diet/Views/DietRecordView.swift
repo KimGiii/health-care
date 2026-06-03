@@ -70,7 +70,7 @@ struct DietRecordView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(viewModel.remainingCalories >= 0 ? "남은 칼로리" : "초과 섭취")
+                    Text(viewModel.remainingCalories >= 0 ? String(localized: "diet.summary.remaining") : String(localized: "diet.summary.exceeded"))
                         .font(.caption)
                         .foregroundColor(Color.textSecondary)
                     Text(String(format: "%.0f kcal", abs(viewModel.remainingCalories)))
@@ -102,7 +102,7 @@ struct DietRecordView: View {
             // 3대 영양소 행
             HStack(spacing: 0) {
                 MacroProgressCell(
-                    label: "단백질",
+                    label: String(localized: "diet.nutrient.protein"),
                     current: viewModel.todayProteinG,
                     goal: viewModel.dailyProteinGoal,
                     progress: viewModel.proteinProgress,
@@ -110,7 +110,7 @@ struct DietRecordView: View {
                 )
                 Divider().frame(height: 36)
                 MacroProgressCell(
-                    label: "탄수화물",
+                    label: String(localized: "diet.nutrient.carbs"),
                     current: viewModel.todayCarbsG,
                     goal: viewModel.dailyCarbsGoal,
                     progress: viewModel.carbsProgress,
@@ -118,7 +118,7 @@ struct DietRecordView: View {
                 )
                 Divider().frame(height: 36)
                 MacroProgressCell(
-                    label: "지방",
+                    label: String(localized: "diet.nutrient.fat"),
                     current: viewModel.todayFatG,
                     goal: viewModel.dailyFatGoal,
                     progress: viewModel.fatProgress,
@@ -147,7 +147,7 @@ struct DietRecordView: View {
                     Button(role: .destructive) {
                         Task { await viewModel.deleteLog(id: log.dietLogId, apiClient: container.apiClient) }
                     } label: {
-                        Label("삭제", systemImage: "trash")
+                        Label(String(localized: "common.delete.button"), systemImage: "trash")
                     }
                 }
             }
@@ -159,9 +159,9 @@ struct DietRecordView: View {
     private var emptyState: some View {
         EmptyState(
             icon: "fork.knife.circle",
-            title: "오늘 식단 기록이 아직 없어요",
-            message: "오늘 먹은 음식을 기록해 보세요\n영양 목표 달성을 도와드려요",
-            action: .init(label: "식단 기록하기") {
+            title: String(localized: "diet.empty.title"),
+            message: String(localized: "diet.empty.message"),
+            action: .init(label: String(localized: "diet.empty.action")) {
                 viewModel.showAddLog = true
             }
         )
@@ -259,7 +259,8 @@ private struct DietHeroSection: View {
 
     private func todayDisplayString() -> String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
+        f.dateFormat = String(localized: "home.date.format")
+        f.locale = Locale.current
         f.locale = Locale(identifier: "ko_KR")
         return f.string(from: Date())
     }

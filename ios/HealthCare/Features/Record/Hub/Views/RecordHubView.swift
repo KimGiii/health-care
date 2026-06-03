@@ -66,8 +66,8 @@ private struct HubHeroSection: View {
 
     private var koDate: String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = Locale.current
+        f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
 

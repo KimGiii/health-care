@@ -21,7 +21,7 @@ struct PremiumPaywallSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { isPresented = false }
+                    Button(String(localized: "common.close")) { isPresented = false }
                         .foregroundColor(Color.brandAccent)
                 }
             }
@@ -52,18 +52,18 @@ struct PremiumPaywallSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             featureRow(
                 icon: "camera.viewfinder",
-                title: "사진 한 장으로 식단 기록",
-                detail: "여러 음식이 담긴 사진을 한 번에 분석해 칼로리·영양소 추정"
+                title: String(localized: "diet.paywall.feature1.title"),
+                detail: String(localized: "diet.paywall.feature1.detail")
             )
             featureRow(
                 icon: "list.bullet.rectangle.portrait",
-                title: "영양소 10종 자동 분해",
-                detail: "탄수·당류·식이섬유·단백·지방·포화·트랜스·콜레스테롤·나트륨까지"
+                title: String(localized: "diet.paywall.feature2.title"),
+                detail: String(localized: "diet.paywall.feature2.detail")
             )
             featureRow(
                 icon: "checkmark.seal",
-                title: "수정 후 저장",
-                detail: "AI 추정값을 검토하고 그대로 식단 기록으로 저장"
+                title: String(localized: "diet.paywall.feature3.title"),
+                detail: String(localized: "diet.paywall.feature3.detail")
             )
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
