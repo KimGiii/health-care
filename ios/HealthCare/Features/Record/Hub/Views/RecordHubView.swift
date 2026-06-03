@@ -94,11 +94,6 @@ private struct HubHeroSection: View {
                         Color.clear.frame(width: 40, height: 40)
                     }
                     Spacer()
-                    Text("RECORD")
-                        .font(.captionBold).fontWeight(.heavy)
-                        .tracking(3.4)
-                        .foregroundStyle(.white.opacity(0.8))
-                    Spacer()
                     Color.clear.frame(width: 40, height: 40)
                 }
                 .padding(.top, 54) // design-lint:ignore — micro/hero spacing
