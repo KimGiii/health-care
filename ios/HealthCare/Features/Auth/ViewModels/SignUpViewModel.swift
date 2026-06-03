@@ -14,15 +14,15 @@ final class SignUpViewModel: ObservableObject {
 
     func register(apiClient: APIClient, authState: AuthState) async {
         guard password == passwordConfirm else {
-            errorMessage = "비밀번호가 일치하지 않습니다."
+            errorMessage = String(localized: "auth.error.password.mismatch")
             return
         }
         guard password.count >= 8 else {
-            errorMessage = "비밀번호는 8자 이상이어야 합니다."
+            errorMessage = String(localized: "auth.error.password.tooShort")
             return
         }
         guard !displayName.trimmingCharacters(in: .whitespaces).isEmpty else {
-            errorMessage = "닉네임을 입력해 주세요."
+            errorMessage = String(localized: "auth.error.displayName.required")
             return
         }
 
@@ -39,12 +39,12 @@ final class SignUpViewModel: ObservableObject {
         } catch let error as APIError {
             switch error {
             case .serverError(let code, _, _) where code == 409:
-                errorMessage = "이미 사용 중인 이메일입니다."
+                errorMessage = String(localized: "auth.error.email.duplicate")
             default:
                 errorMessage = error.errorDescription
             }
         } catch {
-            errorMessage = "회원가입 중 오류가 발생했습니다."
+            errorMessage = String(localized: "auth.error.signup")
         }
     }
 
@@ -81,8 +81,8 @@ final class SignUpViewModel: ObservableObject {
             errorMessage = nil
         } catch {
             switch provider {
-            case .apple:  errorMessage = "Apple 가입에 실패했습니다."
-            case .google: errorMessage = "Google 가입에 실패했습니다."
+            case .apple:  errorMessage = String(localized: "auth.error.apple.signup")
+            case .google: errorMessage = String(localized: "auth.error.google.signup")
             }
         }
     }
@@ -109,8 +109,8 @@ final class SignUpViewModel: ObservableObject {
             errorMessage = error.errorDescription
         } catch {
             switch pending.provider {
-            case .apple:  errorMessage = "Apple 가입에 실패했습니다."
-            case .google: errorMessage = "Google 가입에 실패했습니다."
+            case .apple:  errorMessage = String(localized: "auth.error.apple.signup")
+            case .google: errorMessage = String(localized: "auth.error.google.signup")
             }
         }
     }

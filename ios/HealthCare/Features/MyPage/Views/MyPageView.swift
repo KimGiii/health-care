@@ -27,9 +27,9 @@ struct MyPageView: View {
                 .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("마이페이지")
+            .navigationTitle(Text("mypage.title"))
             .navigationBarTitleDisplayMode(.large)
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
@@ -37,11 +37,15 @@ struct MyPageView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
-            .confirmationDialog("계정을 삭제하면 모든 데이터가 영구 삭제됩니다.", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-                Button("계정 삭제", role: .destructive) {
+            .confirmationDialog(
+                Text("mypage.deleteConfirm.title"),
+                isPresented: $showDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button(String(localized: "mypage.menu.deleteAccount"), role: .destructive) {
                     Task { await viewModel.deleteAccount(apiClient: container.apiClient, authState: authState) }
                 }
-                Button("취소", role: .cancel) {}
+                Button(String(localized: "common.cancel.button"), role: .cancel) {}
             }
             .sheet(isPresented: $showEditSheet) {
                 EditProfileSheet(viewModel: viewModel, isPresented: $showEditSheet)
@@ -83,7 +87,7 @@ struct MyPageView: View {
                 }
 
                 VStack(spacing: 6) {
-                    Text(viewModel.profile?.displayName ?? "불러오는 중...")
+                    Text(viewModel.profile?.displayName ?? String(localized: "mypage.profile.loading"))
                         .font(.numeralMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
                     Text(viewModel.profile?.email ?? "")
@@ -112,22 +116,26 @@ struct MyPageView: View {
     private var statsRow: some View {
         HStack(spacing: 0) {
             statCell(
-                label: "키",
-                value: viewModel.profile?.heightCm.map { "\(Int($0))cm" } ?? "-"
+                label: String(localized: "mypage.stats.height"),
+                value: viewModel.profile?.heightCm.map {
+                    String(format: String(localized: "mypage.stats.height.format"), Int($0))
+                } ?? "-"
             )
             statDivider
             statCell(
-                label: "체중",
-                value: viewModel.profile?.weightKg.map { String(format: "%.1fkg", $0) } ?? "-"
+                label: String(localized: "mypage.stats.weight"),
+                value: viewModel.profile?.weightKg.map {
+                    String(format: String(localized: "mypage.stats.weight.format"), $0)
+                } ?? "-"
             )
             statDivider
             statCell(
-                label: "활동량",
+                label: String(localized: "mypage.stats.activity"),
                 value: viewModel.activityLevelLabel
             )
             statDivider
             statCell(
-                label: "성별",
+                label: String(localized: "mypage.stats.sex"),
                 value: viewModel.sexLabel
             )
         }
@@ -160,14 +168,18 @@ struct MyPageView: View {
 
     private var menuSections: some View {
         VStack(spacing: 20) {
-            MenuSection(title: "계정 관리") {
-                MenuRow(icon: "person.crop.circle", iconColor: Color.brandSecondary, label: "프로필 수정") {
+            MenuSection(title: String(localized: "mypage.section.account")) {
+                MenuRow(
+                    icon: "person.crop.circle",
+                    iconColor: Color.brandSecondary,
+                    label: String(localized: "mypage.menu.editProfile")
+                ) {
                     viewModel.populateEditFields()
                     showEditSheet = true
                 }
             }
 
-            MenuSection(title: "앱 설정") {
+            MenuSection(title: String(localized: "mypage.section.app")) {
                 ThemeMenuRow(selectedTheme: selectedTheme) { theme in
                     appThemeRawValue = theme.rawValue
                 }
@@ -177,11 +189,11 @@ struct MyPageView: View {
                 NotificationSettingsRow()
             }
 
-            MenuSection(title: "앱 정보") {
+            MenuSection(title: String(localized: "mypage.section.info")) {
                 MenuRow(
                     icon: "info.circle",
                     iconColor: Color.brandMoss,
-                    label: "버전",
+                    label: String(localized: "mypage.menu.version"),
                     trailingText: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
                     action: {}
                 )
@@ -189,7 +201,7 @@ struct MyPageView: View {
                 MenuRow(
                     icon: "book.closed",
                     iconColor: Color.brandMoss,
-                    label: "의학 정보 출처"
+                    label: String(localized: "mypage.menu.medicalSources")
                 ) {
                     showMedicalSources = true
                 }
@@ -197,23 +209,32 @@ struct MyPageView: View {
                 MenuLinkRow(
                     icon: "doc.text",
                     iconColor: Color.brandSecondary,
-                    label: "이용약관",
+                    label: String(localized: "mypage.menu.terms"),
                     url: URL(string: "https://gainsy.site/terms")!
                 )
                 Divider().padding(.leading, 60) // design-lint:ignore — micro/hero spacing
                 MenuLinkRow(
                     icon: "hand.raised",
                     iconColor: Color.brandSecondary,
-                    label: "개인정보처리방침",
+                    label: String(localized: "mypage.menu.privacy"),
                     url: URL(string: "https://gainsy.site/privacy")!
                 )
             }
 
             MenuSection(title: "") {
-                MenuRow(icon: "rectangle.portrait.and.arrow.right", iconColor: Color.brandWarning, label: "로그아웃") {
+                MenuRow(
+                    icon: "rectangle.portrait.and.arrow.right",
+                    iconColor: Color.brandWarning,
+                    label: String(localized: "mypage.menu.logout")
+                ) {
                     viewModel.logout(authState: authState)
                 }
-                MenuRow(icon: "trash", iconColor: Color.brandDanger, label: "계정 삭제") {
+                MenuRow(
+                    icon: "trash",
+                    iconColor: Color.brandDanger,
+                    label: String(localized: "mypage.menu.deleteAccount"),
+                    isDestructive: true
+                ) {
                     showDeleteConfirm = true
                 }
             }
@@ -229,7 +250,12 @@ private struct EditProfileSheet: View {
     @EnvironmentObject private var container: AppContainer
     @Environment(\.dismiss) private var dismiss
 
-    let sexOptions = [("남성", "MALE"), ("여성", "FEMALE")]
+    private var sexOptions: [(String, String)] {
+        [
+            (String(localized: "profile.sex.male"),   "MALE"),
+            (String(localized: "profile.sex.female"), "FEMALE"),
+        ]
+    }
     let activityOptions: [ActivityOptionRow] = ActivityLevelOption.all.map {
         ActivityOptionRow(label: $0.label, value: $0.value)
     }
@@ -238,23 +264,42 @@ private struct EditProfileSheet: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
-                    EditCard(title: "기본 정보") {
-                        EditField(label: "닉네임", placeholder: "닉네임을 입력하세요", text: $viewModel.editDisplayName)
+                    EditCard(title: String(localized: "mypage.edit.section.basic")) {
+                        EditField(
+                            label: String(localized: "mypage.edit.field.displayName"),
+                            placeholder: String(localized: "mypage.edit.field.displayName.placeholder"),
+                            text: $viewModel.editDisplayName
+                        )
                         Divider().padding(.leading, Spacing.lg)
-                        EditPickerField(label: "성별", value: viewModel.editSex, options: sexOptions) { v in
+                        EditPickerField(
+                            label: String(localized: "mypage.edit.field.sex"),
+                            value: viewModel.editSex,
+                            options: sexOptions
+                        ) { v in
                             viewModel.editSex = v
                         }
                     }
 
-                    EditCard(title: "신체 정보") {
-                        EditDateField(label: "생년월일", date: $viewModel.editDateOfBirth)
+                    EditCard(title: String(localized: "mypage.edit.section.body")) {
+                        EditDateField(
+                            label: String(localized: "mypage.edit.field.dob"),
+                            date: $viewModel.editDateOfBirth
+                        )
                         Divider().padding(.leading, Spacing.lg)
-                        EditNumericField(label: "키", unit: "cm", text: $viewModel.editHeightCm)
+                        EditNumericField(
+                            label: String(localized: "mypage.edit.field.height"),
+                            unit: "cm",
+                            text: $viewModel.editHeightCm
+                        )
                         Divider().padding(.leading, Spacing.lg)
-                        EditNumericField(label: "체중", unit: "kg", text: $viewModel.editWeightKg)
+                        EditNumericField(
+                            label: String(localized: "mypage.edit.field.weight"),
+                            unit: "kg",
+                            text: $viewModel.editWeightKg
+                        )
                     }
 
-                    EditCard(title: "활동량") {
+                    EditCard(title: String(localized: "mypage.edit.section.activity")) {
                         VStack(spacing: 0) {
                             ForEach(activityOptions) { option in
                                 Button {
@@ -293,7 +338,7 @@ private struct EditProfileSheet: View {
                             if viewModel.isLoading {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("저장")
+                                Text("common.save")
                                     .font(.bodyLarge).fontWeight(.semibold)
                                     .foregroundStyle(.white)
                             }
@@ -309,11 +354,11 @@ private struct EditProfileSheet: View {
                 .padding(.bottom, Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("프로필 수정")
+            .navigationTitle(Text("mypage.edit.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel.button")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
@@ -358,13 +403,23 @@ private struct MenuRow: View {
     let iconColor: Color
     let label: String
     let trailingText: String?
+    /// 텍스트를 danger 색으로 강조 (예: 계정 삭제). 라벨 문자열 비교 대신 명시 플래그를 쓴다 — 영문화 후 비교가 깨지지 않도록.
+    let isDestructive: Bool
     let action: () -> Void
 
-    init(icon: String, iconColor: Color, label: String, trailingText: String? = nil, action: @escaping () -> Void) {
+    init(
+        icon: String,
+        iconColor: Color,
+        label: String,
+        trailingText: String? = nil,
+        isDestructive: Bool = false,
+        action: @escaping () -> Void
+    ) {
         self.icon = icon
         self.iconColor = iconColor
         self.label = label
         self.trailingText = trailingText
+        self.isDestructive = isDestructive
         self.action = action
     }
 
@@ -380,9 +435,7 @@ private struct MenuRow: View {
 
                 Text(label)
                     .font(.bodyMedium)
-                    .foregroundStyle(
-                        label == "계정 삭제" ? Color.brandDanger : Color.textPrimary
-                    )
+                    .foregroundStyle(isDestructive ? Color.brandDanger : Color.textPrimary)
 
                 Spacer()
 
@@ -555,12 +608,12 @@ private struct NotificationSettingsRow: View {
 
     private var statusText: String {
         switch status {
-        case .authorized:   return "허용됨"
-        case .denied:       return "꺼짐"
-        case .notDetermined: return "미설정"
-        case .provisional:  return "임시 허용"
-        case .ephemeral:    return "임시"
-        @unknown default:   return "알 수 없음"
+        case .authorized:   return String(localized: "mypage.notification.status.authorized")
+        case .denied:       return String(localized: "mypage.notification.status.denied")
+        case .notDetermined: return String(localized: "mypage.notification.status.notDetermined")
+        case .provisional:  return String(localized: "mypage.notification.status.provisional")
+        case .ephemeral:    return String(localized: "mypage.notification.status.ephemeral")
+        @unknown default:   return String(localized: "mypage.notification.status.unknown")
         }
     }
 
@@ -723,7 +776,7 @@ private struct EditPickerField: View {
     let onSelect: (String) -> Void
 
     private var displayLabel: String {
-        options.first(where: { $0.1 == value })?.0 ?? "선택"
+        options.first(where: { $0.1 == value })?.0 ?? String(localized: "mypage.edit.select")
     }
 
     var body: some View {

@@ -24,7 +24,7 @@ final class AppleSignInCoordinator: NSObject, SocialIdentityTokenProvider {
 
         var errorDescription: String? {
             switch self {
-            case .missingIdentityToken: return "Apple ID 토큰을 받지 못했습니다."
+            case .missingIdentityToken: return String(localized: "auth.error.apple.missingIdToken")
             case .unexpected(let e):    return e.localizedDescription
             }
         }

@@ -24,8 +24,8 @@ final class GoogleSignInCoordinator: NSObject, SocialIdentityTokenProvider {
 
         var errorDescription: String? {
             switch self {
-            case .missingPresentingViewController: return "Google 로그인 UI 를 띄울 화면을 찾지 못했습니다."
-            case .missingIdentityToken:            return "Google ID 토큰을 받지 못했습니다."
+            case .missingPresentingViewController: return String(localized: "auth.error.google.missingPresenter")
+            case .missingIdentityToken:            return String(localized: "auth.error.google.missingIdToken")
             case .unexpected(let e):               return e.localizedDescription
             }
         }

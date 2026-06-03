@@ -43,13 +43,21 @@ struct SocialConsentSheet: View {
 
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        consentRow(isChecked: $isTermsAgreed, label: "이용약관", url: termsURL)
-                        consentRow(isChecked: $isPrivacyAgreed, label: "개인정보처리방침", url: privacyURL)
+                        consentRow(
+                            isChecked: $isTermsAgreed,
+                            label: String(localized: "auth.consent.terms"),
+                            url: termsURL
+                        )
+                        consentRow(
+                            isChecked: $isPrivacyAgreed,
+                            label: String(localized: "auth.consent.privacy"),
+                            url: privacyURL
+                        )
                     }
                     .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
                     PrimaryButton(
-                        "동의하고 가입하기",
+                        String(localized: "auth.consent.continue"),
                         isEnabled: canSubmit,
                         isLoading: isLoading
                     ) {
@@ -64,7 +72,7 @@ struct SocialConsentSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { onCancel() }
+                    Button(String(localized: "common.cancel.button")) { onCancel() }
                         .foregroundColor(Color.brandAccent)
                 }
             }

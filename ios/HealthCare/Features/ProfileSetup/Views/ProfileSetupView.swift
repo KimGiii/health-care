@@ -46,14 +46,14 @@ struct ProfileSetupView: View {
                 Group {
                     if step == 1 {
                         PrimaryButton(
-                            "다음으로",
+                            String(localized: "profile.next.button"),
                             isEnabled: viewModel.canProceedStep1
                         ) {
                             withAnimation { step = 2 }
                         }
                     } else {
                         PrimaryButton(
-                            "시작하기",
+                            String(localized: "profile.start.button"),
                             isEnabled: viewModel.canSubmit,
                             isLoading: viewModel.isLoading
                         ) {
@@ -151,12 +151,12 @@ private struct StepOneView: View {
 
                     HStack(spacing: 12) {
                         MeasurementField(
-                            placeholder: "키",
+                            placeholder: String(localized: "profile.height.placeholder"),
                             unit: "cm",
                             text: $viewModel.heightText
                         )
                         MeasurementField(
-                            placeholder: "몸무게",
+                            placeholder: String(localized: "profile.weight.placeholder"),
                             unit: "kg",
                             text: $viewModel.weightText
                         )
@@ -213,9 +213,9 @@ private enum SexOption: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .male:   return "남성"
-        case .female: return "여성"
-        case .other:  return "기타"
+        case .male:   return String(localized: "profile.sex.male")
+        case .female: return String(localized: "profile.sex.female")
+        case .other:  return String(localized: "profile.sex.other")
         }
     }
     var icon: String {
@@ -261,12 +261,14 @@ private struct DateOfBirthField: View {
     @Binding var date: Date
     @State private var showPicker = false
 
-    private static let displayFormatter: DateFormatter = {
+    /// Locale-aware DOB display formatter. Picks the format string from xcstrings
+    /// so Korean and English use natural date orderings.
+    private var displayFormatter: DateFormatter {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ko_KR")
-        f.dateFormat = "yyyy년 M월 d일"
+        f.locale = LocaleManager.shared.effectiveLocale
+        f.dateFormat = String(localized: "profile.dob.format")
         return f
-    }()
+    }
 
     var body: some View {
         Button { showPicker = true } label: {
@@ -274,7 +276,7 @@ private struct DateOfBirthField: View {
                 Image(systemName: "calendar")
                     .font(.bodyMedium)
                     .foregroundStyle(Color.brandPrimary)
-                Text(Self.displayFormatter.string(from: date))
+                Text(displayFormatter.string(from: date))
                     .font(.bodyLarge)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.textPrimary)
@@ -394,9 +396,15 @@ private struct CalendarPickerSheet: View {
     // MARK: - Weekday Row
 
     private var weekdayRow: some View {
-        HStack(spacing: 0) {
-            ForEach(["일", "월", "화", "수", "목", "금", "토"], id: \.self) { label in
-                Text(label)
+        // 일요일=1 기준 (Calendar.current.firstWeekday 미사용 — 본 캘린더 그리드는 일요일 시작 고정).
+        // 영문 빌드에서도 Sun~Sat 순서를 유지한다.
+        let weekdayKeys: [LocalizedStringResource] = [
+            "common.weekday.sun", "common.weekday.mon", "common.weekday.tue",
+            "common.weekday.wed", "common.weekday.thu", "common.weekday.fri", "common.weekday.sat"
+        ]
+        return HStack(spacing: 0) {
+            ForEach(0..<weekdayKeys.count, id: \.self) { idx in
+                Text(weekdayKeys[idx])
                     .font(.caption).fontWeight(.semibold)
                     .foregroundStyle(Color.textSecondary)
                     .frame(maxWidth: .infinity)
@@ -462,7 +470,8 @@ private struct CalendarPickerSheet: View {
                 HStack(spacing: 0) {
                     Picker("연도", selection: $pickerYear) {
                         ForEach(years, id: \.self) { year in
-                            Text("\(year)년").tag(year)
+                            Text(String(format: String(localized: "profile.year.suffix"), year))
+                                .tag(year)
                         }
                     }
                     .pickerStyle(.wheel)
@@ -470,7 +479,8 @@ private struct CalendarPickerSheet: View {
 
                     Picker("월", selection: $pickerMonth) {
                         ForEach(1...12, id: \.self) { month in
-                            Text("\(month)월").tag(month)
+                            Text(String(format: String(localized: "profile.month.suffix"), month))
+                                .tag(month)
                         }
                     }
                     .pickerStyle(.wheel)
@@ -502,7 +512,8 @@ private struct CalendarPickerSheet: View {
 
     private var monthTitle: String {
         let comps = cal.dateComponents([.year, .month], from: displayedMonth)
-        return "\(comps.year ?? 0)년 \(comps.month ?? 0)월"
+        return String(format: String(localized: "profile.yearMonth.format"),
+                      comps.year ?? 0, comps.month ?? 0)
     }
 
     private func navigateMonth(by value: Int) {
@@ -622,20 +633,20 @@ private enum ActivityOption: String, CaseIterable, Identifiable {
     }
     var title: String {
         switch self {
-        case .sedentary:        return "비활동적"
-        case .lightlyActive:    return "가볍게 활동"
-        case .moderatelyActive: return "보통 활동"
-        case .veryActive:       return "활발히 활동"
-        case .extraActive:      return "매우 활발"
+        case .sedentary:        return String(localized: "profile.activity.sedentary.title")
+        case .lightlyActive:    return String(localized: "profile.activity.lightlyActive.title")
+        case .moderatelyActive: return String(localized: "profile.activity.moderatelyActive.title")
+        case .veryActive:       return String(localized: "profile.activity.veryActive.title")
+        case .extraActive:      return String(localized: "profile.activity.extraActive.title")
         }
     }
     var description: String {
         switch self {
-        case .sedentary:        return "주로 앉아서 생활해요"
-        case .lightlyActive:    return "가끔 걷거나 스트레칭해요"
-        case .moderatelyActive: return "주 3~4회 운동해요"
-        case .veryActive:       return "매일 강도 있게 운동해요"
-        case .extraActive:      return "하루 두 번 이상 운동해요"
+        case .sedentary:        return String(localized: "profile.activity.sedentary.description")
+        case .lightlyActive:    return String(localized: "profile.activity.lightlyActive.description")
+        case .moderatelyActive: return String(localized: "profile.activity.moderatelyActive.description")
+        case .veryActive:       return String(localized: "profile.activity.veryActive.description")
+        case .extraActive:      return String(localized: "profile.activity.extraActive.description")
         }
     }
 }

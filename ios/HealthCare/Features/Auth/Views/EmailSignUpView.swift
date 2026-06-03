@@ -38,13 +38,13 @@ struct EmailSignUpView: View {
                 VStack(spacing: 14) {
                     StyledTextField(
                         icon:        "person",
-                        placeholder: "닉네임",
+                        placeholder: String(localized: "auth.displayName.placeholder"),
                         text:        $viewModel.displayName
                     )
 
                     StyledTextField(
                         icon:        "envelope",
-                        placeholder: "이메일",
+                        placeholder: String(localized: "auth.email.placeholder"),
                         text:        $viewModel.email
                     )
                     .textInputAutocapitalization(.never)
@@ -52,13 +52,13 @@ struct EmailSignUpView: View {
 
                     StyledSecureField(
                         icon:        "lock",
-                        placeholder: "비밀번호 (8자 이상)",
+                        placeholder: String(localized: "auth.password.create.placeholder"),
                         text:        $viewModel.password
                     )
 
                     StyledSecureField(
                         icon:        "lock.shield",
-                        placeholder: "비밀번호 확인",
+                        placeholder: String(localized: "auth.password.confirm.placeholder"),
                         text:        $viewModel.passwordConfirm
                     )
                 }
@@ -77,13 +77,21 @@ struct EmailSignUpView: View {
 
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        consentRow(isChecked: $isTermsAgreed, label: "이용약관", url: termsURL)
-                        consentRow(isChecked: $isPrivacyAgreed, label: "개인정보처리방침", url: privacyURL)
+                        consentRow(
+                            isChecked: $isTermsAgreed,
+                            label: String(localized: "auth.consent.terms"),
+                            url: termsURL
+                        )
+                        consentRow(
+                            isChecked: $isPrivacyAgreed,
+                            label: String(localized: "auth.consent.privacy"),
+                            url: privacyURL
+                        )
                     }
                     .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
                     PrimaryButton(
-                        "가입하기",
+                        String(localized: "auth.signup.button"),
                         isEnabled: canSubmit,
                         isLoading: viewModel.isLoading
                     ) {

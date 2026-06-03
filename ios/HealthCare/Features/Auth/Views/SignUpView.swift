@@ -42,7 +42,10 @@ struct SignUpView: View {
                 // CTA: 2개 분기
                 VStack(spacing: 16) {
                     NavigationLink(destination: EmailSignUpView()) {
-                        PrimaryButtonLabel(title: "Gainsy 계정으로 가입하기", isEnabled: !viewModel.isLoading)
+                        PrimaryButtonLabel(
+                            title: String(localized: "auth.signup.gainsy.button"),
+                            isEnabled: !viewModel.isLoading
+                        )
                     }
                     .disabled(viewModel.isLoading)
 

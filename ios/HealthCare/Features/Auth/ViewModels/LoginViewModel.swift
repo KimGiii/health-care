@@ -61,7 +61,7 @@ final class LoginViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "로그인 중 오류가 발생했습니다."
+            errorMessage = String(localized: "auth.error.login")
         }
     }
 
@@ -140,8 +140,8 @@ final class LoginViewModel: ObservableObject {
 
     private func providerErrorMessage(for provider: SocialAuthProvider) -> String {
         switch provider {
-        case .apple:  return "Apple 로그인에 실패했습니다."
-        case .google: return "Google 로그인에 실패했습니다."
+        case .apple:  return String(localized: "auth.error.apple.signin")
+        case .google: return String(localized: "auth.error.google.signin")
         }
     }
 }

@@ -30,7 +30,7 @@ struct LoginView: View {
                 VStack(spacing: 14) {
                     StyledTextField(
                         icon:        "envelope",
-                        placeholder: "이메일",
+                        placeholder: String(localized: "auth.email.placeholder"),
                         text:        $viewModel.email
                     )
                     .textInputAutocapitalization(.never)
@@ -38,7 +38,7 @@ struct LoginView: View {
 
                     StyledSecureField(
                         icon:        "lock",
-                        placeholder: "비밀번호",
+                        placeholder: String(localized: "auth.password.placeholder"),
                         text:        $viewModel.password
                     )
                 }
@@ -59,7 +59,7 @@ struct LoginView: View {
                 // CTA
                 VStack(spacing: Spacing.md) {
                     PrimaryButton(
-                        "로그인하기",
+                        String(localized: "auth.login.button"),
                         isEnabled: !viewModel.email.isEmpty && !viewModel.password.isEmpty,
                         isLoading: viewModel.isLoading
                     ) {
