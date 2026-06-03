@@ -38,19 +38,21 @@ struct EditGoalView: View {
                 .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
                 .padding(.vertical, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("목표 수정")
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("goal.edit.title"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.backgroundPage, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if viewModel.isLoading {
                         ProgressView()
                     } else {
-                        Button("저장") {
+                        Button(String(localized: "common.save.button")) {
                             Task {
                                 await viewModel.submit(apiClient: container.apiClient) {
                                     onSuccess()
@@ -86,14 +88,14 @@ private struct GoalTypeInfoSection: View {
                 Text(goalType.displayName)
                     .font(.bodyLarge).fontWeight(.semibold)
                     .foregroundStyle(Color.textPrimary)
-                Text("목표 유형은 변경할 수 없습니다")
+                Text(String(localized: "goal.edit.fixedType"))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
             Spacer()
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
@@ -107,16 +109,16 @@ private struct EditTargetValueSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("목표값")
+            Text(String(localized: "goal.field.section.target"))
                 .font(.headingSmall)
                 .foregroundStyle(Color.textPrimary)
 
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("목표 \(type.displayName)")
+                    Text(String(format: String(localized: "goal.field.target.label"), type.displayName))
                         .font(.caption).fontWeight(.medium)
                         .foregroundStyle(Color.textSecondary)
-                    TextField("예: 70.0", text: $valueText)
+                    TextField(String(localized: "goal.field.target.placeholder"), text: $valueText)
                         .keyboardType(.decimalPad)
                         .font(.bodyLarge).fontWeight(.semibold)
                         .foregroundStyle(Color.textPrimary)
@@ -133,7 +135,7 @@ private struct EditTargetValueSection: View {
                 }
             }
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
         }
@@ -148,12 +150,12 @@ private struct EditTargetDateSection: View {
     let goalType: GoalType
 
     private let presets: [(label: String, days: Int)] = [
-        ("4주", 28), ("8주", 56), ("12주", 84), ("24주", 168)
+        (String(localized: "goal.preset.4w"), 28), (String(localized: "goal.preset.8w"), 56), (String(localized: "goal.preset.12w"), 84), (String(localized: "goal.preset.24w"), 168)
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("목표 날짜")
+            Text(String(localized: "goal.field.section.date"))
                 .font(.headingSmall)
                 .foregroundStyle(Color.textPrimary)
 
@@ -177,7 +179,7 @@ private struct EditTargetDateSection: View {
             }
 
             DatePicker(
-                "목표 날짜",
+                String(localized: "goal.field.section.date"),
                 selection: $targetDate,
                 in: Date()...,
                 displayedComponents: .date
@@ -185,18 +187,18 @@ private struct EditTargetDateSection: View {
             .datePickerStyle(.compact)
             .environment(\.locale, LocaleManager.resolvedLocale)
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
 
             if goalType.supportsWeeklyRateTarget {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("주간 목표 변화량 (선택)")
+                        Text(String(localized: "goal.field.weeklyRate.label"))
                             .font(.caption).fontWeight(.medium)
                             .foregroundStyle(Color.textSecondary)
                         TextField(
-                            goalType == .BODY_RECOMPOSITION ? "예: 0.25" : "예: 0.5",
+                            goalType == .BODY_RECOMPOSITION ? String(localized: "goal.field.weeklyRate.placeholder.recomp") : String(localized: "goal.field.weeklyRate.placeholder"),
                             text: $weeklyRateText
                         )
                         .keyboardType(.decimalPad)
@@ -213,7 +215,7 @@ private struct EditTargetDateSection: View {
                         .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 }
                 .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-                .background(Color.surfacePrimary)
+                .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                 .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
             }

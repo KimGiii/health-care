@@ -50,7 +50,7 @@ struct TrackingPermissionView: View {
                 )
             }
             .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
             .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
@@ -78,7 +78,7 @@ struct TrackingPermissionView: View {
             .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
         }
-        .background(Color.surfaceGrouped.ignoresSafeArea())
+        .background(Color.backgroundPage.ignoresSafeArea())
     }
 
     private func bulletRow(icon: String, iconColor: Color, title: String, detail: String) -> some View {

@@ -137,7 +137,7 @@ struct ProgressPhotoView: View {
                         .background(
                             viewModel.selectedType == type
                                 ? Color.brandPrimary
-                                : Color.surfacePrimary
+                                : Color.surfaceCard
                         )
                         .foregroundStyle(
                             viewModel.selectedType == type ? Color.white : Color.textSecondary
@@ -156,7 +156,7 @@ struct ProgressPhotoView: View {
             .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
             .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .overlay(
             Rectangle().fill(Color.hairline).frame(height: 0.5),
             alignment: .bottom

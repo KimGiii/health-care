@@ -215,7 +215,7 @@ private struct FormCard<Content: View>: View {
                 content()
             }
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         }

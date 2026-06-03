@@ -62,7 +62,7 @@ struct CalorieExplanationView: View {
                 }
                 .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
+            .background(Color.backgroundPage)
             .navigationTitle("권장 칼로리 계산")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -102,7 +102,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -142,7 +142,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -165,7 +165,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -198,7 +198,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -216,7 +216,7 @@ struct CalorieExplanationView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }

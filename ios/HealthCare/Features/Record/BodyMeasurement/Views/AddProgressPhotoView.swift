@@ -91,7 +91,7 @@ struct AddProgressPhotoView: View {
                         .background(
                             selectedType == type
                                 ? Color.brandPrimary
-                                : Color.surfacePrimary
+                                : Color.surfaceCard
                         )
                         .foregroundStyle(
                             selectedType == type ? Color.white : Color.textSecondary
@@ -132,7 +132,7 @@ struct AddProgressPhotoView: View {
                 .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
         }
@@ -177,7 +177,7 @@ struct AddProgressPhotoView: View {
         .tint(Color.brandAccent)
         .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
         .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
@@ -285,7 +285,7 @@ private struct PhotoPickerSection: View {
         PhotosPicker(selection: $selectedItem, matching: .images) {
             ZStack {
                 RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
-                    .fill(Color.surfacePrimary)
+                    .fill(Color.surfaceCard)
                     .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                     .frame(height: 240)
 

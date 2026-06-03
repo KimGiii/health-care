@@ -71,7 +71,7 @@ struct MedicalSourcesView: View {
                 }
                 .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
+            .background(Color.backgroundPage)
             .navigationTitle("의학 정보 출처")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -99,7 +99,7 @@ struct MedicalSourcesView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
@@ -155,7 +155,7 @@ struct MedicalSourcesView: View {
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }

@@ -41,7 +41,7 @@ final class AddGoalViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "목표 생성 중 오류가 발생했습니다."
+            errorMessage = String(localized: "goal.error.create")
         }
     }
 }

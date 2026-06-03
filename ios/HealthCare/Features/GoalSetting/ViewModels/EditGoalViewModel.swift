@@ -67,7 +67,7 @@ final class EditGoalViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "목표 수정 중 오류가 발생했습니다."
+            errorMessage = String(localized: "goal.error.update")
         }
     }
 }

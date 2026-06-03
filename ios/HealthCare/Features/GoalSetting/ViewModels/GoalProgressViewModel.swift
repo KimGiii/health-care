@@ -28,7 +28,7 @@ final class GoalProgressViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "진행률을 불러오지 못했습니다."
+            errorMessage = String(localized: "goal.error.loadProgress")
         }
     }
 }

@@ -317,7 +317,7 @@ private struct LatestStatsCard: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
@@ -499,7 +499,7 @@ private struct MeasurementTrendSection: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
     }
@@ -661,7 +661,7 @@ private struct MeasurementRow: View {
             }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
         .confirmationDialog(Text("body.records.deleteConfirm.title"), isPresented: $showDeleteConfirm) {
@@ -715,7 +715,7 @@ private struct EmptyMeasurementCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
-            .background(Color.surfacePrimary)
+            .background(Color.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
             .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
         }
