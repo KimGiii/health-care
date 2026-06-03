@@ -24,12 +24,12 @@ struct QuickLogFAB: View {
             if isExpanded {
                 VStack(alignment: .trailing, spacing: 10) {
                     FABMenuItem(
-                        label: "식단 기록",
+                        label: String(localized: "home.fab.diet"),
                         icon: "fork.knife",
                         destination: AnyView(DietRecordView())
                     )
                     FABMenuItem(
-                        label: "운동 기록",
+                        label: String(localized: "home.fab.exercise"),
                         icon: "dumbbell.fill",
                         destination: AnyView(ExerciseRecordView())
                     )

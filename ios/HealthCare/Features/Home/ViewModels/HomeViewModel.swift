@@ -229,17 +229,19 @@ final class HomeViewModel: ObservableObject {
             weekDietLogs   = diet.content
             todayDietLogs  = diet.content.filter { $0.logDate == today }
         case .failure(let err):
-            failedSources.append("식단(\(diagnose(err)))")
+            failedSources.append(String(format: String(localized: "home.error.source.diet"), diagnose(err)))
         }
 
         switch exerciseR {
         case .success(let exercise): recentSessions = exercise.content
-        case .failure(let err):      failedSources.append("운동(\(diagnose(err)))")
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.exercise"), diagnose(err)))
         }
 
         switch profileR {
         case .success(let profile): userProfile = profile
-        case .failure(let err):     failedSources.append("프로필(\(diagnose(err)))")
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.profile"), diagnose(err)))
         }
 
         switch goalR {
@@ -250,11 +252,12 @@ final class HomeViewModel: ObservableObject {
                 activeGoal = nil
             }
         case .failure(let err):
-            failedSources.append("목표(\(diagnose(err)))")
+            failedSources.append(String(format: String(localized: "home.error.source.goal"), diagnose(err)))
         }
 
         if !failedSources.isEmpty {
-            errorMessage = "데이터 일부를 불러오지 못했습니다: \(failedSources.joined(separator: ", "))"
+            errorMessage = String(format: String(localized: "home.error.partialLoad"),
+                                  failedSources.joined(separator: ", "))
         }
     }
 
@@ -266,7 +269,7 @@ final class HomeViewModel: ObservableObject {
 
     private nonisolated func diagnose(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "API 오류"
+            return apiError.errorDescription ?? String(localized: "home.error.apiGeneric")
         }
         return String(describing: type(of: error))
     }

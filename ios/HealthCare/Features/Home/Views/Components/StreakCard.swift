@@ -22,13 +22,13 @@ struct StreakCard: View {
                     .font(.system(size: 40, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
                     .foregroundStyle(streakDays > 0 ? Color.textHeadline : Color.textTertiary)
                     .contentTransition(.numericText())
-                Text("일 연속")
+                Text("home.streak.days")
                     .font(.labelSmall)
                     .foregroundStyle(Color.textSecondary)
                     .padding(.bottom, Spacing.xs) // design-lint:ignore — micro/hero spacing
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("연속 기록: \(streakDays)일")
+            .accessibilityLabel(String(format: String(localized: "home.streak.a11y"), streakDays))
 
             // 7일 도트 캘린더
             HStack(spacing: 6) {

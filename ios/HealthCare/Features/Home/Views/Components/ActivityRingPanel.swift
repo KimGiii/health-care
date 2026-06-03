@@ -32,7 +32,7 @@ struct ActivityRingPanel: View {
                     size: .hero,
                     value: caloriesValueText,
                     unit: "kcal",
-                    label: "칼로리 섭취"
+                    label: String(localized: "home.ring.calorie.label")
                 )
 
                 // 오른쪽 — 운동 + 단백질 (standard × 2)
@@ -43,7 +43,7 @@ struct ActivityRingPanel: View {
                         size: .standard,
                         value: "\(todayDurationMinutes)",
                         unit: "min",
-                        label: "운동"
+                        label: String(localized: "home.ring.activity.label")
                     )
 
                     ProgressRing(
@@ -56,7 +56,7 @@ struct ActivityRingPanel: View {
                         size: .standard,
                         value: String(format: "%.0f", todayProteinG),
                         unit: "g",
-                        label: "단백질"
+                        label: String(localized: "home.ring.protein.label")
                     )
                 }
             }
@@ -74,14 +74,16 @@ struct ActivityRingPanel: View {
                     icon: "flame.fill",
                     color: Color.brandEmber,
                     value: String(format: "%.0f", todayBurnedCalories),
-                    unit: "kcal 소모"
+                    unit: String(localized: "home.ring.summary.burned")
                 )
                 Spacer()
                 summaryChip(
                     icon: remainingCalories >= 0 ? "target" : "exclamationmark.triangle.fill",
                     color: remainingCalories >= 0 ? Color.brandAccent : Color.brandDanger,
                     value: String(format: "%.0f", abs(remainingCalories)),
-                    unit: remainingCalories >= 0 ? "kcal 남음" : "kcal 초과"
+                    unit: remainingCalories >= 0
+                        ? String(localized: "home.ring.summary.remaining")
+                        : String(localized: "home.ring.summary.exceeded")
                 )
             }
             .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
@@ -95,7 +97,7 @@ struct ActivityRingPanel: View {
                     HStack(spacing: 6) {
                         Image(systemName: "info.circle")
                             .font(.captionXSmall)
-                        Text("왜 \(Int(dailyCalorieGoal)) kcal인가요?")
+                        Text(String(format: String(localized: "home.ring.whyCalorie"), Int(dailyCalorieGoal)))
                             .font(.captionXSmall).fontWeight(.semibold)
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right")
@@ -105,7 +107,7 @@ struct ActivityRingPanel: View {
                     .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
                     .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
                 }
-                .accessibilityLabel("권장 칼로리 \(Int(dailyCalorieGoal)) 킬로칼로리가 어떻게 계산됐는지 보기")
+                .accessibilityLabel(String(format: String(localized: "home.ring.whyCalorie.a11y"), Int(dailyCalorieGoal)))
             }
         }
         .background(
