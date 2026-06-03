@@ -197,7 +197,11 @@ struct FoodCatalogItem: Codable, Identifiable {
     let usageCount: Int?
     let createdByUserId: Int?
 
-    var displayName: String { nameKo ?? name }
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
+        return name
+    }
 
     private func amount(_ per100g: Double?, forServing g: Double) -> Double {
         ((per100g ?? 0) * g) / 100
@@ -236,7 +240,11 @@ struct ExternalFoodResult: Codable, Identifiable {
     let sodiumPer100gMg: Double?
 
     var id: String { "\(source.rawValue)-\(externalId)" }
-    var displayName: String { nameKo ?? name }
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
+        return name
+    }
 
     var nutritionSummary: String {
         let kcal = caloriesPer100g.map { String(format: "%.0f kcal", $0) } ?? "-"

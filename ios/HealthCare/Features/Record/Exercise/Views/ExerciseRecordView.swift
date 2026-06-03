@@ -50,11 +50,11 @@ struct ExerciseRecordView: View {
                 Task { await viewModel.sessionAdded(apiClient: container.apiClient) }
             }
         }
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+            Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -90,7 +90,7 @@ private struct ExerciseHeroSection: View {
 
                     Spacer()
 
-                    Text("운동 기록")
+                    Text(String(localized: "exercise.title"))
                         .font(.headingMedium).fontWeight(.bold)
                         .foregroundStyle(.white)
 
@@ -114,14 +114,14 @@ private struct ExerciseHeroSection: View {
                 // 원형 링 카드
                 HStack(spacing: 32) {
                     ExerciseRingView(
-                        label: "볼륨",
+                        label: String(localized: "exercise.stats.volume"),
                         value: viewModel.weeklyVolume,
                         unit: "kg",
                         progress: viewModel.volumeProgress,
                         color: Color.brandAccent
                     )
                     ExerciseRingView(
-                        label: "칼로리",
+                        label: String(localized: "exercise.stats.calories"),
                         value: viewModel.weeklyCalories,
                         unit: "kcal",
                         progress: viewModel.calorieProgress,
@@ -234,7 +234,7 @@ private struct WeeklyStatsStrip: View {
     var body: some View {
         HStack(spacing: 0) {
             statCell(
-                label: "총 볼륨",
+                label: String(localized: "exercise.detail.totalVolume"),
                 value: viewModel.weeklyVolume > 0
                     ? String(format: "%.0fkg", viewModel.weeklyVolume)
                     : "—"
@@ -243,7 +243,7 @@ private struct WeeklyStatsStrip: View {
             Divider().frame(height: 36)
 
             statCell(
-                label: "소모 칼로리",
+                label: String(localized: "exercise.detail.burnedKcal"),
                 value: viewModel.weeklyCalories > 0
                     ? String(format: "%.0fkcal", viewModel.weeklyCalories)
                     : "—"
@@ -252,9 +252,9 @@ private struct WeeklyStatsStrip: View {
             Divider().frame(height: 36)
 
             statCell(
-                label: "운동일",
+                label: String(localized: "exercise.stats.days"),
                 value: viewModel.weeklyWorkoutDays > 0
-                    ? "\(viewModel.weeklyWorkoutDays)일"
+                    ? String(format: String(localized: "exercise.stats.days.value"), viewModel.weeklyWorkoutDays)
                     : "—"
             )
         }
@@ -300,11 +300,11 @@ private struct SessionListSection: View {
             VStack(spacing: 0) {
                 // 섹션 헤더
                 HStack {
-                    Text("운동 기록")
+                    Text(String(localized: "exercise.title"))
                         .font(.headingSmall).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
                     Spacer()
-                    Text("총 \(viewModel.sessions.count)회")
+                    Text(String(format: String(localized: "exercise.list.totalCount"), viewModel.sessions.count))
                         .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                 }
@@ -330,7 +330,7 @@ private struct SessionListSection: View {
                                     )
                                 }
                             } label: {
-                                Label("삭제", systemImage: "trash")
+                                Label(String(localized: "common.delete.button"), systemImage: "trash")
                             }
                         }
                     }
@@ -376,7 +376,7 @@ struct SessionCard: View {
                     if let dur = session.durationMinutes {
                         statChip(
                             icon: "clock",
-                            value: "\(dur)분",
+                            value: String(format: String(localized: "exercise.set.duration.min"), dur),
                             color: Color.textSecondary
                         )
                     }
@@ -419,7 +419,7 @@ struct DateBadge: View {
 
     var body: some View {
         VStack(spacing: 1) {
-            Text(parts.count >= 2 ? "\(parts[1])월" : "")
+            Text(parts.count >= 2 ? String(format: String(localized: "exercise.month.format"), Int(parts[1]) ?? 0) : "")
                 .font(.captionXSmall)
                 .foregroundStyle(Color.brandAccent)
             Text(parts.count >= 3 ? parts[2] : "")
@@ -444,10 +444,10 @@ private struct EmptyExerciseState: View {
                 .foregroundStyle(Color.brandAccent.opacity(0.45))
 
             VStack(spacing: 6) {
-                Text("첫 운동을 기록해보세요")
+                Text(String(localized: "exercise.empty.title"))
                     .font(.headingMedium).fontWeight(.bold)
                     .foregroundStyle(Color.textHeadline)
-                Text("운동을 기록하면 주간 볼륨과\n칼로리 목표가 채워집니다")
+                Text(String(localized: "exercise.empty.message"))
                     .font(.bodyMedium)
                     .foregroundStyle(Color.textSecondary)
                     .multilineTextAlignment(.center)
@@ -455,7 +455,7 @@ private struct EmptyExerciseState: View {
             }
 
             Button(action: onTap) {
-                Text("운동 기록 시작")
+                Text(String(localized: "exercise.empty.action"))
                     .font(.bodyLarge).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing

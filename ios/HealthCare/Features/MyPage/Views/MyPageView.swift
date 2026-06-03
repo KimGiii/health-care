@@ -762,7 +762,7 @@ private struct EditDateField: View {
                 displayedComponents: .date
             )
             .labelsHidden()
-            .environment(\.locale, Locale(identifier: "ko_KR"))
+            .environment(\.locale, Locale.current)
         }
         .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
         .padding(.vertical, 13) // design-lint:ignore — micro/hero spacing

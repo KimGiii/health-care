@@ -86,11 +86,11 @@ private struct DateRangeSection: View {
 
             VStack(spacing: 0) {
                 DatePicker("시작일", selection: $fromDate, in: ...toDate, displayedComponents: .date)
-                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                    .environment(\.locale, Locale.current)
                     .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 Divider().padding(.horizontal, Spacing.lg)
                 DatePicker("종료일", selection: $toDate, in: fromDate..., displayedComponents: .date)
-                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                    .environment(\.locale, Locale.current)
                     .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.surfaceCard)
