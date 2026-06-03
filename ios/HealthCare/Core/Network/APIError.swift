@@ -13,18 +13,18 @@ enum APIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL:                  return "잘못된 URL입니다."
-        case .unknown:                     return "알 수 없는 오류가 발생했습니다."
-        case .noNetwork:                   return "네트워크 연결을 확인해 주세요."
-        case .tokenExpired:                return "세션이 만료되었습니다. 다시 로그인해 주세요."
-        case .unauthorized:                return "인증에 실패했습니다."
-        case .premiumRequired:             return "프리미엄 구독이 필요한 기능입니다."
-        case .decodingError:               return "서버 응답을 처리할 수 없습니다."
+        case .invalidURL:                  return String(localized: "api.error.invalidURL")
+        case .unknown:                     return String(localized: "api.error.unknown")
+        case .noNetwork:                   return String(localized: "api.error.noNetwork")
+        case .tokenExpired:                return String(localized: "api.error.tokenExpired")
+        case .unauthorized:                return String(localized: "api.error.unauthorized")
+        case .premiumRequired:             return String(localized: "api.error.premiumRequired")
+        case .decodingError:               return String(localized: "api.error.decoding")
         case .serverError(let status, _, let message):
             // 백엔드가 사용자용 한국어 메시지를 내려주면 우선 사용.
             // 그 외엔 상태코드만 노출해 디버깅 단서 제공.
             if let message, !message.isEmpty { return message }
-            return "서버 오류가 발생했습니다. (\(status))"
+            return String(format: String(localized: "api.error.server.format"), status)
         }
     }
 }
