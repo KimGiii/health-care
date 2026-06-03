@@ -172,6 +172,8 @@ struct MyPageView: View {
                     appThemeRawValue = theme.rawValue
                 }
                 Divider().padding(.leading, 60) // design-lint:ignore — micro/hero spacing
+                LanguageMenuRow()
+                Divider().padding(.leading, 60) // design-lint:ignore — micro/hero spacing
                 NotificationSettingsRow()
             }
 
@@ -470,6 +472,74 @@ private struct ThemeMenuRow: View {
             }
             .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
             .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        }
+    }
+}
+
+// MARK: - Language Menu Row
+
+private struct LanguageMenuRow: View {
+    @ObservedObject private var localeManager = LocaleManager.shared
+    @State private var showRestartNotice = false
+
+    private var currentLabel: String {
+        switch localeManager.current {
+        case .system: return String(localized: "settings.language.system")
+        case .ko:     return String(localized: "settings.language.korean")
+        case .en:     return String(localized: "settings.language.english")
+        }
+    }
+
+    var body: some View {
+        Menu {
+            ForEach(AppLanguage.allCases) { language in
+                Button {
+                    guard language != localeManager.current else { return }
+                    localeManager.setLanguage(language)
+                    showRestartNotice = true
+                } label: {
+                    Label {
+                        Text(language.displayNameKey)
+                    } icon: {
+                        if language == localeManager.current {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "globe")
+                    .font(.bodyMedium).fontWeight(.medium)
+                    .foregroundStyle(Color.brandAccent)
+                    .frame(width: 30, height: 30)
+                    .background(Color.brandAccent.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+
+                Text("settings.language.title")
+                    .font(.bodyMedium)
+                    .foregroundStyle(Color.textPrimary)
+
+                Spacer()
+
+                Text(currentLabel)
+                    .font(.labelSmall)
+                    .foregroundStyle(Color.brandAccent)
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.captionXSmall).fontWeight(.semibold)
+                    .foregroundStyle(Color.textSecondary.opacity(0.6))
+            }
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        }
+        .alert(
+            Text("settings.language.title"),
+            isPresented: $showRestartNotice
+        ) {
+            Button("common.done", role: .cancel) {}
+        } message: {
+            Text("settings.language.restart_notice")
         }
     }
 }

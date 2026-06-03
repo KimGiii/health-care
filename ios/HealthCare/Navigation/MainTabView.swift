@@ -21,13 +21,13 @@ struct MainTabView: View {
     enum Tab: Int, CaseIterable {
         case home, diary, record, explore, myPage
 
-        var title: String {
+        var titleKey: LocalizedStringKey {
             switch self {
-            case .home:    return "대시보드"
-            case .diary:   return "다이어리"
-            case .record:  return "기록"
-            case .explore: return "탐색"
-            case .myPage:  return "마이"
+            case .home:    return "tab.home"
+            case .diary:   return "tab.diary"
+            case .record:  return "tab.record"
+            case .explore: return "tab.explore"
+            case .myPage:  return "tab.myPage"
             }
         }
 
@@ -47,31 +47,31 @@ struct MainTabView: View {
             NavigationStack(path: $homePath) {
                 HomeView().id(homeId)
             }
-            .tabItem { Label(Tab.home.title, systemImage: Tab.home.systemImage) }
+            .tabItem { Label(Tab.home.titleKey, systemImage: Tab.home.systemImage) }
             .tag(Tab.home)
 
             NavigationStack(path: $diaryPath) {
                 DiaryView().id(diaryId)
             }
-            .tabItem { Label(Tab.diary.title, systemImage: Tab.diary.systemImage) }
+            .tabItem { Label(Tab.diary.titleKey, systemImage: Tab.diary.systemImage) }
             .tag(Tab.diary)
 
             NavigationStack(path: $recordPath) {
                 RecordHubView(showsDismissButton: false).id(recordId)
             }
-            .tabItem { Label(Tab.record.title, systemImage: Tab.record.systemImage) }
+            .tabItem { Label(Tab.record.titleKey, systemImage: Tab.record.systemImage) }
             .tag(Tab.record)
 
             NavigationStack(path: $explorePath) {
                 ExploreView().id(exploreId)
             }
-            .tabItem { Label(Tab.explore.title, systemImage: Tab.explore.systemImage) }
+            .tabItem { Label(Tab.explore.titleKey, systemImage: Tab.explore.systemImage) }
             .tag(Tab.explore)
 
             NavigationStack(path: $myPagePath) {
                 MyPageView().id(myPageId)
             }
-            .tabItem { Label(Tab.myPage.title, systemImage: Tab.myPage.systemImage) }
+            .tabItem { Label(Tab.myPage.titleKey, systemImage: Tab.myPage.systemImage) }
             .tag(Tab.myPage)
         }
         .tint(Color.brandPrimary)
