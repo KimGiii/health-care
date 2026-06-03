@@ -407,6 +407,125 @@
         }
       }
     },
+    "api.error.status.5xx" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server error. Please try again shortly."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "api.error.status.400" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid request. Please check your input."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잘못된 요청입니다. 입력을 확인해 주세요."
+          }
+        }
+      }
+    },
+    "api.error.status.403" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have permission to do that."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "권한이 없습니다."
+          }
+        }
+      }
+    },
+    "api.error.status.404" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't find what you're looking for."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청한 항목을 찾을 수 없습니다."
+          }
+        }
+      }
+    },
+    "api.error.status.409" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This action conflicts with existing data."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기존 데이터와 충돌이 발생했습니다."
+          }
+        }
+      }
+    },
+    "api.error.status.422" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some of your input is invalid."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력 값이 올바르지 않습니다."
+          }
+        }
+      }
+    },
+    "api.error.status.429" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many requests. Please wait a moment."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
+          }
+        }
+      }
+    },
     "api.error.tokenExpired" : {
       "extractionState" : "stale",
       "localizations" : {
