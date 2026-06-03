@@ -13,7 +13,7 @@ final class DiaryViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -23,8 +23,8 @@ final class DiaryViewModel: ObservableObject {
 
     var monthYearText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy년 M월"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.shared.effectiveLocale
+        formatter.dateFormat = String(localized: "diary.monthHeader.format")
         return formatter.string(from: selectedDate)
     }
 
@@ -139,23 +139,23 @@ final class DiaryViewModel: ObservableObject {
         if let exercises {
             exerciseSessions = exercises.content
         } else {
-            failedSources.append("운동")
+            failedSources.append(String(localized: "diary.error.source.exercise"))
         }
 
         if let diets {
             dietLogs = diets.content
         } else {
-            failedSources.append("식단")
+            failedSources.append(String(localized: "diary.error.source.diet"))
         }
 
         if let measurements {
             bodyMeasurements = measurements
         } else {
-            failedSources.append("신체 측정")
+            failedSources.append(String(localized: "diary.error.source.body"))
         }
 
         if !failedSources.isEmpty {
-            errorMessage = "일부 기록을 불러오지 못했습니다: \(failedSources.joined(separator: ", "))"
+            errorMessage = String(format: String(localized: "diary.error.partial"), failedSources.joined(separator: ", "))
         }
     }
 

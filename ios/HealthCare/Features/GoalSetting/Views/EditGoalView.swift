@@ -183,7 +183,7 @@ private struct EditTargetDateSection: View {
                 displayedComponents: .date
             )
             .datePickerStyle(.compact)
-            .environment(\.locale, Locale.current)
+            .environment(\.locale, LocaleManager.resolvedLocale)
             .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfacePrimary)
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))

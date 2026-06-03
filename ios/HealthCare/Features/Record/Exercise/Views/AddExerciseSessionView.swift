@@ -74,7 +74,7 @@ struct AddExerciseSessionView: View {
                     .foregroundStyle(Color.brandAccent)
                 DatePicker("", selection: $viewModel.sessionDate, displayedComponents: .date)
                     .labelsHidden()
-                    .environment(\.locale, Locale.current)
+                    .environment(\.locale, LocaleManager.resolvedLocale)
                 Spacer()
             }
             .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
@@ -307,7 +307,7 @@ struct AddExerciseSessionView: View {
             )
             .labelsHidden()
             .datePickerStyle(.compact)
-            .environment(\.locale, Locale(identifier: "ko_KR"))
+            .environment(\.locale, LocaleManager.resolvedLocale)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(Spacing.md) // design-lint:ignore — micro/hero spacing

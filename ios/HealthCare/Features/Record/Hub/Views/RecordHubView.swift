@@ -66,7 +66,7 @@ private struct HubHeroSection: View {
 
     private var koDate: String {
         let f = DateFormatter()
-        f.locale = Locale.current
+        f.locale = LocaleManager.resolvedLocale
         f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
@@ -285,6 +285,8 @@ private struct ExerciseRouteCard: View {
                     Text("오늘의 운동")
                         .font(.displayMedium)
                         .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
 
                     Text("세트 · 횟수 · 무게를\n있는 그대로 기록")
                         .font(.bodySmall).fontWeight(.medium)
@@ -499,6 +501,8 @@ private struct PhotoRouteCard: View {
                     Text("진행 사진")
                         .font(.displayMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                     Text("변화를 눈으로 확인하는 가장\n강력한 동기부여")
                         .font(.caption).fontWeight(.medium)
                         .foregroundStyle(Color.textHeadline.opacity(0.55))

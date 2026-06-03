@@ -259,9 +259,8 @@ private struct DietHeroSection: View {
 
     private func todayDisplayString() -> String {
         let f = DateFormatter()
+        f.locale = LocaleManager.resolvedLocale
         f.dateFormat = String(localized: "home.date.format")
-        f.locale = Locale.current
-        f.locale = Locale(identifier: "ko_KR")
         return f.string(from: Date())
     }
 }

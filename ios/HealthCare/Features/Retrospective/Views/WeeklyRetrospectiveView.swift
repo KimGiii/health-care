@@ -8,7 +8,7 @@ struct WeeklyRetrospectiveView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 WeekNavigationBar(
-                    weekRange: viewModel.summary?.formattedWeekRange ?? "이번 주",
+                    weekRange: viewModel.summary?.formattedWeekRange ?? String(localized: "retro.weekRange.thisWeek"),
                     canGoNext: viewModel.weekOffset > 0,
                     onPrev: { viewModel.goToPreviousWeek(apiClient: container.apiClient) },
                     onNext: { viewModel.goToNextWeek(apiClient: container.apiClient) }
@@ -26,13 +26,13 @@ struct WeeklyRetrospectiveView: View {
             .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
         }
         .background(Color.backgroundPage)
-        .navigationTitle("주간 회고")
+        .navigationTitle(Text("retro.title"))
         .navigationBarTitleDisplayMode(.large)
-        .alert("오류", isPresented: Binding(
+        .alert(Text("오류"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("확인", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -107,23 +107,23 @@ private struct ExerciseSummaryCard: View {
     let summary: WeeklySummaryResponse
 
     var body: some View {
-        InsightCard(title: "운동", icon: "figure.run", color: .cyan) {
+        InsightCard(title: String(localized: "retro.card.exercise"), icon: "figure.run", color: .cyan) {
             HStack(spacing: 0) {
                 InsightStat(
-                    label: "세션",
-                    value: "\(summary.exerciseSessionCount)회",
+                    label: String(localized: "retro.stat.sessions"),
+                    value: String(format: String(localized: "retro.stat.sessions.value"), summary.exerciseSessionCount),
                     color: .cyan
                 )
                 Divider().frame(height: 40)
                 InsightStat(
-                    label: "총 시간",
-                    value: "\(summary.totalExerciseMinutes)분",
+                    label: String(localized: "retro.stat.totalTime"),
+                    value: String(format: String(localized: "retro.stat.totalTime.value"), summary.totalExerciseMinutes),
                     color: .cyan
                 )
                 if let cal = summary.totalCaloriesBurned {
                     Divider().frame(height: 40)
                     InsightStat(
-                        label: "소모 칼로리",
+                        label: String(localized: "retro.stat.burned"),
                         value: String(format: "%.0f kcal", cal),
                         color: .cyan
                     )
@@ -139,17 +139,17 @@ private struct DietSummaryCard: View {
     let summary: WeeklySummaryResponse
 
     var body: some View {
-        InsightCard(title: "식단", icon: "fork.knife", color: .orange) {
+        InsightCard(title: String(localized: "retro.card.diet"), icon: "fork.knife", color: .orange) {
             HStack(spacing: 0) {
                 InsightStat(
-                    label: "기록",
-                    value: "\(summary.dietLogCount)회",
+                    label: String(localized: "retro.stat.logs"),
+                    value: String(format: String(localized: "retro.stat.logs.value"), summary.dietLogCount),
                     color: .orange
                 )
                 if let cal = summary.avgDailyCalories {
                     Divider().frame(height: 40)
                     InsightStat(
-                        label: "일평균 칼로리",
+                        label: String(localized: "retro.stat.avgKcal"),
                         value: String(format: "%.0f kcal", cal),
                         color: .orange
                     )
@@ -157,7 +157,7 @@ private struct DietSummaryCard: View {
                 if let pro = summary.avgDailyProteinG {
                     Divider().frame(height: 40)
                     InsightStat(
-                        label: "일평균 단백질",
+                        label: String(localized: "retro.stat.avgProtein"),
                         value: String(format: "%.0f g", pro),
                         color: .orange
                     )
@@ -173,11 +173,11 @@ private struct BodySummaryCard: View {
     let summary: WeeklySummaryResponse
 
     var body: some View {
-        InsightCard(title: "신체", icon: "scalemass.fill", color: Color.brandPrimary) {
+        InsightCard(title: String(localized: "retro.card.body"), icon: "scalemass.fill", color: Color.brandPrimary) {
             HStack(spacing: 0) {
                 if let w = summary.latestWeightKg {
                     InsightStat(
-                        label: "현재 체중",
+                        label: String(localized: "retro.stat.currentWeight"),
                         value: String(format: "%.1f kg", w),
                         color: Color.brandPrimary
                     )
@@ -185,7 +185,7 @@ private struct BodySummaryCard: View {
                 if let bf = summary.latestBodyFatPct {
                     Divider().frame(height: 40)
                     InsightStat(
-                        label: "체지방",
+                        label: String(localized: "retro.stat.bodyFat"),
                         value: String(format: "%.1f%%", bf),
                         color: Color.brandPrimary
                     )
@@ -194,7 +194,7 @@ private struct BodySummaryCard: View {
                     Divider().frame(height: 40)
                     let sign = change >= 0 ? "+" : ""
                     InsightStat(
-                        label: "주간 변화",
+                        label: String(localized: "retro.stat.weeklyChange"),
                         value: String(format: "%@%.1f kg", sign, change),
                         color: change < 0 ? .green : (change > 0 ? Color.brandDanger : Color.textSecondary)
                     )
@@ -210,11 +210,11 @@ private struct GoalSummaryCard: View {
     let summary: WeeklySummaryResponse
 
     var body: some View {
-        InsightCard(title: "목표", icon: "target", color: .purple) {
+        InsightCard(title: String(localized: "retro.card.goal"), icon: "target", color: .purple) {
             HStack(spacing: 0) {
                 if let pct = summary.activeGoalPercentComplete {
                     InsightStat(
-                        label: "달성률",
+                        label: String(localized: "retro.stat.progress"),
                         value: String(format: "%.0f%%", pct),
                         color: .purple
                     )
@@ -222,7 +222,7 @@ private struct GoalSummaryCard: View {
                 if let status = summary.activeGoalTrackingStatus {
                     Divider().frame(height: 40)
                     InsightStat(
-                        label: "상태",
+                        label: String(localized: "retro.stat.status"),
                         value: trackingLabel(status),
                         color: trackingColor(status)
                     )
@@ -233,10 +233,10 @@ private struct GoalSummaryCard: View {
 
     private func trackingLabel(_ status: String) -> String {
         switch status {
-        case "AHEAD":           return "초과 달성"
-        case "ON_TRACK":        return "순조로움"
-        case "SLIGHTLY_BEHIND": return "조금 뒤처짐"
-        case "BEHIND":          return "페이스업 필요"
+        case "AHEAD":           return String(localized: "retro.status.ahead")
+        case "ON_TRACK":        return String(localized: "retro.status.onTrack")
+        case "SLIGHTLY_BEHIND": return String(localized: "retro.status.slightlyBehind")
+        case "BEHIND":          return String(localized: "retro.status.behind")
         default:                return status
         }
     }
@@ -308,7 +308,7 @@ private struct WeeklyEmptyState: View {
     var body: some View {
         EmptyState(
             icon: "chart.bar.doc.horizontal",
-            title: "이 주에는 기록이 아직 없어요"
+            title: String(localized: "retro.empty.title")
         )
     }
 }

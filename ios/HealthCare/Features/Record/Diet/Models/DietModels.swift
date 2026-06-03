@@ -111,7 +111,7 @@ struct DietLogSummary: Codable, Identifiable {
         parser.locale = Locale(identifier: "en_US_POSIX")
         if let date = parser.date(from: logDate) {
             let display = DateFormatter()
-            display.locale = Locale.current
+            display.locale = LocaleManager.resolvedLocale
             display.dateFormat = String(localized: "diet.date.format.shortKR")
             return display.string(from: date)
         }

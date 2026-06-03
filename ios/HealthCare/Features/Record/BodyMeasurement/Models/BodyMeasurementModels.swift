@@ -37,7 +37,7 @@ struct MeasurementResponse: Codable, Identifiable, Sendable {
         parser.locale = Locale(identifier: "en_US_POSIX")
         if let date = parser.date(from: "\(parts[0])-\(parts[1])-\(parts[2])") {
             let display = DateFormatter()
-            display.locale = Locale.current
+            display.locale = LocaleManager.resolvedLocale
             display.dateFormat = String(localized: "diet.date.format.longKR")
             return display.string(from: date)
         }

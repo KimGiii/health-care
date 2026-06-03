@@ -192,7 +192,7 @@ private struct TargetDateSection: View {
                     displayedComponents: .date
                 )
                 .datePickerStyle(.compact)
-                .environment(\.locale, Locale.current)
+                .environment(\.locale, LocaleManager.resolvedLocale)
             }
 
             if selectedType.supportsWeeklyRateTarget {

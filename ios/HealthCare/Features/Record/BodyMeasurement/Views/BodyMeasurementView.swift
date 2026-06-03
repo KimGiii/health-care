@@ -520,7 +520,7 @@ private struct MeasurementTrendSection: View {
     private static let axisDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.resolvedLocale
         return formatter
     }()
 }

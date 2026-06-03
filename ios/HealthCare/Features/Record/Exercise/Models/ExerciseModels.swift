@@ -79,7 +79,7 @@ struct SessionSummary: Decodable, Identifiable, Sendable {
         parser.locale = Locale(identifier: "en_US_POSIX")
         guard let date = parser.date(from: sessionDate) else { return sessionDate }
         let display = DateFormatter()
-        display.locale = Locale.current
+        display.locale = LocaleManager.resolvedLocale
         display.dateFormat = String(localized: "diet.date.format.shortKR")
         return display.string(from: date)
     }
@@ -107,7 +107,7 @@ struct SessionDetail: Decodable, Identifiable, Sendable {
         parser.locale = Locale(identifier: "en_US_POSIX")
         guard let date = parser.date(from: sessionDate) else { return sessionDate }
         let display = DateFormatter()
-        display.locale = Locale.current
+        display.locale = LocaleManager.resolvedLocale
         display.dateFormat = String(localized: "diet.date.format.longKR")
         return display.string(from: date)
     }

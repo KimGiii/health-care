@@ -103,6 +103,17 @@ final class LocaleManager: ObservableObject {
         return (regionCode == "KR" || prefersKorean) ? .ko : .en
     }
 
+    /// Nonisolated locale accessor for DateFormatters in non-@MainActor structs.
+    /// `Locale.current` 는 일부 환경에서 AppleLanguages override 를 반영하지 않으므로,
+    /// `UserDefaults["AppleLanguages"]` 를 직접 읽어 SwiftUI 번들 로컬라이제이션과 일치시킨다.
+    nonisolated static var resolvedLocale: Locale {
+        if let langs = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String],
+           let first = langs.first {
+            return Locale(identifier: first)
+        }
+        return Locale.current
+    }
+
     private static func applyToAppleLanguages(_ language: AppLanguage, defaults: UserDefaults) {
         guard let code = language.bundleCode else {
             defaults.removeObject(forKey: Keys.appleLanguages)
