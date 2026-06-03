@@ -187,11 +187,11 @@ final class BodyMeasurementViewModel: ObservableObject {
     var trendSummaryText: String {
         switch selectedRange {
         case .week7:
-            return "최근 1주"
+            return String(localized: "body.range.recent.1w")
         case .month1:
-            return "최근 1개월"
+            return String(localized: "body.range.recent.1m")
         case .month3:
-            return "최근 3개월"
+            return String(localized: "body.range.recent.3m")
         }
     }
 

@@ -32,19 +32,19 @@ struct AddProgressPhotoView: View {
                 .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("진행 사진 추가")
+            .navigationTitle(Text("body.photo.add.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -70,7 +70,7 @@ struct AddProgressPhotoView: View {
 
     private var typeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("포즈")
+            Text(String(localized: "body.photo.add.poseTitle"))
                 .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
@@ -109,22 +109,22 @@ struct AddProgressPhotoView: View {
 
     private var metaSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("신체 정보 (선택)")
+            Text(String(localized: "body.photo.add.bodyInfoTitle"))
                 .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
             VStack(spacing: 0) {
-                metaRow(label: "체중", unit: "kg", text: $weightText)
+                metaRow(label: String(localized: "body.metric.weight"), unit: "kg", text: $weightText)
                 Divider().padding(.leading, Spacing.lg)
-                metaRow(label: "허리", unit: "cm", text: $waistText)
+                metaRow(label: String(localized: "body.metric.waist"), unit: "cm", text: $waistText)
                 Divider().padding(.leading, Spacing.lg)
                 HStack {
-                    Text("메모")
+                    Text(String(localized: "body.photo.add.notesTitle"))
                         .font(.bodyMedium)
                         .foregroundStyle(Color.textSecondary)
                         .frame(width: 56, alignment: .leading)
-                    TextField("특이사항 (선택)", text: $notes, axis: .vertical)
+                    TextField(String(localized: "body.photo.add.notesPlaceholder"), text: $notes, axis: .vertical)
                         .lineLimit(1...3)
                         .font(.bodyMedium)
                         .foregroundStyle(Color.textPrimary)
@@ -166,10 +166,10 @@ struct AddProgressPhotoView: View {
     private var baselineToggle: some View {
         Toggle(isOn: $isBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("기준 사진으로 설정")
+                Text(String(localized: "body.photo.add.setBaseline"))
                     .font(.bodyMedium)
                     .foregroundStyle(Color.textPrimary)
-                Text("변화 비교의 시작점이 됩니다")
+                Text(String(localized: "body.photo.add.setBaselineHint"))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textTertiary)
             }
@@ -217,7 +217,7 @@ struct AddProgressPhotoView: View {
                             ProgressView(value: viewModel.uploadProgress)
                                 .tint(.white)
                                 .frame(width: 160)
-                            Text("업로드 중 \(Int(viewModel.uploadProgress * 100))%")
+                            Text(String(format: String(localized: "body.photo.add.uploadProgress"), Int(viewModel.uploadProgress * 100)))
                                 .font(.bodySmall).fontWeight(.medium)
                                 .foregroundStyle(.white.opacity(0.85))
                         }
@@ -225,12 +225,12 @@ struct AddProgressPhotoView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.headingSmall)
-                            Text("다시 시도")
+                            Text(String(localized: "body.photo.add.retry"))
                                 .font(.bodyLarge).fontWeight(.semibold)
                         }
                         .foregroundStyle(.white)
                     } else {
-                        Text("저장")
+                        Text(String(localized: "body.photo.add.save"))
                             .font(.bodyLarge).fontWeight(.semibold)
                             .foregroundStyle(.white)
                     }
@@ -307,10 +307,10 @@ private struct PhotoPickerSection: View {
                                 .foregroundStyle(Color.brandSecondary)
                         }
                         VStack(spacing: 4) {
-                            Text("사진 선택")
+                            Text(String(localized: "body.photo.add.selectPhoto"))
                                 .font(.headingSmall)
                                 .foregroundStyle(Color.textPrimary)
-                            Text("갤러리에서 가져오기")
+                            Text(String(localized: "body.photo.add.fromGallery"))
                                 .font(.bodySmall)
                                 .foregroundStyle(Color.textTertiary)
                         }

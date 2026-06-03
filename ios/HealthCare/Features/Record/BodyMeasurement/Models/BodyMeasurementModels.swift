@@ -31,7 +31,17 @@ struct MeasurementResponse: Codable, Identifiable, Sendable {
     var formattedDate: String {
         let parts = measuredAt.split(separator: "-")
         guard parts.count == 3 else { return measuredAt }
-        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+        // locale-aware long date format
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        if let date = parser.date(from: "\(parts[0])-\(parts[1])-\(parts[2])") {
+            let display = DateFormatter()
+            display.locale = Locale.current
+            display.dateFormat = String(localized: "diet.date.format.longKR")
+            return display.string(from: date)
+        }
+        return "\(parts[0])-\(parts[1])-\(parts[2])"
     }
 
     var shortDate: String {
@@ -75,9 +85,9 @@ enum MeasurementTrendRange: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .week7:  return "1주"
-        case .month1: return "1개월"
-        case .month3: return "3개월"
+        case .week7:  return String(localized: "body.range.1w")
+        case .month1: return String(localized: "body.range.1m")
+        case .month3: return String(localized: "body.range.3m")
         }
     }
 
@@ -100,10 +110,10 @@ enum MeasurementMetric: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .weight:     return "체중"
-        case .bodyFat:    return "체지방"
-        case .muscleMass: return "근육량"
-        case .waist:      return "허리"
+        case .weight:     return String(localized: "body.metric.weight")
+        case .bodyFat:    return String(localized: "body.metric.bodyFat")
+        case .muscleMass: return String(localized: "body.metric.muscleMass")
+        case .waist:      return String(localized: "body.metric.waist")
         }
     }
 

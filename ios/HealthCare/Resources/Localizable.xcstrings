@@ -785,6 +785,1497 @@
         }
       }
     },
+    "body.add.bmi.autoCalc" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-calculated from height"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키 기반 자동 계산"
+          }
+        }
+      }
+    },
+    "body.add.bmi.sources" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View BMI formula and classification sources (WHO/KSO)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BMI 계산식 및 분류 기준 출처 보기 (WHO·대한비만학회)"
+          }
+        }
+      }
+    },
+    "body.add.notes.placeholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note any unique conditions (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "특이사항이나 컨디션을 기록하세요 (선택)"
+          }
+        }
+      }
+    },
+    "body.add.save" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장"
+          }
+        }
+      }
+    },
+    "body.add.section.circumference" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Circumference"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "둘레 측정"
+          }
+        }
+      }
+    },
+    "body.add.section.composition" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body composition"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신체 구성"
+          }
+        }
+      }
+    },
+    "body.add.section.date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "측정일"
+          }
+        }
+      }
+    },
+    "body.add.section.notes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메모"
+          }
+        }
+      }
+    },
+    "body.add.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Measurement"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신체 측정 기록"
+          }
+        }
+      }
+    },
+    "body.bmi.sources.short" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BMI classification: WHO/KSO sources"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BMI 분류 기준: WHO·대한비만학회 출처 보기"
+          }
+        }
+      }
+    },
+    "body.circ.arm" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arm"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "팔"
+          }
+        }
+      }
+    },
+    "body.circ.chest" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chest"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가슴"
+          }
+        }
+      }
+    },
+    "body.circ.hip" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hip"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "엉덩이"
+          }
+        }
+      }
+    },
+    "body.circ.thigh" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thigh"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허벅지"
+          }
+        }
+      }
+    },
+    "body.circ.waist" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허리"
+          }
+        }
+      }
+    },
+    "body.compare.current" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재"
+          }
+        }
+      }
+    },
+    "body.compare.start" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작"
+          }
+        }
+      }
+    },
+    "body.empty.firstAction" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 추가하기"
+          }
+        }
+      }
+    },
+    "body.empty.firstMessage" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track weight, body fat, muscle mass,\nand more as you change"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체중, 체지방률, 근육량 등\n신체 변화를 꾸준히 기록하세요"
+          }
+        }
+      }
+    },
+    "body.empty.firstTitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log your first measurement"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 번째 측정을 기록해 보세요"
+          }
+        }
+      }
+    },
+    "body.empty.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No measurements yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "측정 기록이 아직 없어요"
+          }
+        }
+      }
+    },
+    "body.metric.bodyFat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body fat"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체지방"
+          }
+        }
+      }
+    },
+    "body.metric.bodyFatPct" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body fat %"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체지방률"
+          }
+        }
+      }
+    },
+    "body.metric.muscleMass" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muscle mass"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근육량"
+          }
+        }
+      }
+    },
+    "body.metric.waist" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "허리"
+          }
+        }
+      }
+    },
+    "body.metric.weight" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체중"
+          }
+        }
+      }
+    },
+    "body.photo.add.bodyInfoTitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body Info (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신체 정보 (선택)"
+          }
+        }
+      }
+    },
+    "body.photo.add.fromGallery" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick from gallery"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갤러리에서 가져오기"
+          }
+        }
+      }
+    },
+    "body.photo.add.notesPlaceholder" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "특이사항 (선택)"
+          }
+        }
+      }
+    },
+    "body.photo.add.notesTitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메모"
+          }
+        }
+      }
+    },
+    "body.photo.add.poseTitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pose"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포즈"
+          }
+        }
+      }
+    },
+    "body.photo.add.retry" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도"
+          }
+        }
+      }
+    },
+    "body.photo.add.save" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장"
+          }
+        }
+      }
+    },
+    "body.photo.add.selectPhoto" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 선택"
+          }
+        }
+      }
+    },
+    "body.photo.add.setBaseline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as baseline"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기준 사진으로 설정"
+          }
+        }
+      }
+    },
+    "body.photo.add.setBaselineHint" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This becomes the starting point for comparison"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변화 비교의 시작점이 됩니다"
+          }
+        }
+      }
+    },
+    "body.photo.add.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Progress Photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 사진 추가"
+          }
+        }
+      }
+    },
+    "body.photo.add.uploadProgress" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploading %d%%"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업로드 중 %d%%"
+          }
+        }
+      }
+    },
+    "body.photo.baseline" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baseline"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기준"
+          }
+        }
+      }
+    },
+    "body.photo.compare.hint0" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick 2 photos to compare"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비교할 사진 2장을 선택하세요"
+          }
+        }
+      }
+    },
+    "body.photo.compare.hint1" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 selected · pick 1 more"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1장 선택됨 · 1장 더 선택하세요"
+          }
+        }
+      }
+    },
+    "body.photo.compare.hint2" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 photos selected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2장 선택됨"
+          }
+        }
+      }
+    },
+    "body.photo.compare.show" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open compare view"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비교 보기"
+          }
+        }
+      }
+    },
+    "body.photo.compareToggle.cancel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "취소"
+          }
+        }
+      }
+    },
+    "body.photo.compareToggle.compare" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비교"
+          }
+        }
+      }
+    },
+    "body.photo.deleteConfirm.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this photo? This cannot be undone."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
+    "body.photo.deleteConfirm.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 삭제"
+          }
+        }
+      }
+    },
+    "body.photo.detail.pose" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pose"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포즈"
+          }
+        }
+      }
+    },
+    "body.photo.detail.takenOn" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taken on"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "촬영일"
+          }
+        }
+      }
+    },
+    "body.photo.detail.weight" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체중"
+          }
+        }
+      }
+    },
+    "body.photo.empty.action" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 추가하기"
+          }
+        }
+      }
+    },
+    "body.photo.empty.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a %@ photo to\nvisualize your change"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 사진을 추가해\n변화를 시각적으로 확인해 보세요"
+          }
+        }
+      }
+    },
+    "body.photo.empty.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No progress photos yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 사진이 아직 없어요"
+          }
+        }
+      }
+    },
+    "body.photo.error.delete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to delete photo."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 삭제에 실패했습니다."
+          }
+        }
+      }
+    },
+    "body.photo.error.load" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load photo."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진을 불러오지 못했습니다."
+          }
+        }
+      }
+    },
+    "body.photo.error.network" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to reach the server.\nPlease try again shortly."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버 연결에 실패했습니다.\n잠시 후 다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "body.photo.error.processImage" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not process the image. Pick another photo."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지를 처리할 수 없습니다. 다른 사진을 선택해 주세요."
+          }
+        }
+      }
+    },
+    "body.photo.error.register" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photo was sent but registration failed.\nPlease try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진은 전송됐지만 등록에 실패했습니다.\n다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "body.photo.error.transfer" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to send the photo.\nCheck your network connection."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 전송에 실패했습니다.\n네트워크 연결을 확인해 주세요."
+          }
+        }
+      }
+    },
+    "body.photo.error.upload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An error occurred during upload.\nPlease try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업로드 중 오류가 발생했습니다.\n다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "body.photo.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress Photos"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 사진"
+          }
+        }
+      }
+    },
+    "body.pose.back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "후면"
+          }
+        }
+      }
+    },
+    "body.pose.detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부위"
+          }
+        }
+      }
+    },
+    "body.pose.front" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Front"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정면"
+          }
+        }
+      }
+    },
+    "body.pose.left" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좌측"
+          }
+        }
+      }
+    },
+    "body.pose.right" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "우측"
+          }
+        }
+      }
+    },
+    "body.range.1m" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1M"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1개월"
+          }
+        }
+      }
+    },
+    "body.range.1w" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1W"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1주"
+          }
+        }
+      }
+    },
+    "body.range.3m" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3M"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3개월"
+          }
+        }
+      }
+    },
+    "body.range.recent.1m" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last month"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 1개월"
+          }
+        }
+      }
+    },
+    "body.range.recent.1w" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last week"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 1주"
+          }
+        }
+      }
+    },
+    "body.range.recent.3m" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 3 months"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 3개월"
+          }
+        }
+      }
+    },
+    "body.recent.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 측정"
+          }
+        }
+      }
+    },
+    "body.records.collapse" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "접기"
+          }
+        }
+      }
+    },
+    "body.records.deleteConfirm.message" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this measurement?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 측정 기록을 삭제하시겠습니까?"
+          }
+        }
+      }
+    },
+    "body.records.deleteConfirm.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete record"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 삭제"
+          }
+        }
+      }
+    },
+    "body.records.showMore" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show more (%d)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "더보기 (%d개)"
+          }
+        }
+      }
+    },
+    "body.records.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "측정 기록"
+          }
+        }
+      }
+    },
+    "body.summary.bodyFat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body fat %.1f%%"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체지방 %.1f%%"
+          }
+        }
+      }
+    },
+    "body.summary.empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 없음"
+          }
+        }
+      }
+    },
+    "body.summary.muscle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muscle %.1f kg"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근육 %.1fkg"
+          }
+        }
+      }
+    },
+    "body.summary.weight" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight %.1f kg"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "체중 %.1fkg"
+          }
+        }
+      }
+    },
+    "body.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body Changes"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신체 변화"
+          }
+        }
+      }
+    },
+    "body.trend.needMore" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A bit more data needed to show trend"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추세를 보여주기엔 기록이 조금 더 필요해요"
+          }
+        }
+      }
+    },
+    "body.trend.needMore.detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll show a chart once you have 2+ %@ entries in the range."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 기간 안에 %@ 기록이 2개 이상 있으면 그래프로 보여드릴게요."
+          }
+        }
+      }
+    },
+    "body.trend.picker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Range"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기간"
+          }
+        }
+      }
+    },
+    "body.trend.subtitle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flow of changes in the selected range"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 기간 동안의 변화 흐름"
+          }
+        }
+      }
+    },
+    "body.trend.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변화 추세"
+          }
+        }
+      }
+    },
     "common.cancel" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6717,6 +8208,7 @@
     },
     "갤러리에서 가져오기" : {
       "comment" : "A label for selecting a photo from the gallery.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -6814,6 +8306,7 @@
     },
     "기록 추가하기" : {
       "comment" : "A button to add a new measurement.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -6862,15 +8355,41 @@
     },
     "기준" : {
       "comment" : "A label indicating a baseline photo.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baseline"
+          }
+        }
+      }
     },
     "기준 사진으로 설정" : {
       "comment" : "A toggle that allows the user to set a photo as a baseline.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as baseline"
+          }
+        }
+      }
     },
     "기준 사진으로 설정됨" : {
       "comment" : "A label indicating that a photo is the user's baseline photo.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as baseline"
+          }
+        }
+      }
     },
     "꾸준함이 성과를 만듭니다 — 하루 30초면 충분해요." : {
       "localizations" : {
@@ -6928,6 +8447,7 @@
     },
     "다시 시도" : {
       "comment" : "A button to retry uploading a photo.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -7000,6 +8520,7 @@
     },
     "메모" : {
       "comment" : "A label displayed in the body of a view.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -7096,10 +8617,27 @@
     },
     "변화 비교의 시작점이 됩니다" : {
       "comment" : "A description of the baseline photo toggle.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This becomes the starting point for comparison"
+          }
+        }
+      }
     },
     "변화 추세" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        }
+      }
     },
     "변화를 눈으로 확인하는 가장\n강력한 동기부여" : {
       "comment" : "A description of the benefits of seeing your progress.",
@@ -7140,7 +8678,16 @@
     },
     "비교 보기" : {
       "comment" : "A button label that translates to \"Compare\" in English.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open compare view"
+          }
+        }
+      }
     },
     "비워두면 가장 최근 신체 측정 기록으로 자동 채워집니다." : {
       "comment" : "A description of the optional start value field.",
@@ -7164,6 +8711,7 @@
     },
     "사진 선택" : {
       "comment" : "A label displayed in the photo picker.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -7227,10 +8775,26 @@
       }
     },
     "선택한 기간 동안의 변화 흐름" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flow of changes in the selected range"
+          }
+        }
+      }
     },
     "선택한 기간 안에 %@ 기록이 2개 이상 있으면 그래프로 보여드릴게요." : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll show a chart once you have 2+ %@ entries in the range."
+          }
+        }
+      }
     },
     "섭취량" : {
       "comment" : "A label displayed next to the serving amount input field.",
@@ -7300,7 +8864,15 @@
     },
     "수치 변화" : {
       "comment" : "A title for a card that shows the user's progress over time.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numeric changes"
+          }
+        }
+      }
     },
     "시간을 입력하지 않으면 서버가 세트 수 기준의 대략적인 값으로 칼로리를 추정합니다." : {
       "comment" : "A description of how the estimated calories are calculated when the time is not specified.",
@@ -7421,7 +8993,16 @@
     },
     "신체 정보 (선택)" : {
       "comment" : "A label displayed above the body measurements section.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body Info (optional)"
+          }
+        }
+      }
     },
     "신체 정보를 알려주세요" : {
       "comment" : "A title describing the purpose of the step.",
@@ -7453,6 +9034,7 @@
     },
     "업로드 중 %@%%" : {
       "comment" : "A label that displays the upload progress as a percentage. The argument is the upload progress as a percentage.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
@@ -7737,7 +9319,16 @@
     },
     "이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다." : {
       "comment" : "A confirmation message for deleting a photo.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this photo? This cannot be undone."
+          }
+        }
+      }
     },
     "이 식사가 오늘 권장량에서 차지하는 비율입니다." : {
       "comment" : "A description of the macro progress rows.",
@@ -7753,7 +9344,16 @@
     },
     "이 측정 기록을 삭제하시겠습니까?" : {
       "comment" : "A confirmation dialog message.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this measurement?"
+          }
+        }
+      }
     },
     "이메일과 비밀번호로 시작하세요" : {
       "comment" : "A description of the email and password sign-up form.",
@@ -7880,7 +9480,16 @@
     },
     "첫 번째 측정을 기록해 보세요" : {
       "comment" : "A title describing the first step of recording measurements.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log your first measurement"
+          }
+        }
+      }
     },
     "첫 운동을 기록해보세요" : {
       "comment" : "A title for the first exercise recording screen.",
@@ -7901,7 +9510,16 @@
     },
     "체중, 체지방률, 근육량 등\n신체 변화를 꾸준히 기록하세요" : {
       "comment" : "A description of the benefits of recording body measurements.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track weight, body fat, muscle mass,\nand more as you change"
+          }
+        }
+      }
     },
     "총 %@회" : {
       "comment" : "A label displaying the number of exercise sessions. The argument is the number of sessions.",
@@ -7942,7 +9560,16 @@
     },
     "최근 측정" : {
       "comment" : "A title of a card that shows the latest measurements.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
+          }
+        }
+      }
     },
     "추가한 식품" : {
       "comment" : "A label displayed above the list of added food items.",
@@ -7957,19 +9584,53 @@
       }
     },
     "추세를 보여주기엔 기록이 조금 더 필요해요" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A bit more data needed to show trend"
+          }
+        }
+      }
     },
     "측정 기록" : {
       "comment" : "A label displayed above a list of measurements.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Records"
+          }
+        }
+      }
     },
     "측정 기록이 아직 없어요" : {
       "comment" : "A description of the empty state of the hero view.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No measurements yet"
+          }
+        }
+      }
     },
     "측정값 비교" : {
       "comment" : "A title for a card that compares two snapshots.",
-      "isCommentAutoGenerated" : true
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare measurements"
+          }
+        }
+      }
     },
     "카탈로그에서 운동을 검색해 세트를 구성하세요" : {
       "comment" : "A description of how to add exercises to a workout.",
@@ -8034,10 +9695,6 @@
         }
       }
     },
-    "키 기반 자동 계산" : {
-      "comment" : "A description of the BMI calculation based on height.",
-      "isCommentAutoGenerated" : true
-    },
     "평소 활동 수준은?" : {
       "comment" : "A label describing the user's daily activity level.",
       "isCommentAutoGenerated" : true,
@@ -8052,7 +9709,16 @@
     },
     "포즈" : {
       "comment" : "A label displayed above a list of body part icons.",
-      "isCommentAutoGenerated" : true
+      "extractionState" : "stale",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pose"
+          }
+        }
+      }
     },
     "프로필을 완성해 주세요" : {
       "comment" : "A title of a card that explains why the user can't see their calorie target.",
