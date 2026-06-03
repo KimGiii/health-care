@@ -146,6 +146,7 @@ jobs:
               -e OPENAI_API_KEY="${{ secrets.DEV_OPENAI_API_KEY }}" \
               -e PUBLIC_FOOD_API_KEY="${{ secrets.DEV_PUBLIC_FOOD_API_KEY }}" \
               -e APPLE_BUNDLE_ID="com.kingloo.gainsy.ios" \
+              -e GOOGLE_IOS_CLIENT_ID="${{ secrets.GOOGLE_IOS_CLIENT_ID }}" \
               -v /etc/healthcare-dev/fcm-credentials.json:/app/fcm-credentials.json:ro \
               ${{ env.IMAGE }}
 

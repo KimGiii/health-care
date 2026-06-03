@@ -1,4 +1,5 @@
 import GoogleMobileAds
+import GoogleSignIn
 import UIKit
 import Firebase
 import FirebaseMessaging
@@ -41,6 +42,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         print("[APNs] Failed to register: \(error.localizedDescription)")
+    }
+
+    // Google Sign-In OAuth 리다이렉트 콜백.
+    // 시뮬레이터/실기기에서 SafariView 또는 ASWebAuthenticationSession 으로 위임됐다 돌아오는 URL 을 처리.
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
     }
 
     private func configurePushNotifications(_ application: UIApplication) {

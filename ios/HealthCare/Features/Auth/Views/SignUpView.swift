@@ -58,6 +58,17 @@ struct SignUpView: View {
                             )
                         }
                     }
+
+                    GoogleSignInButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.signInWithSocialProvider(
+                                .google,
+                                tokenProvider: GoogleSignInCoordinator(),
+                                apiClient: container.apiClient,
+                                authState: authState
+                            )
+                        }
+                    }
                 }
                 .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
                 .padding(.bottom, 48) // design-lint:ignore — micro/hero spacing
