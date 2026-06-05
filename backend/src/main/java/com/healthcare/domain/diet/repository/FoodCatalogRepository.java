@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,4 +75,16 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long> 
     @Transactional
     @Query("UPDATE FoodCatalog f SET f.usageCount = CASE WHEN f.usageCount > 0 THEN f.usageCount - 1 ELSE 0 END WHERE f.id = :id")
     void decrementUsageCount(@Param("id") Long id);
+
+    /** 여러 식품 사용 횟수 일괄 증가 (N+1 방지) */
+    @Modifying
+    @Transactional
+    @Query("UPDATE FoodCatalog f SET f.usageCount = f.usageCount + 1 WHERE f.id IN :ids")
+    void incrementUsageCountBatch(@Param("ids") Collection<Long> ids);
+
+    /** 여러 식품 사용 횟수 일괄 감소 (최소 0 보장, N+1 방지) */
+    @Modifying
+    @Transactional
+    @Query("UPDATE FoodCatalog f SET f.usageCount = CASE WHEN f.usageCount > 0 THEN f.usageCount - 1 ELSE 0 END WHERE f.id IN :ids")
+    void decrementUsageCountBatch(@Param("ids") Collection<Long> ids);
 }

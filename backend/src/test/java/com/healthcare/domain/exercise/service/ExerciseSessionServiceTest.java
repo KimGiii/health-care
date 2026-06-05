@@ -75,7 +75,7 @@ class ExerciseSessionServiceTest {
 
         User user = buildUser(userId, 75.0);
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
-        given(catalogRepository.findById(42L)).willReturn(Optional.of(benchPress));
+        given(catalogRepository.findAllById(anyList())).willReturn(List.of(benchPress));
 
         ExerciseSession savedSession = buildSavedSession(5821L, userId,
                 LocalDate.of(2026, 4, 9), 65,
@@ -112,7 +112,7 @@ class ExerciseSessionServiceTest {
 
         User user = buildUser(userId, 75.0);
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
-        given(catalogRepository.findById(42L)).willReturn(Optional.of(benchPress));
+        given(catalogRepository.findAllById(anyList())).willReturn(List.of(benchPress));
         // 이전 최고 중량은 82.5kg
         given(setRepository.findMaxWeightKgForUserAndExercise(userId, 42L))
                 .willReturn(Optional.of(82.5));
@@ -149,7 +149,7 @@ class ExerciseSessionServiceTest {
 
         User user = buildUser(userId, 75.0);
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
-        given(catalogRepository.findById(42L)).willReturn(Optional.of(benchPress));
+        given(catalogRepository.findAllById(anyList())).willReturn(List.of(benchPress));
         // 이전 최고 중량이 동일한 80.0kg — 초과 아님
         given(setRepository.findMaxWeightKgForUserAndExercise(userId, 42L))
                 .willReturn(Optional.of(80.0));
@@ -177,7 +177,7 @@ class ExerciseSessionServiceTest {
         Long userId = 1L;
         given(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .willReturn(Optional.of(buildUser(userId, 70.0)));
-        given(catalogRepository.findById(999L)).willReturn(Optional.empty());
+        given(catalogRepository.findAllById(anyList())).willReturn(List.of());
 
         CreateSessionRequest request = CreateSessionRequest.builder()
                 .sessionDate(LocalDate.of(2026, 4, 9))
