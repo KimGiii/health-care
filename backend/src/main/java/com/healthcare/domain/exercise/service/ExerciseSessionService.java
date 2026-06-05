@@ -194,16 +194,19 @@ public class ExerciseSessionService {
                 .distinct()
                 .toList();
 
-        Map<Long, ExerciseCatalog> catalogMap = new java.util.LinkedHashMap<>();
+        Map<Long, ExerciseCatalog> catalogMap = catalogRepository.findAllById(catalogIds).stream()
+                .collect(Collectors.toMap(ExerciseCatalog::getId, c -> c));
+
         for (Long id : catalogIds) {
-            ExerciseCatalog catalog = catalogRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("ExerciseCatalog", id));
+            ExerciseCatalog catalog = catalogMap.get(id);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("ExerciseCatalog", id);
+            }
             // 다른 사용자의 커스텀 운동은 접근 불가
             if (Boolean.TRUE.equals(catalog.getIsCustom())
                     && !userId.equals(catalog.getCreatedByUserId())) {
                 throw new ResourceNotFoundException("ExerciseCatalog", id);
             }
-            catalogMap.put(id, catalog);
         }
         return catalogMap;
     }

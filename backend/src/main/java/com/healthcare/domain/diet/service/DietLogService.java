@@ -83,9 +83,7 @@ public class DietLogService {
                 .toList();
         foodEntryRepository.saveAll(entriesWithLogId);
 
-        request.getEntries().stream()
-                .map(CreateFoodEntryRequest::getFoodCatalogId)
-                .forEach(foodCatalogRepository::incrementUsageCount);
+        foodCatalogRepository.incrementUsageCountBatch(new ArrayList<>(catalogMap.keySet()));
 
         dietLogCreatedCounter.increment();
         return toCreateResponse(savedLog, agg.entries().size());
@@ -147,19 +145,18 @@ public class DietLogService {
         }
 
         List<FoodEntry> oldEntries = foodEntryRepository.findByDietLogIdOrderById(logId);
-        oldEntries.stream()
+        List<Long> oldCatalogIds = oldEntries.stream()
                 .map(FoodEntry::getFoodCatalogId)
                 .distinct()
-                .forEach(foodCatalogRepository::decrementUsageCount);
+                .toList();
+        foodCatalogRepository.decrementUsageCountBatch(oldCatalogIds);
         foodEntryRepository.deleteAll(oldEntries);
 
         Map<Long, FoodCatalog> catalogMap = loadAndValidateCatalogs(userId, request.getEntries());
         Aggregation agg = buildEntries(request.getEntries(), catalogMap, logId);
 
         foodEntryRepository.saveAll(agg.entries());
-        request.getEntries().stream()
-                .map(CreateFoodEntryRequest::getFoodCatalogId)
-                .forEach(foodCatalogRepository::incrementUsageCount);
+        foodCatalogRepository.incrementUsageCountBatch(new ArrayList<>(catalogMap.keySet()));
 
         log.update(request.getMealType(), request.getLogDate(), request.getNotes(), agg.totals());
         dietLogRepository.save(log);
@@ -178,10 +175,11 @@ public class DietLogService {
             throw new UnauthorizedException("다른 사용자의 식단 기록을 삭제할 수 없습니다.");
         }
 
-        foodEntryRepository.findByDietLogIdOrderById(logId).stream()
+        List<Long> catalogIdsToDecrement = foodEntryRepository.findByDietLogIdOrderById(logId).stream()
                 .map(FoodEntry::getFoodCatalogId)
                 .distinct()
-                .forEach(foodCatalogRepository::decrementUsageCount);
+                .toList();
+        foodCatalogRepository.decrementUsageCountBatch(catalogIdsToDecrement);
 
         log.softDelete();
         dietLogRepository.save(log);
@@ -294,11 +292,13 @@ public class DietLogService {
                 .distinct()
                 .toList();
 
-        Map<Long, FoodCatalog> catalogMap = new java.util.LinkedHashMap<>();
+        Map<Long, FoodCatalog> catalogMap = foodCatalogRepository.findAllById(catalogIds).stream()
+                .collect(Collectors.toMap(FoodCatalog::getId, c -> c));
+
         for (Long id : catalogIds) {
-            FoodCatalog food = foodCatalogRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("FoodCatalog", id));
-            catalogMap.put(id, food);
+            if (!catalogMap.containsKey(id)) {
+                throw new ResourceNotFoundException("FoodCatalog", id);
+            }
         }
         return catalogMap;
     }

@@ -76,8 +76,7 @@ class DietLogServiceTest {
                 .build();
 
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(buildUser(userId)));
-        given(foodCatalogRepository.findById(10L)).willReturn(Optional.of(chicken));
-        given(foodCatalogRepository.findById(20L)).willReturn(Optional.of(rice));
+        given(foodCatalogRepository.findAllById(anyList())).willReturn(List.of(chicken, rice));
 
         // chicken 100g: 165kcal, rice 200g: 260kcal → total: 425kcal
         // chicken protein: 31g, rice protein: 4.8g → total: 35.8g
@@ -103,8 +102,7 @@ class DietLogServiceTest {
         verify(dietLogRepository).save(logCaptor.capture());
         assertThat(logCaptor.getValue().getTotalCalories()).isEqualTo(425.0);
         assertThat(logCaptor.getValue().getMealType()).isEqualTo(MealType.LUNCH);
-        verify(foodCatalogRepository).incrementUsageCount(10L);
-        verify(foodCatalogRepository).incrementUsageCount(20L);
+        verify(foodCatalogRepository).incrementUsageCountBatch(anyCollection());
     }
 
     @Test
@@ -114,7 +112,7 @@ class DietLogServiceTest {
         Long userId = 1L;
         given(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .willReturn(Optional.of(buildUser(userId)));
-        given(foodCatalogRepository.findById(999L)).willReturn(Optional.empty());
+        given(foodCatalogRepository.findAllById(anyList())).willReturn(List.of());
 
         CreateDietLogRequest request = CreateDietLogRequest.builder()
                 .logDate(LocalDate.of(2026, 4, 13))
@@ -143,7 +141,7 @@ class DietLogServiceTest {
 
         given(userRepository.findByIdAndDeletedAtIsNull(userId))
                 .willReturn(Optional.of(buildUser(userId)));
-        given(foodCatalogRepository.findById(50L)).willReturn(Optional.of(otherUserFood));
+        given(foodCatalogRepository.findAllById(anyList())).willReturn(List.of(otherUserFood));
         DietLog savedLog = buildSavedDietLog(101L, userId, LocalDate.of(2026, 4, 13),
                 MealType.DINNER, 150.0, 7.5, 15.0, 4.5);
         given(dietLogRepository.save(any(DietLog.class))).willReturn(savedLog);
@@ -162,7 +160,7 @@ class DietLogServiceTest {
 
         // then
         assertThat(response.getDietLogId()).isEqualTo(101L);
-        verify(foodCatalogRepository).incrementUsageCount(50L);
+        verify(foodCatalogRepository).incrementUsageCountBatch(anyCollection());
     }
 
     // ─────────────────────────── 식사 기록 단건 조회 ───────────────────────────
@@ -295,9 +293,12 @@ class DietLogServiceTest {
         // when
         dietLogService.deleteDietLog(userId, logId);
 
-        // then — chicken이 2개 항목이어도 distinct 처리로 1번만 차감
-        verify(foodCatalogRepository, times(1)).decrementUsageCount(10L);
-        verify(foodCatalogRepository, times(1)).decrementUsageCount(20L);
+        // then — chicken이 2개 항목이어도 distinct 처리로 배치 1회 호출, 두 ID 모두 포함
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<java.util.Collection<Long>> idsCaptor =
+                (ArgumentCaptor<java.util.Collection<Long>>) (ArgumentCaptor<?>) ArgumentCaptor.forClass(java.util.Collection.class);
+        verify(foodCatalogRepository, times(1)).decrementUsageCountBatch(idsCaptor.capture());
+        assertThat(idsCaptor.getValue()).containsExactlyInAnyOrder(10L, 20L);
     }
 
     @Test
