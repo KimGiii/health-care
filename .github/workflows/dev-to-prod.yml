@@ -110,9 +110,9 @@ jobs:
                 echo "Green (port $GREEN_PORT) healthy — swapping nginx"
 
                 # nginx 백엔드 proxy_pass를 green 포트로 교체.
-                # 반드시 백엔드 포트(8080|8081)에만 매칭한다 — 전역 [0-9]*로 잡으면
-                # grafana(:3000)·s3(:4566)까지 덮어써서 배포마다 grafana가 깨진다.
-                sudo sed -i -E 's|proxy_pass[[:space:]]*http://127\.0\.0\.1:(8080|8081);|proxy_pass http://127.0.0.1:'"${GREEN_PORT}"';|g' /etc/nginx/sites-available/healthcare
+                # 8080·8081만 각각 치환 — 전역 [0-9]*로 잡으면 grafana(:3000) 등도 덮어쓴다.
+                sudo sed -i "s#proxy_pass http://127.0.0.1:8080;#proxy_pass http://127.0.0.1:${GREEN_PORT};#g" /etc/nginx/sites-available/healthcare
+                sudo sed -i "s#proxy_pass http://127.0.0.1:8081;#proxy_pass http://127.0.0.1:${GREEN_PORT};#g" /etc/nginx/sites-available/healthcare
                 sudo nginx -t && sudo nginx -s reload
 
                 # 활성 포트 기록
