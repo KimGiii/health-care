@@ -19,8 +19,10 @@ public class ExerciseCatalogService {
     private final ExerciseCatalogRepository catalogRepository;
 
     public List<ExerciseCatalogResponse> searchCatalog(Long userId, CatalogSearchParams params) {
+        String query = params.getQuery() == null ? null
+                : params.getQuery().replaceAll("\\s+", "");
         return catalogRepository
-                .findAccessibleToUser(userId, params.getQuery(),
+                .findAccessibleToUser(userId, query,
                         params.getExerciseType(), params.getMuscleGroup(), params.isCustomOnly())
                 .stream()
                 .map(ExerciseCatalogResponse::from)

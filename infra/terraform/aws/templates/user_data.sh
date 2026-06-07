@@ -40,6 +40,14 @@ rm -rf /tmp/aws /tmp/awscliv2.zip
 apt-get install -y nginx certbot python3-certbot-nginx
 
 cat > /etc/nginx/sites-available/healthcare <<NGINX
+# Blue-green 백엔드 업스트림 — 활성 포트가 배포마다 8080/8081로 바뀐다.
+# 두 포트를 모두 등록하고, 죽은 포트로 간 요청은 살아있는 포트로 즉시 재시도한다.
+# max_fails=1 + fail_timeout=5s 로 비활성 포트는 빠르게 down 처리되어 트래픽이 가지 않는다.
+upstream healthcare_backend {
+    server 127.0.0.1:8080 max_fails=1 fail_timeout=5s;
+    server 127.0.0.1:8081 max_fails=1 fail_timeout=5s;
+}
+
 server {
     listen 80;
     server_name ${api_domain} _;
@@ -57,17 +65,36 @@ server {
     }
 
     location /actuator/health {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://healthcare_backend;
+        proxy_next_upstream     error timeout http_502 http_503 http_504;
+        proxy_next_upstream_tries 2;
+    }
+
+    # Grafana (모니터링 대시보드) — 경로 기반. 컨테이너는 127.0.0.1:3000에만 바인딩.
+    # serve_from_sub_path=true이므로 proxy_pass 끝에 슬래시를 두지 않는다(접두사 보존).
+    # 슬래시를 붙이면 /grafana/ 접두사가 제거돼 무한 리다이렉트(ERR_TOO_MANY_REDIRECTS) 발생.
+    location /grafana/ {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_set_header   Host              \$host;
+        proxy_set_header   X-Real-IP         \$remote_addr;
+        proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto \$scheme;
+        # Grafana Live (WebSocket)
+        proxy_set_header   Upgrade           \$http_upgrade;
+        proxy_set_header   Connection        "upgrade";
     }
 
     location / {
-        proxy_pass         http://127.0.0.1:8080;
+        proxy_pass         http://healthcare_backend;
         proxy_http_version 1.1;
         proxy_set_header   Host              \$host;
         proxy_set_header   X-Real-IP         \$remote_addr;
         proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto \$scheme;
         proxy_read_timeout 60s;
+        # 죽은(비활성) 포트로 간 요청은 살아있는 포트로 재시도
+        proxy_next_upstream     error timeout http_502 http_503 http_504;
+        proxy_next_upstream_tries 2;
     }
 }
 NGINX

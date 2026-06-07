@@ -2,6 +2,7 @@ package com.healthcare.domain.user.service;
 
 import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.ValidationException;
+import com.healthcare.domain.nutrition.service.NutritionTargetService;
 import com.healthcare.domain.user.dto.UpdateProfileRequest;
 import com.healthcare.domain.user.dto.UserProfileResponse;
 import com.healthcare.domain.user.entity.User;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final NutritionTargetService nutritionTargetService;
 
     @Cacheable(cacheNames = "userProfile", key = "#userId")
     public UserProfileResponse getProfile(Long userId) {
@@ -51,6 +53,13 @@ public class UserService {
 
         if (Boolean.TRUE.equals(request.getOnboardingCompleted())) {
             user.completeOnboarding();
+        }
+
+        // 프로필 변경 시 영양 목표 자동 재계산.
+        // 단, 사용자가 calorieTarget을 명시적으로 지정한 요청에서는 그 값을 존중하므로 자동 계산을 건너뜀.
+        // (현재 iOS는 영양 목표를 직접 입력받지 않으므로 사실상 항상 자동 계산됨.)
+        if (request.getCalorieTarget() == null) {
+            nutritionTargetService.applyToUser(user);
         }
 
         return UserProfileResponse.from(user);

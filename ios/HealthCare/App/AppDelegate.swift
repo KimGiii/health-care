@@ -1,4 +1,5 @@
 import GoogleMobileAds
+import GoogleSignIn
 import UIKit
 import Firebase
 import FirebaseMessaging
@@ -17,6 +18,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         }
         configurePushNotifications(application)
         GADMobileAds.sharedInstance().start(completionHandler: nil)
+
+        // Cold start: 앱 종료 상태에서 푸시 탭 → launch 시점에 payload 도착.
+        // MainTabView가 아직 onReceive 등록 전이므로 PushRouter에 저장해 consume 대기.
+        if let userInfo = launchOptions?[.remoteNotification] as? [AnyHashable: Any],
+           let type = userInfo["type"] as? String {
+            Task { @MainActor in
+                PushRouter.shared.deliver(type: type)
+            }
+        }
         return true
     }
 
@@ -32,6 +42,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         print("[APNs] Failed to register: \(error.localizedDescription)")
+    }
+
+    // Google Sign-In OAuth 리다이렉트 콜백.
+    // 시뮬레이터/실기기에서 SafariView 또는 ASWebAuthenticationSession 으로 위임됐다 돌아오는 URL 을 처리.
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
     }
 
     private func configurePushNotifications(_ application: UIApplication) {
@@ -69,10 +89,17 @@ extension AppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
-        guard let type = userInfo["type"] as? String else { return }
-        NotificationCenter.default.post(name: .pushNotificationTapped,
-                                        object: nil,
-                                        userInfo: ["type": type])
+        print("[AppDelegate] didReceive userInfo=\(userInfo)")
+        guard let type = userInfo["type"] as? String else {
+            print("[AppDelegate] didReceive — userInfo['type']이 String 아님: \(userInfo["type"] ?? "nil")")
+            return
+        }
+        // 메인 스레드에서 PushRouter에 전달 — SwiftUI 상태 변경 안전성 보장.
+        // NotificationCenter publisher는 race condition(.onReceive 등록 전 fire)이 있어
+        // PushRouter의 pending queue 방식으로 일원화.
+        await MainActor.run {
+            PushRouter.shared.deliver(type: type)
+        }
     }
 }
 
@@ -85,6 +112,6 @@ extension AppDelegate: @preconcurrency MessagingDelegate {
 }
 
 extension Notification.Name {
-    static let fcmTokenRefreshed    = Notification.Name("fcmTokenRefreshed")
-    static let pushNotificationTapped = Notification.Name("pushNotificationTapped")
+    static let fcmTokenRefreshed = Notification.Name("fcmTokenRefreshed")
+    // pushNotificationTapped는 PushRouter로 대체되어 제거됨 (cold-start race 해결).
 }

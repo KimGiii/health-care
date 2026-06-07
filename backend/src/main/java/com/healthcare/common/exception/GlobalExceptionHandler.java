@@ -2,6 +2,7 @@ package com.healthcare.common.exception;
 
 import com.healthcare.common.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -88,6 +89,22 @@ public class GlobalExceptionHandler {
                 .build());
     }
 
+    /**
+     * DB 무결성 위반(주로 UNIQUE 충돌). 소셜 로그인에서 동시 요청이 같은 (provider, subject)
+     * 또는 같은 이메일로 동시에 계정/identity 를 만들 때 발생한다. 트랜잭션은 서비스 경계에서
+     * 이미 롤백된 상태이므로 여기서 409 로 변환해 클라이언트가 재시도하면 정상 처리된다.
+     * 진단을 위해 stacktrace 는 WARN 으로 남긴다(다른 무결성 버그를 숨기지 않도록).
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("데이터 무결성 위반(409 로 변환): {}", e.getMostSpecificCause().getMessage(), e);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ErrorResponse.builder()
+                .code("CONFLICT")
+                .message("이미 처리된 요청입니다. 잠시 후 다시 시도해 주세요.")
+                .build());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -99,7 +116,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        log.error("Unhandled exception", e);
+        log.error("Unhandled exception [{}]: {}", e.getClass().getSimpleName(), e.getMessage());
+        log.debug("Unhandled exception stacktrace", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ErrorResponse.builder()
                 .code("INTERNAL_SERVER_ERROR")

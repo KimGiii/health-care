@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -64,11 +65,13 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long> 
 
     /** 동시성 안전 사용 횟수 증가 (원자적 UPDATE) */
     @Modifying
+    @Transactional
     @Query("UPDATE FoodCatalog f SET f.usageCount = f.usageCount + 1 WHERE f.id = :id")
     void incrementUsageCount(@Param("id") Long id);
 
     /** 동시성 안전 사용 횟수 감소 (최소 0 보장) */
     @Modifying
+    @Transactional
     @Query("UPDATE FoodCatalog f SET f.usageCount = CASE WHEN f.usageCount > 0 THEN f.usageCount - 1 ELSE 0 END WHERE f.id = :id")
     void decrementUsageCount(@Param("id") Long id);
 }

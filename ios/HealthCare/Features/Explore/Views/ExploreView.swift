@@ -1,6 +1,16 @@
 import GoogleMobileAds
 import SwiftUI
 
+// MARK: - Explore Navigation Destinations
+//
+// MainTabView가 푸시 라우팅에서 explorePath에 직접 append할 수 있도록
+// value 기반 enum으로 노출. NavigationLink도 같은 enum으로 통일.
+
+enum ExploreDestination: Hashable {
+    case weeklyRetrospective
+    case changeAnalysis
+}
+
 struct ExploreView: View {
     @EnvironmentObject private var container: AppContainer
 
@@ -8,19 +18,27 @@ struct ExploreView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
                 InsightSectionHeader()
-                InsightMenuGrid(container: container)
+                InsightMenuGrid()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 40)
+            .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+            .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
         }
         .safeAreaInset(edge: .bottom) {
             BannerAdView(adUnitID: AdsManager.shared.bannerAdUnitID)
                 .frame(height: 50)
         }
         .background(Color.backgroundPage)
-        .navigationTitle("탐색")
+        .navigationTitle(Text("explore.title"))
         .navigationBarTitleDisplayMode(.large)
+        .navigationDestination(for: ExploreDestination.self) { dest in
+            switch dest {
+            case .weeklyRetrospective:
+                WeeklyRetrospectiveView().environmentObject(container)
+            case .changeAnalysis:
+                ChangeAnalysisView().environmentObject(container)
+            }
+        }
     }
 }
 
@@ -29,13 +47,13 @@ struct ExploreView: View {
 private struct InsightSectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("인사이트")
-                .font(.system(size: 13, weight: .semibold))
+            Text(String(localized: "explore.insights.title"))
+                .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
                 .textCase(.uppercase)
                 .tracking(0.5)
-            Text("나의 기록을 분석해보세요")
-                .font(.system(size: 15))
+            Text(String(localized: "explore.insights.subtitle"))
+                .font(.bodyMedium)
                 .foregroundStyle(Color.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -45,32 +63,24 @@ private struct InsightSectionHeader: View {
 // MARK: - Menu Grid
 
 private struct InsightMenuGrid: View {
-    let container: AppContainer
-
     var body: some View {
         VStack(spacing: 12) {
-            NavigationLink {
-                WeeklyRetrospectiveView()
-                    .environmentObject(container)
-            } label: {
+            NavigationLink(value: ExploreDestination.weeklyRetrospective) {
                 InsightMenuCard(
                     icon: "chart.bar.doc.horizontal",
-                    iconColor: Color.brandPrimary,
-                    title: "주간 회고",
-                    description: "이번 주 운동·식단·신체 변화를 한눈에"
+                    iconColor: Color.brandAccent,
+                    title: String(localized: "explore.card.retro.title"),
+                    description: String(localized: "explore.card.retro.desc")
                 )
             }
             .buttonStyle(.plain)
 
-            NavigationLink {
-                ChangeAnalysisView()
-                    .environmentObject(container)
-            } label: {
+            NavigationLink(value: ExploreDestination.changeAnalysis) {
                 InsightMenuCard(
                     icon: "waveform.path.ecg",
                     iconColor: .purple,
-                    title: "변화 분석",
-                    description: "기간별 신체 지표 변화와 운동 통계"
+                    title: String(localized: "explore.card.change.title"),
+                    description: String(localized: "explore.card.change.desc")
                 )
             }
             .buttonStyle(.plain)
@@ -89,30 +99,30 @@ private struct InsightMenuCard: View {
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.numeralMedium).fontWeight(.semibold)
                 .foregroundStyle(iconColor)
                 .frame(width: 50, height: 50)
                 .background(iconColor.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Text(description)
-                    .font(.system(size: 13))
+                    .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.captionBold)
                 .foregroundStyle(Color.textSecondary.opacity(0.5))
         }
-        .padding(16)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }

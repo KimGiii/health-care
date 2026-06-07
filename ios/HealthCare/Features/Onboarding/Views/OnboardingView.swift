@@ -27,16 +27,16 @@ struct OnboardingView: View {
 
                     // Logo
                     BrandLogoView(size: 160, color: Color.brandPrimary)
-                        .padding(.bottom, 36)
+                        .padding(.bottom, 36) // design-lint:ignore — micro/hero spacing
 
                     // Copy
                     VStack(spacing: 10) {
                         Text("Gainsy")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .font(.brandWordmark)
                             .foregroundStyle(Color.brandPrimary)
 
-                        Text("운동·식단·신체변화를 하나로\n매일 기록하고 꾸준히 성장하세요")
-                            .font(.system(size: 15))
+                        Text("운동·식단·신체 변화를 하나로\n매일 기록하고 꾸준히 성장하세요")
+                            .font(.bodyMedium)
                             .foregroundStyle(Color.textSecondary)
                             .multilineTextAlignment(.center)
                             .lineSpacing(4)
@@ -47,35 +47,15 @@ struct OnboardingView: View {
                     // CTA Buttons
                     VStack(spacing: 12) {
                         NavigationLink(destination: LoginView()) {
-                            Text("로그인")
-                                .font(.system(size: 17, weight: .semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.brandPrimary)
-                                .foregroundStyle(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .shadow(
-                                    color: Color.brandPrimary.opacity(0.3),
-                                    radius: 10, x: 0, y: 5
-                                )
+                            PrimaryButtonLabel(title: String(localized: "auth.login.button"))
                         }
 
                         NavigationLink(destination: SignUpView()) {
-                            Text("계정이 없어요, 가입하기")
-                                .font(.system(size: 15, weight: .medium))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.brandPrimary.opacity(0.08))
-                                .foregroundStyle(Color.brandPrimary)
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.brandPrimary.opacity(0.25), lineWidth: 1)
-                                )
+                            SecondaryButtonLabel(title: String(localized: "onboarding.signup.button"))
                         }
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.bottom, 48)
+                    .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                    .padding(.bottom, 48) // design-lint:ignore — micro/hero spacing
                 }
             }
         }

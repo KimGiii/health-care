@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: healthcare-api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # blue-green: 8080/8081 둘 다 등록. 비활성 포트는 up=0으로 표시될 뿐 무해하며,
+      # 알림은 sum(up)==0 (양쪽 모두 down)일 때만 발동한다.
+      - targets:
+          - "host.docker.internal:8080"
+          - "host.docker.internal:8081"
+        labels:
+          application: healthcare-api
+          env: prod

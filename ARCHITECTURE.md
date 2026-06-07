@@ -469,10 +469,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus   # /actuator/prometheus → Prometheus 스크랩
   endpoint:
     health:
       show-details: when-authorized
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true                # p95/p99 지연 히스토그램
 
 app:
   jwt:
@@ -581,6 +585,19 @@ logging:
 ```
 
 All secrets (DB credentials, JWT secret, FCM credentials, AWS credentials) are injected as environment variables — never committed to source control. In production, AWS Systems Manager Parameter Store or Secrets Manager provides secret injection.
+
+### 4.4 Observability — Prometheus + Grafana
+
+애플리케이션 메트릭은 Actuator + Micrometer로 `/actuator/prometheus`에 노출되며, Prometheus가
+스크랩하고 Grafana가 시각화·알림(Slack)한다. 로컬은 `backend/docker-compose.yml`, 프로덕션은
+EC2에서 앱과 동일 인스턴스에 독립 컨테이너로 운영된다(blue-green과 분리). 메모리 여유를 위해
+인스턴스는 t3.medium, Grafana는 11.6.3으로 핀한다.
+
+- 자동 메트릭: JVM(힙/GC), HTTP(`http_server_requests` 히스토그램), HikariCP, Redis
+- 비즈니스 메트릭: `healthcare_auth_*`, `healthcare_diet_log_created_total`, `healthcare_diet_ai_analysis_*`
+- 알림: 5xx 비율·p99 지연·힙·HikariCP·인스턴스 다운
+
+구성·운영·트러블슈팅 상세는 **[docs/operations/MONITORING_PROMETHEUS_GRAFANA.md](docs/operations/MONITORING_PROMETHEUS_GRAFANA.md)** 참고.
 
 ---
 

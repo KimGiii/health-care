@@ -27,7 +27,7 @@ final class ChangeAnalysisViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "변화 분석을 불러오는 중 오류가 발생했습니다."
+            errorMessage = String(localized: "change.error.load")
         }
     }
 }

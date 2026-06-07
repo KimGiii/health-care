@@ -64,7 +64,7 @@ final class ProgressPhotoViewModelTests: XCTestCase {
     func testDeletePhoto_실패시에러메시지가설정된다() async {
         let loader = MockProgressPhotoAPIClient(
             photos: [makePhoto(id: 5, type: .SIDE_LEFT)],
-            deleteError: APIError.serverError(statusCode: 403, code: nil)
+            deleteError: APIError.serverError(statusCode: 403, code: nil, message: nil)
         )
         let vm = ProgressPhotoViewModel()
         await vm.loadAll(apiClient: loader)

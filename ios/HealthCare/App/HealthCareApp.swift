@@ -7,6 +7,7 @@ struct HealthCareApp: App {
 
     @StateObject private var authState: AuthState
     @StateObject private var appContainer = AppContainer()
+    @StateObject private var localeManager = LocaleManager.shared
     @AppStorage("appTheme") private var appThemeRawValue = AppTheme.system.rawValue
 
     private var selectedTheme: AppTheme {
@@ -29,6 +30,8 @@ struct HealthCareApp: App {
             RootView()
                 .environmentObject(authState)
                 .environmentObject(appContainer)
+                .environmentObject(localeManager)
+                .environment(\.locale, localeManager.effectiveLocale)
                 .preferredColorScheme(selectedTheme.colorScheme)
         }
     }

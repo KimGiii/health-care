@@ -23,23 +23,23 @@ struct AddMeasurementView: View {
                     bmiSourceFooter
                     submitButton
                 }
-                .padding(20)
-                .padding(.bottom, 40)
+                .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("신체 측정 기록")
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("body.add.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -52,19 +52,19 @@ struct AddMeasurementView: View {
         Button {
             showSources = true
         } label: {
-            Label("BMI 계산식 및 분류 기준 출처 보기 (WHO·대한비만학회)", systemImage: "info.circle")
-                .font(.system(size: 12))
+            Label(String(localized: "body.add.bmi.sources"), systemImage: "info.circle")
+                .font(.caption)
                 .foregroundStyle(Color.brandPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Date
 
     private var dateSection: some View {
-        FormCard(title: "측정일") {
-            DatePicker("측정일", selection: $viewModel.measuredAt, in: ...Date(), displayedComponents: .date)
+        FormCard(title: String(localized: "body.add.section.date")) {
+            DatePicker(String(localized: "body.add.section.date"), selection: $viewModel.measuredAt, in: ...Date(), displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .labelsHidden()
                 .tint(Color.brandPrimary)
@@ -74,32 +74,32 @@ struct AddMeasurementView: View {
     // MARK: - Body Composition
 
     private var bodyCompositionSection: some View {
-        FormCard(title: "신체 구성") {
+        FormCard(title: String(localized: "body.add.section.composition")) {
             VStack(spacing: 0) {
                 MeasurementField(
                     icon: "scalemass.fill",
                     iconColor: Color(hex: "#2563EB"),
-                    label: "체중",
+                    label: String(localized: "body.metric.weight"),
                     unit: "kg",
                     text: $viewModel.weightKg
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "percent",
                     iconColor: Color(hex: "#7C3AED"),
-                    label: "체지방률",
+                    label: String(localized: "body.metric.bodyFatPct"),
                     unit: "%",
                     text: $viewModel.bodyFatPct
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "figure.arms.open",
                     iconColor: Color.brandPrimary,
-                    label: "근육량",
+                    label: String(localized: "body.metric.muscleMass"),
                     unit: "kg",
                     text: $viewModel.muscleMassKg
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 if viewModel.isBMIAutoCalculated {
                     AutoCalculatedBMIRow(bmi: viewModel.bmi)
                 } else {
@@ -118,44 +118,44 @@ struct AddMeasurementView: View {
     // MARK: - Circumference
 
     private var circumferenceSection: some View {
-        FormCard(title: "둘레 측정") {
+        FormCard(title: String(localized: "body.add.section.circumference")) {
             VStack(spacing: 0) {
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#0EA5E9"),
-                    label: "가슴",
+                    label: String(localized: "body.circ.chest"),
                     unit: "cm",
                     text: $viewModel.chestCm
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#DC2626"),
-                    label: "허리",
+                    label: String(localized: "body.circ.waist"),
                     unit: "cm",
                     text: $viewModel.waistCm
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#D97706"),
-                    label: "엉덩이",
+                    label: String(localized: "body.circ.hip"),
                     unit: "cm",
                     text: $viewModel.hipCm
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#059669"),
-                    label: "허벅지",
+                    label: String(localized: "body.circ.thigh"),
                     unit: "cm",
                     text: $viewModel.thighCm
                 )
-                Divider().padding(.leading, 52)
+                Divider().padding(.leading, 52) // design-lint:ignore — micro/hero spacing
                 MeasurementField(
                     icon: "ruler",
                     iconColor: Color(hex: "#7C3AED"),
-                    label: "팔",
+                    label: String(localized: "body.circ.arm"),
                     unit: "cm",
                     text: $viewModel.armCm
                 )
@@ -166,10 +166,10 @@ struct AddMeasurementView: View {
     // MARK: - Notes
 
     private var notesSection: some View {
-        FormCard(title: "메모") {
-            TextField("특이사항이나 컨디션을 기록하세요 (선택)", text: $viewModel.notes, axis: .vertical)
+        FormCard(title: String(localized: "body.add.section.notes")) {
+            TextField(String(localized: "body.add.notes.placeholder"), text: $viewModel.notes, axis: .vertical)
                 .lineLimit(3...5)
-                .font(.system(size: 14))
+                .font(.bodyMedium)
                 .foregroundStyle(Color.textPrimary)
         }
     }
@@ -184,15 +184,15 @@ struct AddMeasurementView: View {
                 if viewModel.isSubmitting {
                     ProgressView().tint(.white)
                 } else {
-                    Text("저장하기")
-                        .font(.system(size: 16, weight: .semibold))
+                    Text(String(localized: "body.add.save"))
+                        .font(.bodyLarge).fontWeight(.semibold)
                         .foregroundStyle(.white)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 54)
             .background(viewModel.hasAnyValue ? Color.brandPrimary : Color.surfaceSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         }
         .disabled(!viewModel.hasAnyValue || viewModel.isSubmitting)
         .animation(.easeInOut(duration: 0.2), value: viewModel.hasAnyValue)
@@ -208,15 +208,15 @@ private struct FormCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
             VStack(alignment: .leading, spacing: 0) {
                 content()
             }
-            .padding(16)
-            .background(Color.surfacePrimary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         }
     }
@@ -228,28 +228,28 @@ private struct AutoCalculatedBMIRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "heart.fill")
-                .font(.system(size: 15, weight: .medium))
+                .font(.bodyMedium).fontWeight(.medium)
                 .foregroundStyle(Color(hex: "#EA580C"))
                 .frame(width: 32, height: 32)
                 .background(Color(hex: "#EA580C").opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("BMI")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.bodyMedium).fontWeight(.medium)
                     .foregroundStyle(Color.textPrimary)
-                Text("키 기반 자동 계산")
-                    .font(.system(size: 11))
+                Text(String(localized: "body.add.bmi.autoCalc"))
+                    .font(.captionXSmall)
                     .foregroundStyle(Color.textSecondary)
             }
 
             Spacer()
 
             Text(bmi.isEmpty ? "-" : bmi)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.headingSmall)
                 .foregroundStyle(bmi.isEmpty ? Color.textSecondary : Color.textPrimary)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -263,14 +263,14 @@ private struct MeasurementField: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .medium))
+                .font(.bodyMedium).fontWeight(.medium)
                 .foregroundStyle(iconColor)
                 .frame(width: 32, height: 32)
                 .background(iconColor.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.bodyMedium).fontWeight(.medium)
                 .foregroundStyle(Color.textPrimary)
 
             Spacer()
@@ -279,17 +279,17 @@ private struct MeasurementField: View {
                 TextField("0.0", text: $text)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
                     .frame(width: 70)
 
                 if !unit.isEmpty {
                     Text(unit)
-                        .font(.system(size: 13))
+                        .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
     }
 }

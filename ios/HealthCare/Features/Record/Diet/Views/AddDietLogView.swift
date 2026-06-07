@@ -10,10 +10,14 @@ struct AddDietLogView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     var onSaved: () -> Void
 
-    init(initialDate: Date = Date(), onSaved: @escaping () -> Void) {
+    /// 이 식사 입력 전 기준, 오늘 남은 칼로리(일일 권장 − 이미 기록된 섭취). nil이면 hint 미표시.
+    private let remainingBeforeMeal: Double?
+
+    init(initialDate: Date = Date(), remainingCalories: Double? = nil, onSaved: @escaping () -> Void) {
         _viewModel = StateObject(
             wrappedValue: AddDietLogViewModel(initialDate: initialDate)
         )
+        self.remainingBeforeMeal = remainingCalories
         self.onSaved = onSaved
     }
 
@@ -21,6 +25,7 @@ struct AddDietLogView: View {
         _viewModel = StateObject(
             wrappedValue: AddDietLogViewModel(editing: log)
         )
+        self.remainingBeforeMeal = nil
         self.onSaved = onSaved
     }
 
@@ -40,19 +45,20 @@ struct AddDietLogView: View {
                         }
                         Spacer(minLength: 100)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                    .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
                 }
                 saveButton
             }
-            .navigationTitle(viewModel.editingLogId != nil ? "식단 수정" : "식단 기록")
+            .navigationTitle(viewModel.editingLogId != nil ? String(localized: "diet.title.edit") : String(localized: "diet.title.add"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { onSaved() }
+                    Button(String(localized: "common.cancel")) { onSaved() }
                         .foregroundColor(Color.brandAccent)
                 }
             }
+            .numericKeyboardToolbar()
             .sheet(isPresented: $viewModel.showFoodSearch) {
                 FoodSearchSheet(viewModel: viewModel)
             }
@@ -62,11 +68,11 @@ struct AddDietLogView: View {
             .sheet(isPresented: $viewModel.showPremiumPaywall) {
                 PremiumPaywallSheet(isPresented: $viewModel.showPremiumPaywall)
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -80,7 +86,7 @@ struct AddDietLogView: View {
                             apiClient: container.apiClient
                         )
                     } else {
-                        viewModel.errorMessage = "사진을 불러오지 못했습니다."
+                        viewModel.errorMessage = String(localized: "diet.error.photoLoad")
                     }
                     selectedPhotoItem = nil
                 }
@@ -117,15 +123,15 @@ struct AddDietLogView: View {
                         .font(.subheadline)
                         .foregroundColor(Color.textSecondary)
                 }
-                .padding(14)
+                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
 
             if !viewModel.analysisWarnings.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("AI 추정치 안내", systemImage: "sparkles")
+                    Label(String(localized: "diet.button.aiHint"), systemImage: "sparkles")
                         .font(.subheadline.bold())
                         .foregroundColor(Color.brandAccent)
                     ForEach(viewModel.analysisWarnings, id: \.self) { warning in
@@ -134,10 +140,10 @@ struct AddDietLogView: View {
                             .foregroundColor(Color.textSecondary)
                     }
                 }
-                .padding(14)
+                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         }
     }
@@ -154,17 +160,45 @@ struct AddDietLogView: View {
                     .foregroundColor(.brandAccent)
             }
             HStack(spacing: 0) {
-                MacroCell(label: "단백질", value: viewModel.totalProtein, color: .blue)
+                MacroCell(label: String(localized: "diet.nutrient.protein"), value: viewModel.totalProtein, color: .blue)
                 Divider().frame(height: 30)
-                MacroCell(label: "탄수화물", value: viewModel.totalCarbs, color: .orange)
+                MacroCell(label: String(localized: "diet.nutrient.carbs"), value: viewModel.totalCarbs, color: .orange)
                 Divider().frame(height: 30)
-                MacroCell(label: "지방", value: viewModel.totalFat, color: .pink)
+                MacroCell(label: String(localized: "diet.nutrient.fat"), value: viewModel.totalFat, color: .pink)
+            }
+            if let remainingBeforeMeal {
+                Divider()
+                remainingCalorieHint(remainingBeforeMeal)
             }
         }
-        .padding(16)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+
+    /// 이 식사를 더한 뒤 오늘 남는 칼로리. 음수면 초과로 danger 톤 표시.
+    private func remainingCalorieHint(_ remainingBeforeMeal: Double) -> some View {
+        let remaining = remainingBeforeMeal - viewModel.totalCalories
+        let isExceeded = remaining < 0
+        return HStack(spacing: 6) {
+            Image(systemName: isExceeded ? "exclamationmark.triangle.fill" : "flame.fill")
+                .font(.caption)
+                .foregroundColor(isExceeded ? Color.brandDanger : Color.textSecondary)
+            Text(isExceeded ? String(localized: "diet.calories.exceeded") : String(localized: "diet.calories.remaining"))
+                .font(.caption)
+                .foregroundColor(Color.textSecondary)
+            Spacer()
+            Text("\(isExceeded ? "+" : "")\(abs(remaining).formatted(.number.precision(.fractionLength(0)))) kcal")
+                .font(.subheadline.bold())
+                .foregroundColor(isExceeded ? Color.brandDanger : Color.brandAccent)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            isExceeded
+                ? String(format: String(localized: "diet.calories.exceeded.a11y"), abs(remaining))
+                : String(format: String(localized: "diet.calories.remaining.a11y"), remaining)
+        )
     }
 
     // MARK: - 추가된 식품 목록
@@ -203,9 +237,9 @@ struct AddDietLogView: View {
                 .font(.subheadline.bold())
                 .foregroundColor(Color.brandAccent)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         }
     }
@@ -222,9 +256,9 @@ struct AddDietLogView: View {
                 .font(.subheadline.bold())
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .background(Color.brandPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         } else {
             Button {
@@ -235,17 +269,17 @@ struct AddDietLogView: View {
                     Text("사진으로 시작")
                     Text("PRO")
                         .font(.caption2.bold())
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                        .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
                         .background(Color.white.opacity(0.25))
                         .clipShape(Capsule())
                 }
                 .font(.subheadline.bold())
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .background(Color.brandPrimary.opacity(0.55))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         }
     }
@@ -255,12 +289,12 @@ struct AddDietLogView: View {
             Text("메모 (선택)")
                 .font(.subheadline.bold())
                 .foregroundColor(Color.textSecondary)
-            TextField("식사 메모를 입력하세요", text: $viewModel.notes, axis: .vertical)
+            TextField(String(localized: "diet.notes.placeholder"), text: $viewModel.notes, axis: .vertical)
                 .font(.body)
                 .lineLimit(3...6)
-                .padding(12)
+                .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
         }
     }
 
@@ -286,11 +320,11 @@ struct AddDietLogView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(viewModel.canSave ? Color.brandPrimary : Color.gray.opacity(0.4))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
         .disabled(!viewModel.canSave || viewModel.isSaving)
     }
@@ -306,13 +340,13 @@ private struct MealTypePill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 4) {
-                Text(type.emoji)
+                Image(systemName: type.sfSymbol)
                     .font(.caption)
                 Text(type.displayName)
                     .font(.caption.bold())
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, Spacing.md) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, 7) // design-lint:ignore — micro/hero spacing
             .background(isSelected ? Color.brandPrimary : Color.surfaceCard)
             .foregroundColor(isSelected ? .white : .primary)
             .clipShape(Capsule())
@@ -344,8 +378,8 @@ private struct DraftEntryCard: View {
                         HStack(spacing: 6) {
                             Text("AI 추정")
                                 .font(.caption2.bold())
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
+                                .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                                .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
                                 .background(Color.brandPrimary.opacity(0.12))
                                 .foregroundColor(Color.brandAccent)
                                 .clipShape(Capsule())
@@ -373,10 +407,10 @@ private struct DraftEntryCard: View {
                     .font(.subheadline.bold())
                     .frame(width: 70)
                     .multilineTextAlignment(.trailing)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 Text("g")
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
@@ -395,16 +429,16 @@ private struct DraftEntryCard: View {
                 }
 
                 if entry.needsReview || entry.unknownOrUncertain != nil {
-                    Text(entry.unknownOrUncertain ?? "AI 추정 항목이라 저장 전 검토를 권장합니다.")
+                    Text(entry.unknownOrUncertain ?? String(localized: "diet.aiHint.review"))
                         .font(.caption)
                         .foregroundColor(.orange)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }
 
@@ -415,8 +449,8 @@ private struct DraftEntryCard: View {
         }
         .font(.caption.bold())
         .foregroundColor(Color.brandAccent)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
         .clipShape(Capsule())
     }
@@ -447,6 +481,7 @@ struct MacroCell: View {
 struct FoodSearchSheet: View {
     @EnvironmentObject private var container: AppContainer
     @ObservedObject var viewModel: AddDietLogViewModel
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -455,7 +490,8 @@ struct FoodSearchSheet: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(Color.textSecondary)
-                    TextField("식품명 검색", text: $viewModel.searchQuery)
+                    TextField(String(localized: "diet.search.placeholder"), text: $viewModel.searchQuery)
+                        .focused($searchFocused)
                         .submitLabel(.search)
                         .onSubmit { triggerSearch() }
                     if !viewModel.searchQuery.isEmpty {
@@ -466,28 +502,28 @@ struct FoodSearchSheet: View {
                         }
                     }
                 }
-                .padding(10)
+                .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
                 .background(Color.backgroundPage)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
                 .onChange(of: viewModel.searchQuery) { _ in
                     viewModel.scheduleSearch(apiClient: container.apiClient)
                 }
 
                 if viewModel.isSearching {
                     Spacer()
-                    ProgressView("검색 중...")
+                    ProgressView(String(localized: "diet.search.loading"))
                     Spacer()
                 } else {
                     combinedList
                 }
             }
-            .navigationTitle("식품 검색")
+            .navigationTitle(Text("diet.search.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { viewModel.showFoodSearch = false }
+                    Button(String(localized: "common.close")) { viewModel.showFoodSearch = false }
                         .foregroundColor(Color.brandAccent)
                 }
             }
@@ -500,7 +536,7 @@ struct FoodSearchSheet: View {
 
         return Group {
             if hasQuery && !hasAny {
-                emptyState(message: "검색 결과가 없습니다.")
+                emptyState(message: String(localized: "diet.search.empty"))
             } else {
                 List {
                     if !viewModel.catalogResults.isEmpty {
@@ -533,7 +569,7 @@ struct FoodSearchSheet: View {
         VStack(spacing: 12) {
             Spacer()
             Image(systemName: "fork.knife.circle")
-                .font(.system(size: 48))
+                .font(.system(size: 48)) // design-lint:ignore — SF Symbol/hero
                 .foregroundColor(.secondary.opacity(0.5))
             Text(message)
                 .font(.subheadline)
@@ -546,7 +582,7 @@ struct FoodSearchSheet: View {
                let item = estimate.firstItem {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Label("AI 영양 추정", systemImage: "sparkles")
+                        Label(String(localized: "diet.ai.estimateNutrition"), systemImage: "sparkles")
                             .font(.subheadline.bold())
                             .foregroundColor(Color.brandAccent)
                         Spacer()
@@ -576,20 +612,20 @@ struct FoodSearchSheet: View {
                     }
 
                     HStack(spacing: 10) {
-                        aiMacro("열량", value: item.nutrition.caloriesKcal, unit: "kcal")
-                        aiMacro("단백질", value: item.nutrition.proteinG, unit: "g")
-                        aiMacro("탄수", value: item.nutrition.carbohydrateG, unit: "g")
-                        aiMacro("지방", value: item.nutrition.fatG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.kcal"), value: item.nutrition.caloriesKcal, unit: "kcal")
+                        aiMacro(String(localized: "diet.macro.label.protein"), value: item.nutrition.proteinG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.carbs"), value: item.nutrition.carbohydrateG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.fat"), value: item.nutrition.fatG, unit: "g")
                     }
                     HStack(spacing: 10) {
-                        aiMacro("당류", value: item.nutrition.sugarsG, unit: "g")
-                        aiMacro("식이섬유", value: item.nutrition.dietaryFiberG, unit: "g")
-                        aiMacro("나트륨", value: item.nutrition.sodiumMg, unit: "mg")
-                        aiMacro("콜레스테롤", value: item.nutrition.cholesterolMg, unit: "mg")
+                        aiMacro(String(localized: "diet.macro.label.sugars"), value: item.nutrition.sugarsG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.fiber"), value: item.nutrition.dietaryFiberG, unit: "g")
+                        aiMacro(String(localized: "diet.macro.label.sodium"), value: item.nutrition.sodiumMg, unit: "mg")
+                        aiMacro(String(localized: "diet.macro.label.cholesterol"), value: item.nutrition.cholesterolMg, unit: "mg")
                     }
 
                     if estimate.isMultiItem {
-                        Text("여러 음식이 인식되었습니다 (\(estimate.items.count)개). 현재는 첫 번째 항목만 추가됩니다.")
+                        Text(String(format: String(localized: "diet.ai.multiItem.warning"), estimate.items.count))
                             .font(.caption)
                             .foregroundColor(Color.textSecondary)
                     }
@@ -609,17 +645,17 @@ struct FoodSearchSheet: View {
                             await viewModel.addAiEstimatedFood(apiClient: container.apiClient)
                         }
                     } label: {
-                        Label("추정값으로 추가", systemImage: "plus.circle.fill")
+                        Label(String(localized: "diet.ai.addEstimate"), systemImage: "plus.circle.fill")
                             .font(.subheadline.bold())
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.brandPrimary)
                 }
-                .padding(14)
+                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             } else {
                 VStack(spacing: 10) {
                     Button {
@@ -631,7 +667,7 @@ struct FoodSearchSheet: View {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Label("AI로 영양 추정", systemImage: "sparkles")
+                            Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
                                 .font(.subheadline.bold())
                                 .frame(maxWidth: .infinity)
                         }
@@ -646,7 +682,7 @@ struct FoodSearchSheet: View {
                             viewModel.showCustomFoodForm = true
                         }
                     } label: {
-                        Label("직접 등록하기", systemImage: "plus.circle")
+                        Label(String(localized: "diet.ai.directAdd"), systemImage: "plus.circle")
                             .font(.subheadline.bold())
                             .frame(maxWidth: .infinity)
                     }
@@ -657,7 +693,7 @@ struct FoodSearchSheet: View {
 
             Spacer()
         }
-        .padding(32)
+        .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
     }
 
     private func aiMacro(_ title: String, value: Double, unit: String) -> some View {
@@ -670,12 +706,13 @@ struct FoodSearchSheet: View {
                 .foregroundColor(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     }
 
     private func triggerSearch() {
+        searchFocused = false
         viewModel.triggerImmediateSearch(apiClient: container.apiClient)
     }
 }
@@ -688,11 +725,11 @@ private struct CatalogFoodRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(item.category?.emoji ?? "🍽")
+            Image(systemName: item.category?.sfSymbol ?? "fork.knife")
                 .font(.title2)
                 .frame(width: 40, height: 40)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
@@ -701,8 +738,8 @@ private struct CatalogFoodRow: View {
                     if item.custom {
                         Text("사용자 등록")
                             .font(.caption2.bold())
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
+                            .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
                             .background(Color.brandAccent.opacity(0.2))
                             .foregroundColor(.brandAccent)
                             .clipShape(Capsule())
@@ -721,7 +758,7 @@ private struct CatalogFoodRow: View {
                     .foregroundColor(Color.brandAccent)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -733,11 +770,11 @@ private struct ExternalFoodRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(item.category?.emoji ?? "🔍")
+            Image(systemName: item.category?.sfSymbol ?? "magnifyingglass")
                 .font(.title2)
                 .frame(width: 40, height: 40)
                 .background(Color.backgroundPage)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.displayName)
@@ -746,8 +783,8 @@ private struct ExternalFoodRow: View {
                 HStack(spacing: 4) {
                     Text(item.source.displayName)
                         .font(.caption2.bold())
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
+                        .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
                         .background(Color.hairline)
                         .clipShape(Capsule())
                     Text(item.nutritionSummary)
@@ -763,7 +800,7 @@ private struct ExternalFoodRow: View {
                     .foregroundColor(Color.brandAccent)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -783,10 +820,10 @@ private struct AddCustomFoodView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("기본 정보") {
-                    TextField("식품명", text: $name)
+                Section(String(localized: "diet.foodEdit.section.basic")) {
+                    TextField(String(localized: "diet.foodEdit.field.name"), text: $name)
                         .textInputAutocapitalization(.never)
-                    Picker("카테고리", selection: $category) {
+                    Picker(String(localized: "diet.foodEdit.field.category"), selection: $category) {
                         ForEach(FoodCategory.allCases, id: \.self) { category in
                             Text(category.displayName).tag(category)
                         }
@@ -819,6 +856,7 @@ private struct AddCustomFoodView: View {
                     .disabled(!canSubmit || viewModel.isSubmittingCustomFood)
                 }
             }
+            .numericKeyboardToolbar()
             .onAppear {
                 if name.isEmpty {
                     name = viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)

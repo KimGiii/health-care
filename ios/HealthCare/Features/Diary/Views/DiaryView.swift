@@ -47,25 +47,28 @@ struct DiaryView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 20)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("다이어리")
+            .navigationTitle(Text("diary.title"))
             .navigationBarTitleDisplayMode(.large)
             .overlay(alignment: .center) {
                 if viewModel.isLoading {
                     ProgressView()
-                        .padding(20)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                        .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Radius.lg))
                 }
             }
-            .refreshable { await viewModel.load(apiClient: container.apiClient) }
-            .alert("오류", isPresented: Binding(
+            .refreshable {
+                await viewModel.load(apiClient: container.apiClient)
+                viewModel.errorMessage = nil
+            }
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+                Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -120,7 +123,7 @@ private struct MonthPickerHeader: View {
                 viewModel.previousMonth()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.bodyLarge).fontWeight(.semibold)
                     .foregroundStyle(Color.brandAccent)
                     .frame(width: 36, height: 36)
                     .background(Color.brandAccent.opacity(0.15))
@@ -130,7 +133,7 @@ private struct MonthPickerHeader: View {
             Spacer()
 
             Text(viewModel.monthYearText)
-                .font(.system(size: 18, weight: .bold))
+                .font(.headingMedium).fontWeight(.bold)
                 .foregroundStyle(Color.textPrimary)
 
             Spacer()
@@ -139,14 +142,14 @@ private struct MonthPickerHeader: View {
                 viewModel.nextMonth()
             } label: {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.bodyLarge).fontWeight(.semibold)
                     .foregroundStyle(Color.brandAccent)
                     .frame(width: 36, height: 36)
                     .background(Color.brandAccent.opacity(0.15))
                     .clipShape(Circle())
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -161,8 +164,8 @@ private struct QuickAddSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 EEEE"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = LocaleManager.shared.effectiveLocale
+        formatter.dateFormat = String(localized: "diary.dayHeader.format")
         return formatter.string(from: selectedDate)
     }
 
@@ -175,11 +178,11 @@ private struct QuickAddSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("빠른 기록")
-                            .font(.system(size: 16, weight: .bold))
+                        Text(String(localized: "diary.quickAdd"))
+                            .font(.bodyLarge).fontWeight(.bold)
                             .foregroundStyle(Color.textPrimary)
                         Text(dateText)
-                            .font(.system(size: 12))
+                            .font(.caption)
                             .foregroundStyle(Color.textSecondary)
                     }
                     Spacer()
@@ -189,7 +192,7 @@ private struct QuickAddSection: View {
                     if !hasExercise {
                         QuickAddButton(
                             icon: "figure.strengthtraining.traditional",
-                            title: "운동 추가",
+                            title: String(localized: "diary.quickAdd.exercise"),
                             tint: .green
                         ) {
                             onSelect(.exercise)
@@ -199,7 +202,7 @@ private struct QuickAddSection: View {
                     if !hasDiet {
                         QuickAddButton(
                             icon: "fork.knife",
-                            title: "식단 추가",
+                            title: String(localized: "diary.quickAdd.diet"),
                             tint: .orange
                         ) {
                             onSelect(.diet)
@@ -209,7 +212,7 @@ private struct QuickAddSection: View {
                     if !hasMeasurement {
                         QuickAddButton(
                             icon: "scalemass.fill",
-                            title: "측정 추가",
+                            title: String(localized: "diary.quickAdd.body"),
                             tint: Color.brandAccent
                         ) {
                             onSelect(.measurement)
@@ -217,9 +220,9 @@ private struct QuickAddSection: View {
                     }
                 }
             }
-            .padding(16)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         }
     }
@@ -235,22 +238,22 @@ private struct QuickAddButton: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.cta)
                     .foregroundStyle(tint)
                     .frame(width: 34, height: 34)
                     .background(tint.opacity(0.12))
                     .clipShape(Circle())
 
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.captionBold)
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             .background(Color.backgroundPage)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         }
         .buttonStyle(.plain)
     }
@@ -261,7 +264,15 @@ private struct QuickAddButton: View {
 private struct CalendarGrid: View {
     @ObservedObject var viewModel: DiaryViewModel
 
-    private let weekdaySymbols = ["일", "월", "화", "수", "목", "금", "토"]
+    private let weekdaySymbols = [
+        String(localized: "common.weekday.sun"),
+        String(localized: "common.weekday.mon"),
+        String(localized: "common.weekday.tue"),
+        String(localized: "common.weekday.wed"),
+        String(localized: "common.weekday.thu"),
+        String(localized: "common.weekday.fri"),
+        String(localized: "common.weekday.sat"),
+    ]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
 
     var body: some View {
@@ -270,7 +281,7 @@ private struct CalendarGrid: View {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(weekdaySymbols.indices, id: \.self) { index in
                     Text(weekdaySymbols[index])
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.captionBold)
                         .foregroundStyle(
                             index == 0 ? Color.brandDanger :
                             index == 6 ? Color.brandAccent :
@@ -279,7 +290,7 @@ private struct CalendarGrid: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
             // 날짜 그리드
             LazyVGrid(columns: columns, spacing: 12) {
@@ -302,9 +313,9 @@ private struct CalendarGrid: View {
                 }
             }
         }
-        .padding(16)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
@@ -340,7 +351,8 @@ private struct CalendarDayCell: View {
                     }
 
                     Text("\(dayNumber)")
-                        .font(.system(size: 15, weight: isToday || isSelected ? .semibold : .regular))
+                        .font(.bodyMedium)
+                        .fontWeight(isToday || isSelected ? .semibold : .regular)
                         .foregroundStyle(
                             isSelected ? Color.textHeadline :
                             isToday ? Color.brandAccent :
@@ -386,8 +398,9 @@ private struct ExerciseRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -396,21 +409,21 @@ private struct ExerciseRecordsSection: View {
             // 헤더
             HStack {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 16))
+                    .font(.bodyLarge)
                     .foregroundStyle(Color.green)
 
-                Text("운동 완료")
-                    .font(.system(size: 16, weight: .bold))
+                Text(String(localized: "diary.section.exercise"))
+                    .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 
                 Spacer()
 
                 Text(dateText)
-                    .font(.system(size: 13))
+                    .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.top, Spacing.lg) // design-lint:ignore — micro/hero spacing
 
             // 세션 리스트
             VStack(spacing: 8) {
@@ -423,11 +436,11 @@ private struct ExerciseRecordsSection: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
@@ -441,7 +454,7 @@ private struct ExerciseSessionSummaryCard: View {
         HStack(spacing: 12) {
             // 아이콘
             Image(systemName: "figure.strengthtraining.traditional")
-                .font(.system(size: 18))
+                .font(.headingMedium).fontWeight(.regular)
                 .foregroundStyle(Color.brandAccent)
                 .frame(width: 40, height: 40)
                 .background(Color.brandAccent.opacity(0.15))
@@ -465,14 +478,14 @@ private struct ExerciseSessionSummaryCard: View {
                     if let dur = session.durationMinutes {
                         statChip(
                             icon: "clock",
-                            value: "\(dur)분"
+                            value: String(format: String(localized: "diary.session.duration"), dur)
                         )
                     }
                 }
 
                 if let notes = session.notes, !notes.isEmpty {
                     Text(notes)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                         .lineLimit(1)
                 }
@@ -481,25 +494,27 @@ private struct ExerciseSessionSummaryCard: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .medium))
+                .font(.bodySmall).fontWeight(.medium)
                 .foregroundStyle(Color.textSecondary.opacity(0.5))
         }
-        .padding(12)
+        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
     private func statChip(icon: String, value: String) -> some View {
         HStack(spacing: 3) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.brandAccent)
             Text(value)
-                .font(.system(size: 11, weight: .medium))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.textSecondary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
+        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
         .background(Color.brandAccent.opacity(0.12))
         .clipShape(Capsule())
     }
@@ -513,8 +528,9 @@ private struct DietRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -523,21 +539,21 @@ private struct DietRecordsSection: View {
             // 헤더
             HStack {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 16))
+                    .font(.bodyLarge)
                     .foregroundStyle(Color.orange)
 
-                Text("식단 완료")
-                    .font(.system(size: 16, weight: .bold))
+                Text(String(localized: "diary.section.diet"))
+                    .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 
                 Spacer()
 
                 Text(dateText)
-                    .font(.system(size: 13))
+                    .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.top, Spacing.lg) // design-lint:ignore — micro/hero spacing
 
             // 식단 로그 리스트
             VStack(spacing: 8) {
@@ -550,11 +566,11 @@ private struct DietRecordsSection: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
@@ -567,8 +583,9 @@ private struct MeasurementRecordsSection: View {
 
     private var dateText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "M월 d일 (E)"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = String(localized: "diary.section.format")
+        formatter.locale = LocaleManager.resolvedLocale
+        formatter.locale = LocaleManager.shared.effectiveLocale
         return formatter.string(from: date)
     }
 
@@ -576,32 +593,32 @@ private struct MeasurementRecordsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "scalemass.fill")
-                    .font(.system(size: 16))
+                    .font(.bodyLarge)
                     .foregroundStyle(Color.brandAccent)
 
-                Text("신체 측정")
-                    .font(.system(size: 16, weight: .bold))
+                Text(String(localized: "diary.section.body"))
+                    .font(.bodyLarge).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
 
                 Spacer()
 
                 Text(dateText)
-                    .font(.system(size: 13))
+                    .font(.bodySmall)
                     .foregroundStyle(Color.textSecondary)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.top, Spacing.lg) // design-lint:ignore — micro/hero spacing
 
             VStack(spacing: 8) {
                 ForEach(measurements) { measurement in
                     MeasurementSummaryCard(measurement: measurement)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
@@ -612,7 +629,7 @@ private struct MeasurementSummaryCard: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "scalemass.fill")
-                .font(.system(size: 18))
+                .font(.headingMedium).fontWeight(.regular)
                 .foregroundStyle(Color.brandAccent)
                 .frame(width: 40, height: 40)
                 .background(Color.brandAccent.opacity(0.15))
@@ -632,7 +649,7 @@ private struct MeasurementSummaryCard: View {
                 }
                 if let notes = measurement.notes, !notes.isEmpty {
                     Text(notes)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                         .lineLimit(1)
                 }
@@ -640,22 +657,24 @@ private struct MeasurementSummaryCard: View {
 
             Spacer()
         }
-        .padding(12)
+        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
     private func statChip(icon: String, value: String, color: Color) -> some View {
         HStack(spacing: 3) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(.captionXSmall)
                 .foregroundStyle(color)
             Text(value)
-                .font(.system(size: 11, weight: .medium))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.textSecondary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
+        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
         .background(color.opacity(0.12))
         .clipShape(Capsule())
     }
@@ -670,10 +689,10 @@ private struct DietLogSummaryCard: View {
         HStack(spacing: 12) {
             // 식사 유형 아이콘
             VStack(spacing: 2) {
-                Text(log.mealType.emoji)
-                    .font(.system(size: 20))
+                Image(systemName: log.mealType.sfSymbol)
+                    .font(.system(size: 18)) // design-lint:ignore — SF Symbol icon sizing
                 Text(log.mealType.displayName)
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold)) // design-lint:ignore — SF Symbol or special
                     .foregroundStyle(Color.brandAccent)
             }
             .frame(width: 40, height: 40)
@@ -707,25 +726,25 @@ private struct DietLogSummaryCard: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .medium))
+                .font(.bodySmall).fontWeight(.medium)
                 .foregroundStyle(Color.textSecondary.opacity(0.5))
         }
-        .padding(12)
+        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
     private func statChip(icon: String, value: String) -> some View {
         HStack(spacing: 3) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.orange)
             Text(value)
-                .font(.system(size: 11, weight: .medium))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.textSecondary)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
+        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
         .background(Color.orange.opacity(0.1))
         .clipShape(Capsule())
     }

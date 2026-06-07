@@ -7,6 +7,7 @@ import com.healthcare.domain.diet.ai.dto.EstimatedItem;
 import com.healthcare.domain.diet.ai.dto.NutritionFacts;
 import com.healthcare.domain.diet.ai.dto.ServingBasis;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +34,7 @@ class AiNutritionEstimationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AiNutritionEstimationService(objectMapper);
+        service = new AiNutritionEstimationService(objectMapper, new SimpleMeterRegistry());
 
         mockClient   = mock(RestClient.class);
         postSpec     = mock(RestClient.RequestBodyUriSpec.class);

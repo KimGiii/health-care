@@ -7,19 +7,19 @@ enum MealType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .BREAKFAST: return "아침"
-        case .LUNCH:     return "점심"
-        case .DINNER:    return "저녁"
-        case .SNACK:     return "간식"
+        case .BREAKFAST: return String(localized: "diet.mealType.breakfast")
+        case .LUNCH:     return String(localized: "diet.mealType.lunch")
+        case .DINNER:    return String(localized: "diet.mealType.dinner")
+        case .SNACK:     return String(localized: "diet.mealType.snack")
         }
     }
 
-    var emoji: String {
+    var sfSymbol: String {
         switch self {
-        case .BREAKFAST: return "🌅"
-        case .LUNCH:     return "☀️"
-        case .DINNER:    return "🌙"
-        case .SNACK:     return "🍎"
+        case .BREAKFAST: return "sun.horizon.fill"
+        case .LUNCH:     return "sun.max.fill"
+        case .DINNER:    return "moon.stars.fill"
+        case .SNACK:     return "cup.and.saucer.fill"
         }
     }
 }
@@ -29,29 +29,29 @@ enum FoodCategory: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .GRAIN:          return "곡류"
-        case .PROTEIN_SOURCE: return "단백질"
-        case .VEGETABLE:      return "채소"
-        case .FRUIT:          return "과일"
-        case .DAIRY:          return "유제품"
-        case .FAT:            return "지방"
-        case .BEVERAGE:       return "음료"
-        case .PROCESSED:      return "가공식품"
-        case .OTHER:          return "기타"
+        case .GRAIN:          return String(localized: "diet.category.grain")
+        case .PROTEIN_SOURCE: return String(localized: "diet.category.proteinSource")
+        case .VEGETABLE:      return String(localized: "diet.category.vegetable")
+        case .FRUIT:          return String(localized: "diet.category.fruit")
+        case .DAIRY:          return String(localized: "diet.category.dairy")
+        case .FAT:            return String(localized: "diet.category.fat")
+        case .BEVERAGE:       return String(localized: "diet.category.beverage")
+        case .PROCESSED:      return String(localized: "diet.category.processed")
+        case .OTHER:          return String(localized: "diet.category.other")
         }
     }
 
-    var emoji: String {
+    var sfSymbol: String {
         switch self {
-        case .GRAIN:          return "🍚"
-        case .PROTEIN_SOURCE: return "🥩"
-        case .VEGETABLE:      return "🥦"
-        case .FRUIT:          return "🍎"
-        case .DAIRY:          return "🥛"
-        case .FAT:            return "🥑"
-        case .BEVERAGE:       return "🧃"
-        case .PROCESSED:      return "🍱"
-        case .OTHER:          return "🍽"
+        case .GRAIN:          return "bowl.fill"
+        case .PROTEIN_SOURCE: return "fish.fill"
+        case .VEGETABLE:      return "leaf.fill"
+        case .FRUIT:          return "tree.fill"
+        case .DAIRY:          return "drop.fill"
+        case .FAT:            return "drop.halffull"
+        case .BEVERAGE:       return "cup.and.saucer.fill"
+        case .PROCESSED:      return "cube.fill"
+        case .OTHER:          return "fork.knife"
         }
     }
 }
@@ -61,24 +61,25 @@ enum FoodDataSource: String, Codable {
 
     var displayName: String {
         switch self {
-        case .PUBLIC_FOOD_API: return "공공데이터"
-        case .ALL:             return "전체"
+        case .PUBLIC_FOOD_API: return String(localized: "diet.dataSource.publicFoodApi")
+        case .ALL:             return String(localized: "diet.dataSource.all")
         }
     }
 }
 
 /// 영양표시기준 10종(앱 전체 표준 — 백엔드와 일치).
+/// 표시명은 locale 별로 재계산되므로 static computed 으로 노출.
 enum NutrientLabel {
-    static let calories      = "칼로리"
-    static let carbs         = "탄수화물"
-    static let sugars        = "당류"
-    static let dietaryFiber  = "식이섬유"
-    static let protein       = "단백질"
-    static let fat           = "지방"
-    static let saturatedFat  = "포화지방"
-    static let transFat      = "트랜스지방"
-    static let cholesterol   = "콜레스테롤"
-    static let sodium        = "나트륨"
+    static var calories: String      { String(localized: "diet.nutrient.calories") }
+    static var carbs: String         { String(localized: "diet.nutrient.carbs") }
+    static var sugars: String        { String(localized: "diet.nutrient.sugars") }
+    static var dietaryFiber: String  { String(localized: "diet.nutrient.dietaryFiber") }
+    static var protein: String       { String(localized: "diet.nutrient.protein") }
+    static var fat: String           { String(localized: "diet.nutrient.fat") }
+    static var saturatedFat: String  { String(localized: "diet.nutrient.saturatedFat") }
+    static var transFat: String      { String(localized: "diet.nutrient.transFat") }
+    static var cholesterol: String   { String(localized: "diet.nutrient.cholesterol") }
+    static var sodium: String        { String(localized: "diet.nutrient.sodium") }
 }
 
 // MARK: - DietLog
@@ -103,7 +104,18 @@ struct DietLogSummary: Codable, Identifiable {
     var formattedDate: String {
         let parts = logDate.split(separator: "-")
         guard parts.count == 3 else { return logDate }
-        return "\(parts[1])월 \(parts[2])일"
+        // locale-aware short date. AppleLanguages override 가 Locale.current 에 반영되므로
+        // LocaleManager 직접 참조 없이 Locale.current 만으로 충분 (MainActor 격리 회피).
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        if let date = parser.date(from: logDate) {
+            let display = DateFormatter()
+            display.locale = LocaleManager.resolvedLocale
+            display.dateFormat = String(localized: "diet.date.format.shortKR")
+            return display.string(from: date)
+        }
+        return "\(parts[1])/\(parts[2])"
     }
 
     var caloriesText: String {
@@ -185,7 +197,11 @@ struct FoodCatalogItem: Codable, Identifiable {
     let usageCount: Int?
     let createdByUserId: Int?
 
-    var displayName: String { nameKo ?? name }
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
+        return name
+    }
 
     private func amount(_ per100g: Double?, forServing g: Double) -> Double {
         ((per100g ?? 0) * g) / 100
@@ -224,7 +240,11 @@ struct ExternalFoodResult: Codable, Identifiable {
     let sodiumPer100gMg: Double?
 
     var id: String { "\(source.rawValue)-\(externalId)" }
-    var displayName: String { nameKo ?? name }
+    var displayName: String {
+        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
+        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
+        return name
+    }
 
     var nutritionSummary: String {
         let kcal = caloriesPer100g.map { String(format: "%.0f kcal", $0) } ?? "-"
@@ -534,9 +554,9 @@ enum ServingBasis: String, Codable {
 
     var displayName: String {
         switch self {
-        case .PER_ITEM:       return "1개 기준"
-        case .PER_100G:       return "100g 기준"
-        case .CUSTOM_WEIGHT:  return "지정 무게 기준"
+        case .PER_ITEM:       return String(localized: "diet.serving.perItem")
+        case .PER_100G:       return String(localized: "diet.serving.per100g")
+        case .CUSTOM_WEIGHT:  return String(localized: "diet.serving.customWeight")
         }
     }
 }
@@ -557,9 +577,9 @@ struct EstimatedItem: Codable, Identifiable {
 
     var confidenceLabel: String {
         switch confidence {
-        case 0.8...:    return "신뢰도 높음"
-        case 0.5..<0.8: return "신뢰도 보통"
-        default:        return "신뢰도 낮음"
+        case 0.8...:    return String(localized: "diet.confidence.high")
+        case 0.5..<0.8: return String(localized: "diet.confidence.medium")
+        default:        return String(localized: "diet.confidence.low")
         }
     }
 }

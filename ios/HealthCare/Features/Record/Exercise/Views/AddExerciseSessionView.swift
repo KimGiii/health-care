@@ -37,22 +37,23 @@ struct AddExerciseSessionView: View {
 
                     Color.clear.frame(height: 20)
                 }
-                .padding(.top, 8)
+                .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage)
-            .navigationTitle("운동 기록 추가")
+            .navigationTitle(Text("exercise.add.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .numericKeyboardToolbar()
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) { viewModel.errorMessage = nil }
+                Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -66,36 +67,36 @@ struct AddExerciseSessionView: View {
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("날짜")
+            sectionLabel(String(localized: "exercise.add.section.date"))
 
             HStack {
                 Image(systemName: "calendar")
                     .foregroundStyle(Color.brandAccent)
                 DatePicker("", selection: $viewModel.sessionDate, displayedComponents: .date)
                     .labelsHidden()
-                    .environment(\.locale, Locale(identifier: "ko_KR"))
+                    .environment(\.locale, LocaleManager.resolvedLocale)
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
     }
 
     private var durationSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("운동 시간")
+            sectionLabel(String(localized: "exercise.add.section.time"))
 
             VStack(alignment: .leading, spacing: 14) {
                 Toggle(isOn: $viewModel.includeSessionTime) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("칼로리 계산에 운동 시간 반영")
-                            .font(.system(size: 15, weight: .semibold))
+                        Text(String(localized: "exercise.add.includeTime"))
+                            .font(.headingSmall)
                             .foregroundStyle(Color.textPrimary)
-                        Text("웨이트와 맨몸 운동은 시간을 입력해야 칼로리 추정이 더 정확해집니다")
-                            .font(.system(size: 12))
+                        Text(String(localized: "exercise.add.timeHint"))
+                            .font(.caption)
                             .foregroundStyle(Color.textSecondary)
                     }
                 }
@@ -103,14 +104,14 @@ struct AddExerciseSessionView: View {
 
                 if viewModel.includeSessionTime {
                     HStack(spacing: 10) {
-                        timePickerCard(title: "시작", selection: $viewModel.sessionStartTime)
-                        timePickerCard(title: "종료", selection: $viewModel.sessionEndTime)
+                        timePickerCard(title: String(localized: "exercise.add.timeStart"), selection: $viewModel.sessionStartTime)
+                        timePickerCard(title: String(localized: "exercise.add.timeEnd"), selection: $viewModel.sessionEndTime)
                     }
 
                     HStack {
                         Label {
-                            Text(viewModel.sessionDurationMinutes.map { "총 \($0)분" } ?? "시간을 확인해주세요")
-                                .font(.system(size: 13, weight: .semibold))
+                            Text(viewModel.sessionDurationMinutes.map { String(format: String(localized: "exercise.add.duration.total"), $0) } ?? String(localized: "exercise.add.duration.check"))
+                                .font(.labelSmall)
                                 .foregroundStyle(viewModel.hasValidSessionTime ? Color.brandAccent : Color.brandDanger)
                         } icon: {
                             Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -120,21 +121,21 @@ struct AddExerciseSessionView: View {
                     }
 
                     if !viewModel.hasValidSessionTime {
-                        Text("종료 시간은 시작 시간보다 늦어야 합니다.")
-                            .font(.system(size: 12))
+                        Text(String(localized: "exercise.add.endAfterStart"))
+                            .font(.caption)
                             .foregroundStyle(Color.brandDanger)
                     }
                 } else {
-                    Text("시간을 입력하지 않으면 서버가 세트 수 기준의 대략적인 값으로 칼로리를 추정합니다.")
-                        .font(.system(size: 12))
+                    Text(String(localized: "exercise.add.serverEstimate"))
+                        .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .padding(16)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Sets Section
@@ -142,17 +143,17 @@ struct AddExerciseSessionView: View {
     private var setsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                sectionLabel("세트 구성")
-                    .padding(.horizontal, 0)
+                sectionLabel(String(localized: "exercise.add.section.sets"))
+                    .padding(.horizontal, 0) // design-lint:ignore — micro/hero spacing
                 Spacer()
                 if !viewModel.exerciseGroups.isEmpty {
                     let totalSets = viewModel.exerciseGroups.map(\.sets.count).reduce(0, +)
-                    Text("\(totalSets)세트")
-                        .font(.system(size: 13))
+                    Text(String(format: String(localized: "exercise.set.count"), totalSets))
+                        .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
 
             if viewModel.exerciseGroups.isEmpty {
                 // 빈 상태 — 운동 추가 유도
@@ -161,27 +162,27 @@ struct AddExerciseSessionView: View {
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 24)) // design-lint:ignore — SF Symbol or special
                             .foregroundStyle(Color.brandAccent)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("운동 추가하기")
-                                .font(.system(size: 15, weight: .semibold))
+                            Text(String(localized: "exercise.add.addExercise"))
+                                .font(.headingSmall)
                                 .foregroundStyle(Color.brandAccent)
-                            Text("카탈로그에서 운동을 검색해 세트를 구성하세요")
-                                .font(.system(size: 12))
+                            Text(String(localized: "exercise.add.addExercise.hint"))
+                                .font(.caption)
                                 .foregroundStyle(Color.textSecondary)
                         }
                         Spacer()
                     }
-                    .padding(16)
+                    .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: Radius.lg)
                             .stroke(Color.brandAccent.opacity(0.4), lineWidth: 1.5)
                     )
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
             } else {
                 // 운동 그룹 카드들
                 VStack(spacing: 12) {
@@ -195,7 +196,7 @@ struct AddExerciseSessionView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
 
                 // 운동 추가 버튼
                 Button {
@@ -203,17 +204,17 @@ struct AddExerciseSessionView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("운동 추가")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.bodyMedium).fontWeight(.semibold)
+                        Text(String(localized: "exercise.add.addExercise.button"))
+                            .font(.bodyMedium).fontWeight(.semibold)
                     }
                     .foregroundStyle(Color.brandAccent)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -222,21 +223,21 @@ struct AddExerciseSessionView: View {
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("메모 (선택)")
+            sectionLabel(String(localized: "exercise.add.section.notes"))
 
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "note.text")
                     .foregroundStyle(Color.textSecondary)
-                    .padding(.top, 2)
-                TextField("오늘 운동 느낌이나 컨디션 메모...", text: $viewModel.sessionNotes, axis: .vertical)
-                    .font(.system(size: 15))
+                    .padding(.top, 2) // design-lint:ignore — micro/hero spacing
+                TextField(String(localized: "exercise.add.notes.placeholder"), text: $viewModel.sessionNotes, axis: .vertical)
+                    .font(.bodyMedium)
                     .lineLimit(2...4)
             }
-            .padding(14)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Save Button
@@ -258,45 +259,45 @@ struct AddExerciseSessionView: View {
                 if viewModel.isSaving {
                     ProgressView().tint(.white)
                 } else {
-                    Text("기록 저장")
-                        .font(.system(size: 17, weight: .semibold))
+                    Text(String(localized: "exercise.add.save"))
+                        .font(.cta)
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(
                 viewModel.canSave
                     ? Color.brandPrimary
                     : Color.brandPrimary.opacity(0.35)
             )
             .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(
                 color: viewModel.canSave ? Color.brandPrimary.opacity(0.35) : .clear,
                 radius: 10, x: 0, y: 4
             )
         }
         .disabled(!viewModel.canSave || viewModel.isSaving)
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.top, Spacing.xs) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Helpers
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: .semibold))
+            .font(.captionBold)
             .foregroundStyle(Color.textSecondary)
             .textCase(.uppercase)
             .tracking(0.5)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 8)
+            .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.sm) // design-lint:ignore — micro/hero spacing
     }
 
     private func timePickerCard(title: String, selection: Binding<Date>) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.captionBold)
                 .foregroundStyle(Color.textSecondary)
 
             DatePicker(
@@ -306,13 +307,13 @@ struct AddExerciseSessionView: View {
             )
             .labelsHidden()
             .datePickerStyle(.compact)
-            .environment(\.locale, Locale(identifier: "ko_KR"))
+            .environment(\.locale, LocaleManager.resolvedLocale)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(12)
+        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 }
 
@@ -331,28 +332,28 @@ private struct ExerciseGroupCard: View {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(group.exercise.displayName)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.headingSmall)
                         .foregroundStyle(Color.textPrimary)
                     Text(group.exercise.muscleGroupLabel)
-                        .font(.system(size: 11))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
                 Spacer()
                 Button(action: onAddSet) {
                     HStack(spacing: 3) {
-                        Image(systemName: "plus.circle.fill").font(.system(size: 15))
-                        Text("세트 추가").font(.system(size: 11, weight: .semibold))
+                        Image(systemName: "plus.circle.fill").font(.bodyMedium)
+                        Text(String(localized: "exercise.add.addSet")).font(.captionXSmall).fontWeight(.semibold)
                     }
                     .foregroundStyle(Color.brandAccent)
-                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.sm).padding(.vertical, Spacing.xs)
                     .background(Color.surfaceCard).clipShape(Capsule())
                 }
                 Button(action: onDeleteGroup) {
-                    Image(systemName: "trash").font(.system(size: 14))
+                    Image(systemName: "trash").font(.bodyMedium)
                         .foregroundStyle(Color.textSecondary.opacity(0.5))
                 }
             }
-            .padding(14)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
 
             Divider()
@@ -365,12 +366,12 @@ private struct ExerciseGroupCard: View {
                         draft: $group.sets[setIdx],
                         onDelete: { onDeleteSet(setIdx) }
                     )
-                    if setIdx < group.sets.count - 1 { Divider().padding(.leading, 14) }
+                    if setIdx < group.sets.count - 1 { Divider().padding(.leading, Spacing.lg) }
                 }
             }
             .background(Color.surfaceCard)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 }
@@ -385,10 +386,10 @@ private struct DraftSetRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("세트 \(setNumber)")
-                    .font(.system(size: 11, weight: .bold))
+                Text(String(format: String(localized: "exercise.add.set.label"), setNumber))
+                    .font(.captionXSmall).fontWeight(.bold)
                     .foregroundStyle(Color.brandAccent)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .padding(.horizontal, Spacing.sm).padding(.vertical, 3)
                     .background(Color.surfaceCard).clipShape(Capsule())
 
                 // 세트 타입 피커
@@ -396,9 +397,9 @@ private struct DraftSetRow: View {
                     ForEach(AddExerciseSessionViewModel.DraftSet.SetTypeOption.allCases, id: \.self) { opt in
                         Button { draft.setType = opt } label: {
                             Text(opt.label)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.captionXSmall).fontWeight(.semibold)
                                 .foregroundStyle(draft.setType == opt ? .white : Color.brandAccent)
-                                .padding(.horizontal, 9).padding(.vertical, 4)
+                                .padding(.horizontal, 9).padding(.vertical, Spacing.xs)
                                 .background(draft.setType == opt ? Color.brandAccent : Color.brandAccent.opacity(0.12))
                                 .clipShape(Capsule())
                         }
@@ -415,19 +416,19 @@ private struct DraftSetRow: View {
             switch draft.setType {
             case .weighted:
                 HStack(spacing: 10) {
-                    inputField("무게", unit: "kg", text: $draft.weightKgText, keyboard: .decimalPad)
-                    inputField("횟수", unit: "회", text: $draft.repsText, keyboard: .numberPad)
+                    inputField(String(localized: "exercise.add.field.weight"), unit: "kg", text: $draft.weightKgText, keyboard: .decimalPad)
+                    inputField(String(localized: "exercise.add.field.reps"), unit: String(localized: "exercise.add.unit.reps"), text: $draft.repsText, keyboard: .numberPad)
                 }
             case .bodyweight:
-                inputField("횟수", unit: "회", text: $draft.repsText, keyboard: .numberPad)
+                inputField(String(localized: "exercise.add.field.reps"), unit: String(localized: "exercise.add.unit.reps"), text: $draft.repsText, keyboard: .numberPad)
             case .cardio:
                 HStack(spacing: 10) {
-                    inputField("시간", unit: "분", text: $draft.durationMinutesText, keyboard: .decimalPad)
-                    inputField("거리", unit: "m", text: $draft.distanceMText, keyboard: .decimalPad)
+                    inputField(String(localized: "exercise.add.field.duration"), unit: String(localized: "exercise.add.unit.min"), text: $draft.durationMinutesText, keyboard: .decimalPad)
+                    inputField(String(localized: "exercise.add.field.distance"), unit: "m", text: $draft.distanceMText, keyboard: .decimalPad)
                 }
             }
         }
-        .padding(14)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
     }
 
     private func inputField(_ placeholder: String, unit: String,
@@ -435,13 +436,13 @@ private struct DraftSetRow: View {
         HStack(spacing: 4) {
             TextField(placeholder, text: text)
                 .keyboardType(keyboard)
-                .font(.system(size: 16, weight: .medium))
+                .font(.bodyLarge).fontWeight(.medium)
                 .multilineTextAlignment(.trailing)
-            Text(unit).font(.system(size: 12)).foregroundStyle(Color.textSecondary)
+            Text(unit).font(.caption).foregroundStyle(Color.textSecondary)
         }
-        .padding(.horizontal, 12).padding(.vertical, 10)
+        .padding(.horizontal, Spacing.md).padding(.vertical, Spacing.md)
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     }
 }
 
@@ -458,7 +459,7 @@ struct ExerciseCatalogPickerView: View {
             VStack(spacing: 0) {
                 // 검색 바
                 searchBar
-                    .padding(16)
+                    .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceCard)
 
                 Divider()
@@ -480,15 +481,15 @@ struct ExerciseCatalogPickerView: View {
                 }
             }
             .background(Color.backgroundPage)
-            .navigationTitle("운동 선택")
+            .navigationTitle(Text("exercise.catalog.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("닫기") { dismiss() }
+                    Button(String(localized: "common.close")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("검색") {
+                    Button(String(localized: "exercise.catalog.search.button")) {
                         Task { await viewModel.searchCatalog(apiClient: container.apiClient) }
                     }
                     .fontWeight(.semibold)
@@ -504,10 +505,11 @@ struct ExerciseCatalogPickerView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.textSecondary)
 
-            TextField("운동 검색 (예: 벤치프레스, 스쿼트)", text: $viewModel.catalogQuery)
+            TextField(String(localized: "exercise.catalog.search.placeholder"), text: $viewModel.catalogQuery)
                 .focused($searchFocused)
                 .submitLabel(.search)
                 .onSubmit {
+                    searchFocused = false
                     Task { await viewModel.searchCatalog(apiClient: container.apiClient) }
                 }
 
@@ -520,9 +522,9 @@ struct ExerciseCatalogPickerView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
     private var catalogList: some View {
@@ -531,14 +533,14 @@ struct ExerciseCatalogPickerView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "line.3.horizontal.decrease.circle.fill")
                         .foregroundStyle(Color.brandAccent)
-                        .font(.system(size: 14))
+                        .font(.bodyMedium)
                     Text(MuscleGroupMeta.label(for: selected))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.labelSmall)
                         .foregroundStyle(Color.brandAccent)
                     Text("·")
                         .foregroundStyle(Color.textSecondary.opacity(0.5))
-                    Text("\(viewModel.catalogResults.count)개")
-                        .font(.system(size: 13))
+                    Text(String(format: String(localized: "exercise.catalog.count"), viewModel.catalogResults.count))
+                        .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                     Spacer()
                     Button {
@@ -548,8 +550,8 @@ struct ExerciseCatalogPickerView: View {
                             .foregroundStyle(Color.textSecondary.opacity(0.5))
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
                 .background(Color.surfaceCard)
                 Divider()
             }
@@ -571,14 +573,14 @@ struct ExerciseCatalogPickerView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("부위별 운동")
-                        .font(.system(size: 18, weight: .bold))
+                    Text(String(localized: "exercise.catalog.byMuscle"))
+                        .font(.headingMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textPrimary)
-                    Text("운동할 부위를 선택하면 해당 운동 목록을 볼 수 있어요")
-                        .font(.system(size: 13))
+                    Text(String(localized: "exercise.catalog.byMuscle.hint"))
+                        .font(.bodySmall)
                         .foregroundStyle(Color.textSecondary)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(MuscleGroupMeta.all, id: \.key) { meta in
@@ -588,41 +590,39 @@ struct ExerciseCatalogPickerView: View {
                             }
                         } label: {
                             VStack(spacing: 8) {
-                                Text(meta.emoji)
-                                    .font(.system(size: 28))
+                                Image(systemName: meta.sfSymbol)
+                                    .font(.system(size: 26)) // design-lint:ignore — SF Symbol icon sizing
                                 Text(meta.label)
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(.labelSmall)
                                     .foregroundStyle(Color.textPrimary)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                             .background(Color.surfaceCard)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                             .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
-            .padding(16)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
     }
 
     private var emptySearchResult: some View {
         VStack(spacing: 14) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 44))
-                .foregroundStyle(Color.textSecondary.opacity(0.6))
-            Text("'\(viewModel.catalogQuery)'에 대한 결과 없음")
-                .font(.system(size: 15))
-                .foregroundStyle(Color.textSecondary)
+            EmptyState(
+                icon: "magnifyingglass",
+                title: String(format: String(localized: "exercise.catalog.noResults"), viewModel.catalogQuery)
+            )
 
             // Codex 작업: 검색 결과가 없을 때 AI 운동 추정 플로우를 화면에 연결합니다.
             if let estimate = viewModel.aiEstimateResult {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Label("AI 운동 추정", systemImage: "sparkles")
-                            .font(.system(size: 14, weight: .semibold))
+                        Label(String(localized: "exercise.catalog.ai.label"), systemImage: "sparkles")
+                            .font(.bodyMedium).fontWeight(.semibold)
                             .foregroundStyle(Color.brandAccent)
                         Spacer()
                         Text("신뢰도 \(Int(estimate.confidence * 100))%")
@@ -631,7 +631,7 @@ struct ExerciseCatalogPickerView: View {
                     }
 
                     Text(estimate.exerciseName)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.cta)
                         .foregroundStyle(Color.textPrimary)
 
                     HStack(spacing: 8) {
@@ -650,18 +650,18 @@ struct ExerciseCatalogPickerView: View {
                             dismiss()
                         }
                     } label: {
-                        Label("추정값으로 추가", systemImage: "plus.circle.fill")
-                            .font(.system(size: 14, weight: .semibold))
+                        Label(String(localized: "exercise.catalog.ai.add"), systemImage: "plus.circle.fill")
+                            .font(.bodyMedium).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color.brandPrimary)
                 }
-                .padding(14)
+                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal, 24)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             } else {
                 Button {
                     Task {
@@ -672,15 +672,15 @@ struct ExerciseCatalogPickerView: View {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else {
-                        Label("AI로 운동 추정", systemImage: "sparkles")
-                            .font(.system(size: 14, weight: .semibold))
+                        Label(String(localized: "exercise.catalog.ai.estimate"), systemImage: "sparkles")
+                            .font(.bodyMedium).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.brandPrimary)
                 .disabled(viewModel.isAiEstimating)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -690,8 +690,8 @@ struct ExerciseCatalogPickerView: View {
         Text(text)
             .font(.caption.bold())
             .foregroundStyle(Color.brandAccent)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, 5) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
             .clipShape(Capsule())
     }
@@ -702,21 +702,21 @@ struct ExerciseCatalogPickerView: View {
 private struct MuscleGroupMeta {
     let key: String
     let label: String
-    let emoji: String
+    let sfSymbol: String
 
     static let all: [MuscleGroupMeta] = [
-        .init(key: "CHEST",      label: "가슴",    emoji: "💪"),
-        .init(key: "BACK",       label: "등",      emoji: "🔙"),
-        .init(key: "SHOULDERS",  label: "어깨",    emoji: "🏋️"),
-        .init(key: "BICEPS",     label: "이두",    emoji: "💪"),
-        .init(key: "TRICEPS",    label: "삼두",    emoji: "🦾"),
-        .init(key: "CORE",       label: "코어",    emoji: "🔥"),
-        .init(key: "QUADRICEPS", label: "대퇴사두", emoji: "🦵"),
-        .init(key: "HAMSTRINGS", label: "햄스트링", emoji: "🦿"),
-        .init(key: "GLUTES",     label: "둔근",    emoji: "🍑"),
-        .init(key: "CALVES",     label: "종아리",  emoji: "🦶"),
-        .init(key: "FULL_BODY",  label: "전신",    emoji: "🤸"),
-        .init(key: "CARDIO",     label: "유산소",  emoji: "🏃"),
+        .init(key: "CHEST",      label: String(localized: "exercise.muscle.chest"),    sfSymbol: "dumbbell.fill"),
+        .init(key: "BACK",       label: String(localized: "exercise.muscle.back"),      sfSymbol: "figure.strengthtraining.traditional"),
+        .init(key: "SHOULDERS",  label: String(localized: "exercise.muscle.shoulders"),    sfSymbol: "figure.arms.open"),
+        .init(key: "BICEPS",     label: String(localized: "exercise.muscle.biceps"),    sfSymbol: "bolt.fill"),
+        .init(key: "TRICEPS",    label: String(localized: "exercise.muscle.triceps"),    sfSymbol: "arrow.up.circle.fill"),
+        .init(key: "CORE",       label: String(localized: "exercise.muscle.core"),    sfSymbol: "figure.core.training"),
+        .init(key: "QUADRICEPS", label: String(localized: "exercise.muscle.quadriceps"), sfSymbol: "figure.walk"),
+        .init(key: "HAMSTRINGS", label: String(localized: "exercise.muscle.hamstrings"), sfSymbol: "figure.walk.arrival"),
+        .init(key: "GLUTES",     label: String(localized: "exercise.muscle.glutes"),    sfSymbol: "figure.step.training"),
+        .init(key: "CALVES",     label: String(localized: "exercise.muscle.calves"),  sfSymbol: "figure.run"),
+        .init(key: "FULL_BODY",  label: String(localized: "exercise.muscle.fullBody"),    sfSymbol: "person.fill"),
+        .init(key: "CARDIO",     label: String(localized: "exercise.muscle.cardio"),  sfSymbol: "heart.circle.fill"),
     ]
 
     static func label(for key: String) -> String {
@@ -732,24 +732,24 @@ private struct CatalogRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: exerciseIcon(for: item.exerciseType))
-                .font(.system(size: 18))
+                .font(.headingMedium).fontWeight(.regular)
                 .foregroundStyle(Color.brandAccent)
                 .frame(width: 40, height: 40)
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.displayName)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
                 HStack(spacing: 5) {
                     Text(item.muscleGroupLabel)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Color.textSecondary)
                     Text("·")
                         .foregroundStyle(Color.textSecondary.opacity(0.5))
                     Text(item.exerciseTypeLabel)
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Color.brandAccent)
                 }
             }
@@ -757,16 +757,16 @@ private struct CatalogRow: View {
             Spacer()
 
             if item.custom {
-                Text("커스텀")
-                    .font(.system(size: 11, weight: .semibold))
+                Text(String(localized: "exercise.catalog.custom"))
+                    .font(.captionXSmall).fontWeight(.semibold)
                     .foregroundStyle(Color.brandWarning)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
+                    .padding(.horizontal, 7) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
                     .background(Color.brandWarning.opacity(0.12))
                     .clipShape(Capsule())
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
     }
 
     private func exerciseIcon(for type: String) -> String {

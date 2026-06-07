@@ -35,6 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
@@ -45,6 +46,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // OAuth JWKS (Apple, Google ID 토큰 서명 검증)
+    implementation("com.auth0:jwks-rsa:0.22.1")
 
     // AWS SDK v2
     implementation(platform("software.amazon.awssdk:bom:2.26.12"))

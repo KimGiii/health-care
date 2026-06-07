@@ -1,5 +1,6 @@
 package com.healthcare.common.notification;
 
+import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.insights.dto.WeeklySummaryResponse;
 import com.healthcare.domain.insights.service.InsightsService;
 import com.healthcare.domain.user.entity.User;
@@ -28,12 +29,13 @@ class NotificationServiceTest {
     @Mock private NotificationLogRepository logRepository;
     @Mock private UserRepository userRepository;
     @Mock private InsightsService insightsService;
+    @Mock private DietLogRepository dietLogRepository;
 
     private NotificationService service;
 
     @BeforeEach
     void setUp() {
-        service = new NotificationService(fcmService, logRepository, userRepository, insightsService);
+        service = new NotificationService(fcmService, logRepository, userRepository, insightsService, dietLogRepository);
     }
 
     private User makeUser(Long id, String fcmToken) {

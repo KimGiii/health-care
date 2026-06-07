@@ -2,20 +2,32 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab: Tab = .home
+    @ObservedObject private var pushRouter = PushRouter.shared
+
+    // NavigationPath — push 스택 리셋용
     @State private var homePath    = NavigationPath()
     @State private var diaryPath   = NavigationPath()
     @State private var recordPath  = NavigationPath()
     @State private var explorePath = NavigationPath()
+    @State private var myPagePath  = NavigationPath()
+
+    // 각 탭 root view의 id — 변경 시 SwiftUI가 view를 새로 만들어 ViewModel/스크롤 위치까지 초기화
+    @State private var homeId    = UUID()
+    @State private var diaryId   = UUID()
+    @State private var recordId  = UUID()
+    @State private var exploreId = UUID()
+    @State private var myPageId  = UUID()
 
     enum Tab: Int, CaseIterable {
-        case home, diary, record, explore
+        case home, diary, record, explore, myPage
 
-        var title: String {
+        var titleKey: LocalizedStringKey {
             switch self {
-            case .home:    return "대시보드"
-            case .diary:   return "다이어리"
-            case .record:  return "기록"
-            case .explore: return "탐색"
+            case .home:    return "tab.home"
+            case .diary:   return "tab.diary"
+            case .record:  return "tab.record"
+            case .explore: return "tab.explore"
+            case .myPage:  return "tab.myPage"
             }
         }
 
@@ -25,57 +37,117 @@ struct MainTabView: View {
             case .diary:   return "calendar"
             case .record:  return "plus.circle.fill"
             case .explore: return "safari"
+            case .myPage:  return "person.crop.circle"
             }
         }
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: tabBinding) {
             NavigationStack(path: $homePath) {
-                HomeView()
+                HomeView().id(homeId)
             }
-            .tabItem { Label(Tab.home.title,    systemImage: Tab.home.systemImage) }
+            .tabItem { Label(Tab.home.titleKey, systemImage: Tab.home.systemImage) }
             .tag(Tab.home)
 
             NavigationStack(path: $diaryPath) {
-                DiaryView()
+                DiaryView().id(diaryId)
             }
-            .tabItem { Label(Tab.diary.title,   systemImage: Tab.diary.systemImage) }
+            .tabItem { Label(Tab.diary.titleKey, systemImage: Tab.diary.systemImage) }
             .tag(Tab.diary)
 
             NavigationStack(path: $recordPath) {
-                RecordHubView(showsDismissButton: false)
+                RecordHubView(showsDismissButton: false).id(recordId)
             }
-            .tabItem { Label(Tab.record.title,  systemImage: Tab.record.systemImage) }
+            .tabItem { Label(Tab.record.titleKey, systemImage: Tab.record.systemImage) }
             .tag(Tab.record)
 
             NavigationStack(path: $explorePath) {
-                ExploreView()
+                ExploreView().id(exploreId)
             }
-            .tabItem { Label(Tab.explore.title, systemImage: Tab.explore.systemImage) }
+            .tabItem { Label(Tab.explore.titleKey, systemImage: Tab.explore.systemImage) }
             .tag(Tab.explore)
+
+            NavigationStack(path: $myPagePath) {
+                MyPageView().id(myPageId)
+            }
+            .tabItem { Label(Tab.myPage.titleKey, systemImage: Tab.myPage.systemImage) }
+            .tag(Tab.myPage)
         }
         .tint(Color.brandPrimary)
-        .onChange(of: selectedTab) { newTab in
-            switch newTab {
-            case .home:    homePath    = NavigationPath()
-            case .diary:   diaryPath   = NavigationPath()
-            case .record:  recordPath  = NavigationPath()
-            case .explore: explorePath = NavigationPath()
-            }
+        // 푸시 라우팅: PushRouter에 쌓인 pending route를 onAppear / onChange에서 소비.
+        // .onReceive(NotificationCenter)는 cold-start race condition이 있어 제거됨.
+        .onAppear {
+            print("[MainTabView] onAppear — pending=\(pushRouter.pendingRoute ?? "nil")")
+            processPendingPushRoute()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .pushNotificationTapped)) { note in
-            guard let type = note.userInfo?["type"] as? String else { return }
-            handlePushRoute(type: type)
+        .onChange(of: pushRouter.pendingRoute) { newValue in
+            print("[MainTabView] pendingRoute changed → \(newValue ?? "nil")")
+            processPendingPushRoute()
+        }
+    }
+
+    private func processPendingPushRoute() {
+        guard let type = pushRouter.consume() else { return }
+        handlePushRoute(type: type)
+    }
+
+    /// 같은 탭을 다시 눌렀을 때만 path/view id를 리셋한다(root로 돌아가기).
+    /// 다른 탭에서 전환해 들어오는 경우엔 기존 view를 유지해 캐시된 데이터가 즉시 보이도록 하고,
+    /// 매번 4개 병렬 API 호출이 발생해 cold-start 부담이 누적되는 문제를 막는다.
+    private var tabBinding: Binding<Tab> {
+        Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab {
+                    resetTab(newTab)
+                }
+                selectedTab = newTab
+            }
+        )
+    }
+
+    private func resetTab(_ tab: Tab) {
+        switch tab {
+        case .home:
+            homePath = NavigationPath()
+            homeId = UUID()
+        case .diary:
+            diaryPath = NavigationPath()
+            diaryId = UUID()
+        case .record:
+            recordPath = NavigationPath()
+            recordId = UUID()
+        case .explore:
+            explorePath = NavigationPath()
+            exploreId = UUID()
+        case .myPage:
+            myPagePath = NavigationPath()
+            myPageId = UUID()
         }
     }
 
     private func handlePushRoute(type: String) {
+        print("[MainTabView] handlePushRoute type=\(type)")
         switch type {
         case "WEEKLY_SUMMARY":
+            // explorePath를 먼저 세팅 — ExploreView가 mount되며 destination을 자동 push.
+            // exploreId 재생성은 path append와 race를 일으켜 제거.
+            explorePath = NavigationPath([ExploreDestination.weeklyRetrospective])
             selectedTab = .explore
-            explorePath = NavigationPath()
+        case "MEAL_BREAKFAST_REMINDER",
+             "MEAL_LUNCH_REMINDER",
+             "MEAL_DINNER_REMINDER":
+            // 식사 시간대 미기록 리마인더 → 기록 탭의 식단 기록 화면으로 직진.
+            // AddDietLogView가 sheet로 열릴 때 시간대 기반으로 mealType이 자동 선택된다.
+            recordPath = NavigationPath([RecordDestination.diet])
+            selectedTab = .record
+        case "DAILY_LOG_REMINDER":
+            // 하루 전체 미기록 리마인더 → 기록 허브로 이동(사용자가 무엇을 기록할지 선택).
+            recordPath = NavigationPath()
+            selectedTab = .record
         default:
+            print("[MainTabView] handlePushRoute — 매핑되지 않은 type: \(type)")
             break
         }
     }

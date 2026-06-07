@@ -135,6 +135,29 @@ CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);
 
 ---
 
+### 2.2A `user_identities` (V19, 2026-06-01)
+
+External OAuth identity links (Apple, Google) for social sign-in. One user can be linked to multiple providers; LOCAL (email/password) does not need a row here — it is identified by a non-null `users.password_hash`. V19 also relaxes `users.password_hash` to nullable so social-only accounts are valid.
+
+```sql
+CREATE TABLE user_identities (
+    id                BIGINT          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id           BIGINT          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider          VARCHAR(20)     NOT NULL,        -- 'APPLE' | 'GOOGLE'
+    provider_subject  VARCHAR(255)    NOT NULL,        -- Apple/Google JWT `sub`
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_identities_provider_subject UNIQUE (provider, provider_subject)
+);
+
+CREATE INDEX idx_user_identities_user_id ON user_identities (user_id);
+```
+
+**Auto-link policy** (`AuthService.socialLogin`): match by `(provider, provider_subject)` first; if not found and the ID token's `email_verified=true`, attach to existing LOCAL account with the same email; otherwise create a new user (passwordHash=NULL, onboardingCompleted=false). Unverified emails never auto-link to prevent account takeover.
+
+**Orphan handling**: if a user is soft-deleted (`deleted_at IS NOT NULL`) but identities remain, the next social sign-in deletes the orphaned identity row and flushes before creating a new account — required because JPA's deferred DELETE otherwise collides with the new INSERT on the unique constraint.
+
+---
+
 ### 2.3 `exercise_catalog`
 
 Global exercise library (seeded with 50+ exercises at launch, per PRD Module A) and user-created custom exercises. MET values from the Ainsworth Compendium (research report section 3.1) are stored for calorie estimation.

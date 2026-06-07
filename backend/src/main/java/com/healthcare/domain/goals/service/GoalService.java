@@ -12,8 +12,12 @@ import com.healthcare.domain.goals.entity.Goal.GoalStatus;
 import com.healthcare.domain.goals.entity.GoalCheckpoint;
 import com.healthcare.domain.goals.repository.GoalCheckpointRepository;
 import com.healthcare.domain.goals.repository.GoalRepository;
+import com.healthcare.domain.nutrition.dto.NutritionTargets;
+import com.healthcare.domain.nutrition.service.NutritionTargetService;
+import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,12 +42,14 @@ public class GoalService {
     private final UserRepository userRepository;
     private final BodyMeasurementRepository bodyMeasurementRepository;
     private final ExerciseSessionRepository exerciseSessionRepository;
+    private final NutritionTargetService nutritionTargetService;
 
     // ─────────────────────────── 목표 생성 ───────────────────────────
 
     @Transactional
+    @CacheEvict(cacheNames = "userProfile", key = "#userId")
     public GoalResponse createGoal(Long userId, CreateGoalRequest request) {
-        userRepository.findByIdAndDeletedAtIsNull(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         if (request.getTargetDate().isBefore(LocalDate.now())) {
@@ -58,10 +64,14 @@ public class GoalService {
         BigDecimal normalizedStartValue = normalizeTargetValue(
                 goalType, request.getTargetUnit(), request.getStartValue());
 
-        // 사용자가 startValue를 입력하지 않은 경우 최신 신체 측정에서 자동 보강.
+        // 사용자가 startValue를 입력하지 않은 경우 자동 보강.
+        // 우선순위: 사용자 프로필(User.weightKg) → 최신 신체 측정 → null.
         // (ENDURANCE는 측정값과 무관하므로 사용자 입력만 사용.)
         if (normalizedStartValue == null && goalType != Goal.GoalType.ENDURANCE) {
-            normalizedStartValue = resolveStartValueFromLatestMeasurement(userId, goalType, startDate);
+            normalizedStartValue = resolveStartValueFromUserProfile(userId, goalType);
+            if (normalizedStartValue == null) {
+                normalizedStartValue = resolveStartValueFromLatestMeasurement(userId, goalType, startDate);
+            }
         }
 
         BigDecimal normalizedWeeklyRateTarget = normalizeWeeklyRateTarget(goalType, request.getWeeklyRateTarget());
@@ -71,6 +81,10 @@ public class GoalService {
             active.abandon();
             goalRepository.save(active);
         });
+
+        // 새 목표 타입 기준으로 영양 권장량 계산 — Goal과 User의 daily target에 모두 반영.
+        // 프로필 정보가 부족하면 null이 반환되고 그대로 비워둔다.
+        NutritionTargets nutritionTargets = nutritionTargetService.computeForGoal(user, goalType);
 
         Goal goal = Goal.builder()
                 .userId(userId)
@@ -82,9 +96,23 @@ public class GoalService {
                 .startDate(startDate)
                 .status(GoalStatus.ACTIVE)
                 .weeklyRateTarget(normalizedWeeklyRateTarget)
+                .calorieTarget(nutritionTargets != null ? nutritionTargets.calorieTarget() : null)
+                .proteinTargetG(nutritionTargets != null ? nutritionTargets.proteinTargetG() : null)
+                .carbTargetG(nutritionTargets != null ? nutritionTargets.carbTargetG() : null)
+                .fatTargetG(nutritionTargets != null ? nutritionTargets.fatTargetG() : null)
                 .build();
 
         Goal saved = goalRepository.save(goal);
+
+        // 활성 목표가 바뀌었으므로 User의 daily 권장량도 동기화 (홈 화면 등은 User 기반으로 표시).
+        if (nutritionTargets != null) {
+            user.updateTargets(
+                    nutritionTargets.calorieTarget(),
+                    nutritionTargets.proteinTargetG(),
+                    nutritionTargets.carbTargetG(),
+                    nutritionTargets.fatTargetG()
+            );
+        }
 
         // 시작 체크포인트 — 히스토리에서 시작점을 항상 보이도록.
         // startValue가 있을 때만 의미가 있다. notes="시작"으로 주간 체크포인트와 구분.
@@ -100,6 +128,21 @@ public class GoalService {
         }
 
         return GoalResponse.from(saved);
+    }
+
+    /**
+     * 사용자 프로필에 등록된 신체 스펙에서 goalType에 맞는 값을 추출한다.
+     * User 엔티티는 weightKg만 보유하므로 체중 관련 목표(WEIGHT_LOSS, GENERAL_HEALTH)만 매핑.
+     * 그 외 목표(MUSCLE_GAIN, BODY_RECOMPOSITION 등)는 프로필에 정보가 없어 null 반환.
+     */
+    private BigDecimal resolveStartValueFromUserProfile(Long userId, Goal.GoalType goalType) {
+        return userRepository.findByIdAndDeletedAtIsNull(userId)
+                .map(user -> switch (goalType) {
+                    case WEIGHT_LOSS, GENERAL_HEALTH ->
+                            user.getWeightKg() != null ? BigDecimal.valueOf(user.getWeightKg()) : null;
+                    case MUSCLE_GAIN, BODY_RECOMPOSITION, ENDURANCE -> null;
+                })
+                .orElse(null);
     }
 
     /**
@@ -221,7 +264,7 @@ public class GoalService {
             return loadExercisePoints(userId, goal, today);
         }
 
-        return bodyMeasurementRepository
+        List<MeasurementPoint> inRange = bodyMeasurementRepository
                 .findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(userId, goal.getStartDate(), today)
                 .stream()
                 .map(measurement -> new MeasurementPoint(
@@ -229,12 +272,30 @@ public class GoalService {
                         extractValueByGoalType(goal.getGoalType(), measurement)))
                 .filter(point -> point.value() != null)
                 .toList();
+
+        if (!inRange.isEmpty()) {
+            return inRange;
+        }
+
+        // Fallback: 목표 시작일 이후 해당 goalType 측정이 없으면 가장 최근 측정 1건을 사용.
+        // 사용자가 측정 이력은 보유했지만 목표 생성 후 새 기록을 안 한 경우에도
+        // "측정 기록 없음" 오류 없이 현재 상태를 보여주기 위함.
+        return bodyMeasurementRepository
+                .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, today)
+                .map(m -> {
+                    BigDecimal value = extractValueByGoalType(goal.getGoalType(), m);
+                    return value != null
+                            ? List.of(new MeasurementPoint(m.getMeasuredAt(), value))
+                            : List.<MeasurementPoint>of();
+                })
+                .orElse(List.of());
     }
 
     private List<MeasurementPoint> loadExercisePoints(Long userId, Goal goal, LocalDate today) {
         long weeksSinceStart = Math.max(1, ChronoUnit.WEEKS.between(goal.getStartDate(), today));
-        int totalMinutes = exerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange(
+        Integer totalMinutesBoxed = exerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange(
                 userId, goal.getStartDate(), today);
+        int totalMinutes = totalMinutesBoxed != null ? totalMinutesBoxed : 0;
         BigDecimal weeklyAvg = BigDecimal.valueOf(totalMinutes)
                 .divide(BigDecimal.valueOf(weeksSinceStart), 2, RoundingMode.HALF_UP);
         return List.of(new MeasurementPoint(today, weeklyAvg));
@@ -504,6 +565,7 @@ public class GoalService {
     // ─────────────────────────── 목표 포기 ───────────────────────────
 
     @Transactional
+    @CacheEvict(cacheNames = "userProfile", key = "#userId")
     public void abandonGoal(Long userId, Long goalId) {
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal", goalId));
@@ -515,5 +577,9 @@ public class GoalService {
         }
         goal.abandon();
         goalRepository.save(goal);
+
+        // 활성 목표가 사라졌으므로 User daily target을 '목표 없음' 기준(TDEE 유지)으로 재계산.
+        userRepository.findByIdAndDeletedAtIsNull(userId)
+                .ifPresent(nutritionTargetService::applyToUser);
     }
 }

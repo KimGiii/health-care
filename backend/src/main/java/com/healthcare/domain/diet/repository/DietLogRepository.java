@@ -43,4 +43,7 @@ public interface DietLogRepository extends JpaRepository<DietLog, Long> {
             @Param("from")   LocalDate from,
             @Param("to")     LocalDate to
     );
+
+    /** 특정 일자에 특정 mealType 기록이 있는지 — 식사 시간대 리마인더 판단용. */
+    boolean existsByUserIdAndLogDateAndMealType(Long userId, LocalDate logDate, DietLog.MealType mealType);
 }

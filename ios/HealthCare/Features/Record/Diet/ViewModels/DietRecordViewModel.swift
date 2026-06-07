@@ -3,6 +3,7 @@ import Foundation
 @MainActor
 final class DietRecordViewModel: ObservableObject {
     @Published var logs: [DietLogSummary] = []
+    @Published var userProfile: UserProfile? = nil
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showAddLog = false
@@ -11,7 +12,7 @@ final class DietRecordViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -39,16 +40,31 @@ final class DietRecordViewModel: ObservableObject {
         todayLogs.compactMap(\.totalFatG).reduce(0, +)
     }
 
-    // MARK: - 목표 대비 진행률 (MVP 고정값)
-    static let dailyCalorieGoal: Double = 2_000
-    static let dailyProteinGoal: Double = 60
-    static let dailyCarbsGoal: Double   = 250
-    static let dailyFatGoal: Double     = 65
+    // MARK: - 목표 (사용자 프로필 우선, 없거나 0이면 fallback)
+    var dailyCalorieGoal: Double {
+        if let t = userProfile?.calorieTarget, t > 0 { return Double(t) }
+        return 2_000
+    }
+    var dailyProteinGoal: Double {
+        if let g = userProfile?.proteinTargetG, g > 0 { return Double(g) }
+        return 60
+    }
+    var dailyCarbsGoal: Double {
+        if let g = userProfile?.carbTargetG, g > 0 { return Double(g) }
+        return 250
+    }
+    var dailyFatGoal: Double {
+        if let g = userProfile?.fatTargetG, g > 0 { return Double(g) }
+        return 65
+    }
 
-    var calorieProgress: Double { min(todayCalories / Self.dailyCalorieGoal, 1.0) }
-    var proteinProgress: Double { min(todayProteinG / Self.dailyProteinGoal, 1.0) }
-    var carbsProgress: Double   { min(todayCarbsG   / Self.dailyCarbsGoal,   1.0) }
-    var fatProgress: Double     { min(todayFatG     / Self.dailyFatGoal,     1.0) }
+    var calorieProgress: Double { min(todayCalories / dailyCalorieGoal, 1.0) }
+    var proteinProgress: Double { min(todayProteinG / dailyProteinGoal, 1.0) }
+    var carbsProgress: Double   { min(todayCarbsG   / dailyCarbsGoal,   1.0) }
+    var fatProgress: Double     { min(todayFatG     / dailyFatGoal,     1.0) }
+
+    /// 권장 - 섭취 (음수면 초과 섭취량).
+    var remainingCalories: Double { dailyCalorieGoal - todayCalories }
 
     // MARK: - 오늘 식사 기록 (식사 유형 순 정렬)
     var todaySortedLogs: [DietLogSummary] {
@@ -58,19 +74,28 @@ final class DietRecordViewModel: ObservableObject {
     // MARK: - API
 
     func loadLogs(apiClient: APIClient) async {
+        // 중복 호출 가드 — onAppear가 짧은 간격에 두 번 호출돼도 in-flight면 무시.
+        guard !isLoading else { return }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
-            let response: DietLogListResponse = try await apiClient.request(
+            async let logsRequest: DietLogListResponse = apiClient.request(
                 .getDietLogs(from: today, to: today, page: 0, size: 50)
             )
-            logs = response.content
+            async let profileRequest: UserProfile = apiClient.request(.getProfile)
+
+            let logsResponse = try await logsRequest
+            logs = logsResponse.content
+            if let profile = try? await profileRequest {
+                userProfile = profile
+            }
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "식단 기록을 불러오지 못했습니다."
+            errorMessage = String(localized: "diet.error.loadList")
         }
     }
 
@@ -81,7 +106,7 @@ final class DietRecordViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "diet.error.delete")
         }
     }
 

@@ -142,11 +142,16 @@ final class MyPageViewModelTests: XCTestCase {
             email: email,
             displayName: displayName,
             sex: sex,
+            dateOfBirth: nil,
             heightCm: heightCm,
             weightKg: weightKg,
             activityLevel: activityLevel,
             onboardingCompleted: onboardingCompleted,
-            isPremium: nil
+            isPremium: nil,
+            calorieTarget: nil,
+            proteinTargetG: nil,
+            carbTargetG: nil,
+            fatTargetG: nil
         )
     }
 }
@@ -167,11 +172,16 @@ private actor MockMyPageProfileManager: MyPageProfileManaging {
             email: "user@example.com",
             displayName: "사용자",
             sex: nil,
+            dateOfBirth: nil,
             heightCm: nil,
             weightKg: nil,
             activityLevel: nil,
             onboardingCompleted: true,
-            isPremium: nil
+            isPremium: nil,
+            calorieTarget: nil,
+            proteinTargetG: nil,
+            carbTargetG: nil,
+            fatTargetG: nil
         ),
         updateProfile: UserProfile? = nil,
         loadError: Error? = nil,

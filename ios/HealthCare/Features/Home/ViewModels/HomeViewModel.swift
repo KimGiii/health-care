@@ -5,6 +5,7 @@ protocol HomeDashboardLoading: Sendable {
     func loadExerciseSessions() async throws -> SessionListResponse
     func loadGoals() async throws -> GoalListResponse
     func loadGoalProgress(id: Int) async throws -> GoalProgressResponse
+    func loadUserProfile() async throws -> UserProfile
 }
 
 extension APIClient: HomeDashboardLoading {
@@ -21,6 +22,9 @@ extension APIClient: HomeDashboardLoading {
     }
     func loadGoalProgress(id: Int) async throws -> GoalProgressResponse {
         try await request(.getGoalProgress(id: id))
+    }
+    func loadUserProfile() async throws -> UserProfile {
+        try await request(.getProfile)
     }
 }
 
@@ -50,13 +54,15 @@ final class HomeViewModel: ObservableObject {
     @Published var weekDietLogs: [DietLogSummary] = []
     @Published var recentSessions: [SessionSummary] = []
     @Published var activeGoal: GoalSummary? = nil
+    /// 사용자 프로필 — 백엔드가 자동 계산한 권장 칼로리·매크로 표시에 사용
+    @Published var userProfile: UserProfile? = nil
 
     // MARK: - 날짜 유틸리티
 
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -74,8 +80,12 @@ final class HomeViewModel: ObservableObject {
         todayDietLogs.compactMap(\.totalCalories).reduce(0, +)
     }
 
-    /// 칼로리 일일 목표 (기본 2,000 kcal)
-    var dailyCalorieGoal: Double { 2_000.0 }
+    /// 칼로리 일일 목표.
+    /// 우선순위: 사용자 프로필의 백엔드 자동 계산값 → 기본 2,000 kcal fallback
+    var dailyCalorieGoal: Double {
+        if let target = userProfile?.calorieTarget, target > 0 { return Double(target) }
+        return 2_000.0
+    }
 
     /// 칼로리 진행률 (0~1, 초과 시 1로 클램프)
     var calorieProgress: Double {
@@ -119,10 +129,20 @@ final class HomeViewModel: ObservableObject {
         todayDietLogs.compactMap(\.totalFatG).reduce(0, +)
     }
 
-    /// 매크로 일일 목표 (기본값; 향후 GoalMacroTargets 연동 예정)
-    var dailyProteinGoal: Double { 150.0 }
-    var dailyCarbsGoal: Double   { 200.0 }
-    var dailyFatGoal: Double     { 60.0  }
+    /// 매크로 일일 목표.
+    /// 우선순위: 사용자 프로필의 백엔드 자동 계산값 → 기본값 fallback
+    var dailyProteinGoal: Double {
+        if let g = userProfile?.proteinTargetG, g > 0 { return Double(g) }
+        return 150.0
+    }
+    var dailyCarbsGoal: Double {
+        if let g = userProfile?.carbTargetG, g > 0 { return Double(g) }
+        return 200.0
+    }
+    var dailyFatGoal: Double {
+        if let g = userProfile?.fatTargetG, g > 0 { return Double(g) }
+        return 60.0
+    }
 
     var proteinProgress: Double { min(todayProteinG / dailyProteinGoal, 1.0) }
     var carbsProgress: Double   { min(todayCarbsG   / dailyCarbsGoal,   1.0) }
@@ -183,31 +203,75 @@ final class HomeViewModel: ObservableObject {
     // MARK: - API
 
     func loadDashboard(apiClient: any HomeDashboardLoading) async {
+        // 중복 호출 가드 — 탭 재진입 등으로 onAppear가 짧은 간격에 두 번 호출돼도
+        // in-flight 중이면 두 번째는 즉시 무시한다. MainActor isolated이라 race-free.
+        guard !isLoading else { return }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
-        do {
-            async let dietResponse     = apiClient.loadDietLogs(from: weekStart, to: today)
-            async let exerciseResponse = apiClient.loadExerciseSessions()
-            async let goalResponse     = apiClient.loadGoals()
+        // 4개 병렬 호출 — 일부 실패가 전체 실패로 전파되지 않도록 개별 Task 로 격리한다.
+        // `try await (a, b, c, d)` 패턴은 a 가 실패하면 b/c/d 결과가 모두 버려지므로
+        // 화면이 빈 상태로 전환되어 "처음 진입 시 에러, 두 번째 시 성공" 패턴을 만든다.
+        async let dietResult     = result { try await apiClient.loadDietLogs(from: weekStart, to: today) }
+        async let exerciseResult = result { try await apiClient.loadExerciseSessions() }
+        async let goalResult     = result { try await apiClient.loadGoals() }
+        async let profileResult  = result { try await apiClient.loadUserProfile() }
 
-            let (diet, exercise, goals) = try await (dietResponse, exerciseResponse, goalResponse)
+        let (dietR, exerciseR, goalR, profileR) =
+            await (dietResult, exerciseResult, goalResult, profileResult)
 
+        var failedSources: [String] = []
+
+        switch dietR {
+        case .success(let diet):
             weekDietLogs   = diet.content
             todayDietLogs  = diet.content.filter { $0.logDate == today }
-            recentSessions = exercise.content
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.diet"), diagnose(err)))
+        }
 
+        switch exerciseR {
+        case .success(let exercise): recentSessions = exercise.content
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.exercise"), diagnose(err)))
+        }
+
+        switch profileR {
+        case .success(let profile): userProfile = profile
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.profile"), diagnose(err)))
+        }
+
+        switch goalR {
+        case .success(let goals):
             if let goal = goals.content.first(where: { $0.status == .ACTIVE }) {
                 activeGoal = await enrichedActiveGoal(goal, apiClient: apiClient)
             } else {
                 activeGoal = nil
             }
-        } catch let error as APIError {
-            errorMessage = error.errorDescription
-        } catch {
-            errorMessage = "데이터를 불러오지 못했습니다."
+        case .failure(let err):
+            failedSources.append(String(format: String(localized: "home.error.source.goal"), diagnose(err)))
         }
+
+        if !failedSources.isEmpty {
+            errorMessage = String(format: String(localized: "home.error.partialLoad"),
+                                  failedSources.joined(separator: ", "))
+        }
+    }
+
+    /// 비동기 throw 호출을 Result 로 감싸 일부 실패가 다른 결과를 휘말리게 하지 않도록 한다.
+    private nonisolated func result<T>(_ op: @Sendable () async throws -> T) async -> Result<T, Error> {
+        do { return .success(try await op()) }
+        catch { return .failure(error) }
+    }
+
+    private nonisolated func diagnose(_ error: Error) -> String {
+        if let apiError = error as? APIError {
+            return apiError.errorDescription ?? String(localized: "home.error.apiGeneric")
+        }
+        return String(describing: type(of: error))
     }
 
     private func enrichedActiveGoal(_ goal: GoalSummary, apiClient: any HomeDashboardLoading) async -> GoalSummary {

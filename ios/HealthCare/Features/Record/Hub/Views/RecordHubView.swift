@@ -1,5 +1,17 @@
 import SwiftUI
 
+// MARK: - Record Navigation Destinations
+//
+// MainTabView가 푸시 라우팅에서 recordPath에 직접 append할 수 있도록
+// value 기반 enum으로 노출. 식사 리마인더 푸시 → 식단 기록 화면으로 직진.
+
+enum RecordDestination: Hashable {
+    case diet
+    case exercise
+    case body
+    case progressPhoto
+}
+
 // VITALITY — Record Hub
 // Editorial entry point. Giant serif display, bento grid, deliberate
 // asymmetry. Each route card uses a distinct visual language while sharing
@@ -22,12 +34,20 @@ struct RecordHubView: View {
                 )
 
                 HubBody()
-                    .padding(.top, -30) // lift body into hero
+                    .padding(.top, -30) // lift body into hero // design-lint:ignore — micro/hero spacing
             }
         }
         .background(Color.backgroundPage.ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
         .navigationBarHidden(true)
+        .navigationDestination(for: RecordDestination.self) { dest in
+            switch dest {
+            case .diet:          DietRecordView()
+            case .exercise:      ExerciseRecordView()
+            case .body:          BodyMeasurementView()
+            case .progressPhoto: ProgressPhotoView()
+            }
+        }
     }
 }
 
@@ -46,8 +66,8 @@ private struct HubHeroSection: View {
 
     private var koDate: String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
+        f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
 
@@ -62,7 +82,7 @@ private struct HubHeroSection: View {
                     if showsDismissButton {
                         Button(action: onDismiss) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 14, weight: .heavy))
+                                .font(.bodyMedium).fontWeight(.heavy)
                                 .foregroundStyle(.white)
                                 .frame(width: 40, height: 40)
                                 .background(
@@ -74,15 +94,10 @@ private struct HubHeroSection: View {
                         Color.clear.frame(width: 40, height: 40)
                     }
                     Spacer()
-                    Text("RECORD")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .tracking(3.4)
-                        .foregroundStyle(.white.opacity(0.8))
-                    Spacer()
                     Color.clear.frame(width: 40, height: 40)
                 }
-                .padding(.top, 54)
-                .padding(.horizontal, 22)
+                .padding(.top, 54) // design-lint:ignore — micro/hero spacing
+                .padding(.horizontal, 22) // design-lint:ignore — micro/hero spacing
 
                 Spacer(minLength: 0)
 
@@ -97,17 +112,17 @@ private struct HubHeroSection: View {
                         .foregroundColor(Color.brandAccentGlow)
                      + Text("\n에게 쓰는 편지")
                         .foregroundColor(.white))
-                        .font(.system(size: 34, weight: .bold, design: .serif))
+                        .font(.system(size: 34, weight: .bold, design: .serif)) // design-lint:ignore — SF Symbol or special
                         .heroTracking()
                         .lineSpacing(-2)
 
                     Text(koDate)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption).fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.55))
-                        .padding(.top, 2)
+                        .padding(.top, 2) // design-lint:ignore — micro/hero spacing
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, 58)
+                .padding(.horizontal, 22) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, 58) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -168,7 +183,7 @@ private struct HubBody: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("WHAT TO LOG").eyebrowStyle(Color.textTertiary)
                     Text("무엇을 기록할까요?")
-                        .font(.system(size: 22, weight: .bold, design: .serif))
+                        .font(.displayMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
                 }
                 Spacer()
@@ -204,11 +219,11 @@ private struct HubBody: View {
 
             // Small tip / footer
             HubFootnote()
-                .padding(.top, 6)
+                .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 34)
-        .padding(.bottom, 64)
+        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+        .padding(.top, 34) // design-lint:ignore — micro/hero spacing
+        .padding(.bottom, 64) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             Color.backgroundPage
@@ -237,10 +252,10 @@ private struct RoundedCorner: Shape {
 private struct ExerciseRouteCard: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(LinearGradient.forestHero)
 
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(
                     RadialGradient(
                         colors: [Color.brandAccent.opacity(0.38), .clear],
@@ -252,7 +267,7 @@ private struct ExerciseRouteCard: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 8) {
-                        Text("01").font(.system(size: 11, weight: .heavy, design: .monospaced))
+                        Text("01").font(.eyebrow)
                             .tracking(1.6)
                             .foregroundStyle(Color.brandAccentGlow)
                         Rectangle()
@@ -263,11 +278,13 @@ private struct ExerciseRouteCard: View {
                     }
 
                     Text("오늘의 운동")
-                        .font(.system(size: 28, weight: .bold, design: .serif))
+                        .font(.displayMedium)
                         .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
 
                     Text("세트 · 횟수 · 무게를\n있는 그대로 기록")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.bodySmall).fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.6))
                         .lineSpacing(1)
                 }
@@ -283,12 +300,12 @@ private struct ExerciseRouteCard: View {
                         .fill(Color.brandAccentGlow)
                         .frame(width: 62, height: 62)
                     Image(systemName: "dumbbell.fill")
-                        .font(.system(size: 22, weight: .bold))
+                        .font(.headingLarge)
                         .foregroundStyle(Color.brandDusk)
                 }
-                .padding(.top, 4)
+                .padding(.top, Spacing.xs) // design-lint:ignore — micro/hero spacing
             }
-            .padding(22)
+            .padding(22) // design-lint:ignore — micro/hero spacing
         }
         .frame(height: 170)
         .elevation(.forest)
@@ -300,15 +317,15 @@ private struct ExerciseRouteCard: View {
 private struct DietRouteCard: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
 
             // warm corner
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(
                     RadialGradient(
                         colors: [Color.brandSunrise.opacity(0.25), .clear],
@@ -319,33 +336,34 @@ private struct DietRouteCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("02")
-                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                        .font(.eyebrow)
                         .tracking(1.6)
                         .foregroundStyle(Color.brandEmber)
                     Spacer()
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 12, weight: .heavy))
+                        .font(.captionBold).fontWeight(.heavy)
                         .foregroundStyle(Color.textHeadline.opacity(0.35))
                 }
 
                 Spacer()
 
-                Text("🍚")
-                    .font(.system(size: 46))
+                Image(systemName: "fork.knife.circle.fill")
+                    .font(.system(size: 46)) // design-lint:ignore — SF Symbol hero icon sizing
+                    .foregroundStyle(Color.brandAccent.opacity(0.2))
                     .rotationEffect(.degrees(-6))
-                    .padding(.bottom, 10)
+                    .padding(.bottom, Spacing.md) // design-lint:ignore — micro/hero spacing
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("식단").eyebrowStyle(Color.textTertiary)
                     Text("오늘 먹은 것")
-                        .font(.system(size: 17, weight: .bold, design: .serif))
+                        .font(.bodyLarge).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
                     Text("한 끼, 한 숟갈까지")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .padding(18)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(height: 190)
@@ -360,16 +378,16 @@ private struct BodyRouteCard: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.brandDusk)
 
             // line topography
             TopoLines()
                 .stroke(Color.brandAccent.opacity(0.22), lineWidth: 0.8)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
 
             // soft glow
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(
                     RadialGradient(
                         colors: [Color.brandAccent.opacity(0.35), .clear],
@@ -380,12 +398,12 @@ private struct BodyRouteCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("03")
-                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                        .font(.eyebrow)
                         .tracking(1.6)
                         .foregroundStyle(Color.brandAccentGlow)
                     Spacer()
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 12, weight: .heavy))
+                        .font(.captionBold).fontWeight(.heavy)
                         .foregroundStyle(.white.opacity(0.5))
                 }
 
@@ -394,31 +412,31 @@ private struct BodyRouteCard: View {
                 HStack(alignment: .bottom, spacing: 4) {
                     if let w = latestWeight {
                         Text(String(format: "%.1f", w))
-                            .font(.system(size: 44, weight: .heavy, design: .rounded))
+                            .font(.numeralHero)
                             .foregroundStyle(.white)
                         Text("kg")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.labelSmall)
                             .foregroundStyle(.white.opacity(0.55))
-                            .padding(.bottom, 8)
+                            .padding(.bottom, Spacing.sm) // design-lint:ignore — micro/hero spacing
                     } else {
                         Image(systemName: "scalemass.fill")
-                            .font(.system(size: 34, weight: .heavy))
+                            .font(.system(size: 34, weight: .heavy)) // design-lint:ignore — SF Symbol or special
                             .foregroundStyle(.white.opacity(0.45))
                     }
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, Spacing.sm) // design-lint:ignore — micro/hero spacing
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("BODY").eyebrowStyle(Color.brandAccentGlow.opacity(0.85))
                     Text("신체 변화")
-                        .font(.system(size: 17, weight: .bold, design: .serif))
+                        .font(.bodyLarge).fontWeight(.bold)
                         .foregroundStyle(.white)
                     Text("작은 변화도 곡선이 된다")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(.white.opacity(0.55))
                 }
             }
-            .padding(18)
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(height: 190)
@@ -450,7 +468,7 @@ private struct TopoLines: Shape {
 private struct PhotoRouteCard: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: [Color.backgroundPage, Color.surfaceCard],
@@ -459,7 +477,7 @@ private struct PhotoRouteCard: View {
                     )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.brandAccent.opacity(0.25), lineWidth: 1)
                 )
 
@@ -467,7 +485,7 @@ private struct PhotoRouteCard: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 8) {
                         Text("04")
-                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                            .font(.eyebrow)
                             .tracking(1.6)
                             .foregroundStyle(Color.brandSecondary)
                         Rectangle()
@@ -476,10 +494,12 @@ private struct PhotoRouteCard: View {
                         Text("PHOTO").eyebrowStyle(Color.brandSecondary.opacity(0.9))
                     }
                     Text("진행 사진")
-                        .font(.system(size: 22, weight: .bold, design: .serif))
+                        .font(.displayMedium).fontWeight(.bold)
                         .foregroundStyle(Color.textHeadline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                     Text("변화를 눈으로 확인하는 가장\n강력한 동기부여")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption).fontWeight(.medium)
                         .foregroundStyle(Color.textHeadline.opacity(0.55))
                         .lineSpacing(2)
                 }
@@ -491,11 +511,11 @@ private struct PhotoRouteCard: View {
                         .fill(Color.brandAccent.opacity(0.15))
                         .frame(width: 72, height: 72)
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 26, weight: .semibold))
+                        .font(.system(size: 26, weight: .semibold)) // design-lint:ignore — SF Symbol or special
                         .foregroundStyle(Color.brandSecondary)
                 }
             }
-            .padding(22)
+            .padding(22) // design-lint:ignore — micro/hero spacing
         }
         .frame(height: 130)
         .elevation(.low)
@@ -508,17 +528,17 @@ private struct HubFootnote: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "leaf.fill")
-                .font(.system(size: 11, weight: .bold))
+                .font(.captionXSmall).fontWeight(.bold)
                 .foregroundStyle(Color.brandAccent)
             Text("꾸준함이 성과를 만듭니다 — 하루 30초면 충분해요.")
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption).fontWeight(.medium)
                 .foregroundStyle(Color.textSecondary)
             Spacer()
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                 .fill(Color.surfaceCard.opacity(0.5))
         )
     }

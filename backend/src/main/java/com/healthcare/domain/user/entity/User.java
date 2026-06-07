@@ -23,7 +23,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
     @Column(name = "display_name", nullable = false, length = 100)
@@ -86,6 +86,12 @@ public class User {
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
 
+    @Column(name = "terms_agreed_at")
+    private OffsetDateTime termsAgreedAt;
+
+    @Column(name = "privacy_agreed_at")
+    private OffsetDateTime privacyAgreedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -126,6 +132,11 @@ public class User {
 
     public void softDelete() {
         this.deletedAt = OffsetDateTime.now();
+    }
+
+    public void recordConsents(OffsetDateTime termsAt, OffsetDateTime privacyAt) {
+        if (termsAt != null) this.termsAgreedAt = termsAt;
+        if (privacyAt != null) this.privacyAgreedAt = privacyAt;
     }
 
     public enum Sex {

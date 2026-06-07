@@ -98,6 +98,7 @@ jobs:
               -e FCM_CREDENTIALS_PATH="/app/fcm-credentials.json" \
               -e OPENAI_API_KEY="${{ secrets.PROD_OPENAI_API_KEY }}" \
               -e PUBLIC_FOOD_API_KEY="${{ secrets.PROD_PUBLIC_FOOD_API_KEY }}" \
+              -e GOOGLE_IOS_CLIENT_ID="${{ secrets.GOOGLE_IOS_CLIENT_ID }}" \
               -v /etc/healthcare/fcm-credentials.json:/app/fcm-credentials.json:ro \
               ${{ env.IMAGE }}
 
@@ -108,8 +109,10 @@ jobs:
               if [ "$STATUS" = "200" ]; then
                 echo "Green (port $GREEN_PORT) healthy — swapping nginx"
 
-                # nginx upstream을 green 포트로 교체 (공백 무관 매칭)
-                sudo sed -i "s|proxy_pass[[:space:]]*http://127.0.0.1:[0-9]*;|proxy_pass http://127.0.0.1:${GREEN_PORT};|g" /etc/nginx/sites-available/healthcare
+                # nginx 백엔드 proxy_pass를 green 포트로 교체.
+                # 반드시 백엔드 포트(8080|8081)에만 매칭한다 — 전역 [0-9]*로 잡으면
+                # grafana(:3000)·s3(:4566)까지 덮어써서 배포마다 grafana가 깨진다.
+                sudo sed -i -E 's|proxy_pass[[:space:]]*http://127\.0\.0\.1:(8080|8081);|proxy_pass http://127.0.0.1:'"${GREEN_PORT}"';|g' /etc/nginx/sites-available/healthcare
                 sudo nginx -t && sudo nginx -s reload
 
                 # 활성 포트 기록

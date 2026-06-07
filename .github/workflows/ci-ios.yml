@@ -13,6 +13,47 @@ on:
       - '.github/workflows/ci-ios.yml'
 
 jobs:
+  design-lint:
+    name: Design Lint
+    runs-on: ubuntu-latest
+    # 베이스라인 0 달성(2026-05-26). 신규 회귀 즉시 차단.
+    # 토큰 우회가 정당한 경우 줄 끝에 // design-lint:ignore 주석.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run design-lint
+        id: lint
+        run: |
+          chmod +x ios/scripts/design-lint.sh
+          set +e
+          OUTPUT=$(ios/scripts/design-lint.sh 2>&1)
+          STATUS=$?
+          echo "$OUTPUT"
+          echo "exit_status=$STATUS" >> "$GITHUB_OUTPUT"
+          # PR Summary
+          PADDING=$(echo "$OUTPUT" | grep -c '^\[PADDING\]')
+          FONT=$(echo "$OUTPUT" | grep -c '^\[FONT\]')
+          RADIUS=$(echo "$OUTPUT" | grep -c '^\[RADIUS\]')
+          TOTAL=$((PADDING + FONT + RADIUS))
+          {
+            echo "## Design Lint"
+            echo ""
+            if [ "$STATUS" -eq 0 ]; then
+              echo "✅ **통과** — DesignSystem 토큰 우회 없음."
+            else
+              echo "❌ **차단** — 신규 토큰 우회 $TOTAL 건. 토큰을 사용하거나 정당한 경우 \`// design-lint:ignore\` 주석."
+            fi
+            echo ""
+            echo "| 카테고리 | 위반 |"
+            echo "|---|---|"
+            echo "| PADDING | $PADDING |"
+            echo "| FONT | $FONT |"
+            echo "| RADIUS | $RADIUS |"
+            echo "| **합계** | **$TOTAL** |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $STATUS
+
   test:
     name: Test
     runs-on: macos-15

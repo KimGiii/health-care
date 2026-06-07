@@ -5,6 +5,8 @@ import com.healthcare.common.exception.UnauthorizedException;
 import com.healthcare.domain.bodymeasurement.dto.*;
 import com.healthcare.domain.bodymeasurement.entity.BodyMeasurement;
 import com.healthcare.domain.bodymeasurement.repository.BodyMeasurementRepository;
+import com.healthcare.domain.user.entity.User;
+import com.healthcare.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,9 @@ class BodyMeasurementServiceTest {
 
     @Mock
     private BodyMeasurementRepository measurementRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private BodyMeasurementService measurementService;
@@ -329,6 +334,51 @@ class BodyMeasurementServiceTest {
 
         assertThatThrownBy(() -> measurementService.getMeasurementAtOrBefore(userId, referenceDate))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ─────────────────────────── 사용자 프로필 동기화 ───────────────────────────
+
+    @Test
+    @DisplayName("측정 기록 생성 시 가장 최근 weightKg가 사용자 프로필에 반영된다")
+    void createMeasurement_syncsLatestWeightToUserProfile() {
+        Long userId = 1L;
+        CreateMeasurementRequest request = buildCreateRequest(LocalDate.now(), 72.3, null, null);
+        BodyMeasurement saved = buildMeasurement(20L, userId, LocalDate.now(), 72.3, null);
+        given(measurementRepository.save(any(BodyMeasurement.class))).willReturn(saved);
+        given(measurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(saved));
+        User user = User.builder()
+                .id(userId).email("a@b.c").passwordHash("h").displayName("T")
+                .weightKg(80.0).build();
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+
+        measurementService.createMeasurement(userId, request);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getWeightKg()).isEqualTo(72.3);
+    }
+
+    @Test
+    @DisplayName("측정 기록 삭제 후 남은 최근 측정값으로 사용자 프로필이 재동기화된다")
+    void deleteMeasurement_resyncsUserProfileFromRemainingLatest() {
+        Long userId = 1L;
+        Long deletedId = 50L;
+        BodyMeasurement target = buildMeasurement(deletedId, userId, LocalDate.now(), 70.0, null);
+        BodyMeasurement remaining = buildMeasurement(49L, userId, LocalDate.now().minusDays(1), 75.5, null);
+        given(measurementRepository.findById(deletedId)).willReturn(Optional.of(target));
+        given(measurementRepository.findFirstByUserIdOrderByMeasuredAtDesc(userId))
+                .willReturn(Optional.of(remaining));
+        User user = User.builder()
+                .id(userId).email("a@b.c").passwordHash("h").displayName("T")
+                .weightKg(70.0).build();
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+
+        measurementService.deleteMeasurement(userId, deletedId);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getWeightKg()).isEqualTo(75.5);
     }
 
     // ─────────────────────────── 헬퍼 ───────────────────────────

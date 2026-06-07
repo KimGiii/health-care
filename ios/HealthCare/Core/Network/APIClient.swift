@@ -44,13 +44,17 @@ actor APIClient {
             try await refreshIfNeeded()
         }
 
-        let urlRequest = try buildRequest(for: endpoint)
-        let (data, response) = try await session.data(for: urlRequest)
+        let accessTokenForRequest = endpoint.requiresAuth ? tokenStore.accessToken : nil
+        let urlRequest = try buildRequest(for: endpoint, accessToken: accessTokenForRequest)
+        let (data, response) = try await send(urlRequest)
 
         guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
 
         // 혹시라도 401이 오면 한 번만 재시도 (안전망)
         if http.statusCode == 401 && endpoint.requiresAuth && retryOnUnauthorized {
+            if tokenStore.accessToken != accessTokenForRequest {
+                return try await performRequest(endpoint, retryOnUnauthorized: false)
+            }
             try await refreshTokens()
             return try await performRequest(endpoint, retryOnUnauthorized: false)
         }
@@ -61,7 +65,7 @@ actor APIClient {
             if http.statusCode == 403 && apiError?.code == "PREMIUM_REQUIRED" {
                 throw APIError.premiumRequired
             }
-            throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code)
+            throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code, message: apiError?.message)
         }
 
         do {
@@ -80,12 +84,17 @@ actor APIClient {
             try await refreshIfNeeded()
         }
 
-        let urlRequest = try buildRequest(for: endpoint)
-        let (data, response) = try await session.data(for: urlRequest)
+        let accessTokenForRequest = endpoint.requiresAuth ? tokenStore.accessToken : nil
+        let urlRequest = try buildRequest(for: endpoint, accessToken: accessTokenForRequest)
+        let (data, response) = try await send(urlRequest)
 
         guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
 
         if http.statusCode == 401 && endpoint.requiresAuth && retryOnUnauthorized {
+            if tokenStore.accessToken != accessTokenForRequest {
+                try await performRequestVoid(endpoint, retryOnUnauthorized: false)
+                return
+            }
             try await refreshTokens()
             try await performRequestVoid(endpoint, retryOnUnauthorized: false)
             return
@@ -97,7 +106,7 @@ actor APIClient {
             if http.statusCode == 403 && apiError?.code == "PREMIUM_REQUIRED" {
                 throw APIError.premiumRequired
             }
-            throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code)
+            throw APIError.serverError(statusCode: http.statusCode, code: apiError?.code, message: apiError?.message)
         }
     }
 
@@ -105,8 +114,20 @@ actor APIClient {
 
     /// 토큰이 만료됐거나 30초 이내 만료 예정이면 미리 refresh
     private func refreshIfNeeded() async throws {
-        guard let token = tokenStore.accessToken, isTokenExpired(token) else { return }
-        try await refreshTokens()
+        if let token = tokenStore.accessToken {
+            if isTokenExpired(token) {
+                try await refreshTokens()
+            }
+            return
+        }
+
+        if tokenStore.refreshToken != nil {
+            try await refreshTokens()
+            return
+        }
+
+        NotificationCenter.default.post(name: .sessionDidExpire, object: nil)
+        throw APIError.unauthorized
     }
 
     /// JWT payload의 exp 클레임으로 만료 여부 판단 (30초 버퍼 포함)
@@ -167,7 +188,7 @@ actor APIClient {
         }
     }
 
-    private func buildRequest(for endpoint: APIEndpoint) throws -> URLRequest {
+    private func buildRequest(for endpoint: APIEndpoint, accessToken: String?) throws -> URLRequest {
         var components = URLComponents()
         components.scheme = baseURL.scheme
         components.host = baseURL.host
@@ -184,11 +205,51 @@ actor APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        if endpoint.requiresAuth, let token = tokenStore.accessToken {
+        if endpoint.requiresAuth, let token = accessToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         request.httpBody = endpoint.body
         return request
+    }
+
+    private func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        return try await sendWithTransientRetry(request, attempt: 0, maxAttempts: 3)
+    }
+
+    /// LAN cold-start / connection-warmup 단계에서 병렬 요청이 일시적으로 실패하는
+    /// 케이스를 흡수한다. 첫 탭 진입 시 "에러 → 재클릭으로 성공" 패턴의 원인.
+    /// 지수 백오프 250ms → 750ms (총 grace ~1s) 후에도 실패하면 사용자에게 보고.
+    private func sendWithTransientRetry(
+        _ request: URLRequest,
+        attempt: Int,
+        maxAttempts: Int
+    ) async throws -> (Data, URLResponse) {
+        do {
+            return try await session.data(for: request)
+        } catch let urlError as URLError {
+            let nextAttempt = attempt + 1
+            if nextAttempt < maxAttempts, isTransient(urlError) {
+                let backoffMs: UInt64 = attempt == 0 ? 250 : 750
+                try? await Task.sleep(nanoseconds: backoffMs * 1_000_000)
+                return try await sendWithTransientRetry(request, attempt: nextAttempt, maxAttempts: maxAttempts)
+            }
+            throw APIError.noNetwork
+        }
+    }
+
+    private nonisolated func isTransient(_ error: URLError) -> Bool {
+        // .cancelled는 view dismiss로 인한 의도된 종료이므로 retry 대상이 아님.
+        // retry해도 같은 cancellation context에서 즉시 또 cancelled가 됨.
+        switch error.code {
+        case .timedOut,
+             .networkConnectionLost,
+             .notConnectedToInternet,
+             .cannotConnectToHost,
+             .dnsLookupFailed:
+            return true
+        default:
+            return false
+        }
     }
 }
 
@@ -207,7 +268,9 @@ private struct SuccessEnvelope<T: Decodable>: Decodable {
 }
 
 struct APIErrorResponse: Decodable {
-    let success: Bool
+    // 백엔드 ErrorResponse는 success 필드를 보내지 않으므로 옵셔널.
+    // 과거 required로 잡혀 있어 모든 에러 디코드가 실패 → code=nil → 일반 메시지로 노출되던 회귀 차단.
+    let success: Bool?
     let code: String?
     let message: String
 }

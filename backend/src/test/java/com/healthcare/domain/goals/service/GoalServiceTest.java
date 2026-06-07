@@ -13,6 +13,7 @@ import com.healthcare.domain.goals.entity.Goal.GoalType;
 import com.healthcare.domain.goals.entity.GoalCheckpoint;
 import com.healthcare.domain.goals.repository.GoalCheckpointRepository;
 import com.healthcare.domain.goals.repository.GoalRepository;
+import com.healthcare.domain.nutrition.service.NutritionTargetService;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +51,7 @@ class GoalServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private BodyMeasurementRepository bodyMeasurementRepository;
     @Mock private ExerciseSessionRepository exerciseSessionRepository;
+    @Mock private NutritionTargetService nutritionTargetService;
 
     @InjectMocks
     private GoalService goalService;
@@ -160,6 +162,40 @@ class GoalServiceTest {
         assertThat(startCheckpoint.getActualValue()).isEqualByComparingTo("80.5");
         assertThat(startCheckpoint.getNotes()).isEqualTo("시작");
         assertThat(startCheckpoint.getIsOnTrack()).isTrue();
+    }
+
+    @Test
+    @DisplayName("startValue 미입력 시 사용자 프로필 weightKg가 측정 기록보다 우선 사용된다")
+    void createGoal_missingStartValue_prefersUserProfileOverMeasurement() {
+        Long userId = 1L;
+        LocalDate today = LocalDate.now();
+        CreateGoalRequest request = buildCreateRequest(
+                GoalType.WEIGHT_LOSS,
+                new BigDecimal("70.0"), "kg",
+                today.plusMonths(3),
+                null, new BigDecimal("-0.5"));
+
+        // 프로필에 78.0kg, 측정 기록은 80.5kg — 프로필이 우선되어야 함
+        User userWithWeight = User.builder()
+                .id(userId).email("a@b.c").passwordHash("h").displayName("T")
+                .weightKg(78.0).build();
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(userWithWeight));
+        given(goalRepository.findActiveGoalByUserId(userId)).willReturn(Optional.empty());
+        Goal savedGoal = buildWeightGoal(41L, userId,
+                new BigDecimal("78.0"), new BigDecimal("70.0"),
+                today, today.plusMonths(3));
+        given(goalRepository.save(any(Goal.class))).willReturn(savedGoal);
+
+        goalService.createGoal(userId, request);
+
+        ArgumentCaptor<Goal> goalCaptor = ArgumentCaptor.forClass(Goal.class);
+        verify(goalRepository).save(goalCaptor.capture());
+        assertThat(goalCaptor.getValue().getStartValue()).isEqualByComparingTo("78.0");
+
+        // 시작 체크포인트도 프로필 값으로 생성됨
+        ArgumentCaptor<GoalCheckpoint> checkpointCaptor = ArgumentCaptor.forClass(GoalCheckpoint.class);
+        verify(goalCheckpointRepository).save(checkpointCaptor.capture());
+        assertThat(checkpointCaptor.getValue().getActualValue()).isEqualByComparingTo("78.0");
     }
 
     @Test
@@ -620,6 +656,65 @@ class GoalServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getGoalType()).isEqualTo(GoalType.ENDURANCE);
         assertThat(response.getPercentComplete()).isGreaterThanOrEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("목표 시작일 이후 측정이 없어도 시작일 이전 최근 측정으로 진행률을 계산한다")
+    void getGoalProgress_noMeasurementsAfterStartDate_fallsBackToLatestPriorMeasurement() {
+        Long userId = 1L;
+        Long goalId = 12L;
+        LocalDate today = LocalDate.now();
+        // 목표는 어제 생성, 이후 측정 0건. 하지만 3개월치 이력은 보유.
+        LocalDate startDate = today.minusDays(1);
+        Goal goal = Goal.builder()
+                .id(goalId).userId(userId)
+                .goalType(GoalType.WEIGHT_LOSS).status(Goal.GoalStatus.ACTIVE)
+                .startValue(BigDecimal.valueOf(80.0)).targetValue(BigDecimal.valueOf(70.0)).targetUnit("kg")
+                .startDate(startDate).targetDate(today.plusMonths(3))
+                .build();
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        // 시작일 이후 측정은 비어 있음
+        given(bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(
+                userId, startDate, today)).willReturn(List.of());
+        // fallback — 가장 최근 측정
+        BodyMeasurement priorLatest = buildMeasurement(userId, today.minusDays(5), 78.2);
+        given(bodyMeasurementRepository.findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(
+                userId, today)).willReturn(Optional.of(priorLatest));
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCurrentValue()).isEqualByComparingTo("78.2");
+    }
+
+    @Test
+    @DisplayName("ENDURANCE 목표는 운동 기록이 0건이면 NPE 없이 0분 평균으로 계산된다")
+    void getGoalProgress_enduranceGoalWithNoSessions_returnsZeroAverage() {
+        Long userId = 1L;
+        Long goalId = 11L;
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(7);
+        Goal goal = Goal.builder()
+                .id(goalId).userId(userId)
+                .goalType(GoalType.ENDURANCE).status(Goal.GoalStatus.ACTIVE)
+                .startValue(BigDecimal.valueOf(0)).targetValue(BigDecimal.valueOf(60)).targetUnit("minutes")
+                .startDate(startDate).targetDate(today.plusDays(30))
+                .build();
+
+        given(goalRepository.findById(goalId)).willReturn(Optional.of(goal));
+        // SUM 결과가 null인 경우(운동 기록 0건) — 과거에 NPE 유발하던 회귀 케이스
+        given(exerciseSessionRepository.sumDurationMinutesByUserIdAndDateRange(
+                userId, startDate, today)).willReturn(null);
+        given(goalCheckpointRepository.findByGoalIdOrderByCheckpointDate(goalId))
+                .willReturn(List.of());
+
+        GoalProgressResponse response = goalService.getGoalProgress(userId, goalId);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCurrentValue()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test

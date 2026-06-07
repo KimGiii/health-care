@@ -61,7 +61,7 @@ final class AddDietLogViewModel: ObservableObject {
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
         return f
     }()
 
@@ -170,7 +170,7 @@ final class AddDietLogViewModel: ObservableObject {
             errorMessage = nil
         } catch {
             catalogResults = []
-            errorMessage = "카탈로그 검색 실패: \(error.localizedDescription)"
+            errorMessage = String(localized: "diet.error.foodSearch")
             print("❌ searchCatalog error: \(error)")
         }
     }
@@ -215,7 +215,7 @@ final class AddDietLogViewModel: ObservableObject {
                     guard let self, self.normalizedSearchQuery == query else { return }
                     self.catalogResults = []
                     self.externalResults = []
-                    self.errorMessage = "식품 검색 중 오류가 발생했습니다."
+                    self.errorMessage = String(localized: "diet.error.foodSearch2")
                     self.isSearching = false
                     self.searchTask = nil
                 }
@@ -271,15 +271,15 @@ final class AddDietLogViewModel: ObservableObject {
             if !result.isFood, let error = result.error {
                 switch error.code {
                 case "NOT_FOOD_OR_UNKNOWN":
-                    errorMessage = "음식으로 인식되지 않았습니다. 다른 이름으로 검색하거나 직접 등록해 주세요."
+                    errorMessage = String(localized: "diet.error.ai.notFood")
                 case "AI_UNAVAILABLE":
-                    errorMessage = "AI 추정 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+                    errorMessage = String(localized: "diet.error.ai.unavailable")
                 default:
                     errorMessage = error.message
                 }
             }
         } catch {
-            errorMessage = "AI 영양 추정에 실패했습니다. 직접 입력해 주세요."
+            errorMessage = String(localized: "diet.error.ai.estimate")
         }
     }
 
@@ -331,7 +331,7 @@ final class AddDietLogViewModel: ObservableObject {
             // 검색 시트도 함께 닫음 — 일반 식품 추가(addEntry) 동작과 동일하게.
             showFoodSearch = false
         } catch {
-            errorMessage = "AI 추정 식품 저장에 실패했습니다."
+            errorMessage = String(localized: "diet.error.ai.save")
         }
     }
 
@@ -372,7 +372,7 @@ final class AddDietLogViewModel: ObservableObject {
             addEntry(food: saved)
             showCustomFoodForm = false
         } catch {
-            errorMessage = "식품 등록에 실패했습니다."
+            errorMessage = String(localized: "diet.error.foodRegister")
         }
     }
 
@@ -395,7 +395,7 @@ final class AddDietLogViewModel: ObservableObject {
             print("✅ searchExternal success: \(results.count) results")
         } catch {
             externalResults = []
-            errorMessage = "외부 검색 실패: \(error.localizedDescription)"
+            errorMessage = String(localized: "diet.error.foodSearch")
             print("❌ searchExternal error: \(error)")
         }
     }
@@ -427,7 +427,7 @@ final class AddDietLogViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "식품 추가 중 오류가 발생했습니다."
+            errorMessage = String(localized: "diet.error.foodAdd")
         }
     }
 
@@ -496,7 +496,7 @@ final class AddDietLogViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "사진 분석 중 오류가 발생했습니다."
+            errorMessage = String(localized: "diet.error.photoAnalyze")
         }
     }
 
@@ -569,7 +569,7 @@ final class AddDietLogViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "저장 중 오류가 발생했습니다."
+            errorMessage = String(localized: "diet.error.save")
         }
     }
 

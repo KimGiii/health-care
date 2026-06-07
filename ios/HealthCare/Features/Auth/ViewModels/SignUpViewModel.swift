@@ -9,17 +9,20 @@ final class SignUpViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    /// 신규 소셜 가입자 약관 동의 sheet 트리거.
+    @Published var pendingConsent: PendingSocialConsent?
+
     func register(apiClient: APIClient, authState: AuthState) async {
         guard password == passwordConfirm else {
-            errorMessage = "비밀번호가 일치하지 않습니다."
+            errorMessage = String(localized: "auth.error.password.mismatch")
             return
         }
         guard password.count >= 8 else {
-            errorMessage = "비밀번호는 8자 이상이어야 합니다."
+            errorMessage = String(localized: "auth.error.password.tooShort")
             return
         }
         guard !displayName.trimmingCharacters(in: .whitespaces).isEmpty else {
-            errorMessage = "닉네임을 입력해주세요."
+            errorMessage = String(localized: "auth.error.displayName.required")
             return
         }
 
@@ -35,13 +38,84 @@ final class SignUpViewModel: ObservableObject {
             authState.saveAndAuthenticate(tokenResponse: tokenResponse)
         } catch let error as APIError {
             switch error {
-            case .serverError(let code, _) where code == 409:
-                errorMessage = "이미 사용 중인 이메일입니다."
+            case .serverError(let code, _, _) where code == 409:
+                errorMessage = String(localized: "auth.error.email.duplicate")
             default:
                 errorMessage = error.errorDescription
             }
         } catch {
-            errorMessage = "회원가입 중 오류가 발생했습니다."
+            errorMessage = String(localized: "auth.error.signup")
         }
+    }
+
+    /// 2-step 소셜 가입: 토큰 fetch → /check → 신규면 약관 동의 sheet 트리거, 기존이면 즉시 로그인.
+    func signInWithSocialProvider(
+        _ provider: SocialAuthProvider,
+        tokenProvider: SocialIdentityTokenProvider,
+        apiClient: APIClient,
+        authState: AuthState
+    ) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let identity = try await tokenProvider.fetchIdToken()
+            await NetworkPathWaiter.waitForLocalNetwork()
+            let body = try apiClient.encode(
+                SocialLoginRequest(idToken: identity.idToken, nonce: identity.rawNonce)
+            )
+            let check: SocialLoginCheckResponse = try await retryingSocialConflict {
+                try await apiClient.request(.socialLoginCheck(provider: provider, body: body))
+            }
+            if !check.newUser, let tokens = check.tokens {
+                authState.saveAndAuthenticate(tokenResponse: tokens)
+            } else {
+                pendingConsent = PendingSocialConsent(
+                    provider: provider, idToken: identity.idToken, rawNonce: identity.rawNonce
+                )
+            }
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch is CancellationError {
+            errorMessage = nil
+        } catch {
+            switch provider {
+            case .apple:  errorMessage = String(localized: "auth.error.apple.signup")
+            case .google: errorMessage = String(localized: "auth.error.google.signup")
+            }
+        }
+    }
+
+    func completeSocialSignUp(apiClient: APIClient, authState: AuthState) async {
+        guard let pending = pendingConsent else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let body = try apiClient.encode(SocialLoginCommitRequest(
+                idToken: pending.idToken,
+                nonce: pending.rawNonce,
+                agreedToTerms: true,
+                agreedToPrivacy: true
+            ))
+            let tokenResponse: TokenResponse = try await retryingSocialConflict {
+                try await apiClient.request(.socialLoginCommit(provider: pending.provider, body: body))
+            }
+            pendingConsent = nil
+            authState.saveAndAuthenticate(tokenResponse: tokenResponse)
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch {
+            switch pending.provider {
+            case .apple:  errorMessage = String(localized: "auth.error.apple.signup")
+            case .google: errorMessage = String(localized: "auth.error.google.signup")
+            }
+        }
+    }
+
+    func cancelSocialSignUp() {
+        pendingConsent = nil
     }
 }

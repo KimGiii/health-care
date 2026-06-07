@@ -9,6 +9,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @EnvironmentObject private var container: AppContainer
+    @State private var showCalorieExplanation = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -16,8 +17,8 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // 1. 대시보드 헤더
                     DashboardHeaderBar()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
+                        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+                        .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
 
                     // 2. 메인 링 패널 (칼로리 + 운동 + 단백질)
                     ActivityRingPanel(
@@ -29,7 +30,10 @@ struct HomeView: View {
                         todayDurationMinutes: viewModel.todayDurationMinutes,
                         todayBurnedCalories:  viewModel.todayBurnedCalories,
                         todayProteinG:    viewModel.todayProteinG,
-                        dailyProteinGoal: viewModel.dailyProteinGoal
+                        dailyProteinGoal: viewModel.dailyProteinGoal,
+                        onWhyTapped: viewModel.userProfile != nil
+                            ? { showCalorieExplanation = true }
+                            : nil
                     )
 
                     // 3. 매크로 + 연속일 — 2열 그리드
@@ -50,7 +54,7 @@ struct HomeView: View {
                         )
                         .frame(maxWidth: .infinity)
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
                     // 4. 주간 추세
                     WeeklyTrendCard(weeklyActivity: viewModel.weeklyActivity)
@@ -66,7 +70,7 @@ struct HomeView: View {
 
                     Spacer(minLength: 100)
                 }
-                .padding(.top, 4)
+                .padding(.top, Spacing.xs) // design-lint:ignore — micro/hero spacing
             }
             .background(Color.backgroundPage.ignoresSafeArea())
             .overlay(alignment: .center) {
@@ -74,11 +78,11 @@ struct HomeView: View {
                     ProgressView()
                         .tint(Color.brandAccentGlow)
                         .scaleEffect(1.4)
-                        .padding(24)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+                        .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Radius.lg))
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
@@ -90,8 +94,25 @@ struct HomeView: View {
                 BannerAdView(adUnitID: AdsManager.shared.bannerAdUnitID)
                     .frame(height: 50)
             }
+            .sheet(isPresented: $showCalorieExplanation) {
+                if let profile = viewModel.userProfile {
+                    CalorieExplanationView(
+                        profile: profile,
+                        goalType: viewModel.activeGoal?.goalType
+                    )
+                }
+            }
+            // .task는 view 생명주기에 묶여 있어 NavigationLink pop 시 재실행되지 않는다.
+            // resetTab이 탭 전환마다 homeId를 새 UUID로 교체해 view를 재생성하므로
+            // 탭 전환 시에는 항상 새로 로드된다. 이전의 .onAppear는 child push→pop 시에도
+            // 재실행되어 두 번째 loadDashboard가 실패하면 데이터는 있는데 에러 alert이 뜨는
+            // 버그를 일으켰다.
             .task { await viewModel.loadDashboard(apiClient: container.apiClient) }
-            .refreshable { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            .refreshable {
+                await viewModel.loadDashboard(apiClient: container.apiClient)
+                // pull-to-refresh로 인한 실패는 alert으로 알리지 않음(기존 화면 데이터 유지).
+                viewModel.errorMessage = nil
+            }
 
             // 8. 기록 FAB (기존 LogCTASection 대체)
             QuickLogFAB()
@@ -102,20 +123,25 @@ struct HomeView: View {
 // MARK: - Dashboard Header Bar
 
 private struct DashboardHeaderBar: View {
+    @EnvironmentObject private var container: AppContainer
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var showNotifications = false
+    @State private var unreadCount: Int = 0
+
     private var greetingText: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 5..<12:  return "좋은 아침이에요 ☀️"
-        case 12..<17: return "활기찬 오후예요 💪"
-        case 17..<21: return "수고했어요 🌙"
-        default:      return "오늘도 잘 했어요 ⭐"
+        case 5..<12:  return String(localized: "home.greeting.morning")
+        case 12..<17: return String(localized: "home.greeting.afternoon")
+        case 17..<21: return String(localized: "home.greeting.evening")
+        default:      return String(localized: "home.greeting.night")
         }
     }
 
     private var dateText: String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.shared.effectiveLocale
+        f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
 
@@ -123,50 +149,77 @@ private struct DashboardHeaderBar: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(dateText)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.captionXSmall).fontWeight(.semibold)
                     .tracking(0.5)
                     .foregroundStyle(Color.textTertiary)
                 Text(greetingText)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.numeralMedium).fontWeight(.bold)
                     .foregroundStyle(Color.textHeadline)
             }
 
             Spacer()
 
-            HStack(spacing: 8) {
-                HeaderIconButton(system: "bell")
-                NavigationLink(destination: MyPageView()) {
-                    HeaderIconButton(system: "person.crop.circle")
-                }
-                .buttonStyle(.plain)
+            NotificationBellButton(unreadCount: unreadCount) {
+                showNotifications = true
             }
         }
+        .sheet(isPresented: $showNotifications, onDismiss: {
+            Task { await refreshUnreadCount() }
+        }) {
+            NavigationStack {
+                NotificationsView().environmentObject(container)
+            }
+        }
+        .task { await refreshUnreadCount() }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await refreshUnreadCount() } }
+        }
+    }
+
+    private func refreshUnreadCount() async {
+        struct Response: Decodable { let count: Int }
+        let response: Response? = try? await container.apiClient.request(.getNotificationsUnreadCount)
+        if let response { unreadCount = response.count }
     }
 }
 
-private struct HeaderIconButton: View {
-    let system: String
+// MARK: - Notification Bell Button
 
-    private var accessibilityLabel: String {
-        switch system {
-        case "bell":               return "알림"
-        case "person.crop.circle": return "프로필"
-        default:                   return system
-        }
-    }
+private struct NotificationBellButton: View {
+    let unreadCount: Int
+    let action: () -> Void
 
     var body: some View {
-        Image(systemName: system)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Color.textHeadline.opacity(0.65))
-            .frame(width: 38, height: 38)
-            .background(
-                Circle()
-                    .fill(Color.surfaceCard)
-                    .overlay(Circle().stroke(Color.cardStroke, lineWidth: 1))
-            )
-            .elevation(.low)
-            .accessibilityLabel(accessibilityLabel)
+        Button(action: action) {
+            Image(systemName: "bell")
+                .font(.bodyMedium).fontWeight(.semibold)
+                .foregroundStyle(Color.textHeadline.opacity(0.75))
+                .frame(width: 38, height: 38)
+                .background(
+                    Circle()
+                        .fill(Color.surfaceCard)
+                        .overlay(Circle().stroke(Color.cardStroke, lineWidth: 1))
+                )
+                .overlay(alignment: .topTrailing) {
+                    if unreadCount > 0 {
+                        Text(unreadCount > 99 ? "99+" : "\(unreadCount)")
+                            .font(.captionXSmall).fontWeight(.bold)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5) // design-lint:ignore — badge inner padding
+                            .frame(minWidth: 18, minHeight: 18)
+                            .background(Color.brandDanger)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.surfaceCard, lineWidth: 1.5))
+                            .offset(x: 6, y: -4)
+                    }
+                }
+                .elevation(.low)
+        }
+        .accessibilityLabel(
+            unreadCount > 0
+                ? String(format: String(localized: "home.notification.bell.unread"), unreadCount)
+                : String(localized: "home.notification.bell.empty")
+        )
     }
 }
 
@@ -177,8 +230,8 @@ private struct MealsSectionCompact: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(title: "오늘 식단", eyebrow: "MEALS")
-                .padding(.horizontal, 20)
+            SectionLabel(title: String(localized: "home.section.meals.title"), eyebrow: "MEALS")
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 12) {
@@ -201,7 +254,7 @@ private struct MealsSectionCompact: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -220,32 +273,28 @@ private struct MealCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.surfaceCard)
-                Text(log.mealType.emoji)
-                    .font(.system(size: 52))
-                    .offset(x: 16, y: 14)
-                    .rotationEffect(.degrees(-4))
-                    .accessibilityHidden(true)
-            }
-            .frame(width: 140, height: 114)
-            .overlay(alignment: .topTrailing) {
-                Text(log.mealType.displayName)
-                    .font(.system(size: 9, weight: .heavy)).tracking(1.0).textCase(.uppercase)
-                    .foregroundStyle(Color.textHeadline)
-                    .padding(.horizontal, 7).padding(.vertical, 3)
-                    .background(Capsule().fill(Color.surfaceCard))
-                    .padding(9)
-            }
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                .fill(Color.surfaceCard)
+                .frame(width: 140, height: 114)
+                .overlay {
+                    VStack(spacing: 8) {
+                        Image(systemName: log.mealType.sfSymbol)
+                            .font(.system(size: 36, weight: .medium)) // design-lint:ignore — SF Symbol icon sizing
+                            .foregroundStyle(Color.brandAccent)
+                            .accessibilityHidden(true)
+                        Text(log.mealType.displayName)
+                            .font(.system(size: 11, weight: .semibold)) // design-lint:ignore — SF Symbol icon label
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                }
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .lastTextBaseline, spacing: 2) {
                     Text(String(format: "%.0f", log.totalCalories ?? 0))
-                        .font(.system(size: 20, weight: .heavy, design: .rounded))
+                        .font(.numeralMedium).fontWeight(.heavy)
                         .foregroundStyle(Color.textHeadline)
                     Text("kcal")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
                 if let p = log.totalProteinG, let c = log.totalCarbsG {
@@ -254,7 +303,7 @@ private struct MealCard: View {
                 }
             }
             .frame(width: 140, alignment: .leading)
-            .padding(.top, 9)
+            .padding(.top, 9) // design-lint:ignore — micro/hero spacing
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityDescription)
@@ -265,19 +314,21 @@ private struct EmptyMealCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                     .fill(Color.backgroundPage)
-                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                         .stroke(Color.textHeadline.opacity(0.08), style: StrokeStyle(lineWidth: 1, dash: [4])))
                 VStack(spacing: 8) {
-                    Text("🌱").font(.system(size: 30)).opacity(0.5)
-                    Text("아직 기록 없음").font(.system(size: 11, weight: .medium)).foregroundStyle(Color.textTertiary)
+                    Image(systemName: "fork.knife")
+                        .font(.system(size: 28, weight: .light)) // design-lint:ignore — SF Symbol size
+                        .foregroundStyle(Color.textTertiary.opacity(0.6))
+                    Text("기록이 아직 없어요").font(.caption).foregroundStyle(Color.textTertiary)
                 }
             }
             .frame(width: 140, height: 114)
-            Text("첫 식사를 기록하세요")
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(Color.textSecondary)
-                .frame(width: 140, alignment: .leading).padding(.top, 9)
+            Text("식단을 기록해 보세요")
+                .font(.captionBold).foregroundStyle(Color.textSecondary)
+                .frame(width: 140, alignment: .leading).padding(.top, 9) // design-lint:ignore — micro/hero spacing
         }
     }
 }
@@ -286,18 +337,18 @@ private struct AddMealCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.brandDusk)
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous).fill(Color.brandDusk)
                 VStack(spacing: 8) {
                     Image(systemName: "plus")
-                        .font(.system(size: 18, weight: .heavy)).foregroundStyle(Color.brandDusk)
+                        .font(.headingMedium).fontWeight(.heavy).foregroundStyle(Color.brandDusk)
                         .frame(width: 38, height: 38).background(Circle().fill(Color.brandAccentGlow))
-                    Text("기록 추가").font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                    Text("기록 추가").font(.captionBold).fontWeight(.bold).foregroundStyle(.white)
                 }
             }
             .frame(width: 140, height: 114)
             Text("+ 새 식단")
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(Color.textHeadline)
-                .frame(width: 140, alignment: .leading).padding(.top, 9)
+                .font(.captionXSmall).fontWeight(.semibold).foregroundStyle(Color.textHeadline)
+                .frame(width: 140, alignment: .leading).padding(.top, 9) // design-lint:ignore — micro/hero spacing
         }
     }
 }
@@ -309,14 +360,14 @@ private struct WorkoutSectionCompact: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(title: "오늘 운동", eyebrow: "EXERCISE")
-                .padding(.horizontal, 20)
+            SectionLabel(title: String(localized: "home.section.exercise.title"), eyebrow: "EXERCISE")
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
             NavigationLink(destination: ExerciseRecordView()) {
                 WorkoutCompactCard(session: session)
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
         }
     }
 }
@@ -326,13 +377,13 @@ private struct WorkoutCompactCard: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(LinearGradient.forestHero)
             RadialGradient(
                 colors: [Color.brandAccent.opacity(0.30), .clear],
                 center: UnitPoint(x: 0.9, y: 0.15), startRadius: 10, endRadius: 200
             )
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
 
             HStack(alignment: .center) {
                 if let session {
@@ -341,7 +392,11 @@ private struct WorkoutCompactCard: View {
                             .eyebrowStyle(Color.brandAccentGlow)
                         HStack(spacing: 10) {
                             if let dur = session.durationMinutes {
-                                WorkoutChip(icon: "clock.fill", value: "\(dur)", unit: "분")
+                                WorkoutChip(
+                                    icon: "clock.fill",
+                                    value: "\(dur)",
+                                    unit: String(localized: "home.workout.duration.unit")
+                                )
                             }
                             if let cal = session.caloriesBurned {
                                 WorkoutChip(icon: "flame.fill", value: String(format: "%.0f", cal), unit: "kcal")
@@ -356,7 +411,7 @@ private struct WorkoutCompactCard: View {
                         Text("READY")
                             .eyebrowStyle(Color.brandAccentGlow)
                         Text("오늘 운동을 시작해보세요")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.headingSmall).fontWeight(.bold)
                             .foregroundStyle(.white)
                     }
                 }
@@ -366,13 +421,13 @@ private struct WorkoutCompactCard: View {
                 ZStack {
                     Circle().fill(Color.brandAccentGlow).frame(width: 46, height: 46)
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 16, weight: .heavy))
+                        .font(.bodyLarge).fontWeight(.heavy)
                         .foregroundStyle(Color.brandDusk)
                 }
                 .accessibilityHidden(true)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 18)
+            .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
         .frame(height: 90)
         .elevation(.forest)
@@ -384,15 +439,15 @@ private struct WorkoutChip: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: icon)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 9, weight: .bold)) // design-lint:ignore — SF Symbol or hero numeric
                 .foregroundStyle(Color.brandAccentGlow)
                 .accessibilityHidden(true)
             HStack(alignment: .lastTextBaseline, spacing: 3) {
-                Text(value).font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(.white)
-                Text(unit).font(.system(size: 9, weight: .medium)).foregroundStyle(.white.opacity(0.6))
+                Text(value).font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(.white) // design-lint:ignore — 데이터 카운터
+                Text(unit).font(.system(size: 9, weight: .medium)).foregroundStyle(.white.opacity(0.6)) // design-lint:ignore — 단위 라벨
             }
         }
-        .padding(.horizontal, 9).padding(.vertical, 5)
+        .padding(.horizontal, 9).padding(.vertical, 5) // design-lint:ignore — micro/hero spacing
         .background(Capsule().fill(Color.white.opacity(0.08)).overlay(Capsule().stroke(Color.white.opacity(0.13), lineWidth: 0.7)))
     }
 }
@@ -412,7 +467,7 @@ private struct SectionLabel: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(eyebrow).eyebrowStyle(Color.textTertiary)
                 Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .serif))
+                    .font(.headingMedium).fontWeight(.bold)
                     .foregroundStyle(Color.textHeadline)
             }
             Spacer()

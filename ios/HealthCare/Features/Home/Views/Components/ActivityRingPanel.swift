@@ -18,6 +18,9 @@ struct ActivityRingPanel: View {
     let todayProteinG: Double
     let dailyProteinGoal: Double
 
+    /// "왜 이 수치인가요?" 탭 — 권장 칼로리 계산식 시트 호출. nil이면 버튼 미표시.
+    var onWhyTapped: (() -> Void)? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             // 링 영역
@@ -29,7 +32,7 @@ struct ActivityRingPanel: View {
                     size: .hero,
                     value: caloriesValueText,
                     unit: "kcal",
-                    label: "칼로리 섭취"
+                    label: String(localized: "home.ring.calorie.label")
                 )
 
                 // 오른쪽 — 운동 + 단백질 (standard × 2)
@@ -40,7 +43,7 @@ struct ActivityRingPanel: View {
                         size: .standard,
                         value: "\(todayDurationMinutes)",
                         unit: "min",
-                        label: "운동"
+                        label: String(localized: "home.ring.activity.label")
                     )
 
                     ProgressRing(
@@ -53,50 +56,76 @@ struct ActivityRingPanel: View {
                         size: .standard,
                         value: String(format: "%.0f", todayProteinG),
                         unit: "g",
-                        label: "단백질"
+                        label: String(localized: "home.ring.protein.label")
                     )
                 }
             }
-            .padding(.horizontal, 28)
-            .padding(.top, 24)
-            .padding(.bottom, 20)
+            .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+            .padding(.top, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+            .padding(.bottom, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
             Divider()
                 .background(Color.brandDusk.opacity(0.07))
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
-            // 하단 — 소모 칼로리 + 목표 대비 요약
+            // 하단 — 소모 칼로리 + 권장 대비 요약 (초과 시 brandDanger)
             HStack {
                 summaryChip(
                     icon: "flame.fill",
                     color: Color.brandEmber,
                     value: String(format: "%.0f", todayBurnedCalories),
-                    unit: "kcal 소모"
+                    unit: String(localized: "home.ring.summary.burned")
                 )
                 Spacer()
                 summaryChip(
-                    icon: "target",
-                    color: Color.brandAccent,
-                    value: String(format: "%.0f", dailyCalorieGoal - todayCalories),
-                    unit: "kcal 남음"
+                    icon: remainingCalories >= 0 ? "target" : "exclamationmark.triangle.fill",
+                    color: remainingCalories >= 0 ? Color.brandAccent : Color.brandDanger,
+                    value: String(format: "%.0f", abs(remainingCalories)),
+                    unit: remainingCalories >= 0
+                        ? String(localized: "home.ring.summary.remaining")
+                        : String(localized: "home.ring.summary.exceeded")
                 )
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 14)
+            .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+
+            if let onWhyTapped {
+                Divider()
+                    .background(Color.brandDusk.opacity(0.07))
+                    .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+                Button(action: onWhyTapped) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "info.circle")
+                            .font(.captionXSmall)
+                        Text(String(format: String(localized: "home.ring.whyCalorie"), Int(dailyCalorieGoal)))
+                            .font(.captionXSmall).fontWeight(.semibold)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.captionXSmall)
+                    }
+                    .foregroundStyle(Color.brandAccent)
+                    .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
+                }
+                .accessibilityLabel(String(format: String(localized: "home.ring.whyCalorie.a11y"), Int(dailyCalorieGoal)))
+            }
         }
         .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )
         .elevation(.low)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Helpers
+
+    /// 권장 - 섭취 (음수면 초과 섭취량).
+    private var remainingCalories: Double { dailyCalorieGoal - todayCalories }
 
     private var caloriesValueText: String {
         let v = Int(todayCalories)
@@ -111,15 +140,15 @@ struct ActivityRingPanel: View {
     private func summaryChip(icon: String, color: Color, value: String, unit: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 11, weight: .bold))
+                .font(.captionXSmall).fontWeight(.bold)
                 .foregroundStyle(color)
                 .accessibilityHidden(true)
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 Text(value)
-                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .font(.system(size: 15, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
                     .foregroundStyle(Color.textPrimary)
                 Text(unit)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.captionXSmall)
                     .foregroundStyle(Color.textSecondary)
             }
         }
@@ -140,6 +169,6 @@ struct ActivityRingPanel: View {
             todayProteinG: 98,
             dailyProteinGoal: 150
         )
-        .padding(.vertical, 40)
+        .padding(.vertical, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
     }
 }

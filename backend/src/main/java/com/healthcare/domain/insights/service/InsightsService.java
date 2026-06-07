@@ -106,6 +106,19 @@ public class InsightsService {
                 .build();
     }
 
+    /**
+     * 특정 일자에 사용자가 어떤 기록(식단/운동/신체측정)이라도 했는지.
+     * 일일 미기록 알림(DAILY_LOG_REMINDER) 판단용.
+     *
+     * <p>최적화 여지: 각 repository에 existsByUserIdAndDate(...) 추가하면 N row 로드 없이
+     * 단일 boolean 쿼리로 줄일 수 있다. 현재는 기존 메서드 재사용으로 단순화.
+     */
+    public boolean hasAnyActivityOn(Long userId, LocalDate date) {
+        if (!dietLogRepository.findAllByUserIdAndDateRange(userId, date, date).isEmpty()) return true;
+        if (!exerciseSessionRepository.findByUserIdAndDateRangeOrdered(userId, date, date).isEmpty()) return true;
+        return !bodyMeasurementRepository.findByUserIdAndDateRange(userId, date, date).isEmpty();
+    }
+
     public ChangeAnalysisResponse getChangeAnalysis(Long userId, LocalDate from, LocalDate to) {
         Optional<BodyMeasurement> fromMeasurement = bodyMeasurementRepository
                 .findFirstByUserIdAndMeasuredAtLessThanEqualOrderByMeasuredAtDesc(userId, from);

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gainsy — 운동·식단·신체 변화를 한곳에서</title>
+  <meta name="description" content="Gainsy는 운동, 식단, 신체 측정을 함께 기록하고 목표를 추적하는 건강관리 앱입니다." />
+  <meta property="og:title" content="Gainsy — 건강관리 앱" />
+  <meta property="og:description" content="운동·식단·신체 변화를 한곳에서 기록하고 목표를 달성하세요." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://gainsy.site" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌿%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --color-bg: oklch(98% 0.015 145);
+      --color-surface: oklch(100% 0 0);
+      --color-ink: oklch(22% 0.02 150);
+      --color-muted: oklch(45% 0.02 150);
+      --color-accent: oklch(58% 0.14 150);
+      --color-accent-soft: oklch(92% 0.05 150);
+      --radius-md: 14px;
+      --radius-lg: 24px;
+      --space-section: clamp(4rem, 3rem + 5vw, 8rem);
+      --text-hero: clamp(2.4rem, 1.6rem + 4vw, 4.8rem);
+      --text-lead: clamp(1.05rem, 0.95rem + 0.4vw, 1.25rem);
+      --shadow-soft: 0 10px 40px -20px oklch(40% 0.1 150 / 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Helvetica Neue", sans-serif;
+      background: var(--color-bg);
+      color: var(--color-ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    header {
+      padding: 28px 0;
+      position: sticky;
+      top: 0;
+      background: oklch(98% 0.015 145 / 0.85);
+      backdrop-filter: saturate(140%) blur(12px);
+      -webkit-backdrop-filter: saturate(140%) blur(12px);
+      z-index: 10;
+      border-bottom: 1px solid oklch(90% 0.02 150);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--color-accent), oklch(70% 0.16 145));
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 0.85rem;
+    }
+
+    /* Hero */
+    .hero {
+      padding: var(--space-section) 0 calc(var(--space-section) * 0.6);
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--color-accent-soft);
+      color: var(--color-accent);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+
+    h1 {
+      font-size: var(--text-hero);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    h1 .accent {
+      background: linear-gradient(135deg, var(--color-accent), oklch(68% 0.18 145));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      font-size: var(--text-lead);
+      color: var(--color-muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--color-ink);
+      color: var(--color-bg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 50px -18px oklch(20% 0.05 150 / 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-ink);
+      border: 1px solid oklch(85% 0.02 150);
+    }
+
+    .btn-ghost:hover { background: var(--color-surface); }
+
+    /* Features */
+    .features {
+      padding: calc(var(--space-section) * 0.6) 0 var(--space-section);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--color-surface);
+      padding: 32px 28px;
+      border-radius: var(--radius-lg);
+      border: 1px solid oklch(93% 0.02 150);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--color-accent-soft);
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .feature-card p {
+      color: var(--color-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Section heading */
+    .section-heading {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .section-heading h2 {
+      font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+
+    .section-heading p {
+      color: var(--color-muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid oklch(90% 0.02 150);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: var(--color-muted);
+      text-decoration: none;
+      margin: 0 12px;
+    }
+
+    footer a:hover { color: var(--color-ink); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo">
+        <span class="logo-mark">G</span>
+        <span>Gainsy</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow">건강관리 앱</span>
+        <h1>운동·식단·신체 변화,<br /><span class="accent">한 앱에서 기록하세요.</span></h1>
+        <p class="lead">
+          매일의 운동 세션, 식사, 체중·체지방 변화를 한곳에서 추적하고
+          목표 달성까지의 과정을 시각화합니다.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://apps.apple.com/app/gainsy/id6769074187">App Store에서 받기</a>
+          <a class="btn btn-ghost" href="#features">기능 살펴보기</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="container">
+        <div class="section-heading">
+          <h2>꾸준한 기록이 변화를 만듭니다</h2>
+          <p>Gainsy는 기록을 쉽고 빠르게, 분석을 직관적으로 만들었습니다.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🏋️</div>
+            <h3>운동 세션 기록</h3>
+            <p>세트·반복·중량을 빠르게 입력하고 소모 칼로리까지 자동 추정합니다.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🍽️</div>
+            <h3>식단 칼로리 분석</h3>
+            <p>음식 검색으로 영양표시기준 10종 영양소를 자동 계산해 줍니다.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>신체 변화 추적</h3>
+            <p>체중·체지방·둘레를 기록하고 추세 그래프로 변화를 한눈에 봅니다.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>목표 관리</h3>
+            <p>감량·증량·유지 목표를 설정하고 권장 칼로리·매크로를 자동 계산합니다.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h3>다이어리 캘린더</h3>
+            <p>월 단위 캘린더에서 운동·식단·측정 기록을 한 화면으로 확인합니다.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📸</div>
+            <h3>진행 사진</h3>
+            <p>주기적으로 사진을 남겨 시각적으로 변화를 비교할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Gainsy. All rights reserved.</p>
+      <p style="margin-top: 12px;">
+        <a href="/support">지원</a>
+        <a href="/privacy">개인정보처리방침</a>
+        <a href="/terms">이용약관</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

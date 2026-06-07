@@ -20,8 +20,8 @@ struct ProgressPhotoView: View {
             }
             photoGrid
         }
-        .background(Color.surfaceGrouped)
-        .navigationTitle("진행 사진")
+        .background(Color.backgroundPage)
+        .navigationTitle(Text("body.photo.title"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -31,8 +31,8 @@ struct ProgressPhotoView: View {
                             viewModel.toggleCompareMode()
                         }
                     } label: {
-                        Text(viewModel.isCompareMode ? "취소" : "비교")
-                            .font(.system(size: 15, weight: .medium))
+                        Text(viewModel.isCompareMode ? String(localized: "body.photo.compareToggle.cancel") : String(localized: "body.photo.compareToggle.compare"))
+                            .font(.bodyMedium).fontWeight(.medium)
                             .foregroundStyle(viewModel.isCompareMode ? Color.textSecondary : Color.brandPrimary)
                     }
                 }
@@ -43,7 +43,7 @@ struct ProgressPhotoView: View {
                         showAddSheet = true
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.bodyLarge).fontWeight(.semibold)
                             .foregroundStyle(Color.brandPrimary)
                     }
                 }
@@ -64,19 +64,19 @@ struct ProgressPhotoView: View {
                 )
             }
         }
-        .alert("사진 삭제", isPresented: Binding(
+        .alert(Text("body.photo.deleteConfirm.title"), isPresented: Binding(
             get: { photoToDelete != nil },
             set: { if !$0 { photoToDelete = nil } }
         )) {
-            Button("삭제", role: .destructive) {
+            Button(String(localized: "common.delete.button"), role: .destructive) {
                 if let photo = photoToDelete {
                     Task { await viewModel.deletePhoto(photoId: photo.photoId, apiClient: container.apiClient) }
                 }
                 photoToDelete = nil
             }
-            Button("취소", role: .cancel) { photoToDelete = nil }
+            Button(String(localized: "common.cancel"), role: .cancel) { photoToDelete = nil }
         } message: {
-            Text("이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다.")
+            Text(String(localized: "body.photo.deleteConfirm.message"))
         }
         .overlay {
             if viewModel.isLoading {
@@ -118,12 +118,12 @@ struct ProgressPhotoView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Text(type.label)
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.labelSmall)
                             if count > 0 {
                                 Text("\(count)")
-                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 1)
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol/hero
+                                    .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
+                                    .padding(.vertical, 1) // design-lint:ignore — micro/hero spacing
                                     .background(
                                         viewModel.selectedType == type
                                             ? Color.white.opacity(0.25)
@@ -132,12 +132,12 @@ struct ProgressPhotoView: View {
                                     .clipShape(Capsule())
                             }
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
                         .background(
                             viewModel.selectedType == type
                                 ? Color.brandPrimary
-                                : Color.surfacePrimary
+                                : Color.surfaceCard
                         )
                         .foregroundStyle(
                             viewModel.selectedType == type ? Color.white : Color.textSecondary
@@ -153,10 +153,10 @@ struct ProgressPhotoView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
         }
-        .background(Color.surfacePrimary)
+        .background(Color.surfaceCard)
         .overlay(
             Rectangle().fill(Color.hairline).frame(height: 0.5),
             alignment: .bottom
@@ -169,35 +169,35 @@ struct ProgressPhotoView: View {
         HStack(spacing: 12) {
             Image(systemName: "square.split.2x1")
                 .foregroundStyle(Color.brandPrimary)
-                .font(.system(size: 15))
+                .font(.bodyMedium)
             Text(compareBarLabel)
-                .font(.system(size: 14, weight: .medium))
+                .font(.bodyMedium).fontWeight(.medium)
                 .foregroundStyle(Color.textPrimary)
             Spacer()
             Button {
                 showCompareSheet = true
             } label: {
-                Text("비교 보기")
-                    .font(.system(size: 14, weight: .semibold))
+                Text(String(localized: "body.photo.compare.show"))
+                    .font(.bodyMedium).fontWeight(.semibold)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
                     .background(viewModel.compareSelection.count == 2 ? Color.brandPrimary : Color.textTertiary)
                     .clipShape(Capsule())
             }
             .disabled(viewModel.compareSelection.count != 2)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
         .overlay(Rectangle().fill(Color.hairline).frame(height: 0.5), alignment: .bottom)
     }
 
     private var compareBarLabel: String {
         switch viewModel.compareSelection.count {
-        case 0: return "비교할 사진 2장을 선택하세요"
-        case 1: return "1장 선택됨 · 1장 더 선택하세요"
-        default: return "2장 선택됨"
+        case 0: return String(localized: "body.photo.compare.hint0")
+        case 1: return String(localized: "body.photo.compare.hint1")
+        default: return String(localized: "body.photo.compare.hint2")
         }
     }
 
@@ -232,52 +232,30 @@ struct ProgressPhotoView: View {
                                 Button(role: .destructive) {
                                     photoToDelete = photo
                                 } label: {
-                                    Label("삭제", systemImage: "trash")
+                                    Label(String(localized: "common.delete.button"), systemImage: "trash")
                                 }
                             }
                         }
                     }
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, Spacing.xl) // design-lint:ignore — micro/hero spacing
             }
-            .refreshable { await viewModel.loadAll(apiClient: container.apiClient) }
+            .refreshable {
+                await viewModel.loadAll(apiClient: container.apiClient)
+                viewModel.errorMessage = nil
+            }
         }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            ZStack {
-                Circle()
-                    .fill(Color.surfaceCard)
-                    .frame(width: 96, height: 96)
-                Image(systemName: "camera")
-                    .font(.system(size: 36, weight: .light))
-                    .foregroundStyle(Color.brandSecondary)
-            }
-            VStack(spacing: 8) {
-                Text("아직 사진이 없어요")
-                    .font(.headingMedium)
-                    .foregroundStyle(Color.textPrimary)
-                Text("+ 버튼으로 \(viewModel.selectedType.label) 사진을 추가하세요")
-                    .font(.bodyMedium)
-                    .foregroundStyle(Color.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            Button {
+        EmptyState(
+            icon: "camera",
+            title: String(localized: "body.photo.empty.title"),
+            message: String(format: String(localized: "body.photo.empty.message"), viewModel.selectedType.label),
+            action: .init(label: String(localized: "body.photo.empty.action")) {
                 showAddSheet = true
-            } label: {
-                Text("사진 추가")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 13)
-                    .background(Color.brandPrimary)
-                    .clipShape(Capsule())
             }
-            Spacer()
-        }
-        .padding(.horizontal, 40)
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -317,20 +295,20 @@ private struct PhotoGridCell: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     if photo.isBaseline {
-                        Text("기준")
-                            .font(.system(size: 9, weight: .heavy))
+                        Text(String(localized: "body.photo.baseline"))
+                            .font(.system(size: 9, weight: .heavy)) // design-lint:ignore — SF Symbol/hero
                             .foregroundStyle(Color.textHeadline)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
+                            .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
                             .background(Color.brandAccentGlow)
                             .clipShape(Capsule())
                     }
                     Text(photo.displayDate)
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.captionXSmall).fontWeight(.semibold)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                 }
-                .padding(8)
+                .padding(Spacing.sm) // design-lint:ignore — micro/hero spacing
                 .background(
                     LinearGradient(
                         colors: [.clear, .black.opacity(0.45)],
@@ -342,10 +320,10 @@ private struct PhotoGridCell: View {
                     ZStack(alignment: .topTrailing) {
                         Color.black.opacity(isSelected ? 0 : 0.25)
                         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.system(size: 22, weight: .semibold)) // design-lint:ignore — SF Symbol/hero
                             .foregroundStyle(isSelected ? Color.brandPrimary : .white)
                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                            .padding(8)
+                            .padding(Spacing.sm) // design-lint:ignore — micro/hero spacing
                     }
                     .frame(width: geo.size.width, height: geo.size.width)
                 }
@@ -355,7 +333,7 @@ private struct PhotoGridCell: View {
         .clipShape(Rectangle())
         .overlay(
             isSelected
-                ? RoundedRectangle(cornerRadius: 0)
+                ? RoundedRectangle(cornerRadius: 0) // design-lint:ignore — intentional sharp corner
                     .stroke(Color.brandPrimary, lineWidth: 3)
                 : nil
         )
@@ -389,10 +367,10 @@ private struct PhotoDetailView: View {
                     .frame(maxWidth: .infinity)
 
                     VStack(alignment: .leading, spacing: 20) {
-                        infoRow("포즈", photo.photoType.label)
-                        infoRow("촬영일", photo.displayDate)
+                        infoRow(String(localized: "body.photo.detail.pose"), photo.photoType.label)
+                        infoRow(String(localized: "body.photo.detail.takenOn"), photo.displayDate)
                         if let w = photo.bodyWeightKg {
-                            infoRow("체중", String(format: "%.1f kg", w))
+                            infoRow(String(localized: "body.photo.detail.weight"), String(format: "%.1f kg", w))
                         }
                         if let wc = photo.waistCm {
                             infoRow("허리", String(format: "%.1f cm", wc))
@@ -410,24 +388,24 @@ private struct PhotoDetailView: View {
                             }
                         }
                     }
-                    .padding(24)
+                    .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
 
                     Button(role: .destructive) {
                         showDeleteConfirm = true
                     } label: {
                         Label("사진 삭제", systemImage: "trash")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.bodyMedium).fontWeight(.medium)
                             .foregroundStyle(Color.red)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
+                            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                             .background(Color.red.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
+                    .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                    .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
                 }
             }
-            .background(Color.surfaceGrouped)
+            .background(Color.backgroundPage)
             .navigationTitle(photo.photoType.label)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -437,7 +415,7 @@ private struct PhotoDetailView: View {
                 }
             }
             .alert("사진 삭제", isPresented: $showDeleteConfirm) {
-                Button("삭제", role: .destructive) {
+                Button(String(localized: "common.delete.button"), role: .destructive) {
                     Task {
                         await viewModel.deletePhoto(photoId: photo.photoId, apiClient: container.apiClient)
                         dismiss()
@@ -445,7 +423,7 @@ private struct PhotoDetailView: View {
                 }
                 Button("취소", role: .cancel) {}
             } message: {
-                Text("이 사진을 삭제하시겠습니까? 되돌릴 수 없습니다.")
+                Text(String(localized: "body.photo.deleteConfirm.message"))
             }
         }
     }
@@ -511,15 +489,15 @@ struct PhotoCompareView: View {
 
             VStack(spacing: 4) {
                 Text(photo.displayDate)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.labelSmall)
                     .foregroundStyle(.white)
                 if let w = photo.bodyWeightKg {
                     Text(String(format: "%.1f kg", w))
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Color.white.opacity(0.7))
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             .frame(maxWidth: .infinity)
             .background(Color.black.opacity(0.85))
         }

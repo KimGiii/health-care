@@ -37,14 +37,14 @@ struct ExerciseSessionDetailView: View {
                 }
             }
         }
-        .confirmationDialog("운동 기록을 삭제할까요?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button("삭제", role: .destructive) {
+        .confirmationDialog(Text("exercise.confirm.delete"), isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button(String(localized: "common.delete.button"), role: .destructive) {
                 Task {
                     await viewModel.deleteSession(id: sessionId, apiClient: container.apiClient)
                     dismiss()
                 }
             }
-            Button("취소", role: .cancel) {}
+            Button(String(localized: "common.cancel"), role: .cancel) {}
         }
         .task { await viewModel.loadSession(id: sessionId, apiClient: container.apiClient) }
     }
@@ -62,13 +62,13 @@ struct ExerciseSessionDetailView: View {
                 let prSets = session.sets.filter(\.personalRecord)
                 if !prSets.isEmpty {
                     prBanner(sets: prSets)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 }
 
                 // 메모
                 if let notes = session.notes, !notes.isEmpty {
                     noteCard(text: notes)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 }
 
                 // 운동 그룹
@@ -77,8 +77,8 @@ struct ExerciseSessionDetailView: View {
                         ExerciseGroupCard(name: group.exerciseName, sets: group.sets)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 32)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -96,9 +96,9 @@ struct ExerciseSessionDetailView: View {
 
                 // 날짜
                 Text(session.formattedDate)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.numeralMedium).fontWeight(.bold)
                     .foregroundStyle(.white)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
 
                 Spacer(minLength: 0)
 
@@ -108,7 +108,7 @@ struct ExerciseSessionDetailView: View {
                         icon: "scalemass.fill",
                         value: session.totalVolumeKg.map { String(format: "%.0f", $0) } ?? "—",
                         unit: "kg",
-                        label: "총 볼륨",
+                        label: String(localized: "exercise.detail.totalVolume"),
                         color: Color.brandAccent
                     )
                     Divider().frame(height: 44)
@@ -116,32 +116,32 @@ struct ExerciseSessionDetailView: View {
                         icon: "flame.fill",
                         value: session.caloriesBurned.map { String(format: "%.0f", $0) } ?? "—",
                         unit: "kcal",
-                        label: "소모 칼로리",
+                        label: String(localized: "exercise.detail.burnedKcal"),
                         color: .orange
                     )
                     Divider().frame(height: 44)
                     detailStat(
                         icon: "clock.fill",
                         value: session.durationMinutes.map { "\($0)" } ?? "—",
-                        unit: "분",
-                        label: "운동 시간",
+                        unit: String(localized: "exercise.detail.unit.min"),
+                        label: String(localized: "exercise.detail.duration"),
                         color: Color.brandAccent
                     )
                     Divider().frame(height: 44)
                     detailStat(
                         icon: "list.number",
                         value: "\(session.sets.count)",
-                        unit: "세트",
-                        label: "총 세트",
+                        unit: String(localized: "exercise.detail.unit.sets"),
+                        label: String(localized: "exercise.detail.totalSets"),
                         color: Color.brandAccent
                     )
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
                 .shadow(color: .black.opacity(0.10), radius: 12, x: 0, y: 4)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 28)
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -149,18 +149,18 @@ struct ExerciseSessionDetailView: View {
     private func detailStat(icon: String, value: String, unit: String, label: String, color: Color) -> some View {
         VStack(spacing: 5) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(.bodyMedium)
                 .foregroundStyle(color)
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(.cta).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Text(unit)
-                    .font(.system(size: 10))
+                    .font(.captionXSmall)
                     .foregroundStyle(Color.textSecondary)
             }
             Text(label)
-                .font(.system(size: 10))
+                .font(.captionXSmall)
                 .foregroundStyle(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -171,24 +171,24 @@ struct ExerciseSessionDetailView: View {
     private func prBanner(sets: [SetDetail]) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "trophy.fill")
-                .font(.system(size: 20))
+                .font(.system(size: 20)) // design-lint:ignore — SF Symbol or special
                 .foregroundStyle(.yellow)
             VStack(alignment: .leading, spacing: 3) {
                 Text("개인 최고 기록 달성! 🎉")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.bodyMedium).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Text(sets.map(\.displayExerciseName).joined(separator: ", "))
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(Color.textSecondary)
                     .lineLimit(2)
             }
             Spacer()
         }
-        .padding(14)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.brandWarning.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: Radius.lg)
                 .stroke(Color.brandWarning.opacity(0.4), lineWidth: 1)
         )
     }
@@ -199,16 +199,16 @@ struct ExerciseSessionDetailView: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "note.text")
                 .foregroundStyle(Color.brandAccent)
-                .padding(.top, 1)
+                .padding(.top, 1) // design-lint:ignore — micro/hero spacing
             Text(text)
-                .font(.system(size: 14))
+                .font(.bodyMedium)
                 .foregroundStyle(Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .padding(14)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 
@@ -217,19 +217,19 @@ struct ExerciseSessionDetailView: View {
     private func errorState(message: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 44))
+                .font(.system(size: 44)) // design-lint:ignore — SF Symbol or special
                 .foregroundStyle(Color.brandWarning)
             Text(message)
-                .font(.system(size: 15))
+                .font(.bodyMedium)
                 .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("다시 시도") {
+            Button(String(localized: "exercise.retry")) {
                 Task { await viewModel.loadSession(id: sessionId, apiClient: container.apiClient) }
             }
             .foregroundStyle(Color.brandAccent)
             .fontWeight(.semibold)
         }
-        .padding(32)
+        .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -282,29 +282,29 @@ private struct ExerciseGroupCard: View {
             // 그룹 헤더
             HStack {
                 Text(name)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.headingSmall).fontWeight(.bold)
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
-                Text("\(sets.count)세트")
-                    .font(.system(size: 12, weight: .medium))
+                Text(String(format: String(localized: "exercise.set.count"), sets.count))
+                    .font(.caption).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
                     .background(Color.backgroundPage)
                     .clipShape(Capsule())
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
 
             // 세트 행
             ForEach(sets) { set in
-                Divider().padding(.horizontal, 16)
+                Divider().padding(.horizontal, Spacing.lg)
                 SetRow(set: set)
             }
         }
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }
@@ -318,7 +318,7 @@ private struct SetRow: View {
         HStack(spacing: 12) {
             // 세트 번호
             Text("\(set.setNumber)")
-                .font(.system(size: 13, weight: .bold))
+                .font(.bodySmall).fontWeight(.bold)
                 .foregroundStyle(Color.brandAccent)
                 .frame(width: 28, height: 28)
                 .background(Color.surfaceCard)
@@ -326,7 +326,7 @@ private struct SetRow: View {
 
             // 내용
             Text(set.setDescription)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.bodyLarge).fontWeight(.semibold)
                 .foregroundStyle(Color.textPrimary)
 
             Spacer()
@@ -335,20 +335,20 @@ private struct SetRow: View {
             if set.personalRecord {
                 HStack(spacing: 3) {
                     Image(systemName: "trophy.fill")
-                        .font(.system(size: 10))
+                        .font(.captionXSmall)
                         .foregroundStyle(.yellow)
                     Text("PR")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.captionXSmall).fontWeight(.bold)
                         .foregroundStyle(Color.brandWarning)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
                 .background(Color.brandWarning.opacity(0.12))
                 .clipShape(Capsule())
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 11) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -370,7 +370,7 @@ final class ExerciseSessionDetailViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "운동 상세를 불러오지 못했습니다."
+            errorMessage = String(localized: "exercise.error.loadDetail")
         }
     }
 
@@ -380,7 +380,7 @@ final class ExerciseSessionDetailViewModel: ObservableObject {
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {
-            errorMessage = "삭제 중 오류가 발생했습니다."
+            errorMessage = String(localized: "exercise.error.delete")
         }
     }
 }

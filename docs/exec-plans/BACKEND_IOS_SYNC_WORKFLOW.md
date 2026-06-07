@@ -162,12 +162,27 @@
 - iOS가 신규 화면 상태를 요구하면 백엔드 응답이 그 상태를 지원하는지 먼저 확인한다.
 - TODO 문서에는 "한 플랫폼 단독 작업"보다 "연동 단위 작업"을 우선으로 쓴다.
 
+## 환경 분리 매트릭스
+
+iOS 빌드 환경과 백엔드 환경의 매핑. **이 표와 어긋나면 연동이 깨진다.**
+
+| 용도 | iOS Scheme | Build Config | `BASE_URL` | 백엔드 프로파일 | 도메인 |
+|---|---|---|---|---|---|
+| 로컬 개발 | `HealthCare` (Run) | Debug | `localhost:8080` / `$(LOCAL_IP):8080` | `local` | 로컬 |
+| dev 테스트 | `HealthCare-Staging` | Staging | `https://dev.api.gainsy.site` | `dev` | `dev.api.gainsy.site` |
+| App Store 심사/배포 | `HealthCare` (Archive) | Release | `https://api.gainsy.site` | `prod` | `api.gainsy.site` |
+
+- `BASE_URL`은 **xcconfig에서만** 정의한다. scheme `environmentVariables`로 주입 금지 (환경 분리가 무력화됨).
+- `HealthCare` scheme은 액션마다 config가 다르다: **Run=Debug / Archive=Release**. 심사 제출은 `HealthCare` scheme을 Archive → Distribute 하면 prod로 나간다.
+- 환경 오인·연결 실패 등 트러블슈팅 기록은 [docs/operations/TROUBLESHOOTING.md](../operations/TROUBLESHOOTING.md) 참고.
+
 ## 문서 반영 규칙
 
 - 기능 슬라이스 완료 시 `docs/CURRENT_STATUS.md` 업데이트
 - 백엔드 작업 기준 변경 시 `docs/exec-plans/BACKEND_TODO.md` 업데이트
 - iOS 작업 기준 변경 시 `docs/exec-plans/IOS_TODO.md` 업데이트
 - 플랫폼 간 공통 흐름 변경 시 이 문서 업데이트
+- 작업 중 문제 발생·해결 시 `docs/operations/TROUBLESHOOTING.md`에 누적 기록
 
 ---
 

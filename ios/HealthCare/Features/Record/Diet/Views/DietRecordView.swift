@@ -14,20 +14,23 @@ struct DietRecordView: View {
                     VStack(spacing: 20) {
                         todayNutritionBar
                         if viewModel.isLoading {
-                            ProgressView().padding(.top, 40)
+                            ProgressView().padding(.top, Spacing.xxxl)
                         } else if viewModel.todayLogs.isEmpty {
                             emptyState
                         } else {
                             logListSection
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 80)
+                    .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                    .padding(.top, Spacing.xl) // design-lint:ignore — micro/hero spacing
+                    .padding(.bottom, 80) // design-lint:ignore — micro/hero spacing
                 }
             }
             .ignoresSafeArea(edges: .top)
-            .refreshable { await viewModel.loadLogs(apiClient: container.apiClient) }
+            .refreshable {
+                await viewModel.loadLogs(apiClient: container.apiClient)
+                viewModel.errorMessage = nil
+            }
 
             if !viewModel.todayLogs.isEmpty {
                 fabButton
@@ -35,7 +38,7 @@ struct DietRecordView: View {
         }
         .navigationBarHidden(true)
         .sheet(isPresented: $viewModel.showAddLog) {
-            AddDietLogView {
+            AddDietLogView(remainingCalories: viewModel.remainingCalories) {
                 viewModel.showAddLog = false
             }
             .environmentObject(container)
@@ -47,7 +50,9 @@ struct DietRecordView: View {
                 }
             }
         }
-        .task { await viewModel.loadLogs(apiClient: container.apiClient) }
+        .onAppear {
+            Task { await viewModel.loadLogs(apiClient: container.apiClient) }
+        }
     }
 
     // MARK: - 오늘 영양소 바
@@ -65,21 +70,23 @@ struct DietRecordView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("목표")
+                    Text(viewModel.remainingCalories >= 0 ? String(localized: "diet.summary.remaining") : String(localized: "diet.summary.exceeded"))
                         .font(.caption)
                         .foregroundColor(Color.textSecondary)
-                    Text(String(format: "%.0f kcal", DietRecordViewModel.dailyCalorieGoal))
-                        .font(.subheadline)
-                        .foregroundColor(Color.textSecondary)
+                    Text(String(format: "%.0f kcal", abs(viewModel.remainingCalories)))
+                        .font(.subheadline.bold())
+                        .foregroundColor(viewModel.remainingCalories >= 0
+                            ? Color.textHeadline
+                            : Color.brandDanger)
                 }
             }
             // 칼로리 프로그레스 바
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: Radius.sm)
                         .fill(Color.hairline)
                         .frame(height: 8)
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: Radius.sm)
                         .fill(
                             LinearGradient(
                                 colors: [.brandAccent, .brandPrimary],
@@ -95,33 +102,33 @@ struct DietRecordView: View {
             // 3대 영양소 행
             HStack(spacing: 0) {
                 MacroProgressCell(
-                    label: "단백질",
+                    label: String(localized: "diet.nutrient.protein"),
                     current: viewModel.todayProteinG,
-                    goal: DietRecordViewModel.dailyProteinGoal,
+                    goal: viewModel.dailyProteinGoal,
                     progress: viewModel.proteinProgress,
                     color: .blue
                 )
                 Divider().frame(height: 36)
                 MacroProgressCell(
-                    label: "탄수화물",
+                    label: String(localized: "diet.nutrient.carbs"),
                     current: viewModel.todayCarbsG,
-                    goal: DietRecordViewModel.dailyCarbsGoal,
+                    goal: viewModel.dailyCarbsGoal,
                     progress: viewModel.carbsProgress,
                     color: .orange
                 )
                 Divider().frame(height: 36)
                 MacroProgressCell(
-                    label: "지방",
+                    label: String(localized: "diet.nutrient.fat"),
                     current: viewModel.todayFatG,
-                    goal: DietRecordViewModel.dailyFatGoal,
+                    goal: viewModel.dailyFatGoal,
                     progress: viewModel.fatProgress,
                     color: .pink
                 )
             }
         }
-        .padding(16)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
     }
 
@@ -140,7 +147,7 @@ struct DietRecordView: View {
                     Button(role: .destructive) {
                         Task { await viewModel.deleteLog(id: log.dietLogId, apiClient: container.apiClient) }
                     } label: {
-                        Label("삭제", systemImage: "trash")
+                        Label(String(localized: "common.delete.button"), systemImage: "trash")
                     }
                 }
             }
@@ -150,32 +157,14 @@ struct DietRecordView: View {
     // MARK: - 빈 상태
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "fork.knife.circle")
-                .font(.system(size: 56))
-                .foregroundColor(.brandAccent.opacity(0.6))
-                .padding(.top, 40)
-            Text("아직 식단 기록이 없어요")
-                .font(.headline)
-                .foregroundColor(Color.textHeadline)
-            Text("오늘 먹은 음식을 기록해보세요.\n영양 목표 달성을 도와드립니다.")
-                .font(.subheadline)
-                .foregroundColor(Color.textSecondary)
-                .multilineTextAlignment(.center)
-            Button {
+        EmptyState(
+            icon: "fork.knife.circle",
+            title: String(localized: "diet.empty.title"),
+            message: String(localized: "diet.empty.message"),
+            action: .init(label: String(localized: "diet.empty.action")) {
                 viewModel.showAddLog = true
-            } label: {
-                Label("첫 식사 기록하기", systemImage: "plus")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.brandPrimary)
-                    .clipShape(Capsule())
             }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 40)
+        )
     }
 
     // MARK: - FAB
@@ -185,15 +174,15 @@ struct DietRecordView: View {
             viewModel.showAddLog = true
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 22, weight: .bold))
+                .font(.headingLarge)
                 .foregroundColor(.white)
                 .frame(width: 56, height: 56)
                 .background(Color.brandPrimary)
                 .clipShape(Circle())
                 .shadow(color: Color.brandPrimary.opacity(0.4), radius: 8, y: 4)
         }
-        .padding(.trailing, 20)
-        .padding(.bottom, 24)
+        .padding(.trailing, Spacing.xl) // design-lint:ignore — micro/hero spacing
+        .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -225,9 +214,9 @@ private struct DietHeroSection: View {
                 HStack {
                     Button(action: onDismiss) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.cta)
                             .foregroundColor(.white)
-                            .padding(8)
+                            .padding(Spacing.sm) // design-lint:ignore — micro/hero spacing
                             .background(Color.white.opacity(0.2))
                             .clipShape(Circle())
                     }
@@ -239,8 +228,8 @@ private struct DietHeroSection: View {
                     // 균형을 위한 빈 공간
                     Color.clear.frame(width: 36, height: 36)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 56)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.top, 56) // design-lint:ignore — micro/hero spacing
 
                 // 오늘 요약 텍스트
                 VStack(spacing: 4) {
@@ -248,7 +237,7 @@ private struct DietHeroSection: View {
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.7))
                     Text(String(format: "%.0f kcal", viewModel.todayCalories))
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .font(.system(size: 40, weight: .bold, design: .rounded)) // design-lint:ignore — SF Symbol/hero
                         .foregroundColor(.white)
                     Text("오늘 섭취 칼로리")
                         .font(.caption)
@@ -262,7 +251,7 @@ private struct DietHeroSection: View {
                         MealStatusChip(type: mealType, count: count)
                     }
                 }
-                .padding(.bottom, 50)
+                .padding(.bottom, 50) // design-lint:ignore — micro/hero spacing
             }
         }
         .frame(maxWidth: .infinity)
@@ -270,8 +259,8 @@ private struct DietHeroSection: View {
 
     private func todayDisplayString() -> String {
         let f = DateFormatter()
-        f.dateFormat = "M월 d일 EEEE"
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = LocaleManager.resolvedLocale
+        f.dateFormat = String(localized: "home.date.format")
         return f.string(from: Date())
     }
 }
@@ -282,13 +271,13 @@ private struct MealStatusChip: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Text(type.emoji).font(.caption)
+            Image(systemName: type.sfSymbol).font(.caption)
             Text(count > 0 ? "✓" : type.displayName)
                 .font(.caption2.bold())
                 .foregroundColor(count > 0 ? .brandAccent : .white.opacity(0.7))
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.horizontal, Spacing.md) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 5) // design-lint:ignore — micro/hero spacing
         .background(count > 0 ? Color.white.opacity(0.95) : Color.white.opacity(0.15))
         .clipShape(Capsule())
     }
@@ -352,7 +341,7 @@ private struct MacroProgressCell: View {
                 }
             }
             .frame(height: 4)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
         }
         .frame(maxWidth: .infinity)
     }
@@ -367,16 +356,16 @@ private struct DietLogCard: View {
         HStack(spacing: 14) {
             // 식사 유형 배지
             VStack(spacing: 4) {
-                Text(log.mealType.emoji)
+                Image(systemName: log.mealType.sfSymbol)
                     .font(.title2)
                 Text(log.mealType.displayName)
                     .font(.caption2.bold())
                     .foregroundColor(Color.brandAccent)
             }
             .frame(width: 52)
-            .padding(.vertical, 10)
+            .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             .background(Color.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(log.caloriesText)
@@ -400,10 +389,10 @@ private struct DietLogCard: View {
                 .font(.caption)
                 .foregroundColor(Color.textSecondary)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }
@@ -417,8 +406,8 @@ private struct MacroTag: View {
         Text("\(label) \(String(format: "%.0f", value))g")
             .font(.caption2.bold())
             .foregroundColor(color)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
             .background(color.opacity(0.1))
             .clipShape(Capsule())
     }

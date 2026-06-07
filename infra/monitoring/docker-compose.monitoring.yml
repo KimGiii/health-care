@@ -1,0 +1,63 @@
+# 프로덕션 모니터링 스택 (EC2 t3.small).
+# 앱 컨테이너(blue-green)와 독립된 long-running 스택. 1회 부트스트랩 후 계속 실행.
+#
+# 실행:
+#   cd infra/monitoring
+#   docker compose -f docker-compose.monitoring.yml --env-file /etc/healthcare/monitoring.env up -d
+#
+# 공유 설정(대시보드·데이터소스·알림 규칙)은 backend/monitoring을 재사용하고,
+# Slack 채널만 이 디렉토리(grafana/alerting)에서 추가로 주입한다.
+# → 레포가 EC2에 존재해야 한다(README 참고).
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: healthcare-prometheus
+    restart: unless-stopped
+    mem_limit: 250m
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+      - "--storage.tsdb.retention.size=300MB"
+    ports:
+      - "127.0.0.1:9090:9090"   # 외부 비노출 (Nginx 라우트 없음)
+    volumes:
+      - ./prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    # v12/v13은 grafana-apiserver·k8s 스토리지 등 무거운 서브시스템이 있어 t3.small에서 thrashing.
+    # 가벼운 11.x LTS로 핀 + 메모리 상향.
+    image: grafana/grafana:11.6.3
+    container_name: healthcare-grafana
+    restart: unless-stopped
+    mem_limit: 350m
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set in monitoring.env}
+      GF_SERVER_ROOT_URL: https://api.gainsy.site/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      # 불필요한 기능 끄기 (메모리/CPU 절약)
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    ports:
+      - "127.0.0.1:3000:3000"   # 외부는 Nginx /grafana/ 경유
+    volumes:
+      # 공유 설정 (backend/monitoring 재사용)
+      - ../../backend/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../../backend/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../../backend/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ../../backend/monitoring/grafana/provisioning/alerting/rules.yml:/etc/grafana/provisioning/alerting/rules.yml:ro
+      # 프로덕션 전용 알림 채널
+      - ./grafana/alerting/contactpoints.yml:/etc/grafana/provisioning/alerting/contactpoints.yml:ro
+      - ./grafana/alerting/policies.yml:/etc/grafana/provisioning/alerting/policies.yml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:

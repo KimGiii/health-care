@@ -137,10 +137,11 @@ public class ExerciseSessionService {
         }
 
         List<ExerciseSet> sets = setRepository.findBySessionIdOrderBySetNumber(sessionId);
-        Map<Long, ExerciseCatalog> catalogMap = sets.stream()
+        List<Long> catalogIds = sets.stream()
                 .map(ExerciseSet::getExerciseCatalogId)
                 .distinct()
-                .flatMap(cid -> catalogRepository.findById(cid).stream())
+                .toList();
+        Map<Long, ExerciseCatalog> catalogMap = catalogRepository.findAllById(catalogIds).stream()
                 .collect(Collectors.toMap(ExerciseCatalog::getId, c -> c));
 
         List<SetDetailResponse> setDetails = sets.stream()

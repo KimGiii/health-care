@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: healthcare-api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # 로컬: 앱은 호스트에서 ./gradlew bootRun (8080)으로 실행.
+      - targets: ["host.docker.internal:8080"]
+        labels:
+          application: healthcare-api
+          env: local

@@ -397,6 +397,7 @@ private actor MockHomeDashboardLoader: HomeDashboardLoading {
     private let sessions: [SessionSummary]
     private let goals: [GoalSummary]
     private let goalProgress: GoalProgressResponse?
+    private let userProfile: UserProfile?
     private let shouldFail: Bool
 
     init(
@@ -404,12 +405,14 @@ private actor MockHomeDashboardLoader: HomeDashboardLoading {
         sessions: [SessionSummary] = [],
         goals: [GoalSummary] = [],
         goalProgress: GoalProgressResponse? = nil,
+        userProfile: UserProfile? = nil,
         shouldFail: Bool = false
     ) {
         self.dietLogs = dietLogs
         self.sessions = sessions
         self.goals = goals
         self.goalProgress = goalProgress
+        self.userProfile = userProfile
         self.shouldFail = shouldFail
     }
 
@@ -446,5 +449,15 @@ private actor MockHomeDashboardLoader: HomeDashboardLoading {
     func loadGoalProgress(id: Int) async throws -> GoalProgressResponse {
         if let p = goalProgress { return p }
         throw APIError.unknown
+    }
+
+    func loadUserProfile() async throws -> UserProfile {
+        if shouldFail { throw APIError.unknown }
+        return userProfile ?? UserProfile(
+            id: 1, email: "t@t.com", displayName: "Tester",
+            sex: nil, dateOfBirth: nil, heightCm: nil, weightKg: nil,
+            activityLevel: nil, onboardingCompleted: true, isPremium: false,
+            calorieTarget: nil, proteinTargetG: nil, carbTargetG: nil, fatTargetG: nil
+        )
     }
 }

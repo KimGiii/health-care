@@ -25,8 +25,8 @@ public interface ExerciseCatalogRepository extends JpaRepository<ExerciseCatalog
               AND (:customOnly = FALSE   OR c.isCustom = TRUE)
               AND (
                     :query IS NULL
-                    OR LOWER(c.name)   LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
-                    OR LOWER(c.nameKo) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
+                    OR LOWER(REPLACE(c.name,   ' ', '')) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
+                    OR LOWER(REPLACE(c.nameKo, ' ', '')) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
                   )
             ORDER BY c.isCustom ASC, c.name ASC
             """)

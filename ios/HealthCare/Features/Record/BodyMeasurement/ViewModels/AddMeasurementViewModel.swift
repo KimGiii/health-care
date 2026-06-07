@@ -102,6 +102,8 @@ final class AddMeasurementViewModel: ObservableObject {
         do {
             let body = try apiClient.encode(request)
             let _: MeasurementResponse = try await apiClient.request(.createBodyMeasurement(body: body))
+            // 신체 측정 생성 → 백엔드가 User.weightKg를 동기화하므로 마이페이지 등이 새로고침되도록 알림.
+            NotificationCenter.default.post(name: .bodyMeasurementDidChange, object: nil)
             onSuccess()
         } catch {
             errorMessage = error.localizedDescription

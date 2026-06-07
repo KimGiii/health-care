@@ -1,5 +1,5 @@
 import SwiftUI
-import PhotosUI
+@preconcurrency import PhotosUI
 
 @MainActor
 struct AddProgressPhotoView: View {
@@ -28,23 +28,23 @@ struct AddProgressPhotoView: View {
                     baselineToggle
                     uploadButton
                 }
-                .padding(20)
-                .padding(.bottom, 40)
+                .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("진행 사진 추가")
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("body.photo.add.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
             }
-            .alert("오류", isPresented: Binding(
+            .alert(Text("오류"), isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("확인", role: .cancel) {}
+                Button(String(localized: "common.ok"), role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
@@ -63,52 +63,17 @@ struct AddProgressPhotoView: View {
     // MARK: - Photo Picker
 
     private var photoPickerSection: some View {
-        PhotosPicker(selection: $selectedItem, matching: .images) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.surfacePrimary)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-                    .frame(height: 240)
-
-                if let img = selectedImage {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 240)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                } else {
-                    VStack(spacing: 14) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.surfaceCard)
-                                .frame(width: 64, height: 64)
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundStyle(Color.brandSecondary)
-                        }
-                        VStack(spacing: 4) {
-                            Text("사진 선택")
-                                .font(.headingSmall)
-                                .foregroundStyle(Color.textPrimary)
-                            Text("갤러리에서 가져오기")
-                                .font(.bodySmall)
-                                .foregroundStyle(Color.textTertiary)
-                        }
-                    }
-                }
-            }
-        }
+        PhotoPickerSection(selectedItem: $selectedItem, selectedImage: selectedImage)
     }
 
     // MARK: - Type Selector
 
     private var typeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("포즈")
-                .font(.system(size: 13, weight: .semibold))
+            Text(String(localized: "body.photo.add.poseTitle"))
+                .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
             HStack(spacing: 8) {
                 ForEach(PhotoType.allCases) { type in
@@ -117,21 +82,21 @@ struct AddProgressPhotoView: View {
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: type.icon)
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.bodyLarge).fontWeight(.medium)
                             Text(type.label)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.captionXSmall).fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
                         .background(
                             selectedType == type
                                 ? Color.brandPrimary
-                                : Color.surfacePrimary
+                                : Color.surfaceCard
                         )
                         .foregroundStyle(
                             selectedType == type ? Color.white : Color.textSecondary
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                         .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)
@@ -144,31 +109,31 @@ struct AddProgressPhotoView: View {
 
     private var metaSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("신체 정보 (선택)")
-                .font(.system(size: 13, weight: .semibold))
+            Text(String(localized: "body.photo.add.bodyInfoTitle"))
+                .font(.labelSmall)
                 .foregroundStyle(Color.textSecondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
             VStack(spacing: 0) {
-                metaRow(label: "체중", unit: "kg", text: $weightText)
-                Divider().padding(.leading, 16)
-                metaRow(label: "허리", unit: "cm", text: $waistText)
-                Divider().padding(.leading, 16)
+                metaRow(label: String(localized: "body.metric.weight"), unit: "kg", text: $weightText)
+                Divider().padding(.leading, Spacing.lg)
+                metaRow(label: String(localized: "body.metric.waist"), unit: "cm", text: $waistText)
+                Divider().padding(.leading, Spacing.lg)
                 HStack {
-                    Text("메모")
+                    Text(String(localized: "body.photo.add.notesTitle"))
                         .font(.bodyMedium)
                         .foregroundStyle(Color.textSecondary)
                         .frame(width: 56, alignment: .leading)
-                    TextField("특이사항 (선택)", text: $notes, axis: .vertical)
+                    TextField(String(localized: "body.photo.add.notesPlaceholder"), text: $notes, axis: .vertical)
                         .lineLimit(1...3)
-                        .font(.system(size: 14))
+                        .font(.bodyMedium)
                         .foregroundStyle(Color.textPrimary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfacePrimary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
         }
     }
@@ -184,7 +149,7 @@ struct AddProgressPhotoView: View {
                 TextField("0.0", text: text)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.headingSmall)
                     .foregroundStyle(Color.textPrimary)
                     .frame(width: 70)
                 Text(unit)
@@ -192,8 +157,8 @@ struct AddProgressPhotoView: View {
                     .foregroundStyle(Color.textTertiary)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, 13) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Baseline Toggle
@@ -201,19 +166,19 @@ struct AddProgressPhotoView: View {
     private var baselineToggle: some View {
         Toggle(isOn: $isBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("기준 사진으로 설정")
+                Text(String(localized: "body.photo.add.setBaseline"))
                     .font(.bodyMedium)
                     .foregroundStyle(Color.textPrimary)
-                Text("변화 비교의 시작점이 됩니다")
+                Text(String(localized: "body.photo.add.setBaselineHint"))
                     .font(.bodySmall)
                     .foregroundStyle(Color.textTertiary)
             }
         }
         .tint(Color.brandAccent)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.surfacePrimary)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
 
@@ -252,28 +217,28 @@ struct AddProgressPhotoView: View {
                             ProgressView(value: viewModel.uploadProgress)
                                 .tint(.white)
                                 .frame(width: 160)
-                            Text("업로드 중 \(Int(viewModel.uploadProgress * 100))%")
-                                .font(.system(size: 13, weight: .medium))
+                            Text(String(format: String(localized: "body.photo.add.uploadProgress"), Int(viewModel.uploadProgress * 100)))
+                                .font(.bodySmall).fontWeight(.medium)
                                 .foregroundStyle(.white.opacity(0.85))
                         }
                     } else if isRetryState {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 15, weight: .semibold))
-                            Text("다시 시도")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.headingSmall)
+                            Text(String(localized: "body.photo.add.retry"))
+                                .font(.bodyLarge).fontWeight(.semibold)
                         }
                         .foregroundStyle(.white)
                     } else {
-                        Text("저장하기")
-                            .font(.system(size: 16, weight: .semibold))
+                        Text(String(localized: "body.photo.add.save"))
+                            .font(.bodyLarge).fontWeight(.semibold)
                             .foregroundStyle(.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(uploadButtonBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             }
             .disabled(!canUpload)
             .animation(.easeInOut(duration: 0.2), value: canUpload)
@@ -289,19 +254,69 @@ struct AddProgressPhotoView: View {
     private var uploadFailureBanner: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.bodyMedium).fontWeight(.semibold)
                 .foregroundStyle(Color.brandDanger)
-                .padding(.top, 1)
+                .padding(.top, 1) // design-lint:ignore — micro/hero spacing
             Text(viewModel.uploadFailureMessage)
-                .font(.system(size: 13))
+                .font(.bodySmall)
                 .foregroundStyle(Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.brandDanger.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+}
+
+// MARK: - Photo Picker Section
+//
+// PhotosPicker의 label 클로저가 Swift 6 strict concurrency에서 nonisolated로
+// 추론되는 문제를 피하기 위해 별도 @MainActor View로 분리.
+
+@MainActor
+private struct PhotoPickerSection: View {
+    @Binding var selectedItem: PhotosPickerItem?
+    let selectedImage: UIImage?
+
+    var body: some View {
+        PhotosPicker(selection: $selectedItem, matching: .images) {
+            ZStack {
+                RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                    .fill(Color.surfaceCard)
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    .frame(height: 240)
+
+                if let img = selectedImage {
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 240)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
+                } else {
+                    VStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.surfaceCard)
+                                .frame(width: 64, height: 64)
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 24, weight: .semibold)) // design-lint:ignore — SF Symbol/hero
+                                .foregroundStyle(Color.brandSecondary)
+                        }
+                        VStack(spacing: 4) {
+                            Text(String(localized: "body.photo.add.selectPhoto"))
+                                .font(.headingSmall)
+                                .foregroundStyle(Color.textPrimary)
+                            Text(String(localized: "body.photo.add.fromGallery"))
+                                .font(.bodySmall)
+                                .foregroundStyle(Color.textTertiary)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

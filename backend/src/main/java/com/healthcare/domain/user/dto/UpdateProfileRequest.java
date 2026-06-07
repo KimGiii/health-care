@@ -2,6 +2,7 @@ package com.healthcare.domain.user.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
@@ -14,6 +15,8 @@ public class UpdateProfileRequest {
     private String displayName;
 
     private String sex;
+
+    @Past(message = "생년월일은 과거 날짜여야 합니다.")
     private LocalDate dateOfBirth;
 
     @DecimalMin(value = "50.0", message = "키는 50cm 이상이어야 합니다.")

@@ -21,27 +21,27 @@ struct MacroBreakdownCard: View {
                     .eyebrowStyle()
                 Spacer()
                 Text("오늘 섭취")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.captionXSmall)
                     .foregroundStyle(Color.textTertiary)
             }
 
             VStack(spacing: 10) {
                 MacroRow(
-                    label: "단백질",
+                    label: String(localized: "home.macros.protein"),
                     current: proteinG,
                     goal: proteinGoal,
                     color: Color.brandAccent,
                     unit: "g"
                 )
                 MacroRow(
-                    label: "탄수화물",
+                    label: String(localized: "home.macros.carbs"),
                     current: carbsG,
                     goal: carbsGoal,
                     color: Color.brandSunrise,
                     unit: "g"
                 )
                 MacroRow(
-                    label: "지방",
+                    label: String(localized: "home.macros.fat"),
                     current: fatG,
                     goal: fatGoal,
                     color: Color.brandEmber,
@@ -49,12 +49,12 @@ struct MacroBreakdownCard: View {
                 )
             }
         }
-        .padding(18)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )
@@ -72,35 +72,36 @@ private struct MacroRow: View {
     let unit: String
 
     private var progress: Double { min(current / max(goal, 1), 1.0) }
+    private var isExceeded: Bool { current > goal && goal > 0 }
 
     var body: some View {
         VStack(spacing: 5) {
             HStack(alignment: .lastTextBaseline) {
                 Text(label)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.captionBold)
                     .foregroundStyle(Color.textSecondary)
                 Spacer()
                 HStack(alignment: .lastTextBaseline, spacing: 2) {
                     Text(String(format: "%.0f", current))
-                        .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color.textPrimary)
+                        .font(.system(size: 14, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
+                        .foregroundStyle(isExceeded ? Color.brandDanger : Color.textPrimary)
                     Text("/ \(Int(goal))\(unit)")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textTertiary)
                 }
             }
 
-            // 진행 바
+            // 진행 바 (100% 클램프 + 초과 시 danger 톤)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     // 트랙
                     Capsule()
-                        .fill(color.opacity(0.12))
+                        .fill((isExceeded ? Color.brandDanger : color).opacity(0.12))
                         .frame(height: 6)
 
                     // 진행
                     Capsule()
-                        .fill(color)
+                        .fill(isExceeded ? Color.brandDanger : color)
                         .frame(width: geo.size.width * progress, height: 6)
                         .animation(.spring(response: 0.8, dampingFraction: 0.82), value: progress)
                 }
@@ -109,7 +110,10 @@ private struct MacroRow: View {
             .accessibilityHidden(true)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label): \(String(format: "%.0f", current))\(unit) / \(Int(goal))\(unit)")
+        .accessibilityLabel(
+            "\(label): \(String(format: "%.0f", current))\(unit) / \(Int(goal))\(unit)"
+            + (isExceeded ? ", " + String(localized: "home.macros.exceeded.a11y") : "")
+        )
     }
 }
 
@@ -124,6 +128,6 @@ private struct MacroRow: View {
             carbsGoal: 200,
             fatGoal: 60
         )
-        .padding(20)
+        .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
     }
 }

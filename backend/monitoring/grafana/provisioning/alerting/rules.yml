@@ -1,0 +1,140 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: healthcare-api
+    folder: Healthcare
+    interval: 1m
+    rules:
+      - uid: hc-api-5xx-ratio
+        title: API 5xx 비율 > 5%
+        condition: C
+        for: 5m
+        # 데이터 없음(배포 중·무트래픽)은 알림 안 함. 실제 다운은 hc-instance-down이 잡음.
+        noDataState: OK
+        labels:
+          severity: critical
+        annotations:
+          summary: "최근 5분 5xx 응답 비율이 5%를 초과했습니다."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: '100 * (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 1)'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [5] }
+
+      - uid: hc-api-latency-p99
+        title: HTTP p99 지연 > 2s
+        condition: C
+        for: 5m
+        # 데이터 없음(배포 중·무트래픽)은 알림 안 함. 실제 다운은 hc-instance-down이 잡음.
+        noDataState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: "최근 5분 HTTP p99 지연이 2초를 초과했습니다."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: 'histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket[5m])))'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [2] }
+
+      - uid: hc-jvm-heap
+        title: JVM 힙 사용률 > 90%
+        condition: C
+        for: 5m
+        # 데이터 없음(배포 중·무트래픽)은 알림 안 함. 실제 다운은 hc-instance-down이 잡음.
+        noDataState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM 힙 사용률이 90%를 초과했습니다."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: '100 * sum(jvm_memory_used_bytes{area="heap"}) / clamp_min(sum(jvm_memory_max_bytes{area="heap"}), 1)'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [90] }
+
+      - uid: hc-instance-down
+        title: 앱 인스턴스 전체 down
+        condition: C
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "healthcare-api 스크랩 대상이 모두 down 상태입니다. (blue-green 양쪽 다 응답 없음)"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 120, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: 'sum(up{job="healthcare-api"})'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+
+      - uid: hc-hikari-exhaustion
+        title: HikariCP 커넥션 풀 고갈
+        condition: C
+        for: 5m
+        # 데이터 없음(배포 중·무트래픽)은 알림 안 함. 실제 다운은 hc-instance-down이 잡음.
+        noDataState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: "HikariCP active 커넥션이 max의 90%를 초과했습니다."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: 'max(hikaricp_connections_active) / clamp_min(max(hikaricp_connections_max), 1)'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.9] }

@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "프로젝트 전역 false-positive 허용 규칙"
+
+paths = [
+  '''docs/exec-plans/.*\.md''',
+]
+
+regexes = [
+  '''thumbnailKey\d+''',
+  '''eyJhbGciOiJIUzUxMiJ9\.\.\.''',
+]

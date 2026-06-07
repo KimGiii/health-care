@@ -4,7 +4,12 @@ import SwiftUI
 
 extension Color {
     // Brand — Dark Forest Green (deepened, richer)
-    static let brandPrimary      = Color(hex: "#0F3B24")   // deeper forest
+    // brandPrimary: 라이트 모드에서는 딥 포레스트, 다크 모드에서는 구별 가능한 밝은 포레스트
+    static let brandPrimary = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(adaptHex: "#1E6040")   // lighter forest — readable on dark bg
+            : UIColor(adaptHex: "#0F3B24")   // deeper forest for light bg
+    })
     static let brandSecondary    = Color(hex: "#2D6A4F")   // mid forest
     static let brandTertiary     = Color(hex: "#1A4A2E")   // classic forest (legacy)
     static let brandAccent       = Color(hex: "#52B788")   // fresh mint
@@ -30,67 +35,72 @@ extension Color {
     static let surfaceGrouped    = Color(.systemGroupedBackground)
 
     // MARK: Adaptive semantic tokens (light / dark)
+    //
+    // 다크 모드 광도 정책 (2026-05-26 조정):
+    //   - 배경 ~14% / 카드 ~20% / hairline ~28% — 6%씩 elevation 차이로 카드 떠 보이게
+    //   - textSecondary/Tertiary 대비를 WCAG AA(4.5:1) 이상으로 끌어올림
+    //   - 브랜드 forest 톤은 유지 (그린 hue 살림)
 
-    /// Page background — warm bone (light) / deep forest night (dark)
+    /// Page background — warm bone (light) / forest night (dark)
     static let backgroundPage = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#0D1A12")
+            ? UIColor(adaptHex: "#14241B")
             : UIColor(adaptHex: "#EFEAE0")
     })
 
     /// Card / elevated surface — white (light) / elevated forest (dark)
     static let surfaceCard = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#162219")
+            ? UIColor(adaptHex: "#1E3329")
             : .white
     })
 
     /// Headline text — near-black forest (light) / near-white with green tint (dark)
     static let textHeadline = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#D8EAE0")
+            ? UIColor(adaptHex: "#E4F0E8")
             : UIColor(adaptHex: "#0B2A1C")
     })
 
     /// Progress ring track — dark at low opacity (light) / light at low opacity (dark)
     static let ringTrack = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(white: 1, alpha: 0.15)
+            ? UIColor(white: 1, alpha: 0.20)
             : UIColor(adaptHex: "#0B2A1C").withAlphaComponent(0.10)
     })
 
     /// Card border stroke — subtle dark-on-light (light) / subtle light-on-dark (dark)
     static let cardStroke = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(white: 1, alpha: 0.09)
+            ? UIColor(white: 1, alpha: 0.14)
             : UIColor(adaptHex: "#0B2A1C").withAlphaComponent(0.06)
     })
 
     /// Body text — near-black (light) / near-white green-tinted (dark)
     static let textPrimary = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#E4EDE6")
+            ? UIColor(adaptHex: "#ECF3EE")
             : UIColor(adaptHex: "#121815")
     })
 
-    /// Secondary text — sage (light) / lighter sage (dark)
+    /// Secondary text — sage (light) / brighter sage (dark) — WCAG AA on backgroundPage
     static let textSecondary = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#7EA28E")
+            ? UIColor(adaptHex: "#A6C5B3")
             : UIColor(adaptHex: "#6B7A72")
     })
 
-    /// Tertiary text — muted sage (light) / dimmer sage (dark)
+    /// Tertiary text — muted sage (light) / brighter sage (dark) — WCAG AA on backgroundPage
     static let textTertiary = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#526B5E")
+            ? UIColor(adaptHex: "#88A797")
             : UIColor(adaptHex: "#9AA79F")
     })
 
-    /// Hairline / divider — light warm (light) / dark forest (dark)
+    /// Hairline / divider — light warm (light) / mid forest (dark)
     static let hairline = Color(UIColor { t in
         t.userInterfaceStyle == .dark
-            ? UIColor(adaptHex: "#243B2D")
+            ? UIColor(adaptHex: "#324B3D")
             : UIColor(adaptHex: "#E3EAE4")
     })
 }

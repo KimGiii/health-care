@@ -17,7 +17,7 @@ struct GoalProgressCard: View {
             }
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
     }
 }
 
@@ -26,6 +26,12 @@ struct GoalProgressCard: View {
 private struct ActiveGoalContent: View {
     let goal: GoalSummary
 
+    /// 표시용 진행률(%) — 반올림. 링·라벨·접근성 라벨이 동일 값을 쓰도록 한 곳에서 계산한다.
+    /// 다른 화면(GoalProgressView, GoalSettingView)도 %.0f 반올림을 사용한다.
+    private var percentText: String {
+        String(format: "%.0f", goal.progressRatio * 100)
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             // 진행 링 (compact ProgressRing)
@@ -33,7 +39,7 @@ private struct ActiveGoalContent: View {
                 progress: goal.progressRatio,
                 gradient: .ringCalorie,
                 size: .standard,
-                value: "\(Int(goal.progressRatio * 100))",
+                value: percentText,
                 unit: "%",
                 trackColor: Color.brandDusk.opacity(0.10)
             )
@@ -41,9 +47,12 @@ private struct ActiveGoalContent: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("GOAL · \(goal.goalType.displayName.uppercased())")
                     .eyebrowStyle()
-                Text("\(goal.goalType.emoji)  \(goal.goalType.displayName)")
-                    .font(.system(size: 17, weight: .bold, design: .serif))
-                    .foregroundStyle(Color.textHeadline)
+                HStack(spacing: 6) {
+                    Image(systemName: goal.goalType.icon)
+                    Text(goal.goalType.displayName)
+                }
+                .font(.bodyLarge).fontWeight(.bold)
+                .foregroundStyle(Color.textHeadline)
 
                 if let days = goal.daysRemaining {
                     HStack(spacing: 6) {
@@ -52,11 +61,11 @@ private struct ActiveGoalContent: View {
                             .frame(width: 48, height: 20)
                             .overlay(
                                 Text("D-\(days)")
-                                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                    .font(.system(size: 10, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
                                     .foregroundStyle(Color.surfaceCard)
                             )
-                        Text("\(String(format: "%.0f", goal.progressRatio * 100))% 완료")
-                            .font(.system(size: 12, weight: .medium))
+                        Text(String(format: String(localized: "home.goal.percentComplete"), percentText))
+                            .font(.caption).fontWeight(.medium)
                             .foregroundStyle(Color.textSecondary)
                     }
                 }
@@ -65,22 +74,28 @@ private struct ActiveGoalContent: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .bold))
+                .font(.captionBold).fontWeight(.bold)
                 .foregroundStyle(Color.textHeadline.opacity(0.30))
                 .accessibilityHidden(true)
         }
-        .padding(18)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )
         .elevation(.low)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("목표: \(goal.goalType.displayName), \(Int(goal.progressRatio * 100))% 완료\(goal.daysRemaining.map { ", \($0)일 남음" } ?? "")")
+        .accessibilityLabel(
+            String(format: String(localized: "home.goal.a11y"),
+                   goal.goalType.displayName, percentText)
+            + (goal.daysRemaining.map {
+                ", " + String(format: String(localized: "home.goal.daysRemaining.a11y"), $0)
+            } ?? "")
+        )
     }
 }
 
@@ -94,30 +109,30 @@ private struct EmptyGoalContent: View {
                     .fill(LinearGradient.forestHero)
                     .frame(width: 52, height: 52)
                 Image(systemName: "target")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.headingLarge)
                     .foregroundStyle(Color.brandAccentGlow)
             }
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text("목표 없음")
-                    .font(.system(size: 15, weight: .bold))
+                Text("목표가 아직 없어요")
+                    .font(.headingSmall)
                     .foregroundStyle(Color.textHeadline)
-                Text("목표를 세우고 여정을 시작하세요")
-                    .font(.system(size: 12))
+                Text("목표를 세우고 기록을 시작해 보세요")
+                    .font(.caption)
                     .foregroundStyle(Color.textSecondary)
             }
             Spacer()
             Image(systemName: "plus.circle.fill")
-                .font(.system(size: 24))
+                .font(.system(size: 24)) // design-lint:ignore — SF Symbol or hero numeric
                 .foregroundStyle(Color.brandAccent)
                 .accessibilityHidden(true)
         }
-        .padding(18)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )

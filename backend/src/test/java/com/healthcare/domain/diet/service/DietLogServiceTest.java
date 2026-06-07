@@ -13,12 +13,15 @@ import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
@@ -44,6 +47,7 @@ class DietLogServiceTest {
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private FoodCatalogRepository foodCatalogRepository;
     @Mock private UserRepository userRepository;
+    @Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
     private DietLogService dietLogService;

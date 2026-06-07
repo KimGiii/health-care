@@ -1,0 +1,13 @@
+{
+  "Simulator Target Bundle": "com.kingloo.gainsy.ios",
+  "aps": {
+    "alert": {
+      "title": "이번 주 건강 요약",
+      "body": "이번 주 운동·식단 기록을 확인해 보세요"
+    },
+    "sound": "default",
+    "badge": 1
+  },
+  "type": "WEEKLY_SUMMARY",
+  "weekStart": "2026-05-19"
+}

@@ -65,12 +65,30 @@ enum ProgressRingSize {
         }
     }
 
+    /// 링과 하단 라벨 사이 간격
+    var labelSpacing: CGFloat {
+        switch self {
+        case .compact:  return 5
+        case .standard: return 10
+        case .hero:     return 12
+        }
+    }
+
     /// spring 애니메이션 response
     var springResponse: Double {
         switch self {
         case .compact:  return 0.7
         case .standard: return 0.85
         case .hero:     return 1.0
+        }
+    }
+
+    /// 링 내부 텍스트가 넘치지 않도록 허용하는 최대 너비
+    var innerWidth: CGFloat {
+        switch self {
+        case .compact:  return diameter - strokeWidth * 2 - 4
+        case .standard: return diameter - strokeWidth * 2 - 8
+        case .hero:     return diameter - strokeWidth * 2 - 16
         }
     }
 }
@@ -120,7 +138,7 @@ struct ProgressRing: View {
     }
 
     var body: some View {
-        VStack(spacing: size == .compact ? 3 : 6) {
+        VStack(spacing: size.labelSpacing) {
             ZStack {
                 // 트랙 (미진행 배경 원)
                 Circle()
@@ -175,15 +193,18 @@ struct ProgressRing: View {
                     Text(value)
                         .font(size.valueFont)
                         .foregroundStyle(Color.textPrimary)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.6)
                         .lineLimit(1)
 
                     if let unit, size != .compact {
                         Text(unit)
                             .font(size.unitFont)
                             .foregroundStyle(Color.textSecondary)
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
                     }
                 }
+                .frame(maxWidth: size.innerWidth)
 
                 // compact에서는 단위를 수치 아래에 표시
                 if let unit, size == .compact {
@@ -192,13 +213,14 @@ struct ProgressRing: View {
                         .foregroundStyle(Color.textSecondary)
                 }
             }
+            .frame(maxWidth: size.innerWidth)
         }
     }
 
     // MARK: - Accessibility
 
     private var accessibilityDescription: String {
-        label ?? "진행 링"
+        label ?? String(localized: "ds.progressRing.a11y")
     }
 
     private var accessibilityValue: String {

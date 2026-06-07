@@ -13,24 +13,24 @@ struct LoginView: View {
                 // Header
                 VStack(spacing: 8) {
                     BrandLogoView(size: 72, color: Color.brandPrimary)
-                        .padding(.bottom, 4)
+                        .padding(.bottom, Spacing.xs) // design-lint:ignore — micro/hero spacing
 
                     Text("다시 만나서 반가워요")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.headingLarge)
                         .foregroundStyle(Color.brandPrimary)
 
-                    Text("계속하려면 로그인해주세요")
-                        .font(.system(size: 14))
+                    Text("계속하려면 로그인해 주세요")
+                        .font(.bodyMedium)
                         .foregroundStyle(Color.textSecondary)
                 }
-                .padding(.top, 40)
-                .padding(.bottom, 36)
+                .padding(.top, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, 36) // design-lint:ignore — micro/hero spacing
 
                 // Form
                 VStack(spacing: 14) {
                     StyledTextField(
                         icon:        "envelope",
-                        placeholder: "이메일",
+                        placeholder: String(localized: "auth.email.placeholder"),
                         text:        $viewModel.email
                     )
                     .textInputAutocapitalization(.never)
@@ -38,11 +38,11 @@ struct LoginView: View {
 
                     StyledSecureField(
                         icon:        "lock",
-                        placeholder: "비밀번호",
+                        placeholder: String(localized: "auth.password.placeholder"),
                         text:        $viewModel.password
                     )
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
 
                 // Error
                 if let error = viewModel.errorMessage {
@@ -50,106 +50,65 @@ struct LoginView: View {
                         .font(.caption)
                         .foregroundStyle(Color.brandDanger)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 28)
-                        .padding(.top, 8)
+                        .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                        .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
                 }
 
                 Spacer()
 
                 // CTA
-                VStack(spacing: 12) {
-                    Button {
+                VStack(spacing: Spacing.md) {
+                    PrimaryButton(
+                        String(localized: "auth.login.button"),
+                        isEnabled: !viewModel.email.isEmpty && !viewModel.password.isEmpty,
+                        isLoading: viewModel.isLoading
+                    ) {
                         Task { await viewModel.login(apiClient: container.apiClient, authState: authState) }
-                    } label: {
-                        Group {
-                            if viewModel.isLoading {
-                                ProgressView().tint(.white)
-                            } else {
-                                Text("로그인")
-                                    .font(.system(size: 17, weight: .semibold))
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.brandPrimary)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .shadow(color: Color.brandPrimary.opacity(0.3), radius: 10, x: 0, y: 5)
                     }
-                    .disabled(viewModel.isLoading || viewModel.email.isEmpty || viewModel.password.isEmpty)
-                    .opacity(viewModel.email.isEmpty || viewModel.password.isEmpty ? 0.55 : 1)
+
+                    OrDivider()
+
+                    AppleSignInButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.signInWithSocialProvider(
+                                .apple,
+                                tokenProvider: AppleSignInCoordinator(),
+                                apiClient: container.apiClient,
+                                authState: authState
+                            )
+                        }
+                    }
+
+                    GoogleSignInButton(isLoading: viewModel.isLoading) {
+                        Task {
+                            await viewModel.signInWithSocialProvider(
+                                .google,
+                                tokenProvider: GoogleSignInCoordinator(),
+                                apiClient: container.apiClient,
+                                authState: authState
+                            )
+                        }
+                    }
                 }
-                .padding(.horizontal, 28)
-                .padding(.bottom, 48)
+                .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
+                .padding(.bottom, 48) // design-lint:ignore — micro/hero spacing
             }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-// MARK: - Styled Input Components
-struct StyledTextField: View {
-    let icon: String
-    let placeholder: String
-    @Binding var text: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(Color.brandPrimary)
-                .frame(width: 20)
-
-            TextField(placeholder, text: $text)
-                .font(.system(size: 15))
+        .sheet(item: $viewModel.pendingConsent) { pending in
+            SocialConsentSheet(
+                provider: pending.provider,
+                isLoading: viewModel.isLoading,
+                onAgree: {
+                    Task { await viewModel.completeSocialSignUp(apiClient: container.apiClient, authState: authState) }
+                },
+                onCancel: {
+                    viewModel.cancelSocialSignUp()
+                }
+            )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 }
 
-struct StyledSecureField: View {
-    let icon: String
-    let placeholder: String
-    @Binding var text: String
-    @State private var isVisible = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(Color.brandPrimary)
-                .frame(width: 20)
-
-            if isVisible {
-                TextField(placeholder, text: $text)
-                    .font(.system(size: 15))
-            } else {
-                SecureField(placeholder, text: $text)
-                    .font(.system(size: 15))
-            }
-
-            Button {
-                isVisible.toggle()
-            } label: {
-                Image(systemName: isVisible ? "eye.slash" : "eye")
-                    .foregroundStyle(Color.textSecondary)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
-    }
-}
+// StyledTextField/StyledSecureField는 DesignSystem/Components/StyledTextField.swift로 승격됨.

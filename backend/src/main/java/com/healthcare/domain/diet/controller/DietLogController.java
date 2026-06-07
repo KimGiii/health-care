@@ -26,7 +26,7 @@ public class DietLogController {
             @CurrentUserId Long userId,
             @Valid @RequestBody CreateDietLogRequest request) {
         CreateDietLogResponse response = dietLogService.createDietLog(userId, request);
-        return ResponseEntity.status(201).body(ApiResponse.ok("식사 기록이 저장되었습니다.", response));
+        return ResponseEntity.status(201).body(ApiResponse.ok("식단 기록이 저장되었습니다.", response));
     }
 
     @GetMapping
@@ -55,7 +55,7 @@ public class DietLogController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateDietLogRequest request) {
         CreateDietLogResponse response = dietLogService.updateDietLog(userId, id, request);
-        return ResponseEntity.ok(ApiResponse.ok("식사 기록이 수정되었습니다.", response));
+        return ResponseEntity.ok(ApiResponse.ok("식단 기록이 수정되었습니다.", response));
     }
 
     @DeleteMapping("/{id}")
@@ -63,6 +63,6 @@ public class DietLogController {
             @CurrentUserId Long userId,
             @PathVariable Long id) {
         dietLogService.deleteDietLog(userId, id);
-        return ResponseEntity.ok(ApiResponse.ok("식사 기록이 삭제되었습니다."));
+        return ResponseEntity.ok(ApiResponse.ok("식단 기록이 삭제되었습니다."));
     }
 }

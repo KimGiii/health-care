@@ -23,18 +23,38 @@ struct WeeklyTrendCard: View {
                     .eyebrowStyle()
                 Spacer()
                 if let sel = selectedDay {
-                    HStack(alignment: .lastTextBaseline, spacing: 2) {
-                        Text(String(format: "%.0f", sel.caloriesIn))
-                            .font(.system(size: 14, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color.brandPrimary)
-                        Text("kcal")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.textSecondary)
+                    HStack(spacing: 10) {
+                        // 섭취
+                        HStack(alignment: .lastTextBaseline, spacing: 2) {
+                            Image(systemName: "fork.knife")
+                                .font(.system(size: 9)) // design-lint:ignore — SF Symbol icon sizing
+                                .foregroundStyle(Color.brandAccent)
+                            Text(String(format: "%.0f", sel.caloriesIn))
+                                .font(.system(size: 14, weight: .heavy, design: .rounded)) // design-lint:ignore — hero numeric
+                                .foregroundStyle(Color.brandAccent)
+                            Text("kcal")
+                                .font(.captionXSmall)
+                                .foregroundStyle(Color.textSecondary)
+                        }
+                        // 소모
+                        if sel.caloriesBurned > 0 {
+                            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                                Image(systemName: "flame.fill")
+                                    .font(.system(size: 9)) // design-lint:ignore — SF Symbol icon sizing
+                                    .foregroundStyle(Color.brandEmber)
+                                Text(String(format: "%.0f", sel.caloriesBurned))
+                                    .font(.system(size: 14, weight: .heavy, design: .rounded)) // design-lint:ignore — hero numeric
+                                    .foregroundStyle(Color.brandEmber)
+                                Text("kcal")
+                                    .font(.captionXSmall)
+                                    .foregroundStyle(Color.textSecondary)
+                            }
+                        }
                     }
                     .transition(.opacity)
                 } else {
                     Text("7일 섭취 추세")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textTertiary)
                 }
             }
@@ -56,7 +76,7 @@ struct WeeklyTrendCard: View {
             .chartXAxis {
                 AxisMarks(values: .automatic) { _ in
                     AxisValueLabel()
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textTertiary)
                 }
             }
@@ -70,7 +90,10 @@ struct WeeklyTrendCard: View {
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { val in
-                                    guard let date: String = proxy.value(atX: val.location.x) else { return }
+                                    // plot area origin을 빼야 정확한 x 좌표 매핑
+                                    let origin = geo[proxy.plotAreaFrame].origin
+                                    let xInPlot = val.location.x - origin.x
+                                    guard let date: String = proxy.value(atX: xInPlot) else { return }
                                     selectedDay = weeklyActivity.first { shortLabel($0.date) == date }
                                 }
                                 .onEnded { _ in
@@ -85,25 +108,25 @@ struct WeeklyTrendCard: View {
             if totalBurned > 0 {
                 HStack(spacing: 6) {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.captionXSmall).fontWeight(.bold)
                         .foregroundStyle(Color.brandEmber)
-                    Text("이번 주 \(Int(totalBurned)) kcal 소모")
-                        .font(.system(size: 11, weight: .medium))
+                    Text(String(format: String(localized: "home.weekly.burned.summary"), Int(totalBurned)))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                 }
             }
         }
-        .padding(18)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )
         .elevation(.low)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
     }
 
     // MARK: - Helpers
@@ -111,7 +134,15 @@ struct WeeklyTrendCard: View {
     private func shortLabel(_ dateStr: String) -> String {
         let parts = dateStr.split(separator: "-")
         guard parts.count == 3, let day = Int(parts[2]) else { return dateStr }
-        let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+        let weekdays = [
+            String(localized: "common.weekday.sun"),
+            String(localized: "common.weekday.mon"),
+            String(localized: "common.weekday.tue"),
+            String(localized: "common.weekday.wed"),
+            String(localized: "common.weekday.thu"),
+            String(localized: "common.weekday.fri"),
+            String(localized: "common.weekday.sat"),
+        ]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         if let date = formatter.date(from: dateStr) {
@@ -135,6 +166,6 @@ struct WeeklyTrendCard: View {
             DayActivity(date: "2026-05-08", caloriesIn: 900,  caloriesBurned: 320, durationMinutes: 42),
         ]
         WeeklyTrendCard(weeklyActivity: activities)
-            .padding(.vertical, 40)
+            .padding(.vertical, Spacing.xxxl) // design-lint:ignore — micro/hero spacing
     }
 }

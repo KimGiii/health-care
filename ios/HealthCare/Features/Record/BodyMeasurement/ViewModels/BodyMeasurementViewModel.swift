@@ -1,5 +1,11 @@
 import Foundation
 
+extension Notification.Name {
+    /// 신체 측정 기록의 생성/수정/삭제가 일어난 직후 발행.
+    /// 마이페이지 등 사용자 프로필을 표시하는 화면이 최신 weightKg를 다시 가져오도록 함.
+    static let bodyMeasurementDidChange = Notification.Name("com.healthcare.bodyMeasurementDidChange")
+}
+
 @MainActor
 final class BodyMeasurementViewModel: ObservableObject {
     @Published var measurements: [MeasurementResponse] = []
@@ -18,23 +24,20 @@ final class BodyMeasurementViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             async let listResponse: MeasurementListResponse = apiClient.request(.getBodyMeasurements(page: 0, size: 50))
-            async let latestResponse: MeasurementResponse = apiClient.request(.getLatestBodyMeasurement)
+            async let latestResponse = loadLatestMeasurement(apiClient: apiClient)
 
-            let (list, latest) = try await (listResponse, latestResponse)
+            let list = try await listResponse
             measurements = list.content
-            latestMeasurement = latest
+            latestMeasurement = await latestResponse
             await loadActiveGoal(apiClient: apiClient)
             await loadTrendData(apiClient: apiClient)
         } catch {
-            if case APIError.serverError(let code, _) = error, code == 404 {
-                measurements = []
-                latestMeasurement = nil
-                trendPoints = []
-                await loadActiveGoal(apiClient: apiClient)
-            } else {
-                errorMessage = error.localizedDescription
-            }
+            errorMessage = error.localizedDescription
         }
+    }
+
+    private func loadLatestMeasurement(apiClient: APIClient) async -> MeasurementResponse? {
+        try? await apiClient.request(.getLatestBodyMeasurement)
     }
 
     private func loadActiveGoal(apiClient: APIClient) async {
@@ -107,11 +110,14 @@ final class BodyMeasurementViewModel: ObservableObject {
                 latestMeasurement = measurements.first
             }
             await loadTrendData(apiClient: apiClient)
+            NotificationCenter.default.post(name: .bodyMeasurementDidChange, object: nil)
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    /// AddMeasurement에서 측정을 추가한 직후 호출되는 콜백.
+    /// `bodyMeasurementDidChange` 알림은 AddMeasurementViewModel이 직접 발행하므로 여기서는 발행하지 않음(중복 방지).
     func measurementAdded(apiClient: APIClient) async {
         await load(apiClient: apiClient)
     }
@@ -181,11 +187,11 @@ final class BodyMeasurementViewModel: ObservableObject {
     var trendSummaryText: String {
         switch selectedRange {
         case .week7:
-            return "최근 1주"
+            return String(localized: "body.range.recent.1w")
         case .month1:
-            return "최근 1개월"
+            return String(localized: "body.range.recent.1m")
         case .month3:
-            return "최근 3개월"
+            return String(localized: "body.range.recent.3m")
         }
     }
 

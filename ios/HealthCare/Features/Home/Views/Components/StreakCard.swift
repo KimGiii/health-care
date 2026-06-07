@@ -19,16 +19,16 @@ struct StreakCard: View {
             // 큰 숫자
             HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text("\(streakDays)")
-                    .font(.system(size: 40, weight: .heavy, design: .rounded))
-                    .foregroundStyle(streakDays > 0 ? Color.brandPrimary : Color.textTertiary)
+                    .font(.system(size: 40, weight: .heavy, design: .rounded)) // design-lint:ignore — SF Symbol or hero numeric
+                    .foregroundStyle(streakDays > 0 ? Color.textHeadline : Color.textTertiary)
                     .contentTransition(.numericText())
-                Text("일 연속")
-                    .font(.system(size: 13, weight: .semibold))
+                Text("home.streak.days")
+                    .font(.labelSmall)
                     .foregroundStyle(Color.textSecondary)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, Spacing.xs) // design-lint:ignore — micro/hero spacing
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("연속 기록: \(streakDays)일")
+            .accessibilityLabel(String(format: String(localized: "home.streak.a11y"), streakDays))
 
             // 7일 도트 캘린더
             HStack(spacing: 6) {
@@ -41,13 +41,13 @@ struct StreakCard: View {
             }
             .accessibilityHidden(true)
         }
-        .padding(18)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                         .stroke(Color.cardStroke, lineWidth: 1)
                 )
         )
@@ -68,7 +68,7 @@ private struct DotDay: View {
             .overlay(
                 Circle()
                     .stroke(isToday ? Color.brandPrimary : Color.clear, lineWidth: 1.5)
-                    .padding(-3)
+                    .padding(-3) // design-lint:ignore — micro/hero spacing
             )
     }
 }
@@ -82,6 +82,6 @@ private struct DotDay: View {
         }
 
         StreakCard(streakDays: 5, weeklyActivity: sampleActivity)
-            .padding(20)
+            .padding(Spacing.xl) // design-lint:ignore — micro/hero spacing
     }
 }

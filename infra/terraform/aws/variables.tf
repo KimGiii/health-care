@@ -34,7 +34,9 @@ variable "allowed_ssh_cidrs" {
 variable "ec2_instance_type" {
   description = "EC2 인스턴스 타입"
   type        = string
-  default     = "t3.small"
+  # 모니터링 스택(Prometheus+Grafana)을 앱과 같은 박스에 얹으면서 t3.small(2GB) 메모리가
+  # 빠듯해 t3.medium(4GB)으로 상향. 타입 변경은 in-place(스톱→수정→스타트)로 EBS/EIP 보존.
+  default     = "t3.medium"
 }
 
 variable "ec2_key_name" {

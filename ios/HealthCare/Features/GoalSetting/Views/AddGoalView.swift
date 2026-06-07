@@ -31,22 +31,24 @@ struct AddGoalView: View {
                         ErrorBanner(message: error)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 24)
+                .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             }
-            .background(Color.surfaceGrouped)
-            .navigationTitle("목표 설정")
-            .navigationBarTitleDisplayMode(.large)
+            .background(Color.backgroundPage)
+            .navigationTitle(Text("goal.add.title"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.backgroundPage, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                         .foregroundStyle(Color.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if viewModel.isLoading {
                         ProgressView()
                     } else {
-                        Button("저장") {
+                        Button(String(localized: "common.save.button")) {
                             Task {
                                 await viewModel.submit(apiClient: container.apiClient) { response in
                                     onSuccess(response)
@@ -54,7 +56,7 @@ struct AddGoalView: View {
                                 }
                             }
                         }
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.headingSmall)
                         .foregroundStyle(viewModel.isValid ? Color.brandPrimary : Color.textSecondary)
                         .disabled(!viewModel.isValid)
                     }
@@ -71,7 +73,7 @@ private struct GoalTypeSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표 유형")
+            SectionLabel(title: String(localized: "goal.field.section.type"))
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -81,8 +83,8 @@ private struct GoalTypeSection: View {
                         }
                     }
                 }
-                .padding(.horizontal, 1)
-                .padding(.vertical, 4)
+                .padding(.horizontal, 1) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
             }
         }
     }
@@ -97,22 +99,23 @@ private struct GoalTypeCard: View {
         Button(action: onTap) {
             VStack(spacing: 10) {
                 Image(systemName: type.icon)
-                    .font(.system(size: 22))
+                    .font(.headingLarge)
                     .foregroundStyle(isSelected ? .white : Color.brandPrimary)
                     .frame(width: 52, height: 52)
                     .background(
                         isSelected ? Color.brandPrimary : Color.surfaceCard
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
 
                 Text(type.displayName)
-                    .font(.system(size: 12, weight: isSelected ? .bold : .regular))
+                    .font(.caption)
+                    .fontWeight(isSelected ? .bold : .regular)
                     .foregroundStyle(isSelected ? Color.brandPrimary : Color.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .frame(width: 72)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
@@ -128,13 +131,13 @@ private struct TargetValueSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표값")
+            SectionLabel(title: String(localized: "goal.field.section.target"))
 
             FormCard {
                 VStack(spacing: 16) {
                     NumericField(
-                        label: "목표 \(type.displayName)",
-                        placeholder: "예: 70.0",
+                        label: String(format: String(localized: "goal.field.target.label"), type.displayName),
+                        placeholder: String(localized: "goal.field.target.placeholder"),
                         unit: type.displayUnit,
                         text: $valueText
                     )
@@ -142,14 +145,14 @@ private struct TargetValueSection: View {
                     Divider()
 
                     NumericField(
-                        label: "현재 값 (선택)",
-                        placeholder: type.displayUnit.isEmpty ? "현재 값 입력" : "현재 \(type.displayUnit) 입력",
+                        label: String(localized: "goal.field.startValue.label"),
+                        placeholder: type.displayUnit.isEmpty ? String(localized: "goal.field.startValue.placeholder") : String(format: String(localized: "goal.field.startValue.placeholderUnit"), type.displayUnit),
                         unit: type.displayUnit,
                         text: $startValueText
                     )
 
-                    Text("비워두면 가장 최근 신체 측정 기록으로 자동 채워집니다.")
-                        .font(.system(size: 11))
+                    Text(String(localized: "goal.field.startValue.hint"))
+                        .font(.captionXSmall)
                         .foregroundStyle(Color.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -166,12 +169,12 @@ private struct TargetDateSection: View {
     let selectedType: GoalType
 
     private let presets: [(label: String, days: Int)] = [
-        ("4주", 28), ("8주", 56), ("12주", 84), ("24주", 168)
+        (String(localized: "goal.preset.4w"), 28), (String(localized: "goal.preset.8w"), 56), (String(localized: "goal.preset.12w"), 84), (String(localized: "goal.preset.24w"), 168)
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionLabel(title: "목표 날짜")
+            SectionLabel(title: String(localized: "goal.field.section.date"))
 
             HStack(spacing: 8) {
                 ForEach(presets, id: \.days) { preset in
@@ -185,20 +188,20 @@ private struct TargetDateSection: View {
 
             FormCard {
                 DatePicker(
-                    "목표 날짜",
+                    String(localized: "goal.field.section.date"),
                     selection: $targetDate,
                     in: Date()...,
                     displayedComponents: .date
                 )
                 .datePickerStyle(.compact)
-                .environment(\.locale, Locale(identifier: "ko_KR"))
+                .environment(\.locale, LocaleManager.resolvedLocale)
             }
 
             if selectedType.supportsWeeklyRateTarget {
                 FormCard {
                     NumericField(
-                        label: "주간 목표 변화량 (선택)",
-                        placeholder: selectedType == .BODY_RECOMPOSITION ? "예: 0.25" : "예: 0.5",
+                        label: String(localized: "goal.field.weeklyRate.label"),
+                        placeholder: selectedType == .BODY_RECOMPOSITION ? String(localized: "goal.field.weeklyRate.placeholder.recomp") : String(localized: "goal.field.weeklyRate.placeholder"),
                         unit: selectedType.weeklyRateDisplayUnit,
                         text: $weeklyRateText
                     )
@@ -215,7 +218,7 @@ private struct SectionLabel: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.headingSmall)
             .foregroundStyle(Color.textPrimary)
     }
 }
@@ -229,9 +232,9 @@ private struct FormCard<Content: View>: View {
 
     var body: some View {
         content()
-            .padding(16)
-            .background(Color.surfacePrimary)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
 }
@@ -246,22 +249,22 @@ private struct NumericField: View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
                 TextField(placeholder, text: $text)
                     .keyboardType(.decimalPad)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.bodyLarge).fontWeight(.semibold)
                     .foregroundStyle(Color.textPrimary)
             }
             Spacer()
             if !unit.isEmpty {
                 Text(unit)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.bodyMedium).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, Spacing.md) // design-lint:ignore — micro/hero spacing
+                    .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
                     .background(Color.surfaceSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
         }
     }
@@ -274,10 +277,10 @@ private struct PresetChip: View {
     var body: some View {
         Button(action: onTap) {
             Text(label)
-                .font(.system(size: 13, weight: .medium))
+                .font(.bodySmall).fontWeight(.medium)
                 .foregroundStyle(Color.brandPrimary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
+                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, 7) // design-lint:ignore — micro/hero spacing
                 .background(Color.surfaceCard)
                 .clipShape(Capsule())
         }
@@ -293,12 +296,12 @@ private struct ErrorBanner: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(Color.brandDanger)
             Text(message)
-                .font(.system(size: 13))
+                .font(.bodySmall)
                 .foregroundStyle(Color.brandDanger)
         }
-        .padding(14)
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.brandDanger.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 }

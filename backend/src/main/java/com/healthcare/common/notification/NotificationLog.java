@@ -42,6 +42,12 @@ public class NotificationLog {
     @Column(name = "sent_at", nullable = false)
     private Instant sentAt;
 
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead;
+
+    @Column(name = "read_at")
+    private Instant readAt;
+
     @Builder
     public NotificationLog(Long userId, String type, String title, String body,
                            String status, String fcmToken, String errorMessage) {
@@ -53,5 +59,13 @@ public class NotificationLog {
         this.fcmToken = fcmToken;
         this.errorMessage = errorMessage;
         this.sentAt = Instant.now();
+        this.isRead = false;
+    }
+
+    /** 사용자가 알림 열람 처리. 이미 읽은 상태면 no-op (read_at 보존). */
+    public void markRead() {
+        if (this.isRead) return;
+        this.isRead = true;
+        this.readAt = Instant.now();
     }
 }

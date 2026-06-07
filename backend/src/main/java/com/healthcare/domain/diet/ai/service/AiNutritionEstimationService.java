@@ -7,8 +7,9 @@ import com.healthcare.domain.diet.ai.dto.EstimatedItem;
 import com.healthcare.domain.diet.ai.dto.NutritionFacts;
 import com.healthcare.domain.diet.ai.dto.ServingBasis;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -23,7 +24,6 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @ConditionalOnExpression("'${app.ai.meal.openai-api-key:}' != ''")
 public class AiNutritionEstimationService {
 
@@ -103,6 +103,16 @@ public class AiNutritionEstimationService {
             """;
 
     private final ObjectMapper objectMapper;
+    private final Timer analysisTimer;
+    private final MeterRegistry meterRegistry;
+
+    public AiNutritionEstimationService(ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+        this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
+        this.analysisTimer = Timer.builder("healthcare.diet.ai.analysis")
+            .description("식단 AI 영양성분 분석 호출 지연")
+            .register(meterRegistry);
+    }
 
     @Value("${app.ai.meal.openai-api-key}")
     private String apiKey;
@@ -125,6 +135,15 @@ public class AiNutritionEstimationService {
     }
 
     public AiNutritionEstimateResponse estimate(String foodName) {
+        Timer.Sample sample = Timer.start(meterRegistry);
+        try {
+            return doEstimate(foodName);
+        } finally {
+            sample.stop(analysisTimer);
+        }
+    }
+
+    private AiNutritionEstimateResponse doEstimate(String foodName) {
         Map<String, Object> requestBody = Map.of(
                 "model", model,
                 "instructions", INSTRUCTIONS,

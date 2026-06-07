@@ -11,7 +11,8 @@ import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DietLogService {
 
@@ -32,6 +32,22 @@ public class DietLogService {
     private final FoodEntryRepository foodEntryRepository;
     private final FoodCatalogRepository foodCatalogRepository;
     private final UserRepository userRepository;
+
+    private final Counter dietLogCreatedCounter;
+
+    public DietLogService(DietLogRepository dietLogRepository,
+                          FoodEntryRepository foodEntryRepository,
+                          FoodCatalogRepository foodCatalogRepository,
+                          UserRepository userRepository,
+                          MeterRegistry meterRegistry) {
+        this.dietLogRepository = dietLogRepository;
+        this.foodEntryRepository = foodEntryRepository;
+        this.foodCatalogRepository = foodCatalogRepository;
+        this.userRepository = userRepository;
+        this.dietLogCreatedCounter = Counter.builder("healthcare.diet.log.created")
+            .description("식단 기록 생성 수")
+            .register(meterRegistry);
+    }
 
     // ─────────────────────────── 식사 기록 생성 ───────────────────────────
 
@@ -71,6 +87,7 @@ public class DietLogService {
                 .map(CreateFoodEntryRequest::getFoodCatalogId)
                 .forEach(foodCatalogRepository::incrementUsageCount);
 
+        dietLogCreatedCounter.increment();
         return toCreateResponse(savedLog, agg.entries().size());
     }
 
@@ -81,14 +98,15 @@ public class DietLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("DietLog", logId));
 
         if (!log.isOwnedBy(userId)) {
-            throw new UnauthorizedException("다른 사용자의 식사 기록에 접근할 수 없습니다.");
+            throw new UnauthorizedException("다른 사용자의 식단 기록에 접근할 수 없습니다.");
         }
 
         List<FoodEntry> rawEntries = foodEntryRepository.findByDietLogIdOrderById(logId);
-        Map<Long, FoodCatalog> catalogMap = rawEntries.stream()
+        List<Long> catalogIds = rawEntries.stream()
                 .map(FoodEntry::getFoodCatalogId)
                 .distinct()
-                .flatMap(cid -> foodCatalogRepository.findById(cid).stream())
+                .toList();
+        Map<Long, FoodCatalog> catalogMap = foodCatalogRepository.findAllById(catalogIds).stream()
                 .collect(Collectors.toMap(FoodCatalog::getId, c -> c));
 
         List<FoodEntryResponse> entryResponses = rawEntries.stream()
@@ -125,7 +143,7 @@ public class DietLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("DietLog", logId));
 
         if (!log.isOwnedBy(userId)) {
-            throw new UnauthorizedException("다른 사용자의 식사 기록을 수정할 수 없습니다.");
+            throw new UnauthorizedException("다른 사용자의 식단 기록을 수정할 수 없습니다.");
         }
 
         List<FoodEntry> oldEntries = foodEntryRepository.findByDietLogIdOrderById(logId);
@@ -157,7 +175,7 @@ public class DietLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("DietLog", logId));
 
         if (!log.isOwnedBy(userId)) {
-            throw new UnauthorizedException("다른 사용자의 식사 기록을 삭제할 수 없습니다.");
+            throw new UnauthorizedException("다른 사용자의 식단 기록을 삭제할 수 없습니다.");
         }
 
         foodEntryRepository.findByDietLogIdOrderById(logId).stream()

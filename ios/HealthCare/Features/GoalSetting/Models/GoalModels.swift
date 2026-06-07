@@ -3,7 +3,7 @@ import SwiftUI
 private func displayUnitText(from rawUnit: String?) -> String {
     switch rawUnit {
     case "pct":     return "%"
-    case "minutes", "seconds": return "분"
+    case "minutes", "seconds": return String(localized: "goal.unit.minutes")
     case .some(let rawUnit):
         return rawUnit
     case .none:
@@ -33,21 +33,11 @@ enum GoalType: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .WEIGHT_LOSS:        return "체중 감량"
-        case .MUSCLE_GAIN:        return "근육 증가"
-        case .BODY_RECOMPOSITION: return "체형 개선"
-        case .ENDURANCE:          return "지구력 향상"
-        case .GENERAL_HEALTH:     return "전반적 건강"
-        }
-    }
-
-    var emoji: String {
-        switch self {
-        case .WEIGHT_LOSS:        return "⚖️"
-        case .MUSCLE_GAIN:        return "💪"
-        case .BODY_RECOMPOSITION: return "🔥"
-        case .ENDURANCE:          return "🏃"
-        case .GENERAL_HEALTH:     return "❤️"
+        case .WEIGHT_LOSS:        return String(localized: "goal.type.weightLoss")
+        case .MUSCLE_GAIN:        return String(localized: "goal.type.muscleGain")
+        case .BODY_RECOMPOSITION: return String(localized: "goal.type.recomp")
+        case .ENDURANCE:          return String(localized: "goal.type.endurance")
+        case .GENERAL_HEALTH:     return String(localized: "goal.type.health")
         }
     }
 
@@ -93,20 +83,20 @@ enum GoalType: String, Codable, CaseIterable, Sendable {
 
     var weeklyRateDisplayUnit: String {
         switch self {
-        case .WEIGHT_LOSS, .MUSCLE_GAIN: return "kg/주"
-        case .BODY_RECOMPOSITION:        return "%/주"
-        case .ENDURANCE:                 return "분/주"
+        case .WEIGHT_LOSS, .MUSCLE_GAIN: return String(localized: "goal.unit.kgPerWeek")
+        case .BODY_RECOMPOSITION:        return String(localized: "goal.unit.pctPerWeek")
+        case .ENDURANCE:                 return String(localized: "goal.unit.minPerWeek")
         case .GENERAL_HEALTH:            return ""
         }
     }
 
     var description: String {
         switch self {
-        case .WEIGHT_LOSS:        return "체중을 목표치까지 줄여요"
-        case .MUSCLE_GAIN:        return "근육량을 늘려 체성분을 개선해요"
-        case .BODY_RECOMPOSITION: return "체지방을 줄이고 근육을 키워요"
-        case .ENDURANCE:          return "유산소 능력을 향상시켜요"
-        case .GENERAL_HEALTH:     return "전반적인 건강과 웰빙을 향상해요"
+        case .WEIGHT_LOSS:        return String(localized: "goal.type.weightLoss.desc")
+        case .MUSCLE_GAIN:        return String(localized: "goal.type.muscleGain.desc")
+        case .BODY_RECOMPOSITION: return String(localized: "goal.type.recomp.desc")
+        case .ENDURANCE:          return String(localized: "goal.type.endurance.desc")
+        case .GENERAL_HEALTH:     return String(localized: "goal.type.health.desc")
         }
     }
 
@@ -131,9 +121,9 @@ enum GoalStatus: String, Codable, Sendable {
 
     var displayName: String {
         switch self {
-        case .ACTIVE:    return "진행 중"
-        case .COMPLETED: return "달성 완료"
-        case .ABANDONED: return "포기"
+        case .ACTIVE:    return String(localized: "goal.status.active")
+        case .COMPLETED: return String(localized: "goal.status.completed")
+        case .ABANDONED: return String(localized: "goal.status.abandoned")
         }
     }
 
@@ -169,9 +159,14 @@ struct GoalSummary: Codable, Identifiable, Sendable {
 
     var formattedTargetDate: String {
         guard let td = targetDate else { return "-" }
-        let parts = td.split(separator: "-")
-        guard parts.count == 3 else { return td }
-        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = parser.date(from: td) else { return td }
+        let display = DateFormatter()
+        display.locale = LocaleManager.resolvedLocale
+        display.dateFormat = String(localized: "goal.date.long.format")
+        return display.string(from: date)
     }
 
     var targetText: String {
@@ -179,7 +174,7 @@ struct GoalSummary: Codable, Identifiable, Sendable {
         guard let v = displayValue(for: targetValue, unit: targetUnit), !displayUnit.isEmpty else {
             return goalType.displayName
         }
-        return String(format: "%.1f %@", v, displayUnit)
+        return String(format: String(localized: "goal.value.format"), v, displayUnit)
     }
 
     var progressRatio: Double {
@@ -249,13 +244,18 @@ struct GoalCheckpointItem: Codable, Sendable {
     let notes: String?
 
     var isStartingPoint: Bool {
-        notes == "시작"
+        notes == "시작" || notes == "Start"
     }
 
     var formattedDate: String {
-        let parts = checkpointDate.split(separator: "-")
-        guard parts.count == 3 else { return checkpointDate }
-        return "\(parts[1])월 \(parts[2])일"
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = parser.date(from: checkpointDate) else { return checkpointDate }
+        let display = DateFormatter()
+        display.locale = LocaleManager.resolvedLocale
+        display.dateFormat = String(localized: "goal.date.short.format")
+        return display.string(from: date)
     }
 }
 
@@ -283,11 +283,11 @@ struct GoalProgressResponse: Codable, Sendable {
 
     var trackingStatusLabel: String {
         switch trackingStatus {
-        case "AHEAD":           return "목표 초과 달성 중"
-        case "ON_TRACK":        return "순조롭게 진행 중"
-        case "SLIGHTLY_BEHIND": return "조금 뒤처지고 있어요"
-        case "BEHIND":          return "페이스를 높여야 해요"
-        default:                return "진행 중"
+        case "AHEAD":           return String(localized: "goal.tracking.ahead")
+        case "ON_TRACK":        return String(localized: "goal.tracking.onTrack")
+        case "SLIGHTLY_BEHIND": return String(localized: "goal.tracking.slightlyBehind")
+        case "BEHIND":          return String(localized: "goal.tracking.behind")
+        default:                return String(localized: "goal.tracking.default")
         }
     }
 
@@ -308,17 +308,24 @@ struct GoalProgressResponse: Codable, Sendable {
     }
 
     var formattedProjectedDate: String {
-        guard let d = projectedCompletionDate else { return "계산 중" }
-        let parts = d.split(separator: "-")
-        guard parts.count == 3 else { return d }
-        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+        guard let d = projectedCompletionDate else { return String(localized: "goal.progress.calculating") }
+        return Self.formatLongDate(d)
     }
 
     var formattedTargetDate: String {
         guard let d = targetDate else { return "-" }
-        let parts = d.split(separator: "-")
-        guard parts.count == 3 else { return d }
-        return "\(parts[0])년 \(parts[1])월 \(parts[2])일"
+        return Self.formatLongDate(d)
+    }
+
+    static func formatLongDate(_ s: String) -> String {
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = parser.date(from: s) else { return s }
+        let display = DateFormatter()
+        display.locale = LocaleManager.resolvedLocale
+        display.dateFormat = String(localized: "goal.date.long.format")
+        return display.string(from: date)
     }
 }
 
