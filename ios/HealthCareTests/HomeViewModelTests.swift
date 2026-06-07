@@ -460,4 +460,10 @@ private actor MockHomeDashboardLoader: HomeDashboardLoading {
             calorieTarget: nil, proteinTargetG: nil, carbTargetG: nil, fatTargetG: nil
         )
     }
+
+    func loadBodyMeasurements(from: String, to: String) async throws -> [MeasurementResponse] {
+        // 위젯 전용 데이터 — 테스트에서는 빈 응답으로 충분.
+        if shouldFail { throw APIError.unknown }
+        return []
+    }
 }

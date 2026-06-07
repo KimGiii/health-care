@@ -68,4 +68,14 @@ public struct WidgetDataStore {
     public func loadCalorie() -> CalorieWidgetSnapshot? {
         load(CalorieWidgetSnapshot.self, forKey: WidgetConstants.StorageKey.calorieSnapshot)
     }
+
+    // MARK: - Goal
+
+    public func saveGoal(_ snapshot: GoalWidgetSnapshot) {
+        save(snapshot, forKey: WidgetConstants.StorageKey.goalSnapshot)
+    }
+
+    public func loadGoal() -> GoalWidgetSnapshot? {
+        load(GoalWidgetSnapshot.self, forKey: WidgetConstants.StorageKey.goalSnapshot)
+    }
 }
