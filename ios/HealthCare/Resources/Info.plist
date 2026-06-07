@@ -34,6 +34,16 @@
 				<string>com.googleusercontent.apps.997735853542-redj6fm1ca7klv4v9fkfrollb85p443i</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.kingloo.gainsy.ios.widget</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gainsy</string>
+			</array>
+		</dict>
 	</array>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>

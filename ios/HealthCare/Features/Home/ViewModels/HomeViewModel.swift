@@ -259,6 +259,28 @@ final class HomeViewModel: ObservableObject {
             errorMessage = String(format: String(localized: "home.error.partialLoad"),
                                   failedSources.joined(separator: ", "))
         }
+
+        // 위젯 스냅샷 동기화 — 다이어트 데이터가 정상 로드된 경우에만.
+        // 위젯은 절대 네트워크 호출을 하지 않고, 앱이 저장해둔 스냅샷만 읽는다.
+        publishCalorieWidgetSnapshot()
+    }
+
+    /// 현재 ViewModel 상태로부터 위젯용 스냅샷을 만들어 App Group에 저장하고 위젯 갱신을 요청한다.
+    func publishCalorieWidgetSnapshot() {
+        guard let store = WidgetDataStore() else { return }
+        let snapshot = CalorieWidgetSnapshot(
+            date: Date(),
+            consumedKcal: Int(todayCalories.rounded()),
+            targetKcal: Int(dailyCalorieGoal.rounded()),
+            proteinG: todayProteinG,
+            proteinTargetG: dailyProteinGoal,
+            carbsG: todayCarbsG,
+            carbsTargetG: dailyCarbsGoal,
+            fatG: todayFatG,
+            fatTargetG: dailyFatGoal
+        )
+        store.saveCalorie(snapshot)
+        WidgetReloadCenter.reloadCalorie()
     }
 
     /// 비동기 throw 호출을 Result 로 감싸 일부 실패가 다른 결과를 휘말리게 하지 않도록 한다.

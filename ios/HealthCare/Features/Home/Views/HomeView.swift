@@ -113,6 +113,17 @@ struct HomeView: View {
                 // pull-to-refresh로 인한 실패는 alert으로 알리지 않음(기존 화면 데이터 유지).
                 viewModel.errorMessage = nil
             }
+            // 식단/운동/체중 기록이 변경되면 dashboard를 재로드해 위젯 스냅샷까지 갱신한다.
+            // HomeView가 mount 상태일 때만 동작 — unmount이면 다음 .task에서 자연 처리.
+            .onReceive(NotificationCenter.default.publisher(for: .dietRecordChanged)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .exerciseRecordChanged)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .bodyMeasurementChanged)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            }
 
             // 8. 기록 FAB (기존 LogCTASection 대체)
             QuickLogFAB()
