@@ -560,6 +560,9 @@ final class AddDietLogViewModel: ObservableObject {
                     let _: CreateDietLogResponse = try await apiClient.request(.createDietLog(body: body))
                 }
             }
+            // 홈 화면(mount 상태인 경우)이 즉시 dashboard를 재로드해 위젯 스냅샷까지 갱신한다.
+            // mount 아니면 다음 홈 진입 시 .task가 자동 처리.
+            NotificationCenter.default.post(name: .dietRecordChanged, object: nil)
             onSuccess()
         } catch APIError.premiumRequired {
             // 사진 분석 도중 프리미엄이 만료/취소된 드문 케이스 — 백엔드의 confirm
