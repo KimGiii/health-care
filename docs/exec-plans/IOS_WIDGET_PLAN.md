@@ -132,7 +132,7 @@ struct CalorieSnapshot: Codable {
 
 ## 4. 개발 단계 (총 5일 예상)
 
-### Phase 1 — 인프라 세팅 (1일)
+### Phase 1 — 인프라 세팅 ✅ 완료 (2026-06-08)
 - [ ] Xcode에 Widget Extension 타겟 추가 (`HealthCareWidget`)
 - [ ] App Group Capability 활성화 (메인 앱 + 위젯 양쪽)
   - `HealthCare.entitlements`에 `com.apple.security.application-groups` 추가
@@ -141,7 +141,7 @@ struct CalorieSnapshot: Codable {
 - [ ] URL 스킴 등록 (`Info.plist`)
 - [ ] 빈 WidgetBundle로 빌드 통과 확인
 
-### Phase 2 — 칼로리 위젯 (1.5일)
+### Phase 2 — 칼로리 위젯 ✅ 완료 (2026-06-08)
 - [ ] `CalorieSnapshot` 모델 + Codec 테스트
 - [ ] 홈 ViewModel에서 데이터 로드 후 `WidgetDataStore.save(_:)` 호출 지점 삽입
 - [ ] 식단 기록 완료 핸들러에서 동일 저장 + `reloadTimelines` 호출
@@ -149,11 +149,17 @@ struct CalorieSnapshot: Codable {
 - [ ] Small / Medium 뷰 구현 (`Color.brand` 포레스트 그린 + 진행 링)
 - [ ] 딥링크 라우팅 → 다이어리 화면 진입 검증
 
-### Phase 3 — 목표 진행률 위젯 (1일)
-- [ ] `GoalSnapshot` 모델 (활성 목표 1개 + 7일 체중/체지방)
-- [ ] 목표 화면 / 체중 기록 화면에서 스냅샷 갱신
-- [ ] Small / Medium 뷰 + 미니 라인 차트 (Swift Charts)
-- [ ] 딥링크 → 목표 상세
+### Phase 3 — 목표 진행률 위젯 ✅ 완료 (2026-06-08)
+- [x] `GoalWidgetSnapshot` 모델 (활성 목표 + WeightPoint 배열)
+- [x] `WidgetDataStore.saveGoal/loadGoal`
+- [x] `HomeViewModel.publishGoalWidgetSnapshot()` — dashboard 로드 종료 시 자동 호출
+- [x] `HomeDashboardLoading.loadBodyMeasurements` 추가 (배열 반환 — 단일 배열 응답)
+- [x] measurement 로드 범위 30일로 확장 + 최근 7개 추출 (매일 측정 안 해도 차트 채워짐)
+- [x] Small / Medium 뷰
+- [x] Medium: 현재 체중 큰 글씨 + sparkline + 변화량 알약 + 측정 횟수 푸터
+- [x] sparkline: monotone 보간, 각 측정점 dot, 마지막 측정점 흰 테두리 강조
+- [x] 1개 측정 상태 / 0개 상태 빈 상태 처리
+- [x] 딥링크 → 마이페이지 (목표 상세 destination은 Phase 4+에서)
 
 ### Phase 4 — 스트릭 위젯 + 잠금화면 (1일)
 - [ ] 백엔드: `GET /api/streak` 엔드포인트 검토 (없다면 클라이언트 계산)

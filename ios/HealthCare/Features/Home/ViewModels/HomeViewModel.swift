@@ -6,12 +6,17 @@ protocol HomeDashboardLoading: Sendable {
     func loadGoals() async throws -> GoalListResponse
     func loadGoalProgress(id: Int) async throws -> GoalProgressResponse
     func loadUserProfile() async throws -> UserProfile
+    func loadBodyMeasurements(from: String, to: String) async throws -> [MeasurementResponse]
 }
 
 extension APIClient: HomeDashboardLoading {
     func loadDietLogs(from: String, to: String) async throws -> DietLogListResponse {
         // size 50: 7일 × 4끼 = 최대 28개, 여유분 포함
         try await request(.getDietLogs(from: from, to: to, page: 0, size: 50))
+    }
+
+    func loadBodyMeasurements(from: String, to: String) async throws -> [MeasurementResponse] {
+        try await request(.getBodyMeasurementsRange(from: from, to: to))
     }
     func loadExerciseSessions() async throws -> SessionListResponse {
         // size 30: 7일치 세션을 충분히 커버
@@ -56,6 +61,8 @@ final class HomeViewModel: ObservableObject {
     @Published var activeGoal: GoalSummary? = nil
     /// 사용자 프로필 — 백엔드가 자동 계산한 권장 칼로리·매크로 표시에 사용
     @Published var userProfile: UserProfile? = nil
+    /// 최근 7일 체중 측정 (목표 위젯 차트용). 화면 표시에는 사용하지 않는다.
+    @Published var recentMeasurements: [MeasurementResponse] = []
 
     // MARK: - 날짜 유틸리티
 
@@ -70,6 +77,12 @@ final class HomeViewModel: ObservableObject {
 
     private var weekStart: String {
         let date = Calendar.current.date(byAdding: .day, value: -6, to: Date()) ?? Date()
+        return dateFormatter.string(from: date)
+    }
+
+    /// 체중 측정 위젯용 — 매일 측정하지 않는 경우가 흔해 30일 창에서 가져온다.
+    private var measurementRangeStart: String {
+        let date = Calendar.current.date(byAdding: .day, value: -29, to: Date()) ?? Date()
         return dateFormatter.string(from: date)
     }
 
@@ -214,13 +227,14 @@ final class HomeViewModel: ObservableObject {
         // 4개 병렬 호출 — 일부 실패가 전체 실패로 전파되지 않도록 개별 Task 로 격리한다.
         // `try await (a, b, c, d)` 패턴은 a 가 실패하면 b/c/d 결과가 모두 버려지므로
         // 화면이 빈 상태로 전환되어 "처음 진입 시 에러, 두 번째 시 성공" 패턴을 만든다.
-        async let dietResult     = result { try await apiClient.loadDietLogs(from: weekStart, to: today) }
-        async let exerciseResult = result { try await apiClient.loadExerciseSessions() }
-        async let goalResult     = result { try await apiClient.loadGoals() }
-        async let profileResult  = result { try await apiClient.loadUserProfile() }
+        async let dietResult        = result { try await apiClient.loadDietLogs(from: weekStart, to: today) }
+        async let exerciseResult    = result { try await apiClient.loadExerciseSessions() }
+        async let goalResult        = result { try await apiClient.loadGoals() }
+        async let profileResult     = result { try await apiClient.loadUserProfile() }
+        async let measurementResult = result { try await apiClient.loadBodyMeasurements(from: measurementRangeStart, to: today) }
 
-        let (dietR, exerciseR, goalR, profileR) =
-            await (dietResult, exerciseResult, goalResult, profileResult)
+        let (dietR, exerciseR, goalR, profileR, measurementR) =
+            await (dietResult, exerciseResult, goalResult, profileResult, measurementResult)
 
         var failedSources: [String] = []
 
@@ -255,6 +269,11 @@ final class HomeViewModel: ObservableObject {
             failedSources.append(String(format: String(localized: "home.error.source.goal"), diagnose(err)))
         }
 
+        // 체중 측정은 화면에 직접 안 보여서 실패해도 위젯만 빈 차트로 처리. 에러 메시지에 포함 X.
+        if case .success(let measurements) = measurementR {
+            recentMeasurements = measurements
+        }
+
         if !failedSources.isEmpty {
             errorMessage = String(format: String(localized: "home.error.partialLoad"),
                                   failedSources.joined(separator: ", "))
@@ -263,6 +282,7 @@ final class HomeViewModel: ObservableObject {
         // 위젯 스냅샷 동기화 — 다이어트 데이터가 정상 로드된 경우에만.
         // 위젯은 절대 네트워크 호출을 하지 않고, 앱이 저장해둔 스냅샷만 읽는다.
         publishCalorieWidgetSnapshot()
+        publishGoalWidgetSnapshot()
     }
 
     /// 현재 ViewModel 상태로부터 위젯용 스냅샷을 만들어 App Group에 저장하고 위젯 갱신을 요청한다.
@@ -281,6 +301,39 @@ final class HomeViewModel: ObservableObject {
         )
         store.saveCalorie(snapshot)
         WidgetReloadCenter.reloadCalorie()
+    }
+
+    /// 활성 목표 + 최근 7일 체중을 위젯 스냅샷으로 변환해 App Group에 저장.
+    func publishGoalWidgetSnapshot() {
+        guard let store = WidgetDataStore() else { return }
+
+        let activeGoalSnapshot: GoalWidgetSnapshot.ActiveGoal? = activeGoal.map { goal in
+            GoalWidgetSnapshot.ActiveGoal(
+                title: goal.goalType.displayName,
+                systemImage: goal.goalType.icon,
+                targetText: goal.targetText,
+                progress: goal.progressRatio,
+                daysRemaining: goal.daysRemaining
+            )
+        }
+
+        // 체중 기록만 추출. parsedDate가 nil이면 제외. 시간 오름차순 정렬.
+        // 30일 창에서 가져왔지만 차트는 가장 최근 7개만 — 너무 많으면 시각적으로 노이즈.
+        let weightPoints: [GoalWidgetSnapshot.WeightPoint] = recentMeasurements
+            .compactMap { m -> GoalWidgetSnapshot.WeightPoint? in
+                guard let date = m.parsedDate, let kg = m.weightKg else { return nil }
+                return GoalWidgetSnapshot.WeightPoint(date: date, weightKg: kg)
+            }
+            .sorted { $0.date < $1.date }
+            .suffix(7)
+            .map { $0 }
+
+        let snapshot = GoalWidgetSnapshot(
+            goal: activeGoalSnapshot,
+            recentWeights: weightPoints
+        )
+        store.saveGoal(snapshot)
+        WidgetReloadCenter.reloadGoal()
     }
 
     /// 비동기 throw 호출을 Result 로 감싸 일부 실패가 다른 결과를 휘말리게 하지 않도록 한다.
