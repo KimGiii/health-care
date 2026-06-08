@@ -78,4 +78,14 @@ public struct WidgetDataStore {
     public func loadGoal() -> GoalWidgetSnapshot? {
         load(GoalWidgetSnapshot.self, forKey: WidgetConstants.StorageKey.goalSnapshot)
     }
+
+    // MARK: - Streak
+
+    public func saveStreak(_ snapshot: StreakWidgetSnapshot) {
+        save(snapshot, forKey: WidgetConstants.StorageKey.streakSnapshot)
+    }
+
+    public func loadStreak() -> StreakWidgetSnapshot? {
+        load(StreakWidgetSnapshot.self, forKey: WidgetConstants.StorageKey.streakSnapshot)
+    }
 }

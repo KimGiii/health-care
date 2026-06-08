@@ -10,12 +10,10 @@ import SwiftUI
 import WidgetKit
 import Charts
 
-// MARK: - Brand Colors (Widget-local)
-
+// 색은 Shared/WidgetColors.swift 에서 정의 (다크/라이트 동적).
+// 차트 색은 accent와 동일.
 private extension Color {
-    static let widgetBrand = Color(red: 0x0F / 255, green: 0x3B / 255, blue: 0x24 / 255)
-    static let widgetAccent = Color(red: 0x52 / 255, green: 0xB7 / 255, blue: 0x88 / 255)
-    static let widgetChart = Color(red: 0x52 / 255, green: 0xB7 / 255, blue: 0x88 / 255)
+    static var widgetChart: Color { .widgetAccent }
 }
 
 // MARK: - Dispatch
@@ -62,6 +60,10 @@ private struct GoalSmallView: View {
                 Text(goal.title)
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
+                Spacer(minLength: 4)
+                if let days = goal.daysRemaining {
+                    dDayBadge(days: days)
+                }
             }
             .foregroundStyle(Color.widgetBrand)
 
@@ -84,14 +86,9 @@ private struct GoalSmallView: View {
             .frame(maxWidth: .infinity)
 
             Spacer(minLength: 0)
-
-            if let days = goal.daysRemaining {
-                Text("D-\(days)")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
         }
     }
+
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -127,20 +124,22 @@ private struct GoalMediumView: View {
     @ViewBuilder
     private var leftColumn: some View {
         if let goal = snapshot.goal {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
+                // 타이틀 — 배지 없이 한 줄 전체 사용
                 HStack(spacing: 4) {
                     Image(systemName: goal.systemImage)
                         .font(.system(size: 11, weight: .semibold))
                     Text(goal.title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                         .lineLimit(1)
                 }
                 .foregroundStyle(Color.widgetBrand)
 
+                // 링 + 퍼센트
                 ZStack {
                     GoalRing(progress: goal.progress)
                         .frame(width: 78, height: 78)
-                    VStack(spacing: 0) {
+                    VStack(spacing: 1) {
                         Text("\(Int((goal.progress * 100).rounded()))%")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.widgetBrand)
@@ -148,16 +147,17 @@ private struct GoalMediumView: View {
                             .font(.system(size: 9, weight: .medium))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                        // D-day 배지를 링 아래로 이동 — 타이틀 공간 확보
+                        if let days = goal.daysRemaining {
+                            dDayBadge(days: days)
+                                .padding(.top, 2)
+                        }
                     }
                 }
 
-                if let days = goal.daysRemaining {
-                    Text("D-\(days)")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
+                Spacer(minLength: 0)
             }
-            .frame(width: 110, alignment: .leading)
+            .frame(width: 130, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Image(systemName: "target")
@@ -166,7 +166,7 @@ private struct GoalMediumView: View {
                 Text("활성 목표 없음")
                     .font(.system(size: 12, weight: .semibold))
             }
-            .frame(width: 110, alignment: .leading)
+            .frame(width: 130, alignment: .leading)
         }
     }
 
@@ -210,18 +210,17 @@ private struct GoalMediumView: View {
     private func deltaPill(_ kg: Double) -> some View {
         let down = kg < 0
         let sign = kg > 0 ? "+" : ""
+        let tint: Color = down ? .widgetAccent : .widgetBrand
         return HStack(spacing: 2) {
             Image(systemName: down ? "arrow.down" : "arrow.up")
                 .font(.system(size: 9, weight: .bold))
             Text("\(sign)\(String(format: "%.1f", kg))")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
         }
-        .foregroundStyle(down ? Color.widgetAccent : Color.widgetBrand.opacity(0.7))
+        .foregroundStyle(tint)
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(
-            Capsule().fill((down ? Color.widgetAccent : Color.widgetBrand).opacity(0.12))
-        )
+        .background(Capsule().fill(tint.opacity(0.18)))
     }
 
     // MARK: sparkline
@@ -273,7 +272,7 @@ private struct GoalMediumView: View {
         VStack(alignment: .leading, spacing: 4) {
             Image(systemName: "scalemass")
                 .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Color.widgetBrand.opacity(0.6))
+                .foregroundStyle(Color.widgetAccent)
             Text("체중 기록을 시작하세요")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -288,6 +287,20 @@ private struct GoalMediumView: View {
     }
 }
 
+// MARK: - D-day Badge (Small/Medium 공통)
+
+@ViewBuilder
+private func dDayBadge(days: Int) -> some View {
+    Text("D-\(days)")
+        .font(.system(size: 10, weight: .bold, design: .rounded))
+        .foregroundStyle(Color.widgetBrand)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)  // 헤더 좁을 때 wrap 방지
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(Capsule().fill(Color.widgetBrand.opacity(0.14)))
+}
+
 // MARK: - Ring
 
 private struct GoalRing: View {
@@ -297,7 +310,7 @@ private struct GoalRing: View {
         let clamped = max(0, min(progress, 1))
         ZStack {
             Circle()
-                .stroke(Color.widgetBrand.opacity(0.12), lineWidth: 8)
+                .stroke(Color.widgetTrack, lineWidth: 8)
             Circle()
                 .trim(from: 0, to: clamped)
                 .stroke(
@@ -367,8 +380,9 @@ private struct WeightSparkline: View {
                 )
                 .symbol {
                     ZStack {
-                        Circle().fill(Color.widgetChart).frame(width: 7, height: 7)
-                        Circle().stroke(Color.white, lineWidth: 1.5).frame(width: 7, height: 7)
+                        // 시스템 배경색으로 outline → 라이트(흰)/다크(검정 가까운 회색) 모두 자연스러움.
+                        Circle().fill(Color(uiColor: .systemBackground)).frame(width: 9, height: 9)
+                        Circle().fill(Color.widgetChart).frame(width: 6, height: 6)
                     }
                 }
             }

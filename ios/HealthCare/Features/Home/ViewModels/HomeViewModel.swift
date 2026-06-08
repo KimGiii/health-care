@@ -283,6 +283,7 @@ final class HomeViewModel: ObservableObject {
         // 위젯은 절대 네트워크 호출을 하지 않고, 앱이 저장해둔 스냅샷만 읽는다.
         publishCalorieWidgetSnapshot()
         publishGoalWidgetSnapshot()
+        publishStreakWidgetSnapshot()
     }
 
     /// 현재 ViewModel 상태로부터 위젯용 스냅샷을 만들어 App Group에 저장하고 위젯 갱신을 요청한다.
@@ -309,6 +310,7 @@ final class HomeViewModel: ObservableObject {
 
         let activeGoalSnapshot: GoalWidgetSnapshot.ActiveGoal? = activeGoal.map { goal in
             GoalWidgetSnapshot.ActiveGoal(
+                goalId: goal.goalId,
                 title: goal.goalType.displayName,
                 systemImage: goal.goalType.icon,
                 targetText: goal.targetText,
@@ -334,6 +336,19 @@ final class HomeViewModel: ObservableObject {
         )
         store.saveGoal(snapshot)
         WidgetReloadCenter.reloadGoal()
+    }
+
+    /// 연속 기록 일수 + 오늘 식단/운동 체크 상태를 위젯에 저장.
+    func publishStreakWidgetSnapshot() {
+        guard let store = WidgetDataStore() else { return }
+        let snapshot = StreakWidgetSnapshot(
+            streakDays: streakDays,
+            cap: 7,                                          // 현재 streak 계산 윈도우와 동일
+            didLogDietToday: !todayDietLogs.isEmpty,
+            didLogExerciseToday: recentSessions.contains { $0.sessionDate == today }
+        )
+        store.saveStreak(snapshot)
+        WidgetReloadCenter.reloadStreak()
     }
 
     /// 비동기 throw 호출을 Result 로 감싸 일부 실패가 다른 결과를 휘말리게 하지 않도록 한다.

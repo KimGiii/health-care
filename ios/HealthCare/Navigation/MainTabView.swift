@@ -136,9 +136,15 @@ struct MainTabView: View {
             recordPath = NavigationPath([RecordDestination.diet])
             selectedTab = .record
         case "WIDGET_GOAL":
-            // 목표 위젯 → 마이페이지(목표 진행 영역) 진입. 별도 destination은 Phase 3에서 정의.
-            myPagePath = NavigationPath()
-            selectedTab = .myPage
+            // 목표 위젯 → 홈 탭의 GoalProgressView로 직접 진입.
+            // 위젯 스냅샷 캐시에서 goalId를 읽어 path에 push. 활성 목표가 없으면 GoalSettingView로.
+            let snapshot = WidgetDataStore()?.loadGoal()
+            if let goalId = snapshot?.goal?.goalId {
+                homePath = NavigationPath([HomeDestination.goalDetail(id: goalId)])
+            } else {
+                homePath = NavigationPath([HomeDestination.goalSetting])
+            }
+            selectedTab = .home
         case "WIDGET_STREAK":
             // 스트릭 위젯 → 홈 탭으로.
             homePath = NavigationPath()
