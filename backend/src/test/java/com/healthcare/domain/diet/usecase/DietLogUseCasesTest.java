@@ -1,4 +1,4 @@
-package com.healthcare.domain.diet.service;
+package com.healthcare.domain.diet.usecase;
 
 import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.UnauthorizedException;
@@ -37,11 +37,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * RED: DietLogService, 관련 Repository, DTO 클래스가 없으므로 컴파일 실패 상태.
+ * 식단 기록 유스케이스의 규칙을 Repository 경계에서 검증한다.
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DietLogService 단위 테스트")
-class DietLogServiceTest {
+@DisplayName("DietLogUseCases 단위 테스트")
+class DietLogUseCasesTest {
 
     @Mock private DietLogRepository dietLogRepository;
     @Mock private FoodEntryRepository foodEntryRepository;
@@ -50,7 +50,7 @@ class DietLogServiceTest {
     @Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
-    private DietLogService dietLogService;
+    private DietLogUseCases dietLogUseCases;
 
     // ─────────────────────────── 식사 기록 생성 ───────────────────────────
 
@@ -88,7 +88,7 @@ class DietLogServiceTest {
         given(foodEntryRepository.saveAll(anyList())).willReturn(List.of());
 
         // when
-        CreateDietLogResponse response = dietLogService.createDietLog(userId, request);
+        CreateDietLogResponse response = dietLogUseCases.createDietLog(userId, request);
 
         // then
         assertThat(response.getDietLogId()).isEqualTo(100L);
@@ -123,7 +123,7 @@ class DietLogServiceTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> dietLogService.createDietLog(userId, request))
+        assertThatThrownBy(() -> dietLogUseCases.createDietLog(userId, request))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -156,7 +156,7 @@ class DietLogServiceTest {
                 .build();
 
         // when
-        CreateDietLogResponse response = dietLogService.createDietLog(userId, request);
+        CreateDietLogResponse response = dietLogUseCases.createDietLog(userId, request);
 
         // then
         assertThat(response.getDietLogId()).isEqualTo(101L);
@@ -179,7 +179,7 @@ class DietLogServiceTest {
         given(foodEntryRepository.findByDietLogIdOrderById(logId)).willReturn(List.of());
 
         // when
-        DietLogDetailResponse response = dietLogService.getDietLogById(userId, logId);
+        DietLogDetailResponse response = dietLogUseCases.getDietLogById(userId, logId);
 
         // then
         assertThat(response.getDietLogId()).isEqualTo(logId);
@@ -200,7 +200,7 @@ class DietLogServiceTest {
         given(dietLogRepository.findById(logId)).willReturn(Optional.of(dietLog));
 
         // when & then
-        assertThatThrownBy(() -> dietLogService.getDietLogById(currentUserId, logId))
+        assertThatThrownBy(() -> dietLogUseCases.getDietLogById(currentUserId, logId))
                 .isInstanceOf(UnauthorizedException.class);
     }
 
@@ -211,7 +211,7 @@ class DietLogServiceTest {
         given(dietLogRepository.findById(9999L)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> dietLogService.getDietLogById(1L, 9999L))
+        assertThatThrownBy(() -> dietLogUseCases.getDietLogById(1L, 9999L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -231,7 +231,7 @@ class DietLogServiceTest {
                 .willReturn(page);
 
         // when
-        DietLogListResponse response = dietLogService.listDietLogs(userId, null, null, pageable);
+        DietLogListResponse response = dietLogUseCases.listDietLogs(userId, null, null, pageable);
 
         // then
         assertThat(response.getContent()).hasSize(1);
@@ -259,7 +259,7 @@ class DietLogServiceTest {
         given(dietLogRepository.findById(logId)).willReturn(Optional.of(dietLog));
 
         // when
-        dietLogService.deleteDietLog(userId, logId);
+        dietLogUseCases.deleteDietLog(userId, logId);
 
         // then — softDelete() 호출 후 deletedAt 이 설정되어야 함
         verify(dietLogRepository).findById(logId);
@@ -291,7 +291,7 @@ class DietLogServiceTest {
                 .willReturn(List.of(chicken, chickenAgain, rice));
 
         // when
-        dietLogService.deleteDietLog(userId, logId);
+        dietLogUseCases.deleteDietLog(userId, logId);
 
         // then — chicken이 2개 항목이어도 distinct 처리로 배치 1회 호출, 두 ID 모두 포함
         @SuppressWarnings("unchecked")
@@ -311,7 +311,7 @@ class DietLogServiceTest {
         given(dietLogRepository.findById(logId)).willReturn(Optional.of(dietLog));
 
         // when & then
-        assertThatThrownBy(() -> dietLogService.deleteDietLog(1L, logId))
+        assertThatThrownBy(() -> dietLogUseCases.deleteDietLog(1L, logId))
                 .isInstanceOf(UnauthorizedException.class);
     }
 

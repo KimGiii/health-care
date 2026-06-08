@@ -1,4 +1,4 @@
-package com.healthcare.domain.diet.service;
+package com.healthcare.domain.diet.usecase;
 
 import com.healthcare.common.exception.ResourceNotFoundException;
 import com.healthcare.common.exception.UnauthorizedException;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class DietLogService {
+public class DietLogUseCases {
 
     private final DietLogRepository dietLogRepository;
     private final FoodEntryRepository foodEntryRepository;
@@ -35,11 +35,11 @@ public class DietLogService {
 
     private final Counter dietLogCreatedCounter;
 
-    public DietLogService(DietLogRepository dietLogRepository,
-                          FoodEntryRepository foodEntryRepository,
-                          FoodCatalogRepository foodCatalogRepository,
-                          UserRepository userRepository,
-                          MeterRegistry meterRegistry) {
+    public DietLogUseCases(DietLogRepository dietLogRepository,
+                           FoodEntryRepository foodEntryRepository,
+                           FoodCatalogRepository foodCatalogRepository,
+                           UserRepository userRepository,
+                           MeterRegistry meterRegistry) {
         this.dietLogRepository = dietLogRepository;
         this.foodEntryRepository = foodEntryRepository;
         this.foodCatalogRepository = foodCatalogRepository;

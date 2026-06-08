@@ -12,8 +12,8 @@ import com.healthcare.domain.diet.mealphoto.entity.MealPhotoAnalysisItem;
 import com.healthcare.domain.diet.mealphoto.repository.MealPhotoAnalysisItemRepository;
 import com.healthcare.domain.diet.mealphoto.repository.MealPhotoAnalysisRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
-import com.healthcare.domain.diet.service.DietLogService;
 import com.healthcare.domain.diet.service.FoodCatalogService;
+import com.healthcare.domain.diet.usecase.DietLogUseCases;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ class MealPhotoAnalysisServiceTest {
     @Mock private MealAnalysisProvider mealAnalysisProvider;
     @Mock private FoodCatalogRepository foodCatalogRepository;
     @Mock private FoodCatalogService foodCatalogService;
-    @Mock private DietLogService dietLogService;
+    @Mock private DietLogUseCases dietLogUseCases;
     @Mock private UserRepository userRepository;
 
     @InjectMocks
@@ -60,7 +60,7 @@ class MealPhotoAnalysisServiceTest {
                 mealAnalysisProvider,
                 foodCatalogRepository,
                 foodCatalogService,
-                dietLogService,
+                dietLogUseCases,
                 userRepository,
                 new ObjectMapper()
         );
@@ -196,7 +196,7 @@ class MealPhotoAnalysisServiceTest {
                         .createdByUserId(1L)
                         .build()
         );
-        given(dietLogService.createDietLog(eq(1L), any())).willReturn(CreateDietLogResponse.builder()
+        given(dietLogUseCases.createDietLog(eq(1L), any())).willReturn(CreateDietLogResponse.builder()
                 .dietLogId(201L)
                 .logDate(LocalDate.of(2026, 4, 21))
                 .mealType(MealType.DINNER)

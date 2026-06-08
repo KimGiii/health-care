@@ -3,7 +3,7 @@ package com.healthcare.domain.diet.controller;
 import com.healthcare.common.response.ApiResponse;
 import com.healthcare.common.web.PageRequests;
 import com.healthcare.domain.diet.dto.*;
-import com.healthcare.domain.diet.service.DietLogService;
+import com.healthcare.domain.diet.usecase.DietLogUseCases;
 import com.healthcare.security.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +19,13 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class DietLogController {
 
-    private final DietLogService dietLogService;
+    private final DietLogUseCases dietLogUseCases;
 
     @PostMapping
     public ResponseEntity<ApiResponse<CreateDietLogResponse>> createDietLog(
             @CurrentUserId Long userId,
             @Valid @RequestBody CreateDietLogRequest request) {
-        CreateDietLogResponse response = dietLogService.createDietLog(userId, request);
+        CreateDietLogResponse response = dietLogUseCases.createDietLog(userId, request);
         return ResponseEntity.status(201).body(ApiResponse.ok("식단 기록이 저장되었습니다.", response));
     }
 
@@ -37,7 +37,7 @@ public class DietLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         Pageable pageable = PageRequests.of(page, size);
-        DietLogListResponse response = dietLogService.listDietLogs(userId, from, to, pageable);
+        DietLogListResponse response = dietLogUseCases.listDietLogs(userId, from, to, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
@@ -45,7 +45,7 @@ public class DietLogController {
     public ResponseEntity<ApiResponse<DietLogDetailResponse>> getDietLog(
             @CurrentUserId Long userId,
             @PathVariable Long id) {
-        DietLogDetailResponse response = dietLogService.getDietLogById(userId, id);
+        DietLogDetailResponse response = dietLogUseCases.getDietLogById(userId, id);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
@@ -54,7 +54,7 @@ public class DietLogController {
             @CurrentUserId Long userId,
             @PathVariable Long id,
             @Valid @RequestBody UpdateDietLogRequest request) {
-        CreateDietLogResponse response = dietLogService.updateDietLog(userId, id, request);
+        CreateDietLogResponse response = dietLogUseCases.updateDietLog(userId, id, request);
         return ResponseEntity.ok(ApiResponse.ok("식단 기록이 수정되었습니다.", response));
     }
 
@@ -62,7 +62,7 @@ public class DietLogController {
     public ResponseEntity<ApiResponse<Void>> deleteDietLog(
             @CurrentUserId Long userId,
             @PathVariable Long id) {
-        dietLogService.deleteDietLog(userId, id);
+        dietLogUseCases.deleteDietLog(userId, id);
         return ResponseEntity.ok(ApiResponse.ok("식단 기록이 삭제되었습니다."));
     }
 }

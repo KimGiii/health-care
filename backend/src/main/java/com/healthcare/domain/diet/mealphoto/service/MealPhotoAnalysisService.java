@@ -18,8 +18,8 @@ import com.healthcare.domain.diet.mealphoto.entity.MealPhotoAnalysisItem;
 import com.healthcare.domain.diet.mealphoto.repository.MealPhotoAnalysisItemRepository;
 import com.healthcare.domain.diet.mealphoto.repository.MealPhotoAnalysisRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
-import com.healthcare.domain.diet.service.DietLogService;
 import com.healthcare.domain.diet.service.FoodCatalogService;
+import com.healthcare.domain.diet.usecase.DietLogUseCases;
 import com.healthcare.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class MealPhotoAnalysisService {
     private final MealAnalysisProvider mealAnalysisProvider;
     private final FoodCatalogRepository foodCatalogRepository;
     private final FoodCatalogService foodCatalogService;
-    private final DietLogService dietLogService;
+    private final DietLogUseCases dietLogUseCases;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
@@ -174,7 +174,7 @@ public class MealPhotoAnalysisService {
                 .notes(request.getNotes())
                 .build();
 
-        CreateDietLogResponse dietLog = dietLogService.createDietLog(userId, createRequest);
+        CreateDietLogResponse dietLog = dietLogUseCases.createDietLog(userId, createRequest);
         analysis.markConfirmed();
         analysisRepository.save(analysis);
 
