@@ -4,15 +4,17 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context (backend, ios). Read each one relevant to the topic.
-- **`docs/adr/`** at the repo root — system-wide architectural decisions.
-- **`backend/docs/adr/`** and **`ios/docs/adr/`** — context-scoped decisions.
+- **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
+- **`backend/CONTEXT.md`** — backend domain language.
+- **`ios/CONTEXT.md`** — iOS domain language.
+- **`docs/adr/README.md`** and ADR files in **`docs/adr/`** — system-wide architectural decisions.
+- **`backend/docs/adr/README.md`** and **`ios/docs/adr/README.md`** — context-scoped decision indexes.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
+These files are part of the repo's baseline agent context. If one is missing, don't proceed silently: recreate the missing baseline file or ask before continuing if the content would require a real product or architecture decision.
 
 ## File structure
 
-This repo is multi-context (monorepo with separate `backend/` and `ios/` codebases):
+This repo is multi-context, with separate backend and iOS codebases:
 
 ```
 /
@@ -30,7 +32,7 @@ This repo is multi-context (monorepo with separate `backend/` and `ios/` codebas
 
 When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in the relevant `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/grill-with-docs`).
+If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap. Add a focused term to the relevant `CONTEXT.md` when the term is already clear from code or product docs; otherwise note it for `/grill-with-docs`.
 
 ## Flag ADR conflicts
 

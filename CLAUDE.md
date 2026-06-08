@@ -70,4 +70,4 @@ canonical 라벨 이름을 그대로 사용 (`needs-triage`, `needs-info`, `read
 
 ### Domain docs
 
-멀티 컨텍스트 — 루트의 `CONTEXT-MAP.md`와 `backend/`, `ios/` 별 `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+멀티 컨텍스트 — 루트의 `CONTEXT-MAP.md`, `backend/CONTEXT.md`, `ios/CONTEXT.md`, 전역/컨텍스트별 ADR을 읽습니다. 누락된 기본 문서는 생성해서 유지합니다. See `docs/agents/domain.md`.
