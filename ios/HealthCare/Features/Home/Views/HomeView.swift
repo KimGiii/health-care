@@ -1,6 +1,16 @@
 import GoogleMobileAds
 import SwiftUI
 
+// MARK: - Home Navigation Destinations
+//
+// 위젯 딥링크에서 homePath에 push할 수 있도록 value 기반 enum으로 노출.
+// MainTabView.handlePushRoute가 캐시에서 goalId를 읽어 .goalDetail(id:)를 append.
+
+enum HomeDestination: Hashable {
+    case goalSetting           // 활성 목표 없을 때 — 목표 목록/추가 화면
+    case goalDetail(id: Int)   // 활성 목표 상세 (GoalProgressView)
+}
+
 // MARK: - HomeView (대시보드)
 //
 // 기록 진입점 중심 → 활동 진행현황 대시보드 중심으로 재구성.
@@ -107,6 +117,16 @@ struct HomeView: View {
             // 탭 전환 시에는 항상 새로 로드된다. 이전의 .onAppear는 child push→pop 시에도
             // 재실행되어 두 번째 loadDashboard가 실패하면 데이터는 있는데 에러 alert이 뜨는
             // 버그를 일으켰다.
+            .navigationDestination(for: HomeDestination.self) { dest in
+                switch dest {
+                case .goalSetting:
+                    GoalSettingView()
+                        .environmentObject(container)
+                case .goalDetail(let id):
+                    GoalProgressView(goalId: id)
+                        .environmentObject(container)
+                }
+            }
             .task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             .refreshable {
                 await viewModel.loadDashboard(apiClient: container.apiClient)
@@ -121,7 +141,7 @@ struct HomeView: View {
             .onReceive(NotificationCenter.default.publisher(for: .exerciseRecordChanged)) { _ in
                 Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .bodyMeasurementChanged)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .bodyMeasurementDidChange)) { _ in
                 Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             }
 

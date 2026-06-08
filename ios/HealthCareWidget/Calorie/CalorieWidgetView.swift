@@ -9,22 +9,8 @@
 import SwiftUI
 import WidgetKit
 
-// MARK: - Brand Colors (Widget-local)
-
-private extension Color {
-    /// Deep forest green — 주 강조색
-    static let widgetBrand = Color(red: 0x0F / 255, green: 0x3B / 255, blue: 0x24 / 255)
-    /// Fresh mint — 진행 강조
-    static let widgetAccent = Color(red: 0x52 / 255, green: 0xB7 / 255, blue: 0x88 / 255)
-    /// Warm amber — 단백질
-    static let widgetProtein = Color(red: 0xF6 / 255, green: 0xC1 / 255, blue: 0x77 / 255)
-    /// Terracotta — 탄수화물
-    static let widgetCarbs = Color(red: 0xE0 / 255, green: 0x78 / 255, blue: 0x56 / 255)
-    /// Sage — 지방
-    static let widgetFat = Color(red: 0x6F / 255, green: 0xA2 / 255, blue: 0x87 / 255)
-}
-
 // MARK: - Entry View (family dispatch)
+// 색은 Shared/WidgetColors.swift 에서 다크/라이트 동적으로 정의됨.
 
 struct CalorieWidgetView: View {
     @Environment(\.widgetFamily) private var family
@@ -165,7 +151,7 @@ private struct CalorieRing: View {
         let clamped = max(0, min(progress, 1))
         ZStack {
             Circle()
-                .stroke(Color.widgetBrand.opacity(0.12), lineWidth: 8)
+                .stroke(Color.widgetTrack, lineWidth: 8)
             Circle()
                 .trim(from: 0, to: clamped)
                 .stroke(
@@ -187,27 +173,30 @@ private struct MacroBar: View {
     let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
                 Text(label)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .fixedSize()
                 Spacer(minLength: 0)
-                Text("\(Int(current)) / \(Int(target))g")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                Text("\(Int(current))/\(Int(target))g")
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(tint.opacity(0.18))
+            // GeometryReader 대신 scaleEffect — 위젯에서 레이아웃 안전
+            Capsule()
+                .fill(tint.opacity(0.22))
+                .frame(height: 6)
+                .overlay(alignment: .leading) {
                     Capsule()
                         .fill(tint)
-                        .frame(width: geo.size.width * max(0, min(progress, 1)))
+                        .frame(height: 6)
+                        .scaleEffect(x: max(0, min(progress, 1)), anchor: .leading)
                 }
-            }
-            .frame(height: 6)
         }
     }
 }

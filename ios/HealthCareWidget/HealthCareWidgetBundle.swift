@@ -13,5 +13,6 @@ struct HealthCareWidgetBundle: WidgetBundle {
     var body: some Widget {
         CalorieWidget()
         GoalWidget()
+        StreakWidget()
     }
 }

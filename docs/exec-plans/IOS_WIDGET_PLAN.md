@@ -161,11 +161,33 @@ struct CalorieSnapshot: Codable {
 - [x] 1개 측정 상태 / 0개 상태 빈 상태 처리
 - [x] 딥링크 → 마이페이지 (목표 상세 destination은 Phase 4+에서)
 
-### Phase 4 — 스트릭 위젯 + 잠금화면 (1일)
-- [ ] 백엔드: `GET /api/streak` 엔드포인트 검토 (없다면 클라이언트 계산)
-- [ ] `StreakSnapshot` 모델
-- [ ] Accessory Circular / Rectangular / Small 뷰
-- [ ] 잠금화면용 색 처리 (`AccentedRenderingMode`)
+### Phase 4 — 스트릭 위젯 + 잠금화면 ✅ 완료 (2026-06-08)
+- [x] streak는 클라이언트 계산 — 기존 `HomeViewModel.streakDays` 재활용 (7일 윈도우)
+- [x] `StreakWidgetSnapshot` (streakDays, cap, didLogDietToday, didLogExerciseToday)
+- [x] systemSmall: 큰 숫자 + 식단/운동 체크 칩
+- [x] accessoryCircular: 🔥 + 일수 (잠금화면)
+- [x] accessoryRectangular: "N일 연속" + 상태 부제 (잠금화면)
+- [x] `widgetAccentable()` + `AccessoryWidgetBackground` 사용
+- [x] 운동 저장 후 `exerciseRecordChanged` 알림 발행 → 실시간 갱신
+- [x] 체중 변경 알림은 기존 `bodyMeasurementDidChange` 통일 (중복 제거)
+
+### Phase 4.1 — 다크모드 가독성 개선 ✅ 완료 (2026-06-08)
+- [x] `HealthCareWidget/Shared/WidgetColors.swift` — UIColor 동적 색
+- [x] Light: deep forest #0F3B24 / Dark: light mint glow #95E2B5
+- [x] 트랙 색, 매크로 색, 불꽃 색, sparkline 마지막 점 outline 모두 동적
+- [x] 위젯별 private extension Color 제거 (한 곳에서 관리)
+
+### Phase 4.2 — 라우팅 개선 ✅ 완료 (2026-06-08)
+- [x] `HomeDestination` enum + `navigationDestination(for:)` 도입
+- [x] 위젯 스냅샷 `ActiveGoal.goalId` 추가
+- [x] 목표 위젯 탭 → 홈 탭의 `GoalProgressView(goalId:)` 직접 push
+- [x] 활성 목표 없으면 `GoalSettingView`로 fallback
+
+### Phase 4.3 — 다중 활성 목표 계획서 작성 (구현 보류)
+- [x] `docs/exec-plans/IOS_WIDGET_MULTI_GOAL_PLAN.md`
+- [x] 표시 정책 A2 (IntentConfiguration + AppIntent), 라우팅 B1 (현재 표시 목표로 직진) 추천
+- [x] 점진적 도입 단계 + 호환성 + 측정 지표 정의
+- [ ] 선결 의사결정: ACTIVE 동시 운용 도메인 정책 / iOS 17+ deployment target
 
 ### Phase 5 — QA & 출시 준비 (0.5일)
 - [ ] 다크모드 / 라이트모드 양쪽 스크린샷

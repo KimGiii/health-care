@@ -21,6 +21,13 @@ final class AddExerciseSessionViewModel: ObservableObject {
     @Published var aiEstimateResult: AiExerciseEstimateResponse?
     @Published var isAiEstimating = false
 
+    // MARK: - 직접 등록
+    @Published var showCustomExerciseForm = false
+    @Published var isSubmittingCustomExercise = false
+
+    private var searchDebounceTask: Task<Void, Never>?
+    private let debounceDuration: Duration = .milliseconds(500)
+
     // MARK: - Draft sets (grouped by exercise)
     @Published var exerciseGroups: [ExerciseGroup] = []
 
@@ -143,6 +150,61 @@ final class AddExerciseSessionViewModel: ObservableObject {
         selectedMuscleGroup = nil
         aiEstimateResult = nil
         isAiEstimating = false
+        searchDebounceTask?.cancel()
+        searchDebounceTask = nil
+    }
+
+    /// 식단 검색과 동일한 디바운스 자동 검색.
+    /// 텍스트 입력 시 호출 — 500ms 후 카탈로그 검색을 실행한다.
+    func scheduleCatalogSearch(apiClient: APIClient) {
+        let q = catalogQuery.trimmingCharacters(in: .whitespaces)
+        searchDebounceTask?.cancel()
+        guard !q.isEmpty else {
+            catalogResults = []
+            aiEstimateResult = nil
+            return
+        }
+        searchDebounceTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: self?.debounceDuration ?? .milliseconds(500))
+                try Task.checkCancellation()
+                guard let self else { return }
+                await self.searchCatalog(apiClient: apiClient)
+            } catch {
+                return
+            }
+        }
+    }
+
+    // MARK: - 직접 등록한 운동 저장
+    func submitCustomExercise(
+        name: String,
+        muscleGroup: String,
+        exerciseType: String,
+        metValue: Double?,
+        apiClient: APIClient
+    ) async {
+        isSubmittingCustomExercise = true
+        defer { isSubmittingCustomExercise = false }
+
+        do {
+            let payload: [String: Any?] = [
+                "name": name,
+                "nameKo": name,
+                "muscleGroup": muscleGroup,
+                "exerciseType": exerciseType,
+                "metValue": metValue
+            ]
+            let body = try JSONSerialization.data(withJSONObject: payload.compactMapValues { $0 })
+            let catalogItem: ExerciseCatalogItem = try await apiClient.request(
+                .createCustomExercise(body: body)
+            )
+            catalogResults.insert(catalogItem, at: 0)
+            addExercise(catalogItem)
+            showCustomExerciseForm = false
+        } catch {
+            errorMessage = String(localized: "exercise.error.save")
+        }
     }
 
     // MARK: - AI 운동 추정 (카탈로그 검색 결과 없을 때 폴백)
@@ -308,6 +370,9 @@ final class AddExerciseSessionViewModel: ObservableObject {
             let response: CreateSessionResponse = try await apiClient.request(
                 .createExerciseSession(body: body)
             )
+            // 스트릭 위젯이 오늘 운동 체크를 갱신할 수 있도록 알림 발행.
+            // 홈이 mount 상태면 dashboard 재로드 → 스냅샷 저장 → 위젯 reload.
+            NotificationCenter.default.post(name: .exerciseRecordChanged, object: nil)
             onSuccess(response)
         } catch let error as APIError {
             errorMessage = error.errorDescription

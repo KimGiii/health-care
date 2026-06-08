@@ -12,9 +12,9 @@ public extension Notification.Name {
     /// 식단 기록(추가/수정/삭제) 변경. AddDietLogViewModel 저장 성공 직후 post.
     static let dietRecordChanged = Notification.Name("HealthCare.dietRecordChanged")
 
-    /// 운동 기록 변경 (향후 운동 기록 화면에서 동일 패턴 사용).
+    /// 운동 기록 변경 — 스트릭 위젯의 오늘 운동 체크 갱신용.
     static let exerciseRecordChanged = Notification.Name("HealthCare.exerciseRecordChanged")
 
-    /// 체중/체지방 기록 변경 (향후 목표 위젯 갱신에 사용).
-    static let bodyMeasurementChanged = Notification.Name("HealthCare.bodyMeasurementChanged")
+    // 참고: 체중/체지방 변경은 BodyMeasurementViewModel이 이미 발행하는
+    // `.bodyMeasurementDidChange` 알림을 그대로 활용한다 (중복 정의 방지).
 }
