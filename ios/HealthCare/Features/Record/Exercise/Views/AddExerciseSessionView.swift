@@ -60,6 +60,9 @@ struct AddExerciseSessionView: View {
             .sheet(isPresented: $viewModel.showCatalogPicker) {
                 ExerciseCatalogPickerView(viewModel: viewModel)
             }
+            .sheet(isPresented: $viewModel.showCustomExerciseForm) {
+                AddCustomExerciseView(viewModel: viewModel)
+            }
         }
     }
 
@@ -525,6 +528,9 @@ struct ExerciseCatalogPickerView: View {
         .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
         .background(Color.backgroundPage)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        .onChange(of: viewModel.catalogQuery) { _ in
+            viewModel.scheduleCatalogSearch(apiClient: container.apiClient)
+        }
     }
 
     private var catalogList: some View {
@@ -566,6 +572,90 @@ struct ExerciseCatalogPickerView: View {
                 .listRowSeparatorTint(Color(uiColor: .separator).opacity(0.5))
             }
             .listStyle(.plain)
+
+            // 검색 결과가 있어도 AI 추정/직접 추가 버튼을 하단에 항상 노출.
+            if !viewModel.catalogQuery.trimmingCharacters(in: .whitespaces).isEmpty {
+                Divider()
+                aiActionSection
+                    .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+                    .background(Color.backgroundPage)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var aiActionSection: some View {
+        if let estimate = viewModel.aiEstimateResult {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label(String(localized: "exercise.catalog.ai.label"), systemImage: "sparkles")
+                        .font(.bodyMedium).fontWeight(.semibold)
+                        .foregroundStyle(Color.brandAccent)
+                    Spacer()
+                    Text("신뢰도 \(Int(estimate.confidence * 100))%")
+                        .font(.caption)
+                        .foregroundStyle(Color.textSecondary)
+                }
+
+                Text(estimate.exerciseName)
+                    .font(.cta)
+                    .foregroundStyle(Color.textPrimary)
+
+                HStack(spacing: 8) {
+                    aiExerciseTag(estimate.muscleGroup)
+                    aiExerciseTag(estimate.exerciseType)
+                    aiExerciseTag(String(format: "MET %.1f", estimate.metValue))
+                }
+
+                Text(estimate.disclaimer)
+                    .font(.caption)
+                    .foregroundStyle(Color.brandWarning)
+
+                Button {
+                    Task {
+                        await viewModel.addAiEstimatedExercise(apiClient: container.apiClient)
+                        dismiss()
+                    }
+                } label: {
+                    Label(String(localized: "exercise.catalog.ai.add"), systemImage: "plus.circle.fill")
+                        .font(.bodyMedium).fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.brandPrimary)
+            }
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        } else {
+            VStack(spacing: 10) {
+                Button {
+                    Task { await viewModel.estimateWithAI(apiClient: container.apiClient) }
+                } label: {
+                    if viewModel.isAiEstimating {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Label(String(localized: "exercise.catalog.ai.estimate"), systemImage: "sparkles")
+                            .font(.bodyMedium).fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.brandPrimary)
+                .disabled(viewModel.isAiEstimating)
+
+                Button {
+                    viewModel.showCustomExerciseForm = true
+                } label: {
+                    Label(String(localized: "diet.ai.directAdd"), systemImage: "plus.circle")
+                        .font(.bodyMedium).fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(Color.brandSecondary)
+            }
         }
     }
 
@@ -617,71 +707,8 @@ struct ExerciseCatalogPickerView: View {
                 title: String(format: String(localized: "exercise.catalog.noResults"), viewModel.catalogQuery)
             )
 
-            // Codex 작업: 검색 결과가 없을 때 AI 운동 추정 플로우를 화면에 연결합니다.
-            if let estimate = viewModel.aiEstimateResult {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Label(String(localized: "exercise.catalog.ai.label"), systemImage: "sparkles")
-                            .font(.bodyMedium).fontWeight(.semibold)
-                            .foregroundStyle(Color.brandAccent)
-                        Spacer()
-                        Text("신뢰도 \(Int(estimate.confidence * 100))%")
-                            .font(.caption)
-                            .foregroundStyle(Color.textSecondary)
-                    }
-
-                    Text(estimate.exerciseName)
-                        .font(.cta)
-                        .foregroundStyle(Color.textPrimary)
-
-                    HStack(spacing: 8) {
-                        aiExerciseTag(estimate.muscleGroup)
-                        aiExerciseTag(estimate.exerciseType)
-                        aiExerciseTag(String(format: "MET %.1f", estimate.metValue))
-                    }
-
-                    Text(estimate.disclaimer)
-                        .font(.caption)
-                        .foregroundStyle(Color.brandWarning)
-
-                    Button {
-                        Task {
-                            await viewModel.addAiEstimatedExercise(apiClient: container.apiClient)
-                            dismiss()
-                        }
-                    } label: {
-                        Label(String(localized: "exercise.catalog.ai.add"), systemImage: "plus.circle.fill")
-                            .font(.bodyMedium).fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.brandPrimary)
-                }
-                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+            aiActionSection
                 .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
-            } else {
-                Button {
-                    Task {
-                        await viewModel.estimateWithAI(apiClient: container.apiClient)
-                    }
-                } label: {
-                    if viewModel.isAiEstimating {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                    } else {
-                        Label(String(localized: "exercise.catalog.ai.estimate"), systemImage: "sparkles")
-                            .font(.bodyMedium).fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.brandPrimary)
-                .disabled(viewModel.isAiEstimating)
-                .padding(.horizontal, Spacing.xxl) // design-lint:ignore — micro/hero spacing
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -775,6 +802,140 @@ private struct CatalogRow: View {
         case "BODYWEIGHT":  return "figure.gymnastics"
         case "FLEXIBILITY": return "figure.flexibility"
         default:            return "dumbbell.fill"
+        }
+    }
+}
+
+// MARK: - AddCustomExerciseView (직접 등록)
+
+private struct AddCustomExerciseView: View {
+    @EnvironmentObject private var container: AppContainer
+    @ObservedObject var viewModel: AddExerciseSessionViewModel
+
+    @State private var name = ""
+    @State private var muscleGroup = "CHEST"
+    @State private var exerciseType = "STRENGTH"
+    @State private var metValueText = ""
+
+    private let muscleGroups = [
+        "CHEST", "BACK", "SHOULDERS", "BICEPS", "TRICEPS",
+        "CORE", "QUADRICEPS", "HAMSTRINGS", "GLUTES", "CALVES",
+        "FULL_BODY", "CARDIO"
+    ]
+
+    private let exerciseTypes = ["STRENGTH", "CARDIO", "BODYWEIGHT", "FLEXIBILITY", "SPORTS"]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("기본 정보") {
+                    TextField("운동 이름", text: $name)
+                        .textInputAutocapitalization(.never)
+
+                    Picker("근육 그룹", selection: $muscleGroup) {
+                        ForEach(muscleGroups, id: \.self) { group in
+                            Text(label(forMuscleGroup: group)).tag(group)
+                        }
+                    }
+
+                    Picker("운동 유형", selection: $exerciseType) {
+                        ForEach(exerciseTypes, id: \.self) { type in
+                            Text(label(forExerciseType: type)).tag(type)
+                        }
+                    }
+                }
+
+                Section {
+                    HStack {
+                        Text("MET 값")
+                        Spacer()
+                        TextField("선택", text: $metValueText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 90)
+                    }
+                } footer: {
+                    Text("MET은 운동 강도 지표입니다. 비워두면 기본값을 사용합니다.")
+                        .font(.caption)
+                }
+            }
+            .navigationTitle("직접 등록")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소") { viewModel.showCustomExerciseForm = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        Task { await submit() }
+                    } label: {
+                        if viewModel.isSubmittingCustomExercise {
+                            ProgressView()
+                        } else {
+                            Text("등록")
+                        }
+                    }
+                    .disabled(!canSubmit || viewModel.isSubmittingCustomExercise)
+                }
+            }
+            .numericKeyboardToolbar()
+            .onAppear {
+                if name.isEmpty {
+                    name = viewModel.catalogQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+        }
+    }
+
+    private var normalizedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSubmit: Bool {
+        !normalizedName.isEmpty
+    }
+
+    private func submit() async {
+        let met: Double? = {
+            let text = metValueText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty, let value = Double(text), (0...30).contains(value) else { return nil }
+            return value
+        }()
+        await viewModel.submitCustomExercise(
+            name: normalizedName,
+            muscleGroup: muscleGroup,
+            exerciseType: exerciseType,
+            metValue: met,
+            apiClient: container.apiClient
+        )
+    }
+
+    private func label(forMuscleGroup key: String) -> String {
+        switch key {
+        case "CHEST":      return String(localized: "exercise.muscle.chest")
+        case "BACK":       return String(localized: "exercise.muscle.back")
+        case "SHOULDERS":  return String(localized: "exercise.muscle.shoulders")
+        case "BICEPS":     return String(localized: "exercise.muscle.biceps")
+        case "TRICEPS":    return String(localized: "exercise.muscle.triceps")
+        case "CORE":       return String(localized: "exercise.muscle.core")
+        case "QUADRICEPS": return String(localized: "exercise.muscle.quadriceps")
+        case "HAMSTRINGS": return String(localized: "exercise.muscle.hamstrings")
+        case "GLUTES":     return String(localized: "exercise.muscle.glutes")
+        case "CALVES":     return String(localized: "exercise.muscle.calves")
+        case "FULL_BODY":  return String(localized: "exercise.muscle.fullBody")
+        case "CARDIO":     return String(localized: "exercise.muscle.cardio")
+        default:           return key
+        }
+    }
+
+    private func label(forExerciseType key: String) -> String {
+        switch key {
+        case "STRENGTH":    return String(localized: "exercise.type.strength")
+        case "CARDIO":      return String(localized: "exercise.type.cardio")
+        case "BODYWEIGHT":  return String(localized: "exercise.type.bodyweight")
+        case "FLEXIBILITY": return String(localized: "exercise.type.flexibility")
+        case "SPORTS":      return String(localized: "exercise.type.sports")
+        default:            return key
         }
     }
 }

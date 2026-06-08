@@ -252,7 +252,7 @@ struct AddDietLogView: View {
                     Text("PRO")
                         .font(.caption2.bold())
                         .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, 2)
+                        .padding(.vertical, Spacing.xs)
                         .background(Color.white.opacity(0.25))
                         .clipShape(Capsule())
                 }
@@ -326,7 +326,7 @@ private struct MealTypePill: View {
                 Text(type.displayName).font(.caption.bold())
             }
             .padding(.horizontal, Spacing.md)
-            .padding(.vertical, 7)
+            .padding(.vertical, Spacing.sm)
             .background(isSelected ? Color.brandPrimary : Color.surfaceCard)
             .foregroundColor(isSelected ? .white : .primary)
             .clipShape(Capsule())
@@ -356,7 +356,7 @@ private struct DraftEntryCard: View {
                             Text("AI 추정")
                                 .font(.caption2.bold())
                                 .padding(.horizontal, Spacing.sm)
-                                .padding(.vertical, 3)
+                                .padding(.vertical, Spacing.xs)
                                 .background(Color.brandPrimary.opacity(0.12))
                                 .foregroundColor(Color.brandAccent)
                                 .clipShape(Capsule())
@@ -546,7 +546,7 @@ struct FoodSearchSheet: View {
     private func emptyHeader(message: String) -> some View {
         VStack(spacing: 10) {
             Image(systemName: "fork.knife.circle")
-                .font(.system(size: 48))
+                .font(.displayLarge)
                 .foregroundColor(.secondary.opacity(0.5))
             Text(message)
                 .font(.subheadline)
@@ -679,8 +679,8 @@ private struct CatalogFoodRow: View {
                     if item.custom {
                         Text("사용자 등록")
                             .font(.caption2.bold())
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
                             .background(Color.brandAccent.opacity(0.2))
                             .foregroundColor(.brandAccent)
                             .clipShape(Capsule())
@@ -719,8 +719,8 @@ private struct ExternalFoodRow: View {
                 HStack(spacing: 4) {
                     Text(item.source.displayName)
                         .font(.caption2.bold())
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xs)
                         .background(Color.hairline)
                         .clipShape(Capsule())
                     Text(item.nutritionSummary)

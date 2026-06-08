@@ -34,3 +34,6 @@ terraform.tfvars
 .gstack/
 tfplan
 ios/HealthCare/App/GoogleService-Info.plist
+
+# Portfolio artifacts
+docs/portfolio/
