@@ -192,21 +192,8 @@ public class DietRecommendationEngine {
         List<RecommendedFoodEntry> items = new ArrayList<>();
         for (FoodCatalog food : selected) {
             double servingG = calculateServing(food, perItemCalories);
-            double factor = servingG / 100.0;
-
             AllergenConfidenceLevel confidence = allergenGate.resolveConfidence(food.getId(), tagsByFoodId);
-            items.add(new RecommendedFoodEntry(
-                    food.getId(),
-                    food.getName(),
-                    food.getNameKo(),
-                    food.getCategory(),
-                    round(servingG),
-                    round(food.getCaloriesPer100g() * factor),
-                    round(orZero(food.getProteinPer100g()) * factor),
-                    round(orZero(food.getCarbsPer100g()) * factor),
-                    round(orZero(food.getFatPer100g()) * factor),
-                    confidence
-            ));
+            items.add(RecommendedFoodEntry.from(food, servingG, confidence));
         }
         return items;
     }
@@ -237,10 +224,6 @@ public class DietRecommendationEngine {
         String nameLower = food.getName() != null ? food.getName().toLowerCase() : "";
         String nameKoLower = food.getNameKo() != null ? food.getNameKo().toLowerCase() : "";
         return keywords.stream().anyMatch(kw -> nameLower.contains(kw) || nameKoLower.contains(kw));
-    }
-
-    private double orZero(Double value) {
-        return value != null ? value : 0.0;
     }
 
     private double round(double value) {
