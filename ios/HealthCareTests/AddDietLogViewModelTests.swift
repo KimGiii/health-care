@@ -1,41 +1,41 @@
 import XCTest
-@testable import Gainsy
+@testable import HealthCare
 
 @MainActor
 final class AddDietLogViewModelTests: XCTestCase {
 
     func testScheduleSearch_빠른연속입력시마지막쿼리만실행된다() async throws {
         let searcher = MockDietFoodSearcher()
-        let viewModel = AddDietLogViewModel(debounceDuration: .milliseconds(50))
+        let source = FoodEntrySource(debounceDuration: .milliseconds(50))
 
-        viewModel.searchQuery = "닭"
-        viewModel.scheduleSearch(apiClient: searcher)
+        source.searchQuery = "닭"
+        source.scheduleSearch(apiClient: searcher)
 
-        viewModel.searchQuery = "닭가"
-        viewModel.scheduleSearch(apiClient: searcher)
+        source.searchQuery = "닭가"
+        source.scheduleSearch(apiClient: searcher)
 
-        viewModel.searchQuery = "닭가슴살"
-        viewModel.scheduleSearch(apiClient: searcher)
+        source.searchQuery = "닭가슴살"
+        source.scheduleSearch(apiClient: searcher)
 
         try await Task.sleep(for: .milliseconds(150))
 
         let executedQueries = await searcher.executedQueries
         XCTAssertEqual(executedQueries, ["닭가슴살"])
-        XCTAssertEqual(viewModel.catalogResults.map(\.displayName), ["닭가슴살"])
-        XCTAssertEqual(viewModel.externalResults.map(\.displayName), ["닭가슴살 외부"])
+        XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
+        XCTAssertEqual(source.externalResults.map(\.displayName), ["닭가슴살 외부"])
     }
 
     func testScheduleSearch_디바운스이전새입력이오면이전대기작업이취소된다() async throws {
         let searcher = MockDietFoodSearcher()
-        let viewModel = AddDietLogViewModel(debounceDuration: .milliseconds(80))
+        let source = FoodEntrySource(debounceDuration: .milliseconds(80))
 
-        viewModel.searchQuery = "닭"
-        viewModel.scheduleSearch(apiClient: searcher)
+        source.searchQuery = "닭"
+        source.scheduleSearch(apiClient: searcher)
 
         try await Task.sleep(for: .milliseconds(30))
 
-        viewModel.searchQuery = "닭가슴살"
-        viewModel.scheduleSearch(apiClient: searcher)
+        source.searchQuery = "닭가슴살"
+        source.scheduleSearch(apiClient: searcher)
 
         try await Task.sleep(for: .milliseconds(150))
 
@@ -45,34 +45,34 @@ final class AddDietLogViewModelTests: XCTestCase {
 
     func testTriggerImmediateSearch_디바운스대기없이즉시실행된다() async throws {
         let searcher = MockDietFoodSearcher()
-        let viewModel = AddDietLogViewModel(debounceDuration: .seconds(1))
+        let source = FoodEntrySource(debounceDuration: .seconds(1))
 
-        viewModel.searchQuery = "닭가슴살"
-        viewModel.scheduleSearch(apiClient: searcher)
-        viewModel.triggerImmediateSearch(apiClient: searcher)
+        source.searchQuery = "닭가슴살"
+        source.scheduleSearch(apiClient: searcher)
+        source.triggerImmediateSearch(apiClient: searcher)
 
         try await Task.sleep(for: .milliseconds(80))
 
         let executedQueries = await searcher.executedQueries
         XCTAssertEqual(executedQueries, ["닭가슴살"])
-        XCTAssertFalse(viewModel.isSearching)
+        XCTAssertFalse(source.isSearching)
     }
 
     func testClearSearch_결과와AI상태를즉시초기화한다() async {
-        let viewModel = AddDietLogViewModel()
-        viewModel.searchQuery = "비빔밥"
-        viewModel.catalogResults = [makeCatalogItem(name: "비빔밥")]
-        viewModel.externalResults = [makeExternalFood(name: "비빔밥 외부")]
-        viewModel.aiEstimateResult = makeAiEstimate(foodName: "비빔밥")
-        viewModel.isSearching = true
+        let source = FoodEntrySource()
+        source.searchQuery = "비빔밥"
+        source.catalogResults = [makeCatalogItem(name: "비빔밥")]
+        source.externalResults = [makeExternalFood(name: "비빔밥 외부")]
+        source.aiEstimateResult = makeAiEstimate(foodName: "비빔밥")
+        source.isSearching = true
 
-        viewModel.clearSearch()
+        source.clearSearch()
 
-        XCTAssertEqual(viewModel.searchQuery, "")
-        XCTAssertTrue(viewModel.catalogResults.isEmpty)
-        XCTAssertTrue(viewModel.externalResults.isEmpty)
-        XCTAssertNil(viewModel.aiEstimateResult)
-        XCTAssertFalse(viewModel.isSearching)
+        XCTAssertEqual(source.searchQuery, "")
+        XCTAssertTrue(source.catalogResults.isEmpty)
+        XCTAssertTrue(source.externalResults.isEmpty)
+        XCTAssertNil(source.aiEstimateResult)
+        XCTAssertFalse(source.isSearching)
     }
 
     func testSearchAll_느린이전응답이최신결과를덮어쓰지못한다() async throws {
@@ -86,20 +86,51 @@ final class AddDietLogViewModelTests: XCTestCase {
                 "닭가슴살": .milliseconds(20)
             ]
         )
-        let viewModel = AddDietLogViewModel(debounceDuration: .milliseconds(10))
+        let source = FoodEntrySource(debounceDuration: .milliseconds(10))
 
-        viewModel.searchQuery = "닭"
-        Task { await viewModel.searchAll(apiClient: searcher) }
+        source.searchQuery = "닭"
+        Task { await source.searchAll(apiClient: searcher) }
 
         try await Task.sleep(for: .milliseconds(40))
 
-        viewModel.searchQuery = "닭가슴살"
-        viewModel.triggerImmediateSearch(apiClient: searcher)
+        source.searchQuery = "닭가슴살"
+        source.triggerImmediateSearch(apiClient: searcher)
 
         try await Task.sleep(for: .milliseconds(120))
 
-        XCTAssertEqual(viewModel.catalogResults.map(\.displayName), ["닭가슴살"])
-        XCTAssertEqual(viewModel.externalResults.map(\.displayName), ["닭가슴살 외부"])
+        XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
+        XCTAssertEqual(source.externalResults.map(\.displayName), ["닭가슴살 외부"])
+    }
+
+    func testEntryBinding_삭제된식품항목을다시읽어도안전한마지막값을반환한다() {
+        let viewModel = AddDietLogViewModel()
+        let first = DraftFoodEntry(food: makeCatalogItem(name: "닭가슴살"))
+        let second = DraftFoodEntry(food: makeCatalogItem(name: "현미밥"))
+        viewModel.draft = .manual([first, second])
+
+        let binding = viewModel.entryBinding(for: second)
+        viewModel.removeEntry(id: second.id)
+
+        XCTAssertEqual(viewModel.draft.entries.map(\.id), [first.id])
+        XCTAssertEqual(binding.wrappedValue.id, second.id)
+        XCTAssertEqual(binding.wrappedValue.displayName, "현미밥")
+    }
+
+    func testEntryBinding_삭제된식품항목에쓰기를시도해도남은항목을변경하지않는다() {
+        let viewModel = AddDietLogViewModel()
+        let first = DraftFoodEntry(food: makeCatalogItem(name: "닭가슴살"))
+        let second = DraftFoodEntry(food: makeCatalogItem(name: "현미밥"))
+        viewModel.draft = .manual([first, second])
+
+        let binding = viewModel.entryBinding(for: second)
+        viewModel.removeEntry(id: second.id)
+        var staleValue = binding.wrappedValue
+        staleValue.servingGText = "250"
+        binding.wrappedValue = staleValue
+
+        XCTAssertEqual(viewModel.draft.entries.count, 1)
+        XCTAssertEqual(viewModel.draft.entries.first?.id, first.id)
+        XCTAssertEqual(viewModel.draft.entries.first?.servingGText, "100")
     }
 
     private func makeCatalogItem(name: String) -> FoodCatalogItem {

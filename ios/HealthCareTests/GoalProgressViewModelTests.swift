@@ -1,5 +1,5 @@
 import XCTest
-@testable import Gainsy
+@testable import HealthCare
 
 @MainActor
 final class GoalProgressViewModelTests: XCTestCase {

@@ -7,6 +7,7 @@ final class DietLogDetailViewModel: ObservableObject {
     @Published var detail: DietLogDetailResponse?
     @Published var userProfile: UserProfile?
     @Published var isLoading = false
+    @Published var isDeleting = false
     @Published var errorMessage: String?
 
     // MARK: - 일일 권장량 (프로필 우선, 없거나 0이면 fallback)
@@ -44,6 +45,24 @@ final class DietLogDetailViewModel: ObservableObject {
             errorMessage = String(localized: "diet.detail.error.load")
         }
     }
+
+    func delete(id: Int, apiClient: APIClient) async -> Bool {
+        guard !isDeleting else { return false }
+        isDeleting = true
+        errorMessage = nil
+        defer { isDeleting = false }
+
+        do {
+            try await apiClient.requestVoid(.deleteDietLog(id: id))
+            NotificationCenter.default.post(name: .dietRecordChanged, object: nil)
+            return true
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = String(localized: "diet.error.delete")
+        }
+        return false
+    }
 }
 
 // MARK: - DietLogDetailView
@@ -57,6 +76,7 @@ struct DietLogDetailView: View {
     @StateObject private var viewModel = DietLogDetailViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingEdit = false
+    @State private var showingDeleteConfirm = false
     @State private var showingSources = false
 
     var body: some View {
@@ -99,19 +119,46 @@ struct DietLogDetailView: View {
         }
         .overlay(alignment: .topTrailing) {
             if viewModel.detail != nil {
-                Button {
-                    showingEdit = true
-                } label: {
-                    Image(systemName: "pencil")
-                        .font(.cta)
-                        .foregroundColor(.white)
-                        .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
-                        .background(Color.black.opacity(0.25))
-                        .clipShape(Circle())
+                HStack(spacing: 10) {
+                    Button {
+                        showingDeleteConfirm = true
+                    } label: {
+                        Image(systemName: viewModel.isDeleting ? "hourglass" : "trash")
+                            .font(.cta)
+                            .foregroundColor(.white)
+                            .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
+                            .background(Color.black.opacity(0.25))
+                            .clipShape(Circle())
+                    }
+                    .disabled(viewModel.isDeleting)
+
+                    Button {
+                        showingEdit = true
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.cta)
+                            .foregroundColor(.white)
+                            .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
+                            .background(Color.black.opacity(0.25))
+                            .clipShape(Circle())
+                    }
+                    .disabled(viewModel.isDeleting)
                 }
                 .padding(.trailing, Spacing.lg) // design-lint:ignore — micro/hero spacing
                 .padding(.top, 56) // design-lint:ignore — micro/hero spacing
             }
+        }
+        .confirmationDialog(Text("식단 기록 삭제"), isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
+            Button(String(localized: "common.delete.button"), role: .destructive) {
+                Task {
+                    if await viewModel.delete(id: logId, apiClient: container.apiClient) {
+                        dismiss()
+                    }
+                }
+            }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+        } message: {
+            Text("이 식단 기록을 삭제하시겠습니까? 되돌릴 수 없습니다.")
         }
         .sheet(isPresented: $showingEdit) {
             if let detail = viewModel.detail {
@@ -124,6 +171,14 @@ struct DietLogDetailView: View {
         }
         .task { await viewModel.load(id: logId, apiClient: container.apiClient) }
         .sheet(isPresented: $showingSources) { MedicalSourcesView() }
+        .alert(Text("오류"), isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     private func nutritionCard(detail: DietLogDetailResponse) -> some View {

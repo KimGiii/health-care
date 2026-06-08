@@ -96,6 +96,9 @@ struct DiaryView: View {
         .onChange(of: viewModel.selectedDate) { _ in
             Task { await viewModel.load(apiClient: container.apiClient) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .dietRecordChanged)) { _ in
+            Task { await viewModel.load(apiClient: container.apiClient) }
+        }
     }
 
     private func finishQuickAdd() {

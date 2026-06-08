@@ -102,15 +102,55 @@ final class AddDietLogViewModel: ObservableObject {
 
     // MARK: - 항목 관리
 
+    func entryBinding(for entry: DraftFoodEntry) -> Binding<DraftFoodEntry> {
+        let entryId = entry.id
+        return Binding(
+            get: { self.draft.entry(id: entryId) ?? entry },
+            set: { self.draft.updateEntry(id: entryId, with: $0) }
+        )
+    }
+
     func entryBinding(at index: Int) -> Binding<DraftFoodEntry> {
         Binding(
-            get: { self.draft.entries[index] },
+            get: {
+                guard self.draft.entries.indices.contains(index) else {
+                    return Self.fallbackDraftEntry()
+                }
+                return self.draft.entries[index]
+            },
             set: { self.draft.updateEntry(at: index, with: $0) }
         )
     }
 
+    func removeEntry(id: DraftFoodEntry.ID) {
+        draft.remove(id: id)
+    }
+
     func removeEntry(at index: Int) {
+        guard draft.entries.indices.contains(index) else { return }
         draft.remove(at: IndexSet(integer: index))
+    }
+
+    private static func fallbackDraftEntry() -> DraftFoodEntry {
+        DraftFoodEntry(food: FoodCatalogItem(
+            id: -1,
+            name: "",
+            nameKo: nil,
+            category: .OTHER,
+            caloriesPer100g: 0,
+            proteinPer100g: 0,
+            carbsPer100g: 0,
+            fatPer100g: 0,
+            sugarsPer100g: 0,
+            dietaryFiberPer100g: 0,
+            saturatedFatPer100g: 0,
+            transFatPer100g: 0,
+            cholesterolPer100gMg: 0,
+            sodiumPer100gMg: 0,
+            custom: false,
+            usageCount: nil,
+            createdByUserId: nil
+        ))
     }
 
     // MARK: - 네비게이션

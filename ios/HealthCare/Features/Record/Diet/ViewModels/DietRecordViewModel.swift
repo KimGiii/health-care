@@ -103,6 +103,7 @@ final class DietRecordViewModel: ObservableObject {
         do {
             try await apiClient.requestVoid(.deleteDietLog(id: id))
             logs.removeAll { $0.dietLogId == id }
+            NotificationCenter.default.post(name: .dietRecordChanged, object: nil)
         } catch let error as APIError {
             errorMessage = error.errorDescription
         } catch {

@@ -53,6 +53,17 @@ struct DietRecordView: View {
         .onAppear {
             Task { await viewModel.loadLogs(apiClient: container.apiClient) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .dietRecordChanged)) { _ in
+            Task { await viewModel.loadLogs(apiClient: container.apiClient) }
+        }
+        .alert(Text("오류"), isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(String(localized: "common.ok"), role: .cancel) { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     // MARK: - 오늘 영양소 바

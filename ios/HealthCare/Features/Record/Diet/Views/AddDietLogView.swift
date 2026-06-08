@@ -199,9 +199,9 @@ struct AddDietLogView: View {
                     Text("추가한 식품")
                         .font(.subheadline.bold())
                         .foregroundColor(Color.textSecondary)
-                    ForEach(Array(viewModel.draft.entries.enumerated()), id: \.element.id) { idx, _ in
-                        DraftEntryCard(entry: viewModel.entryBinding(at: idx)) {
-                            viewModel.removeEntry(at: idx)
+                    ForEach(viewModel.draft.entries) { entry in
+                        DraftEntryCard(entry: viewModel.entryBinding(for: entry)) {
+                            viewModel.removeEntry(id: entry.id)
                         }
                     }
                 }
