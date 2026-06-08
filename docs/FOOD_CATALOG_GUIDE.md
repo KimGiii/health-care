@@ -1,11 +1,56 @@
 # 식품 카탈로그 기술 가이드
 
-**작성일**: 2026-05-04  
-**상태**: MVP 구현 완료
+**작성일**: 2026-05-04
+
+**개정일**: 2026-06-09
+
+**상태**: MVP 구현 완료 / 카탈로그 강화 계획 확정
 
 ## 개요
 
 HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용자 커스텀 식품의 조합으로 운영됩니다. 이 문서는 2026-05-04에 구현된 **사용 횟수 추적** 및 **사용자 직접 등록** 기능을 설명합니다.
+
+2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
+
+## 카탈로그 운영 모델
+
+### 공통 카탈로그 원칙
+
+사용자는 식단 기록 시 내부 `food_catalog`를 검색하고, 선택한 식품의 영양값으로 식단 기록 합계를 계산합니다. 추천 기능도 같은 `food_catalog`를 기반으로 하지만, 추천 런타임에서는 전체 카탈로그가 아니라 추천 적합성 상태를 통과한 항목만 후보로 사용합니다.
+
+### 데이터 소스
+
+| 소스 | 역할 |
+|---|---|
+| 전국통합식품영양성분정보 가공식품 표준데이터 | 현재 사용 중인 가공식품 공공데이터. 내부 카탈로그에 사전 적재 |
+| 전국통합식품영양성분정보 음식 표준데이터 | 현재 사용 중인 음식/외식 공공데이터. 내부 카탈로그에 사전 적재 |
+| 식약처 식품영양성분DB정보 (`FoodNtrCpntDbInfo02`) | 기존 표준데이터와 비교 후 1회 제공량, 식품중량, 제조사/업체명 등 보강 |
+| 브랜드 공식 메뉴 CSV | 버거킹, BBQ, 서브웨이, 샐러디, 프레퍼스 등 상위 브랜드 일부를 관리자 검수 후 적재 |
+| 사용자 커스텀 식품 | 검색/기록 가능. 검증 전 추천 후보에서는 제외하거나 보수적으로 취급 |
+
+원재료성식품 표준데이터는 v1 필수 범위에서 제외하고, 식재료 단위 추천이나 장보기 기능에서 후속 검토합니다.
+
+### 검색/기록과 추천의 분리
+
+| 상태 | 의미 | 검색/기록 | 추천 |
+|---|---|---:|---:|
+| `SEARCH_ONLY` | 검색/기록 가능, 추천 제외 | O | X |
+| `RECOMMENDABLE` | 일반 추천 후보 | O | O |
+| `RECOMMENDABLE_WITH_CAUTION` | 나트륨·당류·포화지방 등 주의 표시와 함께 추천 가능 | O | O |
+| `DISABLED` | 데이터 불완전, 검수 실패, 만료 등으로 비활성 | X | X |
+
+예를 들어 와퍼세트나 치킨 메뉴는 사용자가 직접 검색해 기록할 수 있지만 기본 추천 후보에서는 제외될 수 있습니다. 반대로 서브웨이, 샐러디, 프레퍼스의 일부 메뉴는 제공량 기준 영양값이 정책 기준을 통과하면 추천 후보가 될 수 있습니다.
+
+### 적재 방식
+
+사용자 검색/추천 시점에 외부 API를 직접 호출하지 않습니다. 공공데이터와 브랜드 공식 메뉴는 배치 또는 관리자 작업으로 내부 DB에 적재하고, 앱 기능은 내부 `food_catalog`를 조회합니다.
+
+### 성능 원칙
+
+- 검색은 내부 DB 기준으로 수행합니다.
+- 검색 품질이 부족하면 `normalized_name`과 PostgreSQL `pg_trgm` 인덱스를 검토합니다.
+- 추천은 `recommendation_status`, 카테고리, 제한 조건, 기본 영양 조건을 DB WHERE 절에서 먼저 적용합니다.
+- 추천 엔진에는 제한된 후보만 전달합니다.
 
 ## 주요 기능
 
@@ -31,7 +76,7 @@ ALTER TABLE food_catalog ADD COLUMN usage_count BIGINT NOT NULL DEFAULT 0;
 
 ```
 backend/src/main/java/com/healthcare/domain/diet/
-├── service/DietLogService.java          # increment/decrement 로직
+├── usecase/DietLogUseCases.java         # increment/decrement 로직
 ├── repository/FoodCatalogRepository.java # incrementUsageCount(), decrementUsageCount()
 └── entity/FoodCatalog.java              # usageCount 필드
 ```
@@ -266,7 +311,7 @@ NavigationStack(path: $recordTabPath) {
 - createCustomFood_NFC_정규화()
 - createCustomFood_연속_공백_축약()
 
-// DietLogServiceTest
+// DietLogUseCasesTest
 - addDietLog_식품별_usage_count_increment()
 - removeDietLog_식품별_usage_count_decrement()
 - removeDietLog_usage_count_최소_0_유지()
@@ -307,9 +352,9 @@ NavigationStack(path: $recordTabPath) {
    - AI로 추정된 영양성분 표시 UI 미구현
    - 향후: "AI 추정값" 배지 + disclaimer 텍스트 추가
 
-3. **외부 API 장애 대응 미완료**
-   - 공공 데이터 API 장애 시 fallback 전략 모호
-   - 향후: 회귀 테스트 및 graceful degradation 강화
+3. **공공데이터 사전 적재 미완료**
+   - 현재 외부 공공데이터를 사용자 경로에서 직접 조회하는 흐름이 남아 있음
+   - 향후: 배치/관리자 적재로 내부 `food_catalog`를 보강하고, 사용자 검색/추천은 내부 DB 기준으로 고정
 
 ## 성능 고려사항
 
@@ -321,6 +366,19 @@ CREATE INDEX idx_food_catalog_name ON food_catalog(name);
 CREATE UNIQUE INDEX idx_food_catalog_name_category 
   ON food_catalog(name, category) 
   WHERE source = 'CUSTOM';
+```
+
+카탈로그 강화 시 추가 검토:
+
+```sql
+CREATE INDEX idx_food_catalog_recommendation_status
+  ON food_catalog(recommendation_status)
+  WHERE deleted_at IS NULL;
+
+-- 검색 품질이 부족할 경우
+-- CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- CREATE INDEX idx_food_catalog_normalized_name_trgm
+--   ON food_catalog USING gin (normalized_name gin_trgm_ops);
 ```
 
 ### 캐싱 전략
