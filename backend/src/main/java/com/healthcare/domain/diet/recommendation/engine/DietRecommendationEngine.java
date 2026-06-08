@@ -95,11 +95,13 @@ public class DietRecommendationEngine {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
+        // 칼로리 / FOOD / CATEGORY 필터는 UseCase의 FoodCatalogSpecs가 DB 레벨에서 처리한다.
+        // 여기서는 안전망으로 유지하되, 실질적으로는 no-op.
         return candidates.stream()
-                .filter(food -> food.getCaloriesPer100g() != null)              // 영양 정보 필수
-                .filter(food -> !restrictedFoodIds.contains(food.getId()))       // FOOD 제한
-                .filter(food -> !restrictedCategories.contains(food.getCategory())) // CATEGORY 제한
-                .filter(food -> !matchesKeyword(food, restrictedKeywords))       // KEYWORD 제한
+                .filter(food -> food.getCaloriesPer100g() != null)
+                .filter(food -> !restrictedFoodIds.contains(food.getId()))
+                .filter(food -> !restrictedCategories.contains(food.getCategory()))
+                .filter(food -> !matchesKeyword(food, restrictedKeywords))       // KEYWORD 제한 (메모리 처리)
                 .filter(food -> !containsRestrictedAllergen(food.getId(), restrictedAllergenTags, tagsByFoodId)) // 알러젠 포함 제외
                 .filter(food -> passesAllergenConfidenceGate(food.getId(), restrictedAllergenTags, tagsByFoodId, strictMode)) // 신뢰 레벨 게이트
                 .toList();

@@ -3,6 +3,7 @@ package com.healthcare.domain.diet.repository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long> {
+public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>, JpaSpecificationExecutor<FoodCatalog> {
 
     /**
      * 모든 사용자가 접근 가능한 식품 카탈로그를 인기순(usageCount DESC)으로 조회한다.

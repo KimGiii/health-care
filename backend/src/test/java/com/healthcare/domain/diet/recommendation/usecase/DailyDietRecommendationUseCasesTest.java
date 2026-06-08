@@ -18,6 +18,8 @@ import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,7 +82,7 @@ class DailyDietRecommendationUseCasesTest {
         given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(foodCatalogRepository.findAll()).willReturn(diverseFoods());
+        given(foodCatalogRepository.findAll(any(Specification.class), any(Sort.class))).willReturn(diverseFoods());
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
@@ -98,7 +100,7 @@ class DailyDietRecommendationUseCasesTest {
         given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(foodCatalogRepository.findAll()).willReturn(diverseFoods());
+        given(foodCatalogRepository.findAll(any(Specification.class), any(Sort.class))).willReturn(diverseFoods());
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
 
         useCases.recommend(1L, request(List.of(MealType.BREAKFAST)));
@@ -119,7 +121,7 @@ class DailyDietRecommendationUseCasesTest {
         given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of(restriction));
-        given(foodCatalogRepository.findAll()).willReturn(diverseFoods());
+        given(foodCatalogRepository.findAll(any(Specification.class), any(Sort.class))).willReturn(diverseFoods());
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
