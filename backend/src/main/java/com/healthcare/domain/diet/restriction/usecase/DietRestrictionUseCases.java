@@ -33,10 +33,9 @@ public class DietRestrictionUseCases {
 
     @Transactional
     public DietRestrictionResponse createRestriction(Long userId, CreateDietRestrictionRequest request) {
-        validate(request);
         String normalizedKeyword = request.getTargetType() == TargetType.KEYWORD
                 ? normalizeKeyword(request.getKeyword()) : null;
-        checkDuplicate(userId, request, normalizedKeyword);
+        validateAndCheckDuplicate(userId, request, normalizedKeyword);
 
         DietRestriction restriction = DietRestriction.builder()
                 .userId(userId)
@@ -66,55 +65,36 @@ public class DietRestrictionUseCases {
 
     // ─── 내부 헬퍼 ───
 
-    private void validate(CreateDietRestrictionRequest request) {
+    private void validateAndCheckDuplicate(Long userId, CreateDietRestrictionRequest request, String normalizedKeyword) {
         switch (request.getTargetType()) {
             case FOOD -> {
-                if (request.getFoodCatalogId() == null) {
+                if (request.getFoodCatalogId() == null)
                     throw new IllegalArgumentException("FOOD 제한에는 foodCatalogId가 필요합니다.");
-                }
                 foodCatalogRepository.findById(request.getFoodCatalogId())
                         .orElseThrow(() -> new ResourceNotFoundException("FoodCatalog", request.getFoodCatalogId()));
+                if (dietRestrictionRepository.findActiveFoodRestriction(userId, request.getRestrictionType(), request.getFoodCatalogId()).isPresent())
+                    throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
             }
             case CATEGORY -> {
-                if (request.getCategory() == null) {
+                if (request.getCategory() == null)
                     throw new IllegalArgumentException("CATEGORY 제한에는 category가 필요합니다.");
-                }
+                if (dietRestrictionRepository.findActiveCategoryRestriction(userId, request.getRestrictionType(), request.getCategory()).isPresent())
+                    throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
             }
             case KEYWORD -> {
-                if (request.getKeyword() == null || request.getKeyword().isBlank()) {
+                if (request.getKeyword() == null || request.getKeyword().isBlank())
                     throw new IllegalArgumentException("KEYWORD 제한에는 1자 이상의 keyword가 필요합니다.");
-                }
-                String normalized = normalizeKeyword(request.getKeyword());
-                if (normalized.isEmpty() || normalized.length() > 100) {
+                if (normalizedKeyword.isEmpty() || normalizedKeyword.length() > 100)
                     throw new IllegalArgumentException("keyword는 1~100자여야 합니다.");
-                }
+                if (dietRestrictionRepository.findActiveKeywordRestriction(userId, request.getRestrictionType(), normalizedKeyword).isPresent())
+                    throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
             }
             case ALLERGEN_TAG -> {
-                if (request.getAllergenTag() == null) {
+                if (request.getAllergenTag() == null)
                     throw new IllegalArgumentException("ALLERGEN_TAG 제한에는 allergenTag가 필요합니다.");
-                }
+                if (dietRestrictionRepository.findActiveAllergenTagRestriction(userId, request.getRestrictionType(), request.getAllergenTag()).isPresent())
+                    throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
             }
-        }
-    }
-
-    private void checkDuplicate(Long userId, CreateDietRestrictionRequest request, String normalizedKeyword) {
-        boolean exists = switch (request.getTargetType()) {
-            case FOOD -> dietRestrictionRepository
-                    .findActiveFoodRestriction(userId, request.getRestrictionType(), request.getFoodCatalogId())
-                    .isPresent();
-            case CATEGORY -> dietRestrictionRepository
-                    .findActiveCategoryRestriction(userId, request.getRestrictionType(), request.getCategory())
-                    .isPresent();
-            case KEYWORD -> dietRestrictionRepository
-                    .findActiveKeywordRestriction(userId, request.getRestrictionType(), normalizedKeyword)
-                    .isPresent();
-            case ALLERGEN_TAG -> dietRestrictionRepository
-                    .findActiveAllergenTagRestriction(userId, request.getRestrictionType(), request.getAllergenTag())
-                    .isPresent();
-        };
-
-        if (exists) {
-            throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
         }
     }
 

@@ -195,6 +195,50 @@ class DietRestrictionUseCasesTest {
             assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
+
+        @Test
+        @DisplayName("FOOD 제한에 foodCatalogId가 없으면 예외를 던진다")
+        void create_food_withoutFoodCatalogId_throws() {
+            var request = CreateDietRestrictionRequest.builder()
+                    .restrictionType(RestrictionType.AVOID)
+                    .targetType(TargetType.FOOD)
+                    .build();
+
+            assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    // ─── 필드 누락 검증 ───
+
+    @Nested
+    @DisplayName("필드 누락 검증")
+    class FieldValidation {
+
+        @Test
+        @DisplayName("ALLERGEN_TAG 제한에 allergenTag가 없으면 예외를 던진다")
+        void create_allergenTag_withoutTag_throws() {
+            var request = CreateDietRestrictionRequest.builder()
+                    .restrictionType(RestrictionType.ALLERGY)
+                    .targetType(TargetType.ALLERGEN_TAG)
+                    .build();
+
+            assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("KEYWORD가 100자 초과면 예외를 던진다")
+        void create_keyword_tooLong_throws() {
+            var request = CreateDietRestrictionRequest.builder()
+                    .restrictionType(RestrictionType.AVOID)
+                    .targetType(TargetType.KEYWORD)
+                    .keyword("a".repeat(101))
+                    .build();
+
+            assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     // ─── 삭제 ───
