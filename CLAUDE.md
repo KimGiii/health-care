@@ -57,3 +57,17 @@ ios/HealthCare/
 ## 응답 언어
 
 **항상 한국어**로 답변한다.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues (`KimGiii/Gainsy`)에서 이슈를 관리합니다. `gh` CLI 사용. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+canonical 라벨 이름을 그대로 사용 (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+멀티 컨텍스트 — 루트의 `CONTEXT-MAP.md`와 `backend/`, `ios/` 별 `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.

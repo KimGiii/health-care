@@ -10,21 +10,16 @@ struct AddDietLogView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     var onSaved: () -> Void
 
-    /// 이 식사 입력 전 기준, 오늘 남은 칼로리(일일 권장 − 이미 기록된 섭취). nil이면 hint 미표시.
     private let remainingBeforeMeal: Double?
 
     init(initialDate: Date = Date(), remainingCalories: Double? = nil, onSaved: @escaping () -> Void) {
-        _viewModel = StateObject(
-            wrappedValue: AddDietLogViewModel(initialDate: initialDate)
-        )
+        _viewModel = StateObject(wrappedValue: AddDietLogViewModel(initialDate: initialDate))
         self.remainingBeforeMeal = remainingCalories
         self.onSaved = onSaved
     }
 
     init(editing log: DietLogDetailResponse, onSaved: @escaping () -> Void) {
-        _viewModel = StateObject(
-            wrappedValue: AddDietLogViewModel(editing: log)
-        )
+        _viewModel = StateObject(wrappedValue: AddDietLogViewModel(editing: log))
         self.remainingBeforeMeal = nil
         self.onSaved = onSaved
     }
@@ -45,8 +40,8 @@ struct AddDietLogView: View {
                         }
                         Spacer(minLength: 100)
                     }
-                    .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
-                    .padding(.top, Spacing.sm) // design-lint:ignore — micro/hero spacing
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.top, Spacing.sm)
                 }
                 saveButton
             }
@@ -60,10 +55,7 @@ struct AddDietLogView: View {
             }
             .numericKeyboardToolbar()
             .sheet(isPresented: $viewModel.showFoodSearch) {
-                FoodSearchSheet(viewModel: viewModel)
-            }
-            .sheet(isPresented: $viewModel.showCustomFoodForm) {
-                AddCustomFoodView(viewModel: viewModel)
+                FoodSearchSheet(source: viewModel.foodEntrySource)
             }
             .sheet(isPresented: $viewModel.showPremiumPaywall) {
                 PremiumPaywallSheet(isPresented: $viewModel.showPremiumPaywall)
@@ -80,11 +72,7 @@ struct AddDietLogView: View {
                 guard let item else { return }
                 Task {
                     if let data = try? await item.loadTransferable(type: Data.self) {
-                        await viewModel.startPhotoAnalysis(
-                            imageData: data,
-                            suggestedFileName: "meal-photo.jpg",
-                            apiClient: container.apiClient
-                        )
+                        await viewModel.startPhotoAnalysis(imageData: data, apiClient: container.apiClient)
                     } else {
                         viewModel.errorMessage = String(localized: "diet.error.photoLoad")
                     }
@@ -112,7 +100,7 @@ struct AddDietLogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - 영양 미리보기 카드
+    // MARK: - 사진 분석 상태
 
     private var photoAnalysisSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -123,30 +111,32 @@ struct AddDietLogView: View {
                         .font(.subheadline)
                         .foregroundColor(Color.textSecondary)
                 }
-                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(Spacing.lg)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
 
-            if !viewModel.analysisWarnings.isEmpty {
+            if case .photoAnalysis(_, _, let warnings, _) = viewModel.draft, !warnings.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Label(String(localized: "diet.button.aiHint"), systemImage: "sparkles")
                         .font(.subheadline.bold())
                         .foregroundColor(Color.brandAccent)
-                    ForEach(viewModel.analysisWarnings, id: \.self) { warning in
+                    ForEach(warnings, id: \.self) { warning in
                         Text("• \(warning)")
                             .font(.caption)
                             .foregroundColor(Color.textSecondary)
                     }
                 }
-                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(Spacing.lg)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         }
     }
+
+    // MARK: - 영양 미리보기 카드
 
     private var nutritionPreviewCard: some View {
         VStack(spacing: 12) {
@@ -171,13 +161,12 @@ struct AddDietLogView: View {
                 remainingCalorieHint(remainingBeforeMeal)
             }
         }
-        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
 
-    /// 이 식사를 더한 뒤 오늘 남는 칼로리. 음수면 초과로 danger 톤 표시.
     private func remainingCalorieHint(_ remainingBeforeMeal: Double) -> some View {
         let remaining = remainingBeforeMeal - viewModel.totalCalories
         let isExceeded = remaining < 0
@@ -205,14 +194,14 @@ struct AddDietLogView: View {
 
     private var entriesSection: some View {
         Group {
-            if !viewModel.draftEntries.isEmpty {
+            if !viewModel.draft.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("추가한 식품")
                         .font(.subheadline.bold())
                         .foregroundColor(Color.textSecondary)
-                    ForEach(Array(viewModel.draftEntries.enumerated()), id: \.element.id) { idx, entry in
-                        DraftEntryCard(entry: $viewModel.draftEntries[idx]) {
-                            viewModel.draftEntries.remove(at: idx)
+                    ForEach(Array(viewModel.draft.entries.enumerated()), id: \.element.id) { idx, _ in
+                        DraftEntryCard(entry: viewModel.entryBinding(at: idx)) {
+                            viewModel.removeEntry(at: idx)
                         }
                     }
                 }
@@ -223,12 +212,8 @@ struct AddDietLogView: View {
     private var actionButtons: some View {
         HStack(spacing: 12) {
             photoButton
-
             Button {
-                viewModel.searchQuery = ""
-                viewModel.catalogResults = []
-                viewModel.externalResults = []
-                viewModel.showFoodSearch = true
+                viewModel.openFoodSearch()
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
@@ -237,14 +222,13 @@ struct AddDietLogView: View {
                 .font(.subheadline.bold())
                 .foregroundColor(Color.brandAccent)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.lg)
                 .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         }
     }
 
-    // 프리미엄 사용자만 PhotosPicker 노출. 비프리미엄은 잠금 표시 + paywall 시트 트리거.
     @ViewBuilder
     private var photoButton: some View {
         if authState.isPremium {
@@ -256,28 +240,26 @@ struct AddDietLogView: View {
                 .font(.subheadline.bold())
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.lg)
                 .background(Color.brandPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
         } else {
-            Button {
-                viewModel.showPremiumPaywall = true
-            } label: {
+            Button { viewModel.showPremiumPaywall = true } label: {
                 HStack {
                     Image(systemName: "lock.fill")
                     Text("사진으로 시작")
                     Text("PRO")
                         .font(.caption2.bold())
-                        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
-                        .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, 2)
                         .background(Color.white.opacity(0.25))
                         .clipShape(Capsule())
                 }
                 .font(.subheadline.bold())
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+                .padding(.vertical, Spacing.lg)
                 .background(Color.brandPrimary.opacity(0.55))
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             }
@@ -292,7 +274,7 @@ struct AddDietLogView: View {
             TextField(String(localized: "diet.notes.placeholder"), text: $viewModel.notes, axis: .vertical)
                 .font(.body)
                 .lineLimit(3...6)
-                .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
+                .padding(Spacing.md)
                 .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
         }
@@ -320,17 +302,17 @@ struct AddDietLogView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.vertical, Spacing.lg)
             .background(viewModel.canSave ? Color.brandPrimary : Color.gray.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
-            .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
-            .padding(.bottom, Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.lg)
         }
         .disabled(!viewModel.canSave || viewModel.isSaving)
     }
 }
 
-// MARK: - 식사 유형 Pill
+// MARK: - MealTypePill
 
 private struct MealTypePill: View {
     let type: MealType
@@ -340,19 +322,15 @@ private struct MealTypePill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 4) {
-                Image(systemName: type.sfSymbol)
-                    .font(.caption)
-                Text(type.displayName)
-                    .font(.caption.bold())
+                Image(systemName: type.sfSymbol).font(.caption)
+                Text(type.displayName).font(.caption.bold())
             }
-            .padding(.horizontal, Spacing.md) // design-lint:ignore — micro/hero spacing
-            .padding(.vertical, 7) // design-lint:ignore — micro/hero spacing
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, 7)
             .background(isSelected ? Color.brandPrimary : Color.surfaceCard)
             .foregroundColor(isSelected ? .white : .primary)
             .clipShape(Capsule())
-            .overlay(
-                Capsule().stroke(isSelected ? Color.clear : Color.hairline, lineWidth: 1)
-            )
+            .overlay(Capsule().stroke(isSelected ? Color.clear : Color.hairline, lineWidth: 1))
         }
     }
 }
@@ -367,8 +345,7 @@ private struct DraftEntryCard: View {
         VStack(spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.displayName)
-                        .font(.subheadline.bold())
+                    Text(entry.displayName).font(.subheadline.bold())
                     if let cat = entry.food.category {
                         Text(cat.displayName)
                             .font(.caption)
@@ -378,8 +355,8 @@ private struct DraftEntryCard: View {
                         HStack(spacing: 6) {
                             Text("AI 추정")
                                 .font(.caption2.bold())
-                                .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
-                                .padding(.vertical, 3) // design-lint:ignore — micro/hero spacing
+                                .padding(.horizontal, Spacing.sm)
+                                .padding(.vertical, 3)
                                 .background(Color.brandPrimary.opacity(0.12))
                                 .foregroundColor(Color.brandAccent)
                                 .clipShape(Capsule())
@@ -393,27 +370,22 @@ private struct DraftEntryCard: View {
                 }
                 Spacer()
                 Button(action: onDelete) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(Color.textSecondary)
+                    Image(systemName: "xmark.circle.fill").foregroundColor(Color.textSecondary)
                 }
             }
 
             HStack(spacing: 8) {
-                Text("섭취량")
-                    .font(.caption)
-                    .foregroundColor(Color.textSecondary)
+                Text("섭취량").font(.caption).foregroundColor(Color.textSecondary)
                 TextField("g", text: $entry.servingGText)
                     .keyboardType(.decimalPad)
                     .font(.subheadline.bold())
                     .frame(width: 70)
                     .multilineTextAlignment(.trailing)
-                    .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
-                    .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
                     .background(Color.surfaceCard)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                Text("g")
-                    .font(.caption)
-                    .foregroundColor(Color.textSecondary)
+                Text("g").font(.caption).foregroundColor(Color.textSecondary)
                 Spacer()
                 Text(String(format: "%.0f kcal", entry.calories))
                     .font(.subheadline.bold())
@@ -427,7 +399,6 @@ private struct DraftEntryCard: View {
                     portionButton(title: "2x", multiplier: 2.0)
                     Spacer()
                 }
-
                 if entry.needsReview || entry.unknownOrUncertain != nil {
                     Text(entry.unknownOrUncertain ?? String(localized: "diet.aiHint.review"))
                         .font(.caption)
@@ -436,7 +407,7 @@ private struct DraftEntryCard: View {
                 }
             }
         }
-        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
@@ -449,8 +420,8 @@ private struct DraftEntryCard: View {
         }
         .font(.caption.bold())
         .foregroundColor(Color.brandAccent)
-        .padding(.horizontal, Spacing.sm) // design-lint:ignore — micro/hero spacing
-        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
         .background(Color.surfaceCard)
         .clipShape(Capsule())
     }
@@ -465,12 +436,8 @@ struct MacroCell: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text(String(format: "%.1fg", value))
-                .font(.subheadline.bold())
-                .foregroundColor(color)
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(Color.textSecondary)
+            Text(String(format: "%.1fg", value)).font(.subheadline.bold()).foregroundColor(color)
+            Text(label).font(.caption2).foregroundColor(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -480,38 +447,35 @@ struct MacroCell: View {
 
 struct FoodSearchSheet: View {
     @EnvironmentObject private var container: AppContainer
-    @ObservedObject var viewModel: AddDietLogViewModel
+    @ObservedObject var source: FoodEntrySource
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var searchFocused: Bool
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // 검색바
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(Color.textSecondary)
-                    TextField(String(localized: "diet.search.placeholder"), text: $viewModel.searchQuery)
+                    Image(systemName: "magnifyingglass").foregroundColor(Color.textSecondary)
+                    TextField(String(localized: "diet.search.placeholder"), text: $source.searchQuery)
                         .focused($searchFocused)
                         .submitLabel(.search)
                         .onSubmit { triggerSearch() }
-                    if !viewModel.searchQuery.isEmpty {
-                        Button {
-                            viewModel.clearSearch()
-                        } label: {
+                    if !source.searchQuery.isEmpty {
+                        Button { source.clearSearch() } label: {
                             Image(systemName: "xmark.circle.fill").foregroundColor(Color.textSecondary)
                         }
                     }
                 }
-                .padding(Spacing.md) // design-lint:ignore — micro/hero spacing
+                .padding(Spacing.md)
                 .background(Color.backgroundPage)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                .padding(.horizontal, Spacing.lg) // design-lint:ignore — micro/hero spacing
-                .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
-                .onChange(of: viewModel.searchQuery) { _ in
-                    viewModel.scheduleSearch(apiClient: container.apiClient)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.md)
+                .onChange(of: source.searchQuery) { _ in
+                    source.scheduleSearch(apiClient: container.apiClient)
                 }
 
-                if viewModel.isSearching {
+                if source.isSearching {
                     Spacer()
                     ProgressView(String(localized: "diet.search.loading"))
                     Spacer()
@@ -523,197 +487,176 @@ struct FoodSearchSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "common.close")) { viewModel.showFoodSearch = false }
+                    Button(String(localized: "common.close")) { dismiss() }
                         .foregroundColor(Color.brandAccent)
                 }
+            }
+            .sheet(isPresented: $source.showCustomFoodForm) {
+                AddCustomFoodView(source: source)
             }
         }
     }
 
     private var combinedList: some View {
-        let hasQuery = !viewModel.searchQuery.isEmpty
-        let hasAny = !viewModel.catalogResults.isEmpty || !viewModel.externalResults.isEmpty
+        let hasQuery = !source.searchQuery.isEmpty
+        let hasAny = !source.catalogResults.isEmpty || !source.externalResults.isEmpty
 
         return Group {
             if hasQuery && !hasAny {
-                emptyState(message: String(localized: "diet.search.empty"))
+                ScrollView {
+                    VStack(spacing: 12) {
+                        emptyHeader(message: String(localized: "diet.search.empty"))
+                        aiActionSection
+                    }
+                    .padding(Spacing.xxl)
+                }
             } else {
-                List {
-                    if !viewModel.catalogResults.isEmpty {
-                        Section(header: Text("내 카탈로그")) {
-                            ForEach(viewModel.catalogResults) { item in
-                                CatalogFoodRow(item: item) {
-                                    viewModel.addEntry(food: item)
+                VStack(spacing: 0) {
+                    List {
+                        if !source.catalogResults.isEmpty {
+                            Section(header: Text("내 카탈로그")) {
+                                ForEach(source.catalogResults) { item in
+                                    CatalogFoodRow(item: item) { source.select(food: item) }
                                 }
                             }
                         }
-                    }
-                    if !viewModel.externalResults.isEmpty {
-                        Section(header: Text("외부 검색")) {
-                            ForEach(viewModel.externalResults) { item in
-                                ExternalFoodRow(item: item) {
-                                    Task {
-                                        await viewModel.importAndAdd(external: item, apiClient: container.apiClient)
+                        if !source.externalResults.isEmpty {
+                            Section(header: Text("외부 검색")) {
+                                ForEach(source.externalResults) { item in
+                                    ExternalFoodRow(item: item) {
+                                        Task { await source.importAndAdd(external: item, apiClient: container.apiClient) }
                                     }
                                 }
                             }
                         }
                     }
+                    .listStyle(.plain)
+
+                    if hasQuery {
+                        Divider()
+                        aiActionSection
+                            .padding(Spacing.lg)
+                            .background(Color.backgroundPage)
+                    }
                 }
-                .listStyle(.plain)
             }
         }
     }
 
-    private func emptyState(message: String) -> some View {
-        VStack(spacing: 12) {
-            Spacer()
+    private func emptyHeader(message: String) -> some View {
+        VStack(spacing: 10) {
             Image(systemName: "fork.knife.circle")
-                .font(.system(size: 48)) // design-lint:ignore — SF Symbol/hero
+                .font(.system(size: 48))
                 .foregroundColor(.secondary.opacity(0.5))
             Text(message)
                 .font(.subheadline)
                 .foregroundColor(Color.textSecondary)
                 .multilineTextAlignment(.center)
-
-            // 검색 결과가 없을 때 AI 영양 추정 플로우를 화면에 연결.
-            if let estimate = viewModel.aiEstimateResult,
-               estimate.isFood,
-               let item = estimate.firstItem {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Label(String(localized: "diet.ai.estimateNutrition"), systemImage: "sparkles")
-                            .font(.subheadline.bold())
-                            .foregroundColor(Color.brandAccent)
-                        Spacer()
-                        Text(item.confidenceLabel)
-                            .font(.caption)
-                            .foregroundColor(Color.textSecondary)
-                    }
-
-                    Text(item.displayName)
-                        .font(.headline)
-
-                    HStack(spacing: 6) {
-                        if let category = item.category {
-                            Text(category.displayName)
-                                .font(.caption)
-                                .foregroundColor(Color.textSecondary)
-                            Text("·").foregroundColor(Color.textSecondary).font(.caption)
-                        }
-                        Text(item.servingBasis.displayName)
-                            .font(.caption)
-                            .foregroundColor(Color.textSecondary)
-                        if item.estimatedWeightG > 0 {
-                            Text("· \(Int(item.estimatedWeightG))g")
-                                .font(.caption)
-                                .foregroundColor(Color.textSecondary)
-                        }
-                    }
-
-                    HStack(spacing: 10) {
-                        aiMacro(String(localized: "diet.macro.label.kcal"), value: item.nutrition.caloriesKcal, unit: "kcal")
-                        aiMacro(String(localized: "diet.macro.label.protein"), value: item.nutrition.proteinG, unit: "g")
-                        aiMacro(String(localized: "diet.macro.label.carbs"), value: item.nutrition.carbohydrateG, unit: "g")
-                        aiMacro(String(localized: "diet.macro.label.fat"), value: item.nutrition.fatG, unit: "g")
-                    }
-                    HStack(spacing: 10) {
-                        aiMacro(String(localized: "diet.macro.label.sugars"), value: item.nutrition.sugarsG, unit: "g")
-                        aiMacro(String(localized: "diet.macro.label.fiber"), value: item.nutrition.dietaryFiberG, unit: "g")
-                        aiMacro(String(localized: "diet.macro.label.sodium"), value: item.nutrition.sodiumMg, unit: "mg")
-                        aiMacro(String(localized: "diet.macro.label.cholesterol"), value: item.nutrition.cholesterolMg, unit: "mg")
-                    }
-
-                    if estimate.isMultiItem {
-                        Text(String(format: String(localized: "diet.ai.multiItem.warning"), estimate.items.count))
-                            .font(.caption)
-                            .foregroundColor(Color.textSecondary)
-                    }
-
-                    if !item.estimationNote.isEmpty {
-                        Text(item.estimationNote)
-                            .font(.caption)
-                            .foregroundColor(Color.textSecondary)
-                    }
-
-                    Text(estimate.disclaimer)
-                        .font(.caption)
-                        .foregroundColor(.orange)
-
-                    Button {
-                        Task {
-                            await viewModel.addAiEstimatedFood(apiClient: container.apiClient)
-                        }
-                    } label: {
-                        Label(String(localized: "diet.ai.addEstimate"), systemImage: "plus.circle.fill")
-                            .font(.subheadline.bold())
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.brandPrimary)
-                }
-                .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-            } else {
-                VStack(spacing: 10) {
-                    Button {
-                        Task {
-                            await viewModel.estimateWithAI(apiClient: container.apiClient)
-                        }
-                    } label: {
-                        if viewModel.isAiEstimating {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
-                                .font(.subheadline.bold())
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.brandPrimary)
-                    .disabled(viewModel.isAiEstimating)
-
-                    Button {
-                        viewModel.showFoodSearch = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                            viewModel.showCustomFoodForm = true
-                        }
-                    } label: {
-                        Label(String(localized: "diet.ai.directAdd"), systemImage: "plus.circle")
-                            .font(.subheadline.bold())
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.brandSecondary)
-                }
-            }
-
-            Spacer()
         }
-        .padding(Spacing.xxl) // design-lint:ignore — micro/hero spacing
+    }
+
+    @ViewBuilder
+    private var aiActionSection: some View {
+        if let estimate = source.aiEstimateResult,
+           estimate.isFood,
+           let item = estimate.firstItem {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label(String(localized: "diet.ai.estimateNutrition"), systemImage: "sparkles")
+                        .font(.subheadline.bold())
+                        .foregroundColor(Color.brandAccent)
+                    Spacer()
+                    Text(item.confidenceLabel).font(.caption).foregroundColor(Color.textSecondary)
+                }
+                Text(item.displayName).font(.headline)
+                HStack(spacing: 6) {
+                    if let category = item.category {
+                        Text(category.displayName).font(.caption).foregroundColor(Color.textSecondary)
+                        Text("·").foregroundColor(Color.textSecondary).font(.caption)
+                    }
+                    Text(item.servingBasis.displayName).font(.caption).foregroundColor(Color.textSecondary)
+                    if item.estimatedWeightG > 0 {
+                        Text("· \(Int(item.estimatedWeightG))g").font(.caption).foregroundColor(Color.textSecondary)
+                    }
+                }
+                HStack(spacing: 10) {
+                    aiMacro(String(localized: "diet.macro.label.kcal"), value: item.nutrition.caloriesKcal, unit: "kcal")
+                    aiMacro(String(localized: "diet.macro.label.protein"), value: item.nutrition.proteinG, unit: "g")
+                    aiMacro(String(localized: "diet.macro.label.carbs"), value: item.nutrition.carbohydrateG, unit: "g")
+                    aiMacro(String(localized: "diet.macro.label.fat"), value: item.nutrition.fatG, unit: "g")
+                }
+                HStack(spacing: 10) {
+                    aiMacro(String(localized: "diet.macro.label.sugars"), value: item.nutrition.sugarsG, unit: "g")
+                    aiMacro(String(localized: "diet.macro.label.fiber"), value: item.nutrition.dietaryFiberG, unit: "g")
+                    aiMacro(String(localized: "diet.macro.label.sodium"), value: item.nutrition.sodiumMg, unit: "mg")
+                    aiMacro(String(localized: "diet.macro.label.cholesterol"), value: item.nutrition.cholesterolMg, unit: "mg")
+                }
+                if estimate.isMultiItem {
+                    Text(String(format: String(localized: "diet.ai.multiItem.warning"), estimate.items.count))
+                        .font(.caption).foregroundColor(Color.textSecondary)
+                }
+                if !item.estimationNote.isEmpty {
+                    Text(item.estimationNote).font(.caption).foregroundColor(Color.textSecondary)
+                }
+                Text(estimate.disclaimer).font(.caption).foregroundColor(.orange)
+                Button {
+                    Task { await source.addAiEstimatedFood(apiClient: container.apiClient) }
+                } label: {
+                    Label(String(localized: "diet.ai.addEstimate"), systemImage: "plus.circle.fill")
+                        .font(.subheadline.bold())
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.brandPrimary)
+            }
+            .padding(Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        } else {
+            VStack(spacing: 10) {
+                Button {
+                    Task { await source.estimateWithAI(apiClient: container.apiClient) }
+                } label: {
+                    if source.isAiEstimating {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.brandPrimary)
+                .disabled(source.isAiEstimating)
+
+                Button {
+                    source.showCustomFoodForm = true
+                } label: {
+                    Label(String(localized: "diet.ai.directAdd"), systemImage: "plus.circle")
+                        .font(.subheadline.bold())
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.brandSecondary)
+            }
+        }
     }
 
     private func aiMacro(_ title: String, value: Double, unit: String) -> some View {
         VStack(spacing: 2) {
-            Text(String(format: "%.0f%@", value, unit))
-                .font(.caption.bold())
-                .foregroundColor(Color.textHeadline)
-            Text(title)
-                .font(.caption2)
-                .foregroundColor(Color.textSecondary)
+            Text(String(format: "%.0f%@", value, unit)).font(.caption.bold()).foregroundColor(Color.textHeadline)
+            Text(title).font(.caption2).foregroundColor(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.sm) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.sm)
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     }
 
     private func triggerSearch() {
         searchFocused = false
-        viewModel.triggerImmediateSearch(apiClient: container.apiClient)
+        source.triggerImmediateSearch(apiClient: container.apiClient)
     }
 }
 
@@ -730,16 +673,14 @@ private struct CatalogFoodRow: View {
                 .frame(width: 40, height: 40)
                 .background(Color.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(item.displayName)
-                        .font(.subheadline.bold())
+                    Text(item.displayName).font(.subheadline.bold())
                     if item.custom {
                         Text("사용자 등록")
                             .font(.caption2.bold())
-                            .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
-                            .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
                             .background(Color.brandAccent.opacity(0.2))
                             .foregroundColor(.brandAccent)
                             .clipShape(Capsule())
@@ -753,12 +694,10 @@ private struct CatalogFoodRow: View {
             }
             Spacer()
             Button(action: onAdd) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(Color.brandAccent)
+                Image(systemName: "plus.circle.fill").font(.title2).foregroundColor(Color.brandAccent)
             }
         }
-        .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -775,16 +714,13 @@ private struct ExternalFoodRow: View {
                 .frame(width: 40, height: 40)
                 .background(Color.backgroundPage)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.displayName)
-                    .font(.subheadline.bold())
-                    .lineLimit(1)
+                Text(item.displayName).font(.subheadline.bold()).lineLimit(1)
                 HStack(spacing: 4) {
                     Text(item.source.displayName)
                         .font(.caption2.bold())
-                        .padding(.horizontal, 5) // design-lint:ignore — micro/hero spacing
-                        .padding(.vertical, 2) // design-lint:ignore — micro/hero spacing
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
                         .background(Color.hairline)
                         .clipShape(Capsule())
                     Text(item.nutritionSummary)
@@ -795,12 +731,10 @@ private struct ExternalFoodRow: View {
             }
             Spacer()
             Button(action: onAdd) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(Color.brandAccent)
+                Image(systemName: "plus.circle.fill").font(.title2).foregroundColor(Color.brandAccent)
             }
         }
-        .padding(.vertical, Spacing.xs) // design-lint:ignore — micro/hero spacing
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -808,7 +742,8 @@ private struct ExternalFoodRow: View {
 
 private struct AddCustomFoodView: View {
     @EnvironmentObject private var container: AppContainer
-    @ObservedObject var viewModel: AddDietLogViewModel
+    @ObservedObject var source: FoodEntrySource
+    @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
     @State private var category: FoodCategory = .OTHER
@@ -824,12 +759,11 @@ private struct AddCustomFoodView: View {
                     TextField(String(localized: "diet.foodEdit.field.name"), text: $name)
                         .textInputAutocapitalization(.never)
                     Picker(String(localized: "diet.foodEdit.field.category"), selection: $category) {
-                        ForEach(FoodCategory.allCases, id: \.self) { category in
-                            Text(category.displayName).tag(category)
+                        ForEach(FoodCategory.allCases, id: \.self) { cat in
+                            Text(cat.displayName).tag(cat)
                         }
                     }
                 }
-
                 Section("100g 기준 영양 정보") {
                     nutritionField("칼로리", text: $calories, unit: "kcal", required: true)
                     nutritionField("단백질", text: $protein, unit: "g", required: false)
@@ -841,86 +775,59 @@ private struct AddCustomFoodView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { viewModel.showCustomFoodForm = false }
+                    Button("취소") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         Task { await submit() }
                     } label: {
-                        if viewModel.isSubmittingCustomFood {
-                            ProgressView()
-                        } else {
-                            Text("등록")
-                        }
+                        if source.isSubmittingCustomFood { ProgressView() } else { Text("등록") }
                     }
-                    .disabled(!canSubmit || viewModel.isSubmittingCustomFood)
+                    .disabled(!canSubmit || source.isSubmittingCustomFood)
                 }
             }
             .numericKeyboardToolbar()
             .onAppear {
                 if name.isEmpty {
-                    name = viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+                    name = source.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }
         }
     }
 
-    private var canSubmit: Bool {
-        !normalizedName.isEmpty && caloriesValue != nil
-    }
+    private var canSubmit: Bool { !normalizedName.isEmpty && caloriesValue != nil }
+    private var normalizedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var caloriesValue: Double? { parseNumber(calories, required: true) }
 
-    private var normalizedName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var caloriesValue: Double? {
-        parseRequiredNumber(calories)
-    }
-
-    private func nutritionField(
-        _ title: String,
-        text: Binding<String>,
-        unit: String,
-        required: Bool
-    ) -> some View {
+    private func nutritionField(_ title: String, text: Binding<String>, unit: String, required: Bool) -> some View {
         HStack {
             Text(title)
             if required {
-                Text("필수")
-                    .font(.caption2.bold())
-                    .foregroundColor(Color.brandAccent)
+                Text("필수").font(.caption2.bold()).foregroundColor(Color.brandAccent)
             }
             Spacer()
             TextField(unit, text: text)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .frame(width: 90)
-            Text(unit)
-                .font(.caption)
-                .foregroundColor(Color.textSecondary)
+            Text(unit).font(.caption).foregroundColor(Color.textSecondary)
         }
     }
 
     private func submit() async {
         guard let caloriesValue else { return }
-        await viewModel.submitCustomFood(
+        await source.submitCustomFood(
             name: normalizedName,
             category: category,
             caloriesPer100g: caloriesValue,
-            proteinPer100g: parseOptionalNumber(protein),
-            carbsPer100g: parseOptionalNumber(carbs),
-            fatPer100g: parseOptionalNumber(fat),
+            proteinPer100g: parseNumber(protein, required: false),
+            carbsPer100g: parseNumber(carbs, required: false),
+            fatPer100g: parseNumber(fat, required: false),
             apiClient: container.apiClient
         )
     }
 
-    private func parseRequiredNumber(_ text: String) -> Double? {
-        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let number = Double(value), (0...9999).contains(number) else { return nil }
-        return number
-    }
-
-    private func parseOptionalNumber(_ text: String) -> Double? {
+    private func parseNumber(_ text: String, required: Bool) -> Double? {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
         guard let number = Double(value), (0...9999).contains(number) else { return nil }
