@@ -1,5 +1,6 @@
 package com.healthcare.domain.diet.recommendation.engine;
 
+import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenTag;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
@@ -11,17 +12,23 @@ import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+
 
 /**
  * 규칙 기반 하루 식단 추천 엔진 — 순수 로직, 사이드이펙트 없음.
  * 외부 API 호출 없이 내부 데이터만 사용.
  */
 @Component
+@RequiredArgsConstructor
 public class DietRecommendationEngine {
+
+    private final AllergenConfidenceGate allergenGate;
 
     private static final Map<MealType, Double> BASE_RATIOS = Map.of(
             MealType.BREAKFAST, 0.25,
@@ -101,9 +108,9 @@ public class DietRecommendationEngine {
                 .filter(food -> food.getCaloriesPer100g() != null)
                 .filter(food -> !restrictedFoodIds.contains(food.getId()))
                 .filter(food -> !restrictedCategories.contains(food.getCategory()))
-                .filter(food -> !matchesKeyword(food, restrictedKeywords))       // KEYWORD 제한 (메모리 처리)
-                .filter(food -> !containsRestrictedAllergen(food.getId(), restrictedAllergenTags, tagsByFoodId)) // 알러젠 포함 제외
-                .filter(food -> passesAllergenConfidenceGate(food.getId(), restrictedAllergenTags, tagsByFoodId, strictMode)) // 신뢰 레벨 게이트
+                .filter(food -> !matchesKeyword(food, restrictedKeywords))
+                .filter(food -> !allergenGate.containsAllergen(food.getId(), restrictedAllergenTags, tagsByFoodId))
+                .filter(food -> allergenGate.passesGate(food.getId(), restrictedAllergenTags, tagsByFoodId, strictMode))
                 .toList();
     }
 
@@ -187,7 +194,7 @@ public class DietRecommendationEngine {
             double servingG = calculateServing(food, perItemCalories);
             double factor = servingG / 100.0;
 
-            AllergenConfidenceLevel confidence = resolveConfidence(food.getId(), tagsByFoodId);
+            AllergenConfidenceLevel confidence = allergenGate.resolveConfidence(food.getId(), tagsByFoodId);
             items.add(new RecommendedFoodEntry(
                     food.getId(),
                     food.getName(),
@@ -230,48 +237,6 @@ public class DietRecommendationEngine {
         String nameLower = food.getName() != null ? food.getName().toLowerCase() : "";
         String nameKoLower = food.getNameKo() != null ? food.getNameKo().toLowerCase() : "";
         return keywords.stream().anyMatch(kw -> nameLower.contains(kw) || nameKoLower.contains(kw));
-    }
-
-    /** Step 6: 제한된 알러젠이 식품에 존재하면 true (→ 제외) */
-    private boolean containsRestrictedAllergen(
-            Long foodId,
-            Set<AllergenTag> restrictedTags,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId
-    ) {
-        if (restrictedTags.isEmpty()) return false;
-        List<FoodAllergenTag> tags = tagsByFoodId.getOrDefault(foodId, List.of());
-        return tags.stream().anyMatch(t -> restrictedTags.contains(t.getAllergenTag()));
-    }
-
-    /**
-     * Step 7: 알러젠 신뢰 레벨 게이트.
-     * 제한 알러젠이 없는 경우: 기본 모드 = 항상 통과 (UNKNOWN은 낮은 우선순위로 풀에 유지).
-     *   strict 모드 = 알러젠 레코드가 DIRECT_VERIFIED 또는 LABEL_DERIVED인 식품만 통과.
-     */
-    private boolean passesAllergenConfidenceGate(
-            Long foodId,
-            Set<AllergenTag> restrictedAllergenTags,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId,
-            boolean strictMode
-    ) {
-        if (restrictedAllergenTags.isEmpty()) return true;
-        if (!strictMode) return true;
-
-        // Strict 모드: 이 식품에 DIRECT_VERIFIED 또는 LABEL_DERIVED 레코드가 최소 하나 있어야 통과
-        List<FoodAllergenTag> tags = tagsByFoodId.getOrDefault(foodId, List.of());
-        return tags.stream().anyMatch(t ->
-                t.getConfidenceLevel() == AllergenConfidenceLevel.DIRECT_VERIFIED ||
-                t.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED);
-    }
-
-    /** 식품의 알러젠 검토 신뢰 레벨을 결정한다 (응답 표시용). */
-    private AllergenConfidenceLevel resolveConfidence(Long foodId, Map<Long, List<FoodAllergenTag>> tagsByFoodId) {
-        List<FoodAllergenTag> tags = tagsByFoodId.getOrDefault(foodId, List.of());
-        if (tags.isEmpty()) return AllergenConfidenceLevel.UNKNOWN;
-        return tags.stream()
-                .map(FoodAllergenTag::getConfidenceLevel)
-                .max(Comparator.comparingInt(AllergenConfidenceLevel::ordinal))
-                .orElse(AllergenConfidenceLevel.UNKNOWN);
     }
 
     private double orZero(Double value) {

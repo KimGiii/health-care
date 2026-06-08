@@ -1,5 +1,6 @@
 package com.healthcare.domain.diet.recommendation.engine;
 
+import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenDataSource;
 import com.healthcare.domain.diet.allergen.AllergenTag;
@@ -30,7 +31,7 @@ class DietRecommendationEngineTest {
 
     @BeforeEach
     void setUp() {
-        engine = new DietRecommendationEngine();
+        engine = new DietRecommendationEngine(new AllergenConfidenceGate());
     }
 
     // ─── 칼로리 분배 ───

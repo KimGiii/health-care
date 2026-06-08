@@ -8,6 +8,7 @@ import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
+import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
@@ -49,7 +50,7 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private DietRestrictionRepository dietRestrictionRepository;
     @Mock private FoodCatalogRepository foodCatalogRepository;
     @Mock private FoodAllergenTagRepository foodAllergenTagRepository;
-    @Spy private DietRecommendationEngine engine;
+    @Spy private DietRecommendationEngine engine = new DietRecommendationEngine(new AllergenConfidenceGate());
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
