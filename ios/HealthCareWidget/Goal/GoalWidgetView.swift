@@ -124,7 +124,7 @@ private struct GoalMediumView: View {
     @ViewBuilder
     private var leftColumn: some View {
         if let goal = snapshot.goal {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 16) {
                 // 타이틀 — 배지 없이 한 줄 전체 사용
                 HStack(spacing: 4) {
                     Image(systemName: goal.systemImage)
@@ -135,13 +135,13 @@ private struct GoalMediumView: View {
                 }
                 .foregroundStyle(Color.widgetBrand)
 
-                // 링 + 퍼센트
+                // 링 + 퍼센트 — 위 여백으로 헤더와 분리, 위젯 중앙에 시각 무게 둠
                 ZStack {
                     GoalRing(progress: goal.progress)
-                        .frame(width: 78, height: 78)
+                        .frame(width: 90, height: 90)
                     VStack(spacing: 1) {
                         Text("\(Int((goal.progress * 100).rounded()))%")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.widgetBrand)
                         Text(goal.targetText)
                             .font(.system(size: 9, weight: .medium))
@@ -172,7 +172,7 @@ private struct GoalMediumView: View {
 
     @ViewBuilder
     private var rightColumn: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
             switch snapshot.recentWeights.count {
             case 0:
                 emptyState
@@ -182,6 +182,7 @@ private struct GoalMediumView: View {
                 weightFooter
             }
         }
+        .padding(.top, 14)  // 헤더와 차트를 좌측 링 중심에 맞춰 아래로 이동
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
