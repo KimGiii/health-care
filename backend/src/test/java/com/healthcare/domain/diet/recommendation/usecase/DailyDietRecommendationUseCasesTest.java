@@ -6,6 +6,7 @@ import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
@@ -19,25 +20,35 @@ import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import static com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE;
+import static com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE_WITH_CAUTION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -131,6 +142,24 @@ class DailyDietRecommendationUseCasesTest {
         assertThat(response.appliedRestrictions()).hasSize(1);
     }
 
+    @Test
+    @DisplayName("추천 후보 로드 시 recommendation_status 필터가 항상 적용된다")
+    void loadCandidates_alwaysAppliesRecommendationStatusFilter() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+        given(foodCatalogRepository.findAll(any(Specification.class), any(Sort.class))).willReturn(diverseFoods());
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        useCases.recommend(1L, request(List.of(MealType.LUNCH)));
+
+        Collection<RecommendationStatus> statuses = extractRecommendationStatuses(captureCandidateSpec());
+        assertThat(statuses)
+                .containsExactlyInAnyOrder(RECOMMENDABLE, RECOMMENDABLE_WITH_CAUTION)
+                .doesNotContain(RecommendationStatus.SEARCH_ONLY, RecommendationStatus.DISABLED);
+    }
+
     // ─── 헬퍼 ───
 
     private DailyDietRecommendationRequest request(List<MealType> mealTypes) {
@@ -165,5 +194,37 @@ class DailyDietRecommendationUseCasesTest {
                 .carbsPer100g(10.0).fatPer100g(5.0)
                 .isCustom(false).usageCount(0L)
                 .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Specification<FoodCatalog> captureCandidateSpec() {
+        ArgumentCaptor<Specification<FoodCatalog>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+        verify(foodCatalogRepository).findAll(specCaptor.capture(), any(Sort.class));
+        return specCaptor.getValue();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Collection<RecommendationStatus> extractRecommendationStatuses(Specification<FoodCatalog> spec) {
+        Root root = mock(Root.class);
+        CriteriaQuery query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Path caloriesPath = mock(Path.class);
+        Path statusPath = mock(Path.class);
+        Predicate caloriesPredicate = mock(Predicate.class);
+        Predicate statusPredicate = mock(Predicate.class);
+        Predicate combinedPredicate = mock(Predicate.class);
+
+        given(root.get("caloriesPer100g")).willReturn(caloriesPath);
+        given(root.get("recommendationStatus")).willReturn(statusPath);
+        given(cb.isNotNull(caloriesPath)).willReturn(caloriesPredicate);
+        given(statusPath.in(any(Collection.class))).willReturn(statusPredicate);
+        given(cb.and(caloriesPredicate, statusPredicate)).willReturn(combinedPredicate);
+
+        spec.toPredicate(root, query, cb);
+
+        ArgumentCaptor<Collection<RecommendationStatus>> statusCaptor =
+                ArgumentCaptor.forClass(Collection.class);
+        verify(statusPath).in(statusCaptor.capture());
+        return statusCaptor.getValue();
     }
 }

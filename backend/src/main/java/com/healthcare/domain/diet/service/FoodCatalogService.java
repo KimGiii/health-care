@@ -4,6 +4,8 @@ import com.healthcare.domain.diet.dto.CreateCustomFoodRequest;
 import com.healthcare.domain.diet.dto.FoodCatalogResponse;
 import com.healthcare.domain.diet.dto.FoodSearchParams;
 import com.healthcare.domain.diet.entity.FoodCatalog;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -54,6 +56,8 @@ public class FoodCatalogService {
                     .transFatPer100g(request.getTransFatPer100g())
                     .cholesterolPer100gMg(request.getCholesterolPer100gMg())
                     .sodiumPer100gMg(request.getSodiumPer100gMg())
+                    .source(FoodCatalogSource.USER_CUSTOM)
+                    .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                     .isCustom(true)
                     .createdByUserId(userId)
                     .build();

@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="">
+  <head>
+    <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta
+  name="viewport"
+  content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, initial-scale=1.0, width=device-width, viewport-fit=cover"
+/>
+<!-- Google Tag Manager -->
+<script>
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer',"GTM-M394BP2G");
+</script>
+<!-- End Google Tag Manager -->
+
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+  <iframe
+    src="https://www.googletagmanager.com/ns.html?id=GTM-M394BP2G"
+    height="0"
+    width="0"
+    style="display: none; visibility: hidden"
+  ></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Google tag (gtag.js) -->
+<script
+  async
+  src="https://www.googletagmanager.com/gtag/js?id=G-E9MK5VC26E"
+></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', "G-E9MK5VC26E");
+</script>
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="써브웨이" />
+<meta
+  property="og:description"
+  content="써브웨이"
+/>
+<meta property="og:image" />
+<meta
+  property="og:url"
+  content="http://www.subway.co.kr"
+/>
+
+<meta
+  name="apple-itunes-app"
+  content="app-id=1516736468, app-argument=subway://redirect?url=/more/freshInfo"
+/>
+
+<title>써브웨이</title>
+
+<!-- Stylesheet -->
+<link
+  rel="stylesheet"
+  href="https://aws-code.d2.co.kr/2024/subway/resources/assets/css/common.css?v=1781003994052"
+/>
+
+<!-- Import Map 선언 (공통: 동적 생성) -->
+<script>
+  (function () {
+    const v = "1781003994052";
+    const imports = {
+      '/static/js/order/cart/cart.api.js': `/static/js/order/cart/cart.api.js?v=${v}`,
+      '/static/js/payment/order.common.js': `/static/js/payment/order.common.js?v=${v}`,
+      '/static/js/payment/order.const.js': `/static/js/payment/order.const.js?v=${v}`,
+      '/static/js/payment/order.api.js': `/static/js/payment/order.api.js?v=${v}`,
+      '/static/js/payment/popup/common.api.js': `/static/js/payment/popup/common.api.js?v=${v}`,
+      '/static/js/mysub/order/mysub.order.api.js': `/static/js/mysub/order/mysub.order.api.js?v=${v}`,
+      '/static/js/roulette/v1/roulette.api.js': `/static/js/roulette/v1/roulette.api.js?v=${v}`,
+      '/static/js/roulette/v1/roulette.common.js': `/static/js/roulette/v1/roulette.common.js?v=${v}`,
+      '/static/js/roulette/v1/game/GameState.js': `/static/js/roulette/v1/game/GameState.js?v=${v}`,
+      '/static/js/roulette/v1/game/ItemStack.js': `/static/js/roulette/v1/game/ItemStack.js?v=${v}`,
+      '/static/js/roulette/v1/game/itemInfo.const.js': `/static/js/roulette/v1/game/itemInfo.const.js?v=${v}`,
+      '/static/js/roulette/v1/game/roulette.config.js': `/static/js/roulette/v1/game/roulette.config.js?v=${v}`,
+      '/static/js/roulette/v1/game/RouletteGame.js': `/static/js/roulette/v1/game/RouletteGame.js?v=${v}`,
+      '/static/js/roulette/v1/game/Roulette.js': `/static/js/roulette/v1/game/Roulette.js?v=${v}`,
+    };
+
+    const im = { imports };
+    const s = document.createElement('script');
+    s.type = 'importmap';
+    s.textContent = JSON.stringify(im);
+    document.currentScript.after(s);
+  })();
+</script>
+
+<!-- Library -->
+<script src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/jquery-3.1.1.min.js"></script>
+<script src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/jquery-ui.js"></script>
+<script
+  src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/jquery.ui.touch-punch.js"
+></script>
+<script src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/swiper-bundle.min.js"></script>
+<script src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/TweenMax.min.js"></script>
+<script
+  src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/jquery.nice-select.min.js"
+></script>
+
+<!-- UI -->
+<script
+  src="https://aws-code.d2.co.kr/2024/subway/resources/assets/js/ui.js?v=1781003994052"
+></script>
+
+<script
+  type="text/javascript"
+  src="/static/js/d2.common.js?v=1781003994052"
+></script>
+<script
+  type="text/javascript"
+  src="/static/js/d2.common.util.js?v=1781003994052"
+></script>
+<!-- <script type="text/javascript" src="/static/js/jquery.min.js"></script> -->
+<script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
+<script
+  type="text/javascript"
+  src="/static/js/jquery.observable.min.js"
+></script>
+<script type="text/javascript" src="/static/js/jsrender.min.js"></script>
+<script type="text/javascript" src="/static/js/jsviews.min.js"></script>
+<script
+  type="text/javascript"
+  src="/static/js/d2.format.util.js?v=1781003994052"
+></script>
+<script
+  type="text/javascript"
+  src="/static/js/WebAppBridge.js?v=1781003994052"
+></script>
+<script
+  type="text/javascript"
+  src="/static/js/AppInterface.js?v=1781003994052"
+></script>
+<script type="text/javascript" src="/static/js/qrcode.min.js"></script>
+<script
+  type="text/javascript"
+  src="/static/js/layout/header.js?v=1781003994052"
+></script>
+
+<script type="text/javascript">
+  const API_DOMAIN = "https:\/\/devapi.subway.co.kr";
+  const FRONT_DOMAIN_MOBILE = "https:\/\/devm.subway.co.kr";
+  const USER_AUTH_INFO = null;
+  const S3_URL = "https:\/\/devcms.subway.co.kr";
+  const ASSETS_PATH = "https:\/\/aws-code.d2.co.kr\/2024\/subway\/resources";
+  const DEFAULT_IMG_SRC = "https:\/\/aws-code.d2.co.kr\/2024\/subway\/resources" + '/assets/images/order/material/default-01.png';
+  const IS_LOGIN = false;
+  const IS_NON_MEMBER_LOGIN = false;
+  const IS_APP = false;
+  /*
+   * 유입경로 전역 JS 변수 (LOGIC-007, REQ-010)
+   * CommonInterceptor.postHandle이 세션에서 읽어 모델에 주입한 INIT_SOURCE_TYPE 값을
+   * 클라이언트 JS에서 참조할 수 있도록 전역 변수로 노출한다.
+   * th:inline="javascript"가 XSS 이스케이프를 자동 처리 (ADR-003).
+   * null인 경우 빈 문자열('')로 렌더되어 JsRender 조건식이 false로 안전 평가됨.
+   */
+  const INIT_SOURCE_TYPE = null;
+  const BRIDGE = new WebAppBridge();
+
+  function logout() {
+      d2CallAjaxGet(API_DOMAIN + '/logout', null,
+          (result) => {
+              if(result.retCode == '200') {
+                  if(isApp()) {
+                      try {
+                          BRIDGE.logoutCompleted();
+                      } catch(e) {
+                          console.error(e)
+                      }
+                  }
+              }
+              location.href = '/';
+          }, (error) => {
+              console.log(error);
+          });
+  }
+
+  //(APP SNS ONLY)
+  function appSnsLoginComplete (id, channel,agreeItem) {
+      // [M-3] 앱 전용 함수임을 런타임에서도 강제: 웹에서 호출되면 차단
+      if (!isApp()) {
+          console.warn('[appSnsLoginComplete] 앱 전용 함수가 웹에서 호출됨. 차단');
+          return;
+      }
+      //id/channel값이 비어있다면 오류
+      if (!id && !channel) {
+          d2Alert("오류가 발생했습니다.", function () {
+              location.href = "/";
+          });
+      }
+
+      let data = {};
+      data.snsKey = id;
+      data.agreeCodes = agreeItem.join(",");
+      if (channel == 'naver') {
+          data.snsChannel = 'N';
+      } else if (channel == 'kakao') {
+          data.snsChannel = 'K';
+      }
+
+      d2CallAjax(API_DOMAIN + '/member/v1/app-sns-login-token', data, 'POST', function (result) {
+          if (!result || !result.data) {
+              d2Alert("다시 시도해 주세요.", function () {
+                  location.href = "/user/login";
+              });
+          } else {
+              const searchParams = new URLSearchParams(window.location.search);
+              let redirectUrl = searchParams.get('redirectUrl');
+
+              let url = isEmpty(redirectUrl) ? "/" : redirectUrl;
+              // 보안 취약점 [C-2] 개선: token=(JWT) → nonce=(UUID)로 대체
+              let params = "nonce=" + result.data + "&redirectUrl=" + encodeURIComponent(url) + "&rememberMe=on";
+
+              d2CallAjax(API_DOMAIN + '/sns-login/process?' + params, null, 'GET', function (result) {
+                  if (result.status == "success") {
+                      if (isApp()) {
+                          let memIdx = result.data.mbrIdx;
+                          let token = result.data.token;
+                          localStorage.setItem('RECENT_LOGIN_TYPE',  data.snsChannel);
+                          BRIDGE.loginCompleted(memIdx, token);
+                      }
+
+                      location.href = redirectUrl || '/';
+                  } else {
+                      d2Alert("로그인에 실패하였습니다.");
+                  }
+              }, function (error) {
+                  if(error.retCode == '999'){ // NeedVerificationException: 본인인증 필요한 경우
+                      location.replace('/user/login?error=' + data.snsChannel);
+                  } else {
+                      d2Alert(error.retMsg);
+                  }
+              }, true, true);
+          }
+      }, function (result) {
+          console.log("getAppSnsLoginToken error :: ", result);
+          d2Alert("오류가 발생하였습니다.", function () {
+              location.href = "/";
+          });
+      }, true, false);
+  };
+</script>
+
+  </head>
+  <body>
+    <header id="header" class="header">
+    
+        
+        
+            <div class="container">
+                <button type="button" id="topBackBtn" class="btn-back"></button>
+                <div class="page-title">이용방법</div>
+
+                <div class="shortcuts">
+                    
+                    
+                </div>
+            </div>
+        
+        
+        <!-- 선물하기 헤더 -->
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+</header>
+
+<script>
+    $(document).ready(function () {
+        if ($(".btn-back").length) {
+            $(".btn-back").on("click", function () {
+                var backUrl = "/more/list";
+                if (backUrl && backUrl !== "null" && backUrl !== "") {
+                    var removeHistoryYn = "";
+                    if(removeHistoryYn === "Y"){
+                        return location.replace(decodeURIComponent(backUrl));
+                    }
+                    return window.location.href = decodeURIComponent(backUrl);
+                } else {
+                    history.back();
+                }
+            });
+        }
+
+        $("#btnMyGift").click(function(){
+            location.href="/myGift/box";
+        })
+
+        // 장바구니 카운트 SET
+        if(IS_LOGIN || IS_NON_MEMBER_LOGIN){
+            const excludedPaths = ['/menu', '/payment'];
+            const currentPath = window.location.pathname;
+
+            if (!excludedPaths.some(path => currentPath.startsWith(path))) {
+                header.getCartCount('.cart-count');
+            }
+        }else{
+            $('.cart-count').hide();
+        }
+    });
+</script>
+
+    
+    <div class="top-affix">
+      <div class="tab-container bg-white">
+        <div class="tabs-wrapper tabs-wrapper-white full-width">
+          <div class="tabs-list d-flex text-center">
+            <a
+              href="/more/utilizationSubway"
+              class="tab-item full-width text-body1"
+              >매장주문</a
+            >
+            <a
+              href="/more/utilizationGroupMenu"
+              class="tab-item full-width text-body1"
+              >단체메뉴</a
+            >
+            <a
+              href="/more/freshInfo"
+              class="tab-item full-width text-body1 active"
+              >재료소개</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-container bg-white">
+        <div class="tabs-wrapper tabs-wrapper-sub-white">
+          <div class="tabs-list">
+            <a href="javascript:void(0);" class="tab-item text-caption1 active"
+              >All</a
+            >
+            <a href="javascript:void(0);" class="tab-item text-caption1">빵</a>
+            <a href="javascript:void(0);" class="tab-item text-caption1"
+              >야채</a
+            >
+            <a href="javascript:void(0);" class="tab-item text-caption1"
+              >치즈</a
+            >
+            <a href="javascript:void(0);" class="tab-item text-caption1"
+              >소스</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- main -->
+    <main class="main use-info has-dock">
+      <section class="section bg-line-01">
+        <div class="ingredients-wrap">
+          <div id="tabs-sub01" class="ingredients-tabs-area active">
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                      src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list05.png"
+                      alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">화이트</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      195 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">White</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    가장 클래식한 밀빵으로 부드러운 식감이 매력 포인트
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                      src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list03.png"
+                      alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">위트</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      195 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Wheat</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    여러 가지 곡물로 만든 건강하고 고소한 맛의 곡물빵
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                      src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list04.png"
+                      alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">파마산 오레가노</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      207 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Parmesan Oregano</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    부드러운 화이트빵에 파마산 오레가노 시즈닝을 묻혀 허브향
+                    가득
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list01.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">허니오트</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      237 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Honey Oat</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    고소한 위트빵에 오트밀 가루를 묻혀 고소함과 식감이 두배로
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- 하티 삭제-->
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                      src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list07.png"
+                      alt="" />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">그레인</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">213 kcal</h2>
+                  </div>
+                  <p class="text-caption2">Grain</p>
+                  <p class="text-font-02 text-caption2 pe-0">곡물 토핑을 더해 풍부한 맛을 담은 곡물빵</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list06.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">플랫브레드</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      232 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Flat Bread</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    이름처럼 납작 모양에 피자도우처럼 쫀득한 맛이 일품
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tabs-sub02" class="ingredients-tabs-area">
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list01.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">양상추</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      2.9 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Lettuce</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list02.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">토마토</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      7.7 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Tomatoes</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list03.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">오이</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      1.5 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Cucumbers</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list04.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">피망(파프리카)</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      1.4 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Peppers</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list05.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">양파</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      2.8 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Red Onions</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list06.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">피클</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      0.4 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Pickles</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list07.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">올리브</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      3.9 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Olives</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list08.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">할라피뇨</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      0.6 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Jalapenos</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list09.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">아보카도</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      56.5 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Avocado</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="tabs-sub03" class="ingredients-tabs-area">
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list01.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">아메리칸 치즈</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      35.3 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">American Cheese</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list02.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">슈레드 치즈</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      53.6 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Shredded Cheese</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list03.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">모차렐라 치즈</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      43.8 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Mozzarella Cheese</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="tabs-sub04" class="ingredients-tabs-area">
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list01.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">랜치</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      116 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Ranch</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    고소한 마요네즈와 레몬즙의 만남!<br />고소함이 두배!
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list02.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">스위트 어니언</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      40.1 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Sweet Onion</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    써브웨이만의 특제 레시피로 만든 <br />달콤한 양파소스
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list03.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">마요네즈</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      158 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Mayonnaise</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    말이 필요없는 고소함의 대명사, 마요네즈 소스
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list04.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">스위트 칠리</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      40 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Sweet Chilli</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    매콤한 칠리에 더해진 기분 좋은 달콤함!
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list05.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">스모크 바비큐</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      32.8 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Smoke BBQ</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    스모크 향과 달콤한 바비큐의 완벽한 조화
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list06.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">핫 칠리</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      41.8 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Hot Chilli</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    진짜 매운맛을 보고 싶다면?<br />써브웨이의 핫 칠리!
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list07.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">허니 머스터드</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      38.4 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Honey Mustard</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    겨자씨가 아낌없이 들어간 달콤한 머스터드 소스
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list08.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">사우스웨스트 치폴레</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      96.5 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Southwest Chipotle</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    핫 칠리와 고소한 마요네즈가 만난 이국적인 매콤한 맛
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list09.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">홀스래디쉬</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      106 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Horseradish</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    고소한 마요네즈와 고추냉이의 이색적인 만남! 매니아층을
+                    사로잡은 매력 No.1 소스
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!--div class="menu-card border-0">
+                        <div class="menu-card-body">
+                            <div class="menu-card-img">
+                                <img th:src="@{${assetsPath}+'/assets/images/use/etc-source-list10.png'}" alt=""/>
+                            </div>
+                            <div class="menu-card-info">
+                                <div class="ingredients-header">
+                                    <h2 class="text-body1">머스타드</h2>
+                                    <h2 class="ingredients-calorie text-primary-01 text-body1">15.3 kcal</h2>
+                                </div>
+                                <p class="text-caption2">Yellow Mustard</p>
+                                <p class="text-font-02 text-caption2 pe-0">겨자씨로 만든 오리지날 머스터드 소스</p>
+                            </div>
+                        </div>
+                    </div--->
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                      src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list15.png"
+                      alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">저당 크리미 어니언 소스</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">51 kcal</h2>
+                  </div>
+                  <p class="text-caption2">Low Sugar Creamy Onion</p>
+                  <p class="text-font-02 text-caption2 pe-0">부드럽고 가볍게, 어디에나 잘 어울리는 <br />저당 크리미 어니언 소스</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list16.png" alt="" />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">저칼로리 오리엔탈</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">21 kcal</h2>
+                  </div>
+                  <p class="text-caption2">Oriental</p>
+                  <p class="text-font-02 text-caption2 pe-0">산뜻한 저칼로리 오리엔탈 드레싱으로 가볍게!</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list11.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">엑스트라 버진 올리브 오일</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      29 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Extra Virgin Olive Oil</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    담백하고 깔끔하게 즐기고 싶다면 <br />주저하지 말고
+                    올리브오일
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list12.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">레드 와인 식초</h2>
+                    <h2 class="ingredients-calorie text-primary-01 text-body1">
+                      0.7 kcal
+                    </h2>
+                  </div>
+                  <p class="text-caption2">Red Wine Vinaigrette</p>
+                  <p class="text-font-02 text-caption2 pe-0">
+                    레드와인을 발효시켜 풍미가 가득한 식초
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list13.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">소금</h2>
+                  </div>
+                  <p class="text-caption2">Salt</p>
+                </div>
+              </div>
+            </div>
+            <div class="menu-card border-0">
+              <div class="menu-card-body">
+                <div class="menu-card-img">
+                  <img
+                    src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list14.png"
+                    alt=""
+                  />
+                </div>
+                <div class="menu-card-info">
+                  <div class="ingredients-header">
+                    <h2 class="text-body1">후추</h2>
+                  </div>
+                  <p class="text-caption2">Black Pepper</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const $dockItemMainLink = document.querySelector(
+          '.dock-item-main .dock-link'
+        );
+        const $dim = document.querySelector('.dim');
+
+        if (!$dockItemMainLink) return false;
+
+        $dockItemMainLink.addEventListener('click', (e) => {
+          e.target.parentElement.classList.toggle('active');
+          $dim.classList.toggle('active');
+        });
+      });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const tabItems = document.querySelectorAll('.tab-item.text-caption1');
+        const tabContents = document.querySelectorAll('.ingredients-tabs-area');
+        tabContents.forEach((content) => content.classList.add('active'));
+        tabItems.forEach((item, index) => {
+          item.addEventListener('click', () => {
+            tabItems.forEach((tab) => tab.classList.remove('active'));
+
+            item.classList.add('active');
+            if (index > 0) {
+              tabContents.forEach((content) =>
+                content.classList.remove('active')
+              );
+              tabContents[index - 1].classList.add('active');
+            } else {
+              tabContents.forEach((content) => content.classList.add('active'));
+            }
+          });
+        });
+      });
+    </script>
+  
+
+    
+  <div class="dock">
+    <div class="dock-item">
+      <a href="/" class="dock-link home">홈</a>
+    </div>
+    <div
+      class="dock-item"
+    >
+      <a href="/mysub" class="dock-link mysub">마이</a>
+    </div>
+    <div
+      class="dock-item dock-item-main"
+    >
+      <button type="button" class="dock-link order">주문</button>
+      <div class="dock-order-list">
+        <a
+          href="#"
+          class="dock-order-list-item"
+          onclick="header.goToStoreListPage('P'); return false;"
+        >
+          <i class="icon-takeout"></i> 방문포장
+        </a>
+        <a
+          href="#"
+          class="dock-order-list-item"
+          onclick="header.goToStoreListPage('T'); return false;"
+        >
+          <i class="icon-food"></i> 매장식사
+        </a>
+        <a
+          href="#"
+          class="dock-order-list-item"
+          onclick="header.goToStoreListPage('D'); return false;"
+        >
+          <i class="icon-bike"></i> 배달하기
+        </a>
+      </div>
+    </div>
+    <div class="dock-item">
+      <a href="/gift/main" class="dock-link gift">선물</a>
+    </div>
+    <div class="dock-item">
+      <a href="/more/list" class="dock-link more">더보기</a>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const $dockItemMainLink = document.querySelector(
+        '.dock-item-main .dock-link'
+      );
+      const $dim = document.querySelector('.dim');
+
+      if (!$dockItemMainLink) return false;
+
+      $dockItemMainLink.addEventListener('click', (e) => {
+        e.target.parentElement.classList.toggle('active');
+        $dim.classList.toggle('active');
+      });
+    });
+  </script>
+
+
+
+    <!-- 공통 얼럿 팝업 -->
+<!--
+  pop-modal--sm: 360px
+  pop-modal--md: 720px
+  pop-modal--lg: 1200px
+  _variables.scss 파일의 $pop-modal-sizes 변수 참고
+-->
+<div
+  class="pop-layer pop-modal"
+  id="pop-alert"
+  style="display: none; z-index: 999"
+>
+  <div class="pop-dim"></div>
+  <div class="pop-wrap">
+    <div class="pop-content">
+      <p class="text-title3 fw-600 text-center" id="pop-alert-msg"></p>
+    </div>
+    <div class="pop-footer">
+      <div class="btn-wrap rows">
+        <button
+          type="button"
+          class="btn btn-primary-01 full-width"
+          id="pop-alert-confirm"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="pop-close"
+      title="팝업닫기"
+      onclick="UI.popLayerClose('#coupon-pop-03')"
+    ></button>
+  </div>
+</div>
+
+<div
+  class="pop-layer pop-modal"
+  id="pop-confirm"
+  style="display: none; z-index: 999"
+>
+  <div class="pop-dim"></div>
+
+  <div class="pop-wrap">
+    <div class="pop-content pb-12">
+      <div class="text-center">
+        <h2 class="text-title3 fw-600" id="pop-confirm-msg"></h2>
+      </div>
+    </div>
+
+    <div class="pop-footer">
+      <div class="btn-wrap">
+        <button
+          type="button"
+          class="btn btn-bg-02 btn-md"
+          id="pop-confirm-cancel"
+        >
+          아니오
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary-01 btn-md"
+          id="pop-confirm-confirm"
+        >
+          네
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="pop-layer pop-modal"
+  id="pop-confirm-v2"
+  style="display: none; z-index: 999"
+>
+  <div class="pop-dim"></div>
+
+  <div class="pop-wrap">
+    <div class="pop-content pb-12">
+      <div class="text-center">
+        <h2 class="text-title3 fw-600" id="pop-v2-confirm-title"></h2>
+        <p class="text-body1 mt-8" id="pop-v2-confirm-message"></p>
+      </div>
+    </div>
+
+    <div class="pop-footer">
+      <div class="btn-wrap">
+        <button
+          type="button"
+          class="btn btn-md btn-bg-02"
+          id="pop-v2-confirm-cancel"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          class="btn btn-md btn-primary-01"
+          id="pop-v2-confirm-confirm"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--로딩바-->
+<div class="loading-wrap" id="loading" style="display: none">
+  <div class="loader"></div>
+</div>
+
+<!-- (S) OR code Popup -->
+<div class="pop-layer pop-modal" id="main-pop-01-01">
+  <div class="pop-dim" onclick="UI.popLayerClose('#main-pop-01-01')"></div>
+
+  <div class="pop-wrap bottom-sheet">
+    <div class="pop-header"></div>
+    <div class="pop-content pt-12 pb-40">
+      <div class="charge-card">
+        <div class="charge-card-header">
+          <div class="charge-box">
+            <div class="charge-box-icon">
+              <i class="icon-charge-sub-card"></i>
+            </div>
+            <div class="charge-box-content">
+              <div class="charge-box-header subcard">
+                <p class="text-body2">썹 카드</p>
+              </div>
+              <div class="charge-box-body">
+                <p class="text-body1 fw-600 mt-4">
+                  <span id="qr-subcard-text"></span>원
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="charge-box">
+            <div class="charge-box-icon">
+              <i class="icon-charge-sub-point"></i>
+            </div>
+            <div class="charge-box-content">
+              <div class="charge-box-header point">
+                <p class="text-body2">썹 포인트</p>
+              </div>
+              <div class="charge-box-body">
+                <p class="text-body1 fw-600 mt-4">
+                  <span id="qr-point-text"></span>P
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="charge-card-body">
+          <div
+            class="charge-barcode"
+            id="qr-wrapper"
+            style="width: 130px;height: 130px;!important;"
+          >
+            <!--            <img src="../../../resources/assets/images/common/charge-barcode.png" alt="">-->
+          </div>
+          <div class="charge-barcode-number">
+            <span class="text-caption1 text-font-05" id="qr-barcode-txt"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pop-footer">
+      <div class="btn-wrap">
+        <button
+          type="button"
+          class="btn btn-primary-01"
+          onclick="location.href = '/mysub/subcard/charge'"
+        >
+          충전하기
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- (E) OR code Popup -->
+
+<script
+  type="text/javascript"
+  src="/static/js/common/popup_login_check.js?v=1781003994052"
+></script>
+<div class="pop-layer pop-modal" id="popup-login-check">
+  <div class="pop-dim" onclick="UI.popLayerClose('#popup-login-check');"></div>
+
+  <div class="pop-wrap bottom-sheet">
+    <div class="pop-header bg-primary-05"></div>
+
+    <div
+      class="pop-content bg-primary-05 d-flex flex-column align-items-center pb-32"
+    >
+      <div class="main-login-popup">
+        <img
+          src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/common/pop-login-img.png"
+          alt="배경"
+        />
+      </div>
+
+      <p class="text-title3 fw-600 mt-20 text-center">
+        <span class="text-primary-01">써브웨이 회원</span>이 되시면
+        <span class="text-primary-01">포인트, 쿠폰</span> 등<br />
+        다양한 혜택을 누리실 수 있습니다.
+      </p>
+    </div>
+
+    <div class="pop-footer">
+      <div class="btn-wrap rows">
+        <button
+          type="button"
+          class="btn btn-primary-01 full-width"
+          onclick="popupLoginCheck.goToLogin(); return false;"
+        >
+          로그인
+        </button>
+        <a
+          id="nonmember-login-btn"
+          style="display: none"
+          href="#"
+          class="btn btn-link"
+          onclick="popupLoginCheck.goToNonMbrLogin(); return false;"
+          >비회원 주문하기</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script
+  type="text/javascript"
+  src="/static/js/common/popup_login_check_v2.js?v=1781003994052"
+></script>
+<div class="pop-layer pop-modal" id="popup-login-check-v2">
+  <div class="pop-dim" onclick="UI.popLayerClose('#popup-login-check-v2')">
+    <div class="install-modal">
+      <div class="install-modal-img">
+        <img
+          src="https://aws-code.d2.co.kr/2024/subway/resources/assets/images/common/logo.svg"
+          alt=""
+        />
+      </div>
+      <div class="store-name-wrap" id="popup-login-check-v2-msg"></div>
+
+      <!-- 20260310 [s] -->
+      <div class="btn-wrap rows position-relative gap-10 mt-50">
+        <div class="tooltip-bubble-wrap">
+          <span class="tooltip-bubble tooltip-bubble-dark"
+            >3.6% 썹 포인트 적립!</span
+          >
+        </div>
+        <button
+          type="button"
+          class="btn btn-square full-width bg-primary-01 text-title3 text-white"
+          onclick="
+            popupLoginCheckV2.goToLogin();
+            return false;
+          "
+        >
+          <i class="icon-guest mb-4"></i>
+          회원으로 주문하기
+        </button>
+        <button
+          type="button"
+          class="btn btn-square full-width text-title3"
+          onclick="
+            popupLoginCheckV2.goToNonMbrLogin();
+            return false;
+          "
+        >
+          <i class="icon-member mb-4"></i>
+          비회원 주문하기
+        </button>
+      </div>
+      <!-- 20260310 [e] -->
+    </div>
+  </div>
+</div>
+
+
+
+    <div class="dim"></div>
+  </body>
+</html>

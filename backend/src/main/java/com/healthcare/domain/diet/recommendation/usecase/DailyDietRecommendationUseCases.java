@@ -111,7 +111,8 @@ public class DailyDietRecommendationUseCases {
                 .map(DietRestriction::getCategory)
                 .collect(Collectors.toSet());
 
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasCalories();
+        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasCalories()
+                .and(FoodCatalogSpecs.isRecommendable());
         if (!excludedFoodIds.isEmpty()) {
             spec = spec.and(FoodCatalogSpecs.idNotIn(excludedFoodIds));
         }

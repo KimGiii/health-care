@@ -1,0 +1,3895 @@
+{
+  "brandName": "버거킹",
+  "collectedAt": "2026-06-09",
+  "source": {
+    "metadataTransaction": "BKR0347",
+    "endpoint": "https://www.burgerking.co.kr/burgerking/BKR0347.json"
+  },
+  "menuNameGroupCount": 188,
+  "nutritionRowCount": 193,
+  "allergyRowCount": 193,
+  "originInfoList": [
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산과 태국산 섞음 : 닭고기패티[몬스터와퍼,몬스터주니어,치킨버거,치킨치즈마요버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음/호주산 : 쇠고기패티[버거류(주니어포함)]"
+    },
+    {
+      "pattiDivNm": "돼지고기",
+      "pattiDiv": "2",
+      "pattiNote": "외국산 : [오리지널스뉴욕스테이크,몬스터와퍼,베이컨치즈와퍼,치킨킹BLT,BLT오믈렛킹모닝,더크리스퍼베이컨&치즈,스모크베이컨와퍼, 오리지널스엘파소치폴레]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산 : 비프립[스모크비프립 와퍼,스모크비프립 샌드위치버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음 : 쇠고기패티 [오리지널스엘파소치폴레/오리지널스뉴욕스테이크]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "태국산과 국내산 섞음 : 닭고기패티 [(불고기)롱치킨버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음/호주산 : 쇠고기패티[와퍼류,더오치맥시멈2,갈릭불고기맥시멈2/3/원파운더]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "외국산 : 바삭킹"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 너겟킹"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "외국산 : 닭고기패티[치킨킹(BLT)]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 크리스퍼텐더,크리스퍼랩"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 닭고기패티 [더크리스퍼(베이컨&치즈)]"
+    }
+  ],
+  "entries": [
+    {
+      "brandName": "버거킹",
+      "menuName": "갈릭메이플소스",
+      "nutritionRows": [
+        {
+          "weight": "10.5",
+          "caloriesKcal": "30",
+          "proteinG": "0.1",
+          "sodiumMg": "40.3",
+          "sugarsG": "6.1",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 돼지고기, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "갈릭불고기 맥시멈 원파운더",
+      "nutritionRows": [
+        {
+          "weight": "573",
+          "caloriesKcal": "1694",
+          "proteinG": "93(169)",
+          "sodiumMg": "2262(113)",
+          "sugarsG": "18",
+          "saturatedFatG": "45(299)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "갈릭불고기 맥시멈2",
+      "nutritionRows": [
+        {
+          "weight": "358",
+          "caloriesKcal": "1076",
+          "proteinG": "54(99)",
+          "sodiumMg": "1710(85)",
+          "sugarsG": "7",
+          "saturatedFatG": "24(162)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "갈릭불고기 맥시멈3",
+      "nutritionRows": [
+        {
+          "weight": "468",
+          "caloriesKcal": "1347",
+          "proteinG": "77(140)",
+          "sodiumMg": "1902(95)",
+          "sugarsG": "15",
+          "saturatedFatG": "28(189)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "갈릭불고기와퍼",
+      "nutritionRows": [
+        {
+          "weight": "293",
+          "caloriesKcal": "768",
+          "proteinG": "31(57)",
+          "sodiumMg": "1007(50)",
+          "sugarsG": "9",
+          "saturatedFatG": "12(83)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 토마토, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "고구마 크림치즈 파이 로얄",
+      "nutritionRows": [
+        {
+          "weight": "62",
+          "caloriesKcal": "240",
+          "proteinG": "3(5)",
+          "sodiumMg": "94(5)",
+          "sugarsG": "8",
+          "saturatedFatG": "7(49)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "구운갈릭 시즈닝",
+      "nutritionRows": [
+        {
+          "weight": "3",
+          "caloriesKcal": "8",
+          "proteinG": "0(0)",
+          "sodiumMg": "150(8)",
+          "sugarsG": "2",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "너겟킹 10조각",
+      "nutritionRows": [
+        {
+          "weight": "165",
+          "caloriesKcal": "368",
+          "proteinG": "22(39)",
+          "sodiumMg": "1054(53)",
+          "sugarsG": "0.9",
+          "saturatedFatG": "5(35)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "너겟킹 4조각",
+      "nutritionRows": [
+        {
+          "weight": "66",
+          "caloriesKcal": "147",
+          "proteinG": "9(16)",
+          "sodiumMg": "422(21)",
+          "sugarsG": "0.4",
+          "saturatedFatG": "2(14)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 밀, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "너겟킹 8조각",
+      "nutritionRows": [
+        {
+          "weight": "132",
+          "caloriesKcal": "294",
+          "proteinG": "17(31)",
+          "sodiumMg": "843(42)",
+          "sugarsG": "0.7",
+          "saturatedFatG": "4(28)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "대~호 버거",
+      "nutritionRows": [
+        {
+          "weight": "254",
+          "caloriesKcal": "788",
+          "proteinG": "36(66)",
+          "sodiumMg": "1129(56)",
+          "sugarsG": "10",
+          "saturatedFatG": "19(125)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 난류, 쇠고기, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더 크리스퍼",
+      "nutritionRows": [
+        {
+          "weight": "225",
+          "caloriesKcal": "696",
+          "proteinG": "26(48)",
+          "sodiumMg": "1392(70)",
+          "sugarsG": "5",
+          "saturatedFatG": "9(62)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 난류, 쇠고기, 닭고기, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더 크리스퍼 베이컨&치즈",
+      "nutritionRows": [
+        {
+          "weight": "231",
+          "caloriesKcal": "727",
+          "proteinG": "28(51)",
+          "sodiumMg": "1553(78)",
+          "sugarsG": "6",
+          "saturatedFatG": "10(66)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더블비프불고기버거",
+      "nutritionRows": [
+        {
+          "weight": "190",
+          "caloriesKcal": "565",
+          "proteinG": "26(48)",
+          "sodiumMg": "796(40)",
+          "sugarsG": "6",
+          "saturatedFatG": "12(80)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 우유, 밀, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더블오리지널치즈버거",
+      "nutritionRows": [
+        {
+          "weight": "192",
+          "caloriesKcal": "533",
+          "proteinG": "27(49)",
+          "sodiumMg": "728(36)",
+          "sugarsG": "5",
+          "saturatedFatG": "12(78)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 토마토, 쇠고기, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더블와퍼",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더블통모짜와퍼",
+      "nutritionRows": [
+        {
+          "weight": "500",
+          "caloriesKcal": "1277",
+          "proteinG": "65(118)",
+          "sodiumMg": "1740(87)",
+          "sugarsG": "7",
+          "saturatedFatG": "26(170)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 토마토, 밀, 쇠고기, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더블트러플머쉬룸와퍼",
+      "nutritionRows": [
+        {
+          "weight": "414",
+          "caloriesKcal": "960",
+          "proteinG": "54(99)",
+          "sodiumMg": "1269(63)",
+          "sugarsG": "15",
+          "saturatedFatG": "22(146)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 대두, 돼지고기, 우유, 토마토, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더오치 맥시멈 원파운더",
+      "nutritionRows": [
+        {
+          "weight": "606",
+          "caloriesKcal": "1789",
+          "proteinG": "106(193)",
+          "sodiumMg": "3351(168)",
+          "sugarsG": "17",
+          "saturatedFatG": "58(386)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더오치 맥시멈2",
+      "nutritionRows": [
+        {
+          "weight": "375",
+          "caloriesKcal": "1018",
+          "proteinG": "53(97)",
+          "sodiumMg": "2045(102)",
+          "sugarsG": "9",
+          "saturatedFatG": "29(191)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 밀, 난류, 대두, 쇠고기, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "더오치 맥시멈3",
+      "nutritionRows": [
+        {
+          "weight": "501",
+          "caloriesKcal": "1499",
+          "proteinG": "81(147)",
+          "sodiumMg": "3094(155)",
+          "sugarsG": "11",
+          "saturatedFatG": "44(295)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 토마토, 쇠고기, 난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "두툼버거",
+      "nutritionRows": [
+        {
+          "weight": "362",
+          "caloriesKcal": "986",
+          "proteinG": "52(94)",
+          "sodiumMg": "1923(96)",
+          "sugarsG": "14",
+          "saturatedFatG": "18(117)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 오징어, 밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "두툼버거 더블",
+      "nutritionRows": [
+        {
+          "weight": "443",
+          "caloriesKcal": "1269",
+          "proteinG": "73(133)",
+          "sodiumMg": "2157(108)",
+          "sugarsG": "14",
+          "saturatedFatG": "24(159)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 닭고기, 토마토, 오징어, 우유, 대두, 밀, 돼지고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "딥 크런치 아포가토",
+      "nutritionRows": [
+        {
+          "weight": "151",
+          "caloriesKcal": "182",
+          "proteinG": "5(9)",
+          "sodiumMg": "150(8)",
+          "sugarsG": "29",
+          "saturatedFatG": "3(18)",
+          "caffeineMg": "52"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "딥 트러플 머쉬룸 더블",
+      "nutritionRows": [
+        {
+          "weight": "357",
+          "caloriesKcal": "996",
+          "proteinG": "52(94)",
+          "sodiumMg": "1258(63)",
+          "sugarsG": "5",
+          "saturatedFatG": "24(163)",
+          "caffeineMg": "0"
+        },
+        {
+          "weight": "356",
+          "caloriesKcal": "993",
+          "proteinG": "51(94)",
+          "sodiumMg": "1254(63)",
+          "sugarsG": "5",
+          "saturatedFatG": "24(162)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 우유, 대두, 밀"
+        },
+        {
+          "allergens": "쇠고기, 난류, 밀, 대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "딥 트러플 프라이",
+      "nutritionRows": [
+        {
+          "weight": "130",
+          "caloriesKcal": "384",
+          "proteinG": "4(7)",
+          "sodiumMg": "529(26)",
+          "sugarsG": "2",
+          "saturatedFatG": "6(37)",
+          "caffeineMg": "0"
+        },
+        {
+          "weight": "130",
+          "caloriesKcal": "384",
+          "proteinG": "4(7)",
+          "sodiumMg": "529(26)",
+          "sugarsG": "2",
+          "saturatedFatG": "6(37)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 난류, 우유, 대두"
+        },
+        {
+          "allergens": "밀, 우유, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "랠리쉬 소스",
+      "nutritionRows": [
+        {
+          "weight": "10.5",
+          "caloriesKcal": "21",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "46(2.3)",
+          "sugarsG": "3.4",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "롱베이컨",
+      "nutritionRows": [
+        {
+          "weight": "5",
+          "caloriesKcal": "22",
+          "proteinG": "1(2)",
+          "sodiumMg": "42(2)",
+          "sugarsG": "0",
+          "saturatedFatG": "0.6(4)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "롱베이컨 2장",
+      "nutritionRows": [
+        {
+          "weight": "10",
+          "caloriesKcal": "44",
+          "proteinG": "3(5)",
+          "sodiumMg": "83(4)",
+          "sugarsG": "0",
+          "saturatedFatG": "1.3(9)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "롱치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "206",
+          "caloriesKcal": "621",
+          "proteinG": "23(41)",
+          "sodiumMg": "1235(62)",
+          "sugarsG": "7",
+          "saturatedFatG": "7(45)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 닭고기, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "리치브라운소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "39",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 난류, 대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "망고 선데",
+      "nutritionRows": [
+        {
+          "weight": "150",
+          "caloriesKcal": "179",
+          "proteinG": "2(4)",
+          "sodiumMg": "61(3)",
+          "sugarsG": "34",
+          "saturatedFatG": "2(10)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "복숭아, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "매콤치즈 시즈닝",
+      "nutritionRows": [
+        {
+          "weight": "3",
+          "caloriesKcal": "9",
+          "proteinG": "0(0)",
+          "sodiumMg": "250(13)",
+          "sugarsG": "1",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "머스타드",
+      "nutritionRows": [
+        {
+          "weight": "9",
+          "caloriesKcal": "30",
+          "proteinG": "0(0)",
+          "sodiumMg": "60(3)",
+          "sugarsG": "2",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "몬스터 주니어",
+      "nutritionRows": [
+        {
+          "weight": "243",
+          "caloriesKcal": "687",
+          "proteinG": "30(54)",
+          "sodiumMg": "1293(65)",
+          "sugarsG": "7",
+          "saturatedFatG": "13(87)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 난류, 토마토, 우유, 대두, 밀, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "몬스터와퍼",
+      "nutritionRows": [
+        {
+          "weight": "403",
+          "caloriesKcal": "1094",
+          "proteinG": "52(94)",
+          "sodiumMg": "2146(107)",
+          "sugarsG": "8",
+          "saturatedFatG": "21(143)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기, 난류, 쇠고기, 닭고기, 토마토, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "몬스터X",
+      "nutritionRows": [
+        {
+          "weight": "398",
+          "caloriesKcal": "1010",
+          "proteinG": "47(85)",
+          "sodiumMg": "1906(95)",
+          "sugarsG": "16",
+          "saturatedFatG": "20(136)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "조개류, 쇠고기, 난류, 밀, 닭고기, 우유, 돼지고기, 토마토, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "무료 캔콜라",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "무료콘샐러드",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "미닛메이드 오렌지",
+      "nutritionRows": [
+        {
+          "weight": "350",
+          "caloriesKcal": "112",
+          "proteinG": "1.9(3)",
+          "sodiumMg": "95(5)",
+          "sugarsG": "22",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "미닛메이드 포도",
+      "nutritionRows": [
+        {
+          "weight": "350",
+          "caloriesKcal": "126",
+          "proteinG": "1(1)",
+          "sodiumMg": "16(1)",
+          "sugarsG": "28",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "밀크 선데",
+      "nutritionRows": [
+        {
+          "weight": "140",
+          "caloriesKcal": "165",
+          "proteinG": "1(2)",
+          "sodiumMg": "116(6)",
+          "sugarsG": "27",
+          "saturatedFatG": "3(18)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바비큐소스 추가",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바비큐치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "171",
+          "caloriesKcal": "479",
+          "proteinG": "18(33)",
+          "sodiumMg": "792(40)",
+          "sugarsG": "7",
+          "saturatedFatG": "5(34)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 밀, 우유, 대두, 닭고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바삭킹2조각",
+      "nutritionRows": [
+        {
+          "weight": "99",
+          "caloriesKcal": "272",
+          "proteinG": "15(27)",
+          "sodiumMg": "497(25)",
+          "sugarsG": "1.7",
+          "saturatedFatG": "5(34.4)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 대두, 밀, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바삭킹4조각",
+      "nutritionRows": [
+        {
+          "weight": "198",
+          "caloriesKcal": "544",
+          "proteinG": "29(54)",
+          "sodiumMg": "993(50)",
+          "sugarsG": "3.4",
+          "saturatedFatG": "10(66.9)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 대두, 밀, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바삭킹8조각",
+      "nutritionRows": [
+        {
+          "weight": "396",
+          "caloriesKcal": "1088",
+          "proteinG": "59(107)",
+          "sodiumMg": "1986(99)",
+          "sugarsG": "6.7",
+          "saturatedFatG": "20.1(133.8)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 쇠고기, 밀, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "바삭킹8조각+디아블로소스",
+      "nutritionRows": [
+        {
+          "weight": "421",
+          "caloriesKcal": "1127",
+          "proteinG": "59(108)",
+          "sodiumMg": "2279(114)",
+          "sugarsG": "14.1",
+          "saturatedFatG": "20.1(133.9)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 토마토, 닭고기, 쇠고기, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "버거패티",
+      "nutritionRows": [
+        {
+          "weight": "42",
+          "caloriesKcal": "114",
+          "proteinG": "8(15)",
+          "sodiumMg": "199(10)",
+          "sugarsG": "0",
+          "saturatedFatG": "3.7(24.8)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "버드와이저 캔(330ml)",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        },
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        },
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "베이비 불고기",
+      "nutritionRows": [
+        {
+          "weight": "132",
+          "caloriesKcal": "333",
+          "proteinG": "14(25)",
+          "sodiumMg": "368(18)",
+          "sugarsG": "5",
+          "saturatedFatG": "5(36)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "베이비 콰트로치즈",
+      "nutritionRows": [
+        {
+          "weight": "148",
+          "caloriesKcal": "406",
+          "proteinG": "19(35)",
+          "sodiumMg": "621(31)",
+          "sugarsG": "4",
+          "saturatedFatG": "11(75)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 토마토, 쇠고기, 밀, 대두, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "베이비 통새우",
+      "nutritionRows": [
+        {
+          "weight": "142",
+          "caloriesKcal": "332",
+          "proteinG": "15(28)",
+          "sodiumMg": "497(25)",
+          "sugarsG": "3",
+          "saturatedFatG": "6(42)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 새우, 난류, 쇠고기, 토마토, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "베이컨 치폴레 랜치소스",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "베이컨치즈와퍼",
+      "nutritionRows": [
+        {
+          "weight": "320",
+          "caloriesKcal": "844",
+          "proteinG": "37(68)",
+          "sodiumMg": "1654(83)",
+          "sugarsG": "8",
+          "saturatedFatG": "19(124)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 돼지고기, 밀, 토마토, 쇠고기, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불고기 롱치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "234",
+          "caloriesKcal": "691",
+          "proteinG": "23 (42)",
+          "sodiumMg": "1434(72)",
+          "sugarsG": "7",
+          "saturatedFatG": "7(46)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 난류, 닭고기, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불고기몬스터",
+      "nutritionRows": [
+        {
+          "weight": "245",
+          "caloriesKcal": "661",
+          "proteinG": "29(53)",
+          "sodiumMg": "1260(63)",
+          "sugarsG": "12",
+          "saturatedFatG": "11(72)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 대두, 토마토, 우유, 난류, 닭고기, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불고기버거",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불고기와퍼",
+      "nutritionRows": [
+        {
+          "weight": "293",
+          "caloriesKcal": "738",
+          "proteinG": "31(57)",
+          "sodiumMg": "1137(57)",
+          "sugarsG": "10",
+          "saturatedFatG": "13(86)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 난류, 쇠고기, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불고기와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "160",
+          "caloriesKcal": "413",
+          "proteinG": "16(29)",
+          "sodiumMg": "617(31)",
+          "sugarsG": "5",
+          "saturatedFatG": "6(38)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 난류, 쇠고기, 토마토, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불끈버거",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 난류, 새우, 밀, 쇠고기, 대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불끈버거 맥시멈",
+      "nutritionRows": [
+        {
+          "weight": "432",
+          "caloriesKcal": "1023",
+          "proteinG": "48(87)",
+          "sodiumMg": "2760(138)",
+          "sugarsG": "12",
+          "saturatedFatG": "20(134)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 새우, 난류, 쇠고기, 토마토, 우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불끈버거 맥시멈 더블",
+      "nutritionRows": [
+        {
+          "weight": "513",
+          "caloriesKcal": "1278",
+          "proteinG": "66(120)",
+          "sodiumMg": "2980(149)",
+          "sugarsG": "13",
+          "saturatedFatG": "30(197)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 우유, 대두, 밀, 새우"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불닭소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "31",
+          "proteinG": "0.4(0)",
+          "sodiumMg": "124(6)",
+          "sugarsG": "2.5",
+          "saturatedFatG": "0.6(4)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 밀, 대두, 우유, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불맛 더블치즈버거",
+      "nutritionRows": [
+        {
+          "weight": "339",
+          "caloriesKcal": "940",
+          "proteinG": "59(108)",
+          "sodiumMg": "2140(107)",
+          "sugarsG": "10",
+          "saturatedFatG": "29(195)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 우유, 토마토, 쇠고기, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "불맛 더블치즈베이컨버거",
+      "nutritionRows": [
+        {
+          "weight": "349",
+          "caloriesKcal": "977",
+          "proteinG": "59(107)",
+          "sodiumMg": "2295(115)",
+          "sugarsG": "11",
+          "saturatedFatG": "28(185)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 쇠고기, 우유, 돼지고기, 밀, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "브라우니큐브",
+      "nutritionRows": [
+        {
+          "weight": "15",
+          "caloriesKcal": "64",
+          "proteinG": "0.5(0.9)",
+          "sodiumMg": "17(0.9)",
+          "sugarsG": "5.8",
+          "saturatedFatG": "2.8(19)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "브라운 페퍼콘 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "40",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "103(5)",
+          "sugarsG": "1.2",
+          "saturatedFatG": "0.6(4)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "블랙바비큐와퍼",
+      "nutritionRows": [
+        {
+          "weight": "287",
+          "caloriesKcal": "783",
+          "proteinG": "39(71)",
+          "sodiumMg": "1300(65)",
+          "sugarsG": "16",
+          "saturatedFatG": "15(99)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "오징어, 난류, 쇠고기, 돼지고기, 우유, 대두, 밀, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "블랙바비큐콰트로치즈와퍼",
+      "nutritionRows": [
+        {
+          "weight": "323",
+          "caloriesKcal": "981",
+          "proteinG": "46(83)",
+          "sodiumMg": "1601(80)",
+          "sugarsG": "10",
+          "saturatedFatG": "24(160)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 돼지고기, 우유, 대두, 밀, 오징어"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "블랙페퍼 치즈 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "61",
+          "proteinG": "0.1(0)",
+          "sodiumMg": "103(5)",
+          "sugarsG": "0.7",
+          "saturatedFatG": "1(7)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "블루치즈소스 추가",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "비프&슈림프버거",
+      "nutritionRows": [
+        {
+          "weight": "247",
+          "caloriesKcal": "640",
+          "proteinG": "24(43)",
+          "sodiumMg": "1122(56)",
+          "sugarsG": "6",
+          "saturatedFatG": "9(63)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 우유, 토마토, 쇠고기, 새우, 대두, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "비프불고기버거",
+      "nutritionRows": [
+        {
+          "weight": "136",
+          "caloriesKcal": "384",
+          "proteinG": "15(27)",
+          "sodiumMg": "492(25)",
+          "sugarsG": "5",
+          "saturatedFatG": "5(36)",
+          "caffeineMg": "0"
+        },
+        {
+          "weight": "136",
+          "caloriesKcal": "384",
+          "proteinG": "15(27)",
+          "sodiumMg": "492(25)",
+          "sugarsG": "5",
+          "saturatedFatG": "5(36)",
+          "caffeineMg": "0"
+        },
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        },
+        {
+          "allergens": ""
+        },
+        {
+          "allergens": "대두, 밀, 난류, 우유, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "선데바닐라",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "소불고기패티",
+      "nutritionRows": [
+        {
+          "weight": "60",
+          "caloriesKcal": "181",
+          "proteinG": "8(14)",
+          "sodiumMg": "214(11)",
+          "sugarsG": "2.1",
+          "saturatedFatG": "5.5(37)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 밀, 난류, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "쉐이킹프라이 구운갈릭",
+      "nutritionRows": [
+        {
+          "weight": "105",
+          "caloriesKcal": "292",
+          "proteinG": "4(7)",
+          "sodiumMg": "634(32)",
+          "sugarsG": "0.5",
+          "saturatedFatG": "3.1(21)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 토마토, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "쉐이킹프라이 매콤치즈",
+      "nutritionRows": [
+        {
+          "weight": "105",
+          "caloriesKcal": "287",
+          "proteinG": "4(7)",
+          "sodiumMg": "687(34)",
+          "sugarsG": "0.6",
+          "saturatedFatG": "3.1(21)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "쉐이킹프라이 스윗어니언",
+      "nutritionRows": [
+        {
+          "weight": "105",
+          "caloriesKcal": "297",
+          "proteinG": "4(8)",
+          "sodiumMg": "486(24)",
+          "sugarsG": "1.29",
+          "saturatedFatG": "3.0(20)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "슈림프버거",
+      "nutritionRows": [
+        {
+          "weight": "178",
+          "caloriesKcal": "516",
+          "proteinG": "14(26)",
+          "sodiumMg": "1080(54)",
+          "sugarsG": "6",
+          "saturatedFatG": "6(37)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "새우, 난류, 우유, 밀, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스모크 바베큐 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "17.5",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "81(4)",
+          "sugarsG": "3.1",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 밀, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스모크 베이컨 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "288",
+          "caloriesKcal": "870",
+          "proteinG": "40(72)",
+          "sodiumMg": "1287(64)",
+          "sugarsG": "15",
+          "saturatedFatG": "15(99)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 밀, 대두, 돼지고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스모크 비프립 샌드위치 버거",
+      "nutritionRows": [
+        {
+          "weight": "286",
+          "caloriesKcal": "595",
+          "proteinG": "25(46)",
+          "sodiumMg": "1192(60)",
+          "sugarsG": "24",
+          "saturatedFatG": "7(48)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스모크 비프립 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "300",
+          "caloriesKcal": "811",
+          "proteinG": "37(68)",
+          "sodiumMg": "1417(71)",
+          "sugarsG": "17",
+          "saturatedFatG": "14(91)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스모키마요롱치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스위트 칠리소스",
+      "nutritionRows": [
+        {
+          "weight": "10.5",
+          "caloriesKcal": "22",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스윗사우전소스",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스윗어니언 시즈닝",
+      "nutritionRows": [
+        {
+          "weight": "3",
+          "caloriesKcal": "8",
+          "proteinG": "0(0)",
+          "sodiumMg": "140(7)",
+          "sugarsG": "2",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스태커2와퍼",
+      "nutritionRows": [
+        {
+          "weight": "424",
+          "caloriesKcal": "1080",
+          "proteinG": "58(105)",
+          "sodiumMg": "1828(91)",
+          "sugarsG": "8.9",
+          "saturatedFatG": "29.3(195)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 토마토, 우유, 대두, 밀, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스태커3와퍼",
+      "nutritionRows": [
+        {
+          "weight": "544",
+          "caloriesKcal": "1421",
+          "proteinG": "84(153)",
+          "sodiumMg": "2559(128)",
+          "sugarsG": "11.4",
+          "saturatedFatG": "42.1(281)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 쇠고기, 밀, 대두, 우유, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스태커4와퍼",
+      "nutritionRows": [
+        {
+          "weight": "650",
+          "caloriesKcal": "1707",
+          "proteinG": "105(191)",
+          "sodiumMg": "3067(153)",
+          "sugarsG": "11.9",
+          "saturatedFatG": "51.8(345)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 토마토, 쇠고기, 난류, 밀, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스테이크패티",
+      "nutritionRows": [
+        {
+          "weight": "98",
+          "caloriesKcal": "309",
+          "proteinG": "19(34)",
+          "sodiumMg": "425(21)",
+          "sugarsG": "0.7",
+          "saturatedFatG": "11.1(73.8)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 쇠고기, 조개류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스파이시 풀드비프 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "340",
+          "caloriesKcal": "781",
+          "proteinG": "39(71)",
+          "sodiumMg": "1594(80)",
+          "sugarsG": "21",
+          "saturatedFatG": "13(84)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 토마토, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스파이시사우전소스추가",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스파이시소스 추가",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "스파이시크랩버거",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "슬라이스치즈",
+      "nutritionRows": [
+        {
+          "weight": "12",
+          "caloriesKcal": "43",
+          "proteinG": "2(4)",
+          "sodiumMg": "152(8)",
+          "sugarsG": "0",
+          "saturatedFatG": "2.4(16)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "슬라이스치즈 2장",
+      "nutritionRows": [
+        {
+          "weight": "24",
+          "caloriesKcal": "87",
+          "proteinG": "4(8)",
+          "sodiumMg": "304(15)",
+          "sugarsG": "1",
+          "saturatedFatG": "4.9(32)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "아메리카노",
+      "nutritionRows": [
+        {
+          "weight": "249",
+          "caloriesKcal": "7",
+          "proteinG": "0(0)",
+          "sodiumMg": "3(0)",
+          "sugarsG": "0",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "112"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "아이스아메리카노",
+      "nutritionRows": [
+        {
+          "weight": "271",
+          "caloriesKcal": "8",
+          "proteinG": "0(0)",
+          "sodiumMg": "0(0)",
+          "sugarsG": "0",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "120"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "아이스초코",
+      "nutritionRows": [
+        {
+          "weight": "294",
+          "caloriesKcal": "305",
+          "proteinG": "3(6)",
+          "sodiumMg": "172(9)",
+          "sugarsG": "40",
+          "saturatedFatG": "2(11)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "앵그리 너겟킹 10조각",
+      "nutritionRows": [
+        {
+          "weight": "195",
+          "caloriesKcal": "545",
+          "proteinG": "31(56)",
+          "sodiumMg": "1398(70)",
+          "sugarsG": "1",
+          "saturatedFatG": "7(47)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "앵그리 너겟킹 4조각",
+      "nutritionRows": [
+        {
+          "weight": "78",
+          "caloriesKcal": "218",
+          "proteinG": "12(22)",
+          "sodiumMg": "559(28)",
+          "sugarsG": "0.4",
+          "saturatedFatG": "3(19)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 닭고기, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "앵그리너겟킹 8조각",
+      "nutritionRows": [
+        {
+          "weight": "156",
+          "caloriesKcal": "436",
+          "proteinG": "25(45)",
+          "sodiumMg": "1119(56)",
+          "sugarsG": "0.8",
+          "saturatedFatG": "6(38)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 밀, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "양념소스",
+      "nutritionRows": [
+        {
+          "weight": "17",
+          "caloriesKcal": "42",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "101(5)",
+          "sugarsG": "7",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 토마토, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "어니언링",
+      "nutritionRows": [
+        {
+          "weight": "96",
+          "caloriesKcal": "306",
+          "proteinG": "5(8)",
+          "sodiumMg": "333(17)",
+          "sugarsG": "6",
+          "saturatedFatG": "3(21)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "엘파소 치폴레 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "24",
+          "proteinG": "0(0)",
+          "sodiumMg": "142(7)",
+          "sugarsG": "1",
+          "saturatedFatG": "0.3(1.7)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기, 난류, 우유, 대두, 밀, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "오리지널스 뉴욕 스테이크",
+      "nutritionRows": [
+        {
+          "weight": "307",
+          "caloriesKcal": "826",
+          "proteinG": "51(92)",
+          "sodiumMg": "1762(88)",
+          "sugarsG": "10",
+          "saturatedFatG": "22(148)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두, 밀, 돼지고기, 난류, 조개류, 쇠고기, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "오리지널스 메이플 갈릭",
+      "nutritionRows": [
+        {
+          "weight": "324",
+          "caloriesKcal": "873",
+          "proteinG": "42(76)",
+          "sodiumMg": "1081(54)",
+          "sugarsG": "17",
+          "saturatedFatG": "21(137)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 난류, 돼지고기, 토마토, 밀, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "오리지널스 엘파소 치폴레",
+      "nutritionRows": [
+        {
+          "weight": "291",
+          "caloriesKcal": "911",
+          "proteinG": "44(80)",
+          "sodiumMg": "1338(67)",
+          "sugarsG": "9(9)",
+          "saturatedFatG": "25(169)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "오믈렛킹모닝",
+      "nutritionRows": [
+        {
+          "weight": "180",
+          "caloriesKcal": "496",
+          "proteinG": "15(28)",
+          "sodiumMg": "952(48)",
+          "sugarsG": "5",
+          "saturatedFatG": "8(51)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 난류, 우유, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "와퍼",
+      "nutritionRows": [
+        {
+          "weight": "286",
+          "caloriesKcal": "706",
+          "proteinG": "30(55)",
+          "sodiumMg": "1098(55)",
+          "sugarsG": "10",
+          "saturatedFatG": "12(83)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "156",
+          "caloriesKcal": "376",
+          "proteinG": "17(30)",
+          "sodiumMg": "556(28)",
+          "sugarsG": "4",
+          "saturatedFatG": "5(33)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 밀, 대두, 토마토, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "와퍼패티",
+      "nutritionRows": [
+        {
+          "weight": "81",
+          "caloriesKcal": "227",
+          "proteinG": "14(25)",
+          "sodiumMg": "47(2)",
+          "sugarsG": "0",
+          "saturatedFatG": "8(55)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "초코 망고 선데",
+      "nutritionRows": [
+        {
+          "weight": "175",
+          "caloriesKcal": "246",
+          "proteinG": "3(5)",
+          "sodiumMg": "92(5)",
+          "sugarsG": "45",
+          "saturatedFatG": "2(12)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 복숭아"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "초코 브라우니 킹퓨전",
+      "nutritionRows": [
+        {
+          "weight": "177",
+          "caloriesKcal": "325",
+          "proteinG": "6(11)",
+          "sodiumMg": "195(10)",
+          "sugarsG": "45",
+          "saturatedFatG": "7(48)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "초코 선데",
+      "nutritionRows": [
+        {
+          "weight": "165",
+          "caloriesKcal": "232",
+          "proteinG": "2(3)",
+          "sodiumMg": "147(7)",
+          "sugarsG": "38",
+          "saturatedFatG": "3(21)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치즈버거",
+      "nutritionRows": [
+        {
+          "weight": "130",
+          "caloriesKcal": "380",
+          "proteinG": "16(29)",
+          "sodiumMg": "766(38)",
+          "sugarsG": "6",
+          "saturatedFatG": "7(45)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 난류, 토마토, 쇠고기, 밀, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치즈와퍼",
+      "nutritionRows": [
+        {
+          "weight": "310",
+          "caloriesKcal": "799",
+          "proteinG": "35(64)",
+          "sodiumMg": "1571(79)",
+          "sugarsG": "7",
+          "saturatedFatG": "18(117)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 토마토, 난류, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치즈와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "168",
+          "caloriesKcal": "422",
+          "proteinG": "18(32)",
+          "sodiumMg": "778(39)",
+          "sugarsG": "4",
+          "saturatedFatG": "7(49)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 토마토, 난류, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치즈프라이",
+      "nutritionRows": [
+        {
+          "weight": "138",
+          "caloriesKcal": "376",
+          "proteinG": "10(18)",
+          "sodiumMg": "558(28)",
+          "sugarsG": "1.2",
+          "saturatedFatG": "7(46)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치킨 치즈 마요 버거",
+      "nutritionRows": [
+        {
+          "weight": "195",
+          "caloriesKcal": "640",
+          "proteinG": "20(35)",
+          "sodiumMg": "1122(56)",
+          "sugarsG": "4",
+          "saturatedFatG": "10(66)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 밀, 닭고기, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "179",
+          "caloriesKcal": "532",
+          "proteinG": "18(32)",
+          "sodiumMg": "840(42)",
+          "sugarsG": "4",
+          "saturatedFatG": "7(47)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 밀, 대두, 우유, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치킨킹",
+      "nutritionRows": [
+        {
+          "weight": "224",
+          "caloriesKcal": "673",
+          "proteinG": "24(43)",
+          "sodiumMg": "1037(52)",
+          "sugarsG": "8",
+          "saturatedFatG": "10(64)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 닭고기, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치킨킹BLT",
+      "nutritionRows": [
+        {
+          "weight": "269",
+          "caloriesKcal": "739",
+          "proteinG": "25(45)",
+          "sodiumMg": "1065(53)",
+          "sugarsG": "12",
+          "saturatedFatG": "11(75)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 난류, 쇠고기, 닭고기, 토마토, 돼지고기, 우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치폴레 소스",
+      "nutritionRows": [
+        {
+          "weight": "10.5",
+          "caloriesKcal": "21",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "138(6.9)",
+          "sugarsG": "3.2",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기, 토마토, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "치폴레 할라피뇨 파퍼",
+      "nutritionRows": [
+        {
+          "weight": "309",
+          "caloriesKcal": "895",
+          "proteinG": "32(58)",
+          "sodiumMg": "1316(66)",
+          "sugarsG": "15",
+          "saturatedFatG": "19(126)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 돼지고기, 토마토, 쇠고기, 난류, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "카라멜 버터쿠키 킹퓨전",
+      "nutritionRows": [
+        {
+          "weight": "177",
+          "caloriesKcal": "299",
+          "proteinG": "6(11)",
+          "sodiumMg": "321(16)",
+          "sugarsG": "42",
+          "saturatedFatG": "5(34)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "코울슬로",
+      "nutritionRows": [
+        {
+          "weight": "95",
+          "caloriesKcal": "155",
+          "proteinG": "1(2)",
+          "sodiumMg": "210(11)",
+          "sugarsG": "9",
+          "saturatedFatG": "0.9(6)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "코카콜라",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "코코넛슈림프(3조각)+스위트칠리소스",
+      "nutritionRows": [
+        {
+          "weight": "82",
+          "caloriesKcal": "216",
+          "proteinG": "5(9)",
+          "sodiumMg": "505(25)",
+          "sugarsG": "11",
+          "saturatedFatG": "4(24)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 대두, 밀, 새우"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "코코넛슈림프(6조각)+스위트칠리소스",
+      "nutritionRows": [
+        {
+          "weight": "139",
+          "caloriesKcal": "382",
+          "proteinG": "10(18)",
+          "sodiumMg": "804(40)",
+          "sugarsG": "12",
+          "saturatedFatG": "7(48)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 난류, 새우, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "코코넛슈림프(9조각)+스위트칠리소스",
+      "nutritionRows": [
+        {
+          "weight": "196",
+          "caloriesKcal": "548",
+          "proteinG": "15(27)",
+          "sodiumMg": "1104(55)",
+          "sugarsG": "13",
+          "saturatedFatG": "11(73)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 난류, 새우, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콘 아이스크림",
+      "nutritionRows": [
+        {
+          "weight": "95",
+          "caloriesKcal": "133",
+          "proteinG": "3(5)",
+          "sodiumMg": "74(4)",
+          "sugarsG": "12.6",
+          "saturatedFatG": "2.1(14.3)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콘샐러드",
+      "nutritionRows": [
+        {
+          "weight": "95",
+          "caloriesKcal": "127",
+          "proteinG": "2(4)",
+          "sodiumMg": "230(12)",
+          "sugarsG": "4",
+          "saturatedFatG": "1(7)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로치즈 와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "179",
+          "caloriesKcal": "470",
+          "proteinG": "21(38)",
+          "sodiumMg": "833(42)",
+          "sugarsG": "4",
+          "saturatedFatG": "10(66)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 토마토, 쇠고기, 난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로치즈 풀드비프 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "324",
+          "caloriesKcal": "904",
+          "proteinG": "40(72)",
+          "sodiumMg": "1794(90)",
+          "sugarsG": "9",
+          "saturatedFatG": "22(146)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 토마토, 쇠고기, 난류, 오징어, 우유, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로치즈와퍼",
+      "nutritionRows": [
+        {
+          "weight": "331",
+          "caloriesKcal": "887",
+          "proteinG": "43(77)",
+          "sodiumMg": "1647(82)",
+          "sugarsG": "6",
+          "saturatedFatG": "21(141)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 쇠고기, 밀, 난류, 대두, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로치즈X",
+      "nutritionRows": [
+        {
+          "weight": "338",
+          "caloriesKcal": "820",
+          "proteinG": "35(63)",
+          "sodiumMg": "1625(81)",
+          "sugarsG": "9.4",
+          "saturatedFatG": "21.1(141)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 조개류, 쇠고기, 토마토, 닭고기, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로페퍼 큐브스테이크 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "303",
+          "caloriesKcal": "773",
+          "proteinG": "43(78)",
+          "sodiumMg": "1714(86)",
+          "sugarsG": "9",
+          "saturatedFatG": "15(99)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 난류, 토마토, 쇠고기, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "콰트로X콰트로 큐브스테이크",
+      "nutritionRows": [
+        {
+          "weight": "277",
+          "caloriesKcal": "833",
+          "proteinG": "42(76)",
+          "sodiumMg": "1540(77)",
+          "sugarsG": "9",
+          "saturatedFatG": "18(118)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리미 할라피뇨 파퍼",
+      "nutritionRows": [
+        {
+          "weight": "309",
+          "caloriesKcal": "884",
+          "proteinG": "30(54)",
+          "sodiumMg": "1125(56)",
+          "sugarsG": "17",
+          "saturatedFatG": "18(120)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 돼지고기, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리미모짜볼(10조각)",
+      "nutritionRows": [
+        {
+          "weight": "140",
+          "caloriesKcal": "395",
+          "proteinG": "14(25)",
+          "sodiumMg": "248(12)",
+          "sugarsG": "9",
+          "saturatedFatG": "1(9)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 우유, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리미모짜볼(5조각)",
+      "nutritionRows": [
+        {
+          "weight": "70",
+          "caloriesKcal": "198",
+          "proteinG": "7(13)",
+          "sodiumMg": "124(6)",
+          "sugarsG": "4",
+          "saturatedFatG": "1(4)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리미칠리소스",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 랩",
+      "nutritionRows": [
+        {
+          "weight": "133",
+          "caloriesKcal": "359",
+          "proteinG": "12(21)",
+          "sodiumMg": "651(33)",
+          "sugarsG": "4",
+          "saturatedFatG": "3(21)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 닭고기, 우유, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 랩 불닭 치킨",
+      "nutritionRows": [
+        {
+          "weight": "123",
+          "caloriesKcal": "299",
+          "proteinG": "13(23)",
+          "sodiumMg": "775(39)",
+          "sugarsG": "4",
+          "saturatedFatG": "3(19)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 닭고기, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 랩 양념 치킨",
+      "nutritionRows": [
+        {
+          "weight": "123",
+          "caloriesKcal": "342",
+          "proteinG": "12(21)",
+          "sodiumMg": "682(34)",
+          "sugarsG": "6",
+          "saturatedFatG": "3(19)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 토마토, 닭고기, 난류, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 마늘 치킨",
+      "nutritionRows": [
+        {
+          "weight": "255",
+          "caloriesKcal": "661",
+          "proteinG": "25(45)",
+          "sodiumMg": "1579(79)",
+          "sugarsG": "12",
+          "saturatedFatG": "7(44)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 마요 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "51",
+          "proteinG": "0.1(0.2)",
+          "sodiumMg": "89(4)",
+          "sugarsG": "1.3",
+          "saturatedFatG": "0.7(4.7)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 닭고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 불닭 치킨",
+      "nutritionRows": [
+        {
+          "weight": "208",
+          "caloriesKcal": "494",
+          "proteinG": "25(45)",
+          "sodiumMg": "1442(72)",
+          "sugarsG": "7",
+          "saturatedFatG": "6(41)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 쇠고기, 난류, 닭고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 양념 치킨",
+      "nutritionRows": [
+        {
+          "weight": "249",
+          "caloriesKcal": "662",
+          "proteinG": "27(49)",
+          "sodiumMg": "1611(81)",
+          "sugarsG": "16",
+          "saturatedFatG": "7(46)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 토마토, 난류, 닭고기, 밀, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 치폴레",
+      "nutritionRows": [
+        {
+          "weight": "239",
+          "caloriesKcal": "529",
+          "proteinG": "26(48)",
+          "sodiumMg": "1611(81)",
+          "sugarsG": "6",
+          "saturatedFatG": "4(28)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 클래식",
+      "nutritionRows": [
+        {
+          "weight": "221",
+          "caloriesKcal": "569",
+          "proteinG": "25(46)",
+          "sodiumMg": "1390(70)",
+          "sugarsG": "9",
+          "saturatedFatG": "6(42)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 닭고기, 쇠고기, 난류, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 클래식 BLT",
+      "nutritionRows": [
+        {
+          "weight": "246",
+          "caloriesKcal": "591",
+          "proteinG": "28(51)",
+          "sodiumMg": "1568(78)",
+          "sugarsG": "7",
+          "saturatedFatG": "6(43)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "크리스퍼 텐더",
+      "nutritionRows": [
+        {
+          "weight": "80",
+          "caloriesKcal": "176",
+          "proteinG": "11(21)",
+          "sodiumMg": "361(18)",
+          "sugarsG": "1",
+          "saturatedFatG": "1(5)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "닭고기, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "타바스코 소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "터프페퍼 치즈프라이",
+      "nutritionRows": [
+        {
+          "weight": "141",
+          "caloriesKcal": "414",
+          "proteinG": "8(14)",
+          "sodiumMg": "482(24)",
+          "sugarsG": "3",
+          "saturatedFatG": "5(36)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 난류, 우유, 토마토, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "터프페퍼 큐브스테이크",
+      "nutritionRows": [
+        {
+          "weight": "246",
+          "caloriesKcal": "680",
+          "proteinG": "40(73)",
+          "sodiumMg": "1154(58)",
+          "sugarsG": "11",
+          "saturatedFatG": "12(78)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 돼지고기, 우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통다리치킨버거",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통모짜와퍼",
+      "nutritionRows": [
+        {
+          "weight": "400",
+          "caloriesKcal": "1039",
+          "proteinG": "46(84)",
+          "sodiumMg": "2064(103)",
+          "sugarsG": "6",
+          "saturatedFatG": "20(136)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 밀, 대두, 우유, 토마토, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통모짜와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "286",
+          "caloriesKcal": "791",
+          "proteinG": "31(56)",
+          "sodiumMg": "1302(65)",
+          "sugarsG": "7",
+          "saturatedFatG": "13(88)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 토마토, 쇠고기, 난류, 우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우맥시멈2",
+      "nutritionRows": [
+        {
+          "weight": "426",
+          "caloriesKcal": "1093",
+          "proteinG": "62(113)",
+          "sodiumMg": "1551(78)",
+          "sugarsG": "10",
+          "saturatedFatG": "26(173)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 새우, 토마토, 쇠고기, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우맥시멈3",
+      "nutritionRows": [
+        {
+          "weight": "527",
+          "caloriesKcal": "1325",
+          "proteinG": "79(144)",
+          "sodiumMg": "1864(93)",
+          "sugarsG": "13",
+          "saturatedFatG": "32(215)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 새우, 난류, 쇠고기, 토마토, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우맥시멈4",
+      "nutritionRows": [
+        {
+          "weight": "607",
+          "caloriesKcal": "1555",
+          "proteinG": "98(179)",
+          "sodiumMg": "1877(94)",
+          "sugarsG": "11",
+          "saturatedFatG": "41(275)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 우유, 대두, 밀, 새우"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우슈림프버거",
+      "nutritionRows": [
+        {
+          "weight": "190",
+          "caloriesKcal": "512",
+          "proteinG": "16(29)",
+          "sodiumMg": "1077(54)",
+          "sugarsG": "8",
+          "saturatedFatG": "5(36)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "새우, 난류, 우유, 대두, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우와퍼",
+      "nutritionRows": [
+        {
+          "weight": "309",
+          "caloriesKcal": "714",
+          "proteinG": "34(61)",
+          "sodiumMg": "1258(63)",
+          "sugarsG": "9",
+          "saturatedFatG": "12(81)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 토마토, 쇠고기, 새우, 난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "168",
+          "caloriesKcal": "414",
+          "proteinG": "17(31)",
+          "sodiumMg": "658(33)",
+          "sugarsG": "5",
+          "saturatedFatG": "7(46)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "새우, 대두, 우유, 토마토, 쇠고기, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우추가",
+      "nutritionRows": [
+        {
+          "weight": "6",
+          "caloriesKcal": "5",
+          "proteinG": "1(1)",
+          "sodiumMg": "46(2)",
+          "sugarsG": "0",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 새우"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "통새우추가2",
+      "nutritionRows": [
+        {
+          "weight": "12",
+          "caloriesKcal": "10",
+          "proteinG": "2(3)",
+          "sodiumMg": "92(5)",
+          "sugarsG": "0",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "새우, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "트러플머쉬룸와퍼",
+      "nutritionRows": [
+        {
+          "weight": "332",
+          "caloriesKcal": "735",
+          "proteinG": "37(67)",
+          "sodiumMg": "1191(60)",
+          "sugarsG": "13",
+          "saturatedFatG": "13(89)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "돼지고기, 우유, 대두, 밀, 쇠고기, 난류, 토마토"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "트러플머쉬룸와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "179",
+          "caloriesKcal": "399",
+          "proteinG": "18(33)",
+          "sodiumMg": "711(36)",
+          "sugarsG": "8",
+          "saturatedFatG": "6(43)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 대두, 밀, 돼지고기, 우유, 난류, 쇠고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "트러플소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "35",
+          "proteinG": "0.2(0.3)",
+          "sodiumMg": "80(4)",
+          "sugarsG": "1.2",
+          "saturatedFatG": "1.2(8)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 우유, 난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "트러플치즈프라이",
+      "nutritionRows": [
+        {
+          "weight": "138",
+          "caloriesKcal": "403",
+          "proteinG": "8(15)",
+          "sodiumMg": "608(30)",
+          "sugarsG": "1.9",
+          "saturatedFatG": "8(53)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "풀드비프 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "340",
+          "caloriesKcal": "837",
+          "proteinG": "38(69)",
+          "sodiumMg": "1362(68)",
+          "sugarsG": "17",
+          "saturatedFatG": "14(93)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 대두, 우유, 토마토, 쇠고기, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "피스타치오 베이컨잼",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "31",
+          "proteinG": "0.2(0.4)",
+          "sodiumMg": "56(3)",
+          "sugarsG": "5.4",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "토마토, 대두, 돼지고기"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "할라피뇨 파퍼 몬스터",
+      "nutritionRows": [
+        {
+          "weight": "393",
+          "caloriesKcal": "1009",
+          "proteinG": "44(80)",
+          "sodiumMg": "1644(82)",
+          "sugarsG": "10",
+          "saturatedFatG": "18(121)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "밀, 쇠고기, 닭고기, 토마토, 돼지고기, 우유, 난류, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "할라피뇨2 추가",
+      "nutritionRows": [
+        {
+          "weight": "10",
+          "caloriesKcal": "3",
+          "proteinG": "0.04(0)",
+          "sodiumMg": "54(3)",
+          "sugarsG": "0.5",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "할라피뇨4 추가",
+      "nutritionRows": [
+        {
+          "weight": "20",
+          "caloriesKcal": "6",
+          "proteinG": "0.08(0)",
+          "sodiumMg": "108(6)",
+          "sugarsG": "1",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "할라피뇨와퍼",
+      "nutritionRows": [
+        {
+          "weight": "298",
+          "caloriesKcal": "625",
+          "proteinG": "29(53)",
+          "sodiumMg": "917(46)",
+          "sugarsG": "11.5",
+          "saturatedFatG": "13(84)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "할라피뇨와퍼주니어",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "핫 트러플 머쉬룸 와퍼",
+      "nutritionRows": [
+        {
+          "weight": "285",
+          "caloriesKcal": "724",
+          "proteinG": "35(64)",
+          "sodiumMg": "1278(64)",
+          "sugarsG": "7",
+          "saturatedFatG": "14(91)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "쇠고기, 밀, 토마토, 돼지고기, 우유, 대두, 난류"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "핫초코",
+      "nutritionRows": [
+        {
+          "weight": "240",
+          "caloriesKcal": "214",
+          "proteinG": "3(6)",
+          "sodiumMg": "161(8)",
+          "sugarsG": "38",
+          "saturatedFatG": "1(3)",
+          "caffeineMg": "-"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "우유"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "핫트러플소스",
+      "nutritionRows": [
+        {
+          "weight": "11",
+          "caloriesKcal": "57",
+          "proteinG": "0(0)",
+          "sodiumMg": "113(6)",
+          "sugarsG": "1",
+          "saturatedFatG": "0.9(6)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "난류, 쇠고기, 토마토, 대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "핫페퍼소스",
+      "nutritionRows": [
+        {
+          "weight": "0",
+          "caloriesKcal": "0",
+          "proteinG": "0",
+          "sodiumMg": "0",
+          "sugarsG": "0",
+          "saturatedFatG": "0",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": ""
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "해쉬브라운",
+      "nutritionRows": [
+        {
+          "weight": "58",
+          "caloriesKcal": "182",
+          "proteinG": "1.3(2)",
+          "sodiumMg": "382(19)",
+          "sugarsG": "0.2",
+          "saturatedFatG": "2.5(17)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "햄버거",
+      "nutritionRows": [
+        {
+          "weight": "122",
+          "caloriesKcal": "353",
+          "proteinG": "15(27)",
+          "sodiumMg": "540(27)",
+          "sugarsG": "4",
+          "saturatedFatG": "5.2(34)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 쇠고기, 토마토, 난류, 밀"
+        }
+      ]
+    },
+    {
+      "brandName": "버거킹",
+      "menuName": "허니머스타드소스",
+      "nutritionRows": [
+        {
+          "weight": "9",
+          "caloriesKcal": "30",
+          "proteinG": "0(0)",
+          "sodiumMg": "60(3)",
+          "sugarsG": "2(2)",
+          "saturatedFatG": "0(0)",
+          "caffeineMg": "0"
+        }
+      ],
+      "allergenRows": [
+        {
+          "allergens": "대두, 난류"
+        }
+      ]
+    }
+  ]
+}

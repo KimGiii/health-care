@@ -1,0 +1,272 @@
+{
+  "brandName": "써브웨이",
+  "collectedAt": "2026-06-09",
+  "sourceUrl": "https://devm.subway.co.kr/more/freshInfo",
+  "itemCount": 33,
+  "items": [
+    {
+      "category": "빵",
+      "nameKo": "화이트",
+      "caloriesText": "195 kcal",
+      "nameEn": "White",
+      "description": "가장 클래식한 밀빵으로 부드러운 식감이 매력 포인트",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list05.png"
+    },
+    {
+      "category": "빵",
+      "nameKo": "위트",
+      "caloriesText": "195 kcal",
+      "nameEn": "Wheat",
+      "description": "여러 가지 곡물로 만든 건강하고 고소한 맛의 곡물빵",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list03.png"
+    },
+    {
+      "category": "빵",
+      "nameKo": "파마산 오레가노",
+      "caloriesText": "207 kcal",
+      "nameEn": "Parmesan Oregano",
+      "description": "부드러운 화이트빵에 파마산 오레가노 시즈닝을 묻혀 허브향 가득",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list04.png"
+    },
+    {
+      "category": "빵",
+      "nameKo": "허니오트",
+      "caloriesText": "237 kcal",
+      "nameEn": "Honey Oat",
+      "description": "고소한 위트빵에 오트밀 가루를 묻혀 고소함과 식감이 두배로",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list01.png"
+    },
+    {
+      "category": "빵",
+      "nameKo": "그레인",
+      "caloriesText": "213 kcal",
+      "nameEn": "Grain",
+      "description": "곡물 토핑을 더해 풍부한 맛을 담은 곡물빵",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list07.png"
+    },
+    {
+      "category": "빵",
+      "nameKo": "플랫브레드",
+      "caloriesText": "232 kcal",
+      "nameEn": "Flat Bread",
+      "description": "이름처럼 납작 모양에 피자도우처럼 쫀득한 맛이 일품",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-bread-list06.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "양상추",
+      "caloriesText": "2.9 kcal",
+      "nameEn": "Lettuce",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list01.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "토마토",
+      "caloriesText": "7.7 kcal",
+      "nameEn": "Tomatoes",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list02.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "오이",
+      "caloriesText": "1.5 kcal",
+      "nameEn": "Cucumbers",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list03.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "피망(파프리카)",
+      "caloriesText": "1.4 kcal",
+      "nameEn": "Peppers",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list04.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "양파",
+      "caloriesText": "2.8 kcal",
+      "nameEn": "Red Onions",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list05.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "피클",
+      "caloriesText": "0.4 kcal",
+      "nameEn": "Pickles",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list06.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "올리브",
+      "caloriesText": "3.9 kcal",
+      "nameEn": "Olives",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list07.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "할라피뇨",
+      "caloriesText": "0.6 kcal",
+      "nameEn": "Jalapenos",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list08.png"
+    },
+    {
+      "category": "야채",
+      "nameKo": "아보카도",
+      "caloriesText": "56.5 kcal",
+      "nameEn": "Avocado",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-vegetable-list09.png"
+    },
+    {
+      "category": "치즈",
+      "nameKo": "아메리칸 치즈",
+      "caloriesText": "35.3 kcal",
+      "nameEn": "American Cheese",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list01.png"
+    },
+    {
+      "category": "치즈",
+      "nameKo": "슈레드 치즈",
+      "caloriesText": "53.6 kcal",
+      "nameEn": "Shredded Cheese",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list02.png"
+    },
+    {
+      "category": "치즈",
+      "nameKo": "모차렐라 치즈",
+      "caloriesText": "43.8 kcal",
+      "nameEn": "Mozzarella Cheese",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-cheese-list03.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "랜치",
+      "caloriesText": "116 kcal",
+      "nameEn": "Ranch",
+      "description": "고소한 마요네즈와 레몬즙의 만남! 고소함이 두배!",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list01.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "스위트 어니언",
+      "caloriesText": "40.1 kcal",
+      "nameEn": "Sweet Onion",
+      "description": "써브웨이만의 특제 레시피로 만든 달콤한 양파소스",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list02.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "마요네즈",
+      "caloriesText": "158 kcal",
+      "nameEn": "Mayonnaise",
+      "description": "말이 필요없는 고소함의 대명사, 마요네즈 소스",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list03.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "스위트 칠리",
+      "caloriesText": "40 kcal",
+      "nameEn": "Sweet Chilli",
+      "description": "매콤한 칠리에 더해진 기분 좋은 달콤함!",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list04.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "스모크 바비큐",
+      "caloriesText": "32.8 kcal",
+      "nameEn": "Smoke BBQ",
+      "description": "스모크 향과 달콤한 바비큐의 완벽한 조화",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list05.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "핫 칠리",
+      "caloriesText": "41.8 kcal",
+      "nameEn": "Hot Chilli",
+      "description": "진짜 매운맛을 보고 싶다면? 써브웨이의 핫 칠리!",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list06.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "허니 머스터드",
+      "caloriesText": "38.4 kcal",
+      "nameEn": "Honey Mustard",
+      "description": "겨자씨가 아낌없이 들어간 달콤한 머스터드 소스",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list07.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "사우스웨스트 치폴레",
+      "caloriesText": "96.5 kcal",
+      "nameEn": "Southwest Chipotle",
+      "description": "핫 칠리와 고소한 마요네즈가 만난 이국적인 매콤한 맛",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list08.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "홀스래디쉬",
+      "caloriesText": "106 kcal",
+      "nameEn": "Horseradish",
+      "description": "고소한 마요네즈와 고추냉이의 이색적인 만남! 매니아층을 사로잡은 매력 No.1 소스",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list09.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "저당 크리미 어니언 소스",
+      "caloriesText": "51 kcal",
+      "nameEn": "Low Sugar Creamy Onion",
+      "description": "부드럽고 가볍게, 어디에나 잘 어울리는 저당 크리미 어니언 소스",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list15.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "저칼로리 오리엔탈",
+      "caloriesText": "21 kcal",
+      "nameEn": "Oriental",
+      "description": "산뜻한 저칼로리 오리엔탈 드레싱으로 가볍게!",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list16.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "엑스트라 버진 올리브 오일",
+      "caloriesText": "29 kcal",
+      "nameEn": "Extra Virgin Olive Oil",
+      "description": "담백하고 깔끔하게 즐기고 싶다면 주저하지 말고 올리브오일",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list11.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "레드 와인 식초",
+      "caloriesText": "0.7 kcal",
+      "nameEn": "Red Wine Vinaigrette",
+      "description": "레드와인을 발효시켜 풍미가 가득한 식초",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list12.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "소금",
+      "caloriesText": "",
+      "nameEn": "Salt",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list13.png"
+    },
+    {
+      "category": "소스",
+      "nameKo": "후추",
+      "caloriesText": "",
+      "nameEn": "Black Pepper",
+      "description": "",
+      "imageUrl": "https://aws-code.d2.co.kr/2024/subway/resources/assets/images/use/etc-source-list14.png"
+    }
+  ]
+}

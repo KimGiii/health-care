@@ -59,6 +59,43 @@ public class FoodCatalog {
     @Column(name = "sodium_per_100g_mg")
     private Double sodiumPer100gMg;
 
+    @Column(name = "food_code", length = 60)
+    private String foodCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 40)
+    @Builder.Default
+    private FoodCatalogSource source = FoodCatalogSource.SEED;
+
+    @Column(name = "source_detail", length = 120)
+    private String sourceDetail;
+
+    @Column(name = "brand_name", length = 150)
+    private String brandName;
+
+    @Column(length = 150)
+    private String maker;
+
+    @Column(name = "serving_size_g")
+    private Double servingSizeG;
+
+    @Column(name = "serving_reference", length = 80)
+    private String servingReference;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recommendation_status", nullable = false, length = 40)
+    @Builder.Default
+    private RecommendationStatus recommendationStatus = RecommendationStatus.RECOMMENDABLE;
+
+    @Column(name = "recommendation_reason", length = 255)
+    private String recommendationReason;
+
+    @Column(name = "data_version", length = 80)
+    private String dataVersion;
+
+    @Column(name = "last_verified_at")
+    private OffsetDateTime lastVerifiedAt;
+
     @Column(name = "is_custom", nullable = false)
     private Boolean isCustom;
 
@@ -99,6 +136,32 @@ public class FoodCatalog {
 
     public void decrementUsage() {
         this.usageCount = Math.max((this.usageCount == null ? 0L : this.usageCount) - 1, 0L);
+    }
+
+    public void updateFromImportedCatalog(FoodCatalog imported) {
+        this.name = imported.name;
+        this.nameKo = imported.nameKo;
+        this.category = imported.category;
+        this.caloriesPer100g = imported.caloriesPer100g;
+        this.proteinPer100g = imported.proteinPer100g;
+        this.carbsPer100g = imported.carbsPer100g;
+        this.fatPer100g = imported.fatPer100g;
+        this.sugarsPer100g = imported.sugarsPer100g;
+        this.dietaryFiberPer100g = imported.dietaryFiberPer100g;
+        this.saturatedFatPer100g = imported.saturatedFatPer100g;
+        this.transFatPer100g = imported.transFatPer100g;
+        this.cholesterolPer100gMg = imported.cholesterolPer100gMg;
+        this.sodiumPer100gMg = imported.sodiumPer100gMg;
+        this.sourceDetail = imported.sourceDetail;
+        this.brandName = imported.brandName;
+        this.maker = imported.maker;
+        this.servingSizeG = imported.servingSizeG;
+        this.servingReference = imported.servingReference;
+        this.recommendationStatus = imported.recommendationStatus;
+        this.recommendationReason = imported.recommendationReason;
+        this.dataVersion = imported.dataVersion;
+        this.lastVerifiedAt = imported.lastVerifiedAt;
+        this.isCustom = imported.isCustom;
     }
 
     public enum FoodCategory {

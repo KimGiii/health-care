@@ -2,6 +2,7 @@ package com.healthcare.domain.diet.repository;
 
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -52,6 +53,9 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
             @Param("category")   FoodCategory category,
             @Param("customOnly") boolean customOnly
     );
+
+    /** 외부/배치 적재 시 source + foodCode 기준으로 기존 카탈로그 항목을 찾는다. */
+    Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode);
 
     /** 커스텀 식품 중복 검사: 같은 이름(대소문자 무시) + 카테고리 조합 */
     @Query("""

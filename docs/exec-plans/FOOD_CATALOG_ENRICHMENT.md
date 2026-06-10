@@ -2,13 +2,17 @@
 
 작성일: 2026-06-04
 
-개정일: 2026-06-09
+개정일: 2026-06-10
 
-상태: 계획 확정
+상태: 1단계 구현 완료, 2단계 준비
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
 관련: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
+
+작업 브랜치: `feat/allegen-recommendation`
+
+> 알러젠 식단 추천과 식품 카탈로그 강화 작업은 `feat/allegen-recommendation` 브랜치에서만 진행한다. `dev`에는 직접 커밋하지 않고, 검증된 변경만 PR/머지로 반영한다.
 
 > 본 계획은 AI 영양 추정이 아니라, 공공 권위 데이터와 검수된 브랜드 공식 메뉴로 `food_catalog`의 검색/기록/추천 품질을 높이는 작업을 다룬다.
 
@@ -276,6 +280,18 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 
 ## 10. 구현 순서
 
+### 현재 작업 목록(2026-06-10)
+
+| 단계 | 상태 | 현재 작업 | 다음 액션 |
+|---|---|---|---|
+| 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
+| 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
+| 4단계 추천 게이트 적용 | 일부 완료 | 추천 후보 조회에 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 필터 적용 | 주의 상태 사유를 추천 응답에 노출할지 모델 검토 |
+| 2단계 공공데이터 배치 적재 | 진행 중 | 표준데이터 2종과 `FoodNtrCpntDbInfo02` row importer, `source + food_code` upsert 구현 | API 페이지 순회, 재시작 체크포인트, 중복 리포트 구현 |
+| 3단계 브랜드 CSV 적재 | 대기 | 브랜드 공식 영양정보 수동 검수 적재 방식 유지 | CSV 템플릿과 관리자 검수 플로우 정의 |
+| 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
+| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태 Spec 테스트 보강 | DB가 있는 환경에서 전체 테스트와 Flyway 적용 검증 |
+
 ### 0단계: 데이터 프로파일링
 
 1. 현재 사용 중인 가공식품/음식 표준데이터 2종의 필드와 응답 샘플 재확인
@@ -289,6 +305,14 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - 필드 매핑표
 - source priority 초안
 
+진행 메모(2026-06-09):
+
+- 0단계 1차 산출물: `docs/references/FOOD_CATALOG_DATA_PROFILING_2026-06-09.md`
+- API 총 건수, 첫 페이지 필드, 대표 검색어(`김치찌개`, `와퍼`, `닭가슴살`, `샐러드`) 기준 커버리지와 핵심 영양소 결측을 확인했다.
+- `FoodNtrCpntDbInfo02`는 `AMT_NUM1`, `AMT_NUM3`, `AMT_NUM4`, `AMT_NUM6`, `AMT_NUM7`, `AMT_NUM8`, `AMT_NUM13`까지 핵심 영양소 매핑을 1차 확인했다.
+- 지방산/콜레스테롤 등 후반 `AMT_NUM*` 매핑은 출력 메세지 파일 대조 후 importer 구현 단계에서 확정한다.
+- 전체 페이지 순회는 API 트래픽과 재시작 처리가 필요하므로 Phase 2 importer/프로파일러 작업에 포함한다.
+
 ### 1단계: 스키마 보강
 
 1. `food_catalog` 출처/브랜드/제공량/추천 상태 필드 추가
@@ -296,12 +320,30 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 3. 추천 후보 조회 인덱스 추가
 4. 필요 시 `normalized_name`/`pg_trgm` 도입
 
+진행 메모(2026-06-10):
+
+- `V23__food_catalog_source_recommendation_fields.sql`로 출처, 브랜드/제조사, 제공량, 추천 상태, 데이터 버전, 검수 시각 필드를 추가했다.
+- 기존 시드 식품은 `SEED + RECOMMENDABLE`, 기존 사용자 커스텀 식품은 `USER_CUSTOM + SEARCH_ONLY`로 백필했다.
+- `FoodCatalogSource`, `RecommendationStatus` enum과 `FoodCatalog` 엔티티, `FoodCatalogResponse` 응답 DTO 반영을 완료했다.
+- 사용자 직접 등록과 기존 외부 import 경로는 `USER_CUSTOM + SEARCH_ONLY`로 저장되도록 조정했다.
+- `FoodCatalogRepository.findBySourceAndFoodCode()`를 추가해 `source + food_code` 기반 적재/upsert 경로를 준비했다.
+- `source + food_code` 부분 유니크 인덱스와 `recommendation_status` 인덱스를 추가했다.
+- `normalized_name`/`pg_trgm`은 검색 품질 개선 시점까지 보류한다.
+
 ### 2단계: 공공데이터 배치 적재
 
 1. 표준데이터 2종 importer 구현
 2. `FoodNtrCpntDbInfo02` importer 구현
 3. 정규화/upsert/중복 리포트 구현
 4. 적재 결과 검증 테스트 작성
+
+진행 메모(2026-06-10):
+
+- `StandardProcessedFoodImporter`를 추가해 15100066 가공식품 표준데이터 row를 `MFDS_STANDARD_PROCESSED` 출처로 적재한다.
+- `StandardDishFoodImporter`를 추가해 15100070 음식 표준데이터 row를 `MFDS_STANDARD_DISH` 출처로 적재한다. `restNm` 성격의 값은 `brand_name`/`maker`에 보존한다.
+- `MfdsFoodNutrientDbImporter`를 추가해 `FoodNtrCpntDbInfo02` row를 `MFDS_FOOD_NUTRIENT_DB` 출처로 적재한다.
+- 공통 동작은 `source + food_code` 기준 신규 생성/기존 항목 갱신이며, 필수값(`food_code`, 식품명, 열량)이 없으면 skip 처리한다.
+- 현재 importer는 핵심 영양소와 운영 메타데이터 매핑까지 담당한다. 실제 API 페이지 순회, rate limit, 재시작 체크포인트, 중복 후보 리포트는 아직 남아 있다.
 
 ### 3단계: 브랜드 공식 메뉴 CSV 적재
 
@@ -316,6 +358,13 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 2. 추천 후보 조회에 `recommendation_status` 조건 추가
 3. 주의 상태 응답 모델 검토
 4. 추천 엔진 테스트 보강
+
+진행 메모(2026-06-10):
+
+- 추천 상태 enum과 저장 모델은 1단계에서 선반영되었다.
+- `FoodCatalogSpecs.isRecommendable()`을 추가하고 `DailyDietRecommendationUseCases.loadCandidates()`가 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION`만 조회하도록 변경했다.
+- `FoodCatalogSpecsTest`와 `DailyDietRecommendationUseCasesTest`로 `SEARCH_ONLY`, `DISABLED`가 추천 후보에서 제외되는 조건을 검증했다.
+- 남은 작업은 `RECOMMENDABLE_WITH_CAUTION`의 주의 사유를 추천 응답 모델에 노출할지 결정하는 것이다.
 
 ### 5단계: 검색/기록 경로 정리
 
@@ -338,7 +387,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 
 2026-06-09 커밋에는 알러젠/기피식품 기반 추천 엔진, 추천 후보 DB 레벨 필터링, `AllergenConfidenceGate` 분리, `DietLogUseCases` 전환이 포함되어 있다.
 
-본 문서는 해당 흐름을 유지한다. 특히 추천 후보 DB 필터링은 앞으로 `recommendation_status` 조건을 추가하는 방향으로 확장한다. 알러젠 신뢰 레벨과 추천 적합성 상태는 서로 다른 축이다.
+본 문서는 해당 흐름을 유지한다. 추천 후보 DB 필터링은 2026-06-10 작업으로 `recommendation_status` 조건까지 포함하도록 확장했다. 알러젠 신뢰 레벨과 추천 적합성 상태는 서로 다른 축이다.
 
 ---
 

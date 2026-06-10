@@ -2,8 +2,12 @@ package com.healthcare.domain.diet.dto;
 
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -23,6 +27,17 @@ public class FoodCatalogResponse {
     private final Double transFatPer100g;
     private final Double cholesterolPer100gMg;
     private final Double sodiumPer100gMg;
+    private final String foodCode;
+    private final FoodCatalogSource source;
+    private final String sourceDetail;
+    private final String brandName;
+    private final String maker;
+    private final Double servingSizeG;
+    private final String servingReference;
+    private final RecommendationStatus recommendationStatus;
+    private final String recommendationReason;
+    private final String dataVersion;
+    private final OffsetDateTime lastVerifiedAt;
     private final boolean custom;
     private final long usageCount;
     private final Long createdByUserId;
@@ -43,6 +58,17 @@ public class FoodCatalogResponse {
                 .transFatPer100g(food.getTransFatPer100g())
                 .cholesterolPer100gMg(food.getCholesterolPer100gMg())
                 .sodiumPer100gMg(food.getSodiumPer100gMg())
+                .foodCode(food.getFoodCode())
+                .source(food.getSource())
+                .sourceDetail(food.getSourceDetail())
+                .brandName(food.getBrandName())
+                .maker(food.getMaker())
+                .servingSizeG(food.getServingSizeG())
+                .servingReference(food.getServingReference())
+                .recommendationStatus(food.getRecommendationStatus())
+                .recommendationReason(food.getRecommendationReason())
+                .dataVersion(food.getDataVersion())
+                .lastVerifiedAt(food.getLastVerifiedAt())
                 .custom(food.getIsCustom())
                 .usageCount(food.getUsageCount() != null ? food.getUsageCount() : 0L)
                 .createdByUserId(food.getCreatedByUserId())

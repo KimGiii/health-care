@@ -2,15 +2,21 @@
 
 **작성일**: 2026-05-04
 
-**개정일**: 2026-06-09
+**개정일**: 2026-06-10
 
-**상태**: MVP 구현 완료 / 카탈로그 강화 계획 확정
+**상태**: MVP 구현 완료 / 카탈로그 강화 Phase 1 스키마 + 추천 후보 필터 구현
+
+**작업 브랜치**: `feat/allegen-recommendation`
+
+알러젠 식단 추천과 식품 카탈로그 강화 작업은 `feat/allegen-recommendation` 브랜치에서만 진행합니다. `dev`에는 직접 커밋하지 않고, 검증된 변경을 PR/머지로 반영합니다.
 
 ## 개요
 
 HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용자 커스텀 식품의 조합으로 운영됩니다. 이 문서는 2026-05-04에 구현된 **사용 횟수 추적** 및 **사용자 직접 등록** 기능을 설명합니다.
 
-2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
+2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 `food_catalog`의 출처, 브랜드, 제공량, 추천 상태를 담기 위한 V23 스키마 보강과 백엔드 엔티티/응답 DTO 반영, 추천 후보 조회의 `recommendation_status` 필터 적용이 완료되었습니다.
+
+앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
 
 ## 카탈로그 운영 모델
 
@@ -52,7 +58,100 @@ HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용
 - 추천은 `recommendation_status`, 카테고리, 제한 조건, 기본 영양 조건을 DB WHERE 절에서 먼저 적용합니다.
 - 추천 엔진에는 제한된 후보만 전달합니다.
 
+현재 추천 후보 조회는 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 상태만 포함합니다. `SEARCH_ONLY`, `DISABLED` 항목은 검색/기록 정책과 별개로 추천 후보에서는 제외됩니다.
+
 ## 주요 기능
+
+### 0. 카탈로그 강화 메타데이터 (V23)
+
+#### 데이터베이스 변경
+
+V23 마이그레이션에서 `food_catalog`에 다음 운영 메타데이터를 추가했습니다.
+
+```sql
+ALTER TABLE food_catalog
+    ADD COLUMN food_code             VARCHAR(60),
+    ADD COLUMN source                VARCHAR(40),
+    ADD COLUMN source_detail         VARCHAR(120),
+    ADD COLUMN brand_name            VARCHAR(150),
+    ADD COLUMN maker                 VARCHAR(150),
+    ADD COLUMN serving_size_g        DOUBLE PRECISION,
+    ADD COLUMN serving_reference     VARCHAR(80),
+    ADD COLUMN recommendation_status VARCHAR(40),
+    ADD COLUMN recommendation_reason VARCHAR(255),
+    ADD COLUMN data_version          VARCHAR(80),
+    ADD COLUMN last_verified_at      TIMESTAMPTZ;
+```
+
+백필 기본값:
+
+- 기존 시드 식품: `source = SEED`, `recommendation_status = RECOMMENDABLE`
+- 기존 사용자 커스텀 식품: `source = USER_CUSTOM`, `recommendation_status = SEARCH_ONLY`
+
+추가 인덱스:
+
+```sql
+CREATE UNIQUE INDEX uq_food_catalog_source_food_code
+  ON food_catalog (source, food_code)
+  WHERE food_code IS NOT NULL AND deleted_at IS NULL;
+
+CREATE INDEX idx_food_catalog_recommendation_status
+  ON food_catalog (recommendation_status)
+  WHERE deleted_at IS NULL;
+```
+
+#### 구현 위치
+
+```
+backend/src/main/java/com/healthcare/domain/diet/
+├── entity/FoodCatalog.java              # V23 필드 반영
+├── entity/FoodCatalogSource.java        # 출처 enum
+├── entity/RecommendationStatus.java     # 추천 상태 enum
+├── dto/FoodCatalogResponse.java         # 응답 메타데이터 확장
+├── repository/FoodCatalogRepository.java # source + foodCode 조회, usage_count 갱신
+├── repository/FoodCatalogSpecs.java     # 추천 후보 상태 Specification
+├── service/FoodCatalogService.java      # 커스텀 식품 기본값 USER_CUSTOM / SEARCH_ONLY
+├── recommendation/usecase/DailyDietRecommendationUseCases.java # 추천 후보 상태 필터 적용
+├── external/service/FoodImportService.java # 외부 import 기본값 USER_CUSTOM / SEARCH_ONLY
+└── external/importer/                  # 공공데이터 row importer
+    ├── StandardProcessedFoodImporter.java
+    ├── StandardDishFoodImporter.java
+    └── MfdsFoodNutrientDbImporter.java
+```
+
+#### API 응답 추가 필드
+
+`FoodCatalogResponse`는 다음 필드를 추가로 반환합니다.
+
+- `foodCode`
+- `source`
+- `sourceDetail`
+- `brandName`
+- `maker`
+- `servingSizeG`
+- `servingReference`
+- `recommendationStatus`
+- `recommendationReason`
+- `dataVersion`
+- `lastVerifiedAt`
+
+### 0.1 공공데이터 row importer
+
+Phase 2의 첫 구현으로 공공데이터 row를 내부 `food_catalog`로 적재하는 importer를 추가했습니다.
+
+| importer | 원본 | source | source_detail |
+|---|---|---|---|
+| `StandardProcessedFoodImporter` | 전국통합식품영양성분정보 가공식품 표준데이터 | `MFDS_STANDARD_PROCESSED` | `15100066` |
+| `StandardDishFoodImporter` | 전국통합식품영양성분정보 음식 표준데이터 | `MFDS_STANDARD_DISH` | `15100070` |
+| `MfdsFoodNutrientDbImporter` | 식품영양성분DB정보 `FoodNtrCpntDbInfo02` | `MFDS_FOOD_NUTRIENT_DB` | `FoodNtrCpntDbInfo02` |
+
+공통 적재 규칙:
+
+- `source + food_code` 기준으로 기존 항목을 찾고, 없으면 생성합니다.
+- 같은 `source + food_code`가 다시 들어오면 기존 항목의 원본 메타데이터와 영양값을 갱신합니다.
+- `food_code`, 식품명, 열량이 없거나 파싱할 수 없으면 skip 처리합니다.
+- 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. 추천 후보 승격은 별도 추천 적합성 게이트에서 다룹니다.
+- `last_verified_at`은 원본 기준일을 KST 자정 기준으로 저장합니다.
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
 
@@ -306,6 +405,16 @@ NavigationStack(path: $recordTabPath) {
 ### 백엔드 단위 테스트
 
 ```java
+// V23 카탈로그 메타데이터
+- FoodCatalogServiceTest: createCustomFood_success_returnsCreatedFood()
+- FoodImportServiceTest: importFood_fromPublicApi_savesAsUserCustomFood()
+- FoodCatalogSpecsTest: isRecommendable_includesOnlyRecommendableStatuses()
+- DailyDietRecommendationUseCasesTest: loadCandidates_alwaysAppliesRecommendationStatusFilter()
+- StandardProcessedFoodImporterTest: importRows_createsProcessedFoodCatalogItem()
+- StandardProcessedFoodImporterTest: importRows_updatesExistingFoodCatalogItem()
+- StandardDishFoodImporterTest: importRows_createsDishFoodCatalogItem()
+- MfdsFoodNutrientDbImporterTest: importRows_createsFoodNutrientDbCatalogItem()
+
 // FoodCatalogServiceTest
 - createCustomFood_이미_존재하는_이름_카테고리_조합_중복_거절()
 - createCustomFood_NFC_정규화()
@@ -336,7 +445,12 @@ NavigationStack(path: $recordTabPath) {
    docker compose up -d postgres redis
    ```
 
-2. **초기 usage_count 계산 (선택 사항)**
+2. **V23 마이그레이션 실행**
+   - Flyway가 `V23__food_catalog_source_recommendation_fields.sql`을 자동 적용합니다.
+   - 기존 시드 식품은 추천 후보 유지를 위해 `RECOMMENDABLE`로 백필됩니다.
+   - 기존 사용자 커스텀 식품은 검증 전 추천 제외를 위해 `SEARCH_ONLY`로 백필됩니다.
+
+3. **초기 usage_count 계산 (선택 사항)**
    ```sql
    -- 기존 식단 기록을 기반으로 usage_count 초기화
    -- (현재는 0부터 시작, 향후 히스토리 분석 시 필요)
@@ -356,19 +470,26 @@ NavigationStack(path: $recordTabPath) {
    - 현재 외부 공공데이터를 사용자 경로에서 직접 조회하는 흐름이 남아 있음
    - 향후: 배치/관리자 적재로 내부 `food_catalog`를 보강하고, 사용자 검색/추천은 내부 DB 기준으로 고정
 
+4. **주의 상태 추천 응답 모델 미확정**
+   - `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되지만, 추천 응답에서 `recommendation_reason`을 어떤 형태로 노출할지는 아직 확정되지 않음
+   - 향후: 끼니 추천 응답 모델에 주의 사유/출처 표시 여부 검토
+
 ## 성능 고려사항
 
 ### 데이터베이스 인덱싱
 
 ```sql
 -- V13 마이그레이션에 포함
-CREATE INDEX idx_food_catalog_name ON food_catalog(name);
-CREATE UNIQUE INDEX idx_food_catalog_name_category 
-  ON food_catalog(name, category) 
-  WHERE source = 'CUSTOM';
+CREATE INDEX idx_food_catalog_usage
+  ON food_catalog (usage_count DESC, name_ko ASC)
+  WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX uq_food_catalog_custom_name_category
+  ON food_catalog (LOWER(name_ko), category)
+  WHERE deleted_at IS NULL AND is_custom = TRUE;
 ```
 
-카탈로그 강화 시 추가 검토:
+V23 마이그레이션에 포함:
 
 ```sql
 CREATE INDEX idx_food_catalog_recommendation_status

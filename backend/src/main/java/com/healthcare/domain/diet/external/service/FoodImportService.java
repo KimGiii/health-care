@@ -2,6 +2,8 @@ package com.healthcare.domain.diet.external.service;
 
 import com.healthcare.domain.diet.dto.FoodCatalogResponse;
 import com.healthcare.domain.diet.entity.FoodCatalog;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.external.dto.ImportFoodRequest;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,9 @@ public class FoodImportService {
                 .transFatPer100g(request.getTransFatPer100g())
                 .cholesterolPer100gMg(request.getCholesterolPer100gMg())
                 .sodiumPer100gMg(request.getSodiumPer100gMg())
+                .source(FoodCatalogSource.USER_CUSTOM)
+                .sourceDetail(request.getSource() != null ? request.getSource().name() : null)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                 .isCustom(true)
                 .createdByUserId(userId)
                 .build();
