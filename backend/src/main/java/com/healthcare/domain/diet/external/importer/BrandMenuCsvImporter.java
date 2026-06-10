@@ -93,8 +93,10 @@ public class BrandMenuCsvImporter {
                     .findBySourceAndFoodCode(FoodCatalogSource.BRAND_OFFICIAL, food.getFoodCode());
 
             if (existing.isPresent()) {
-                existing.get().updateFromImportedCatalog(food);
-                foodCatalogRepository.save(existing.get());
+                FoodCatalog existingFood = existing.get();
+                existingFood.updateSourceFactsFromImportedCatalog(food);
+                existingFood.updateRecommendationCuration(food.getRecommendationStatus(), food.getRecommendationReason());
+                foodCatalogRepository.save(existingFood);
                 updated++;
             } else {
                 foodCatalogRepository.save(food);

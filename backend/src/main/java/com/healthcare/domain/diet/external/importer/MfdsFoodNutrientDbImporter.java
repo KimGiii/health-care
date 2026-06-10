@@ -62,7 +62,7 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
             Optional<FoodCatalog> existing = foodCatalogRepository
                     .findBySourceAndFoodCode(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB, food.get().getFoodCode());
             if (existing.isPresent()) {
-                existing.get().updateFromImportedCatalog(food.get());
+                existing.get().updateSourceFactsFromImportedCatalog(food.get());
                 foodCatalogRepository.save(existing.get());
                 updated++;
                 continue;

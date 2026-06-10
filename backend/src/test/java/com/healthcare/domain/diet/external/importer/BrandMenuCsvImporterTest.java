@@ -174,7 +174,7 @@ class BrandMenuCsvImporterTest {
                 .servingSizeG("200").calories("280").protein("12").carbs("38")
                 .fat("6").sodium("600").sugar("4").saturatedFat("1")
                 .sourceUrl("").lastVerifiedAt("2026-06-01").recommendationStatus("RECOMMENDABLE")
-                .recommendationReason("").build();
+                .recommendationReason("검수 완료").build();
         when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))
                 .thenReturn(Optional.of(existing));
 
@@ -183,6 +183,9 @@ class BrandMenuCsvImporterTest {
         assertThat(result.updatedCount()).isEqualTo(1);
         assertThat(result.createdCount()).isEqualTo(0);
         verify(repository).save(existing);
+        assertThat(existing.getCaloriesPer100g()).isEqualTo(140.0);
+        assertThat(existing.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
+        assertThat(existing.getRecommendationReason()).isEqualTo("검수 완료");
     }
 
     // -----------------------------------------------------------------------

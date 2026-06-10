@@ -105,7 +105,8 @@ class StandardProcessedFoodImporterTest {
                 .nameKo("이전 이름")
                 .category(FoodCategory.OTHER)
                 .caloriesPer100g(1.0)
-                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
+                .recommendationReason("관리자 검수 완료")
                 .isCustom(false)
                 .build();
 
@@ -145,6 +146,7 @@ class StandardProcessedFoodImporterTest {
         assertThat(saved.getMaker()).isEqualTo("헬스푸드");
         assertThat(saved.getCaloriesPer100g()).isEqualTo(165.0);
         assertThat(saved.getProteinPer100g()).isEqualTo(31.0);
-        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
+        assertThat(saved.getRecommendationReason()).isEqualTo("관리자 검수 완료");
     }
 }

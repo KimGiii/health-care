@@ -69,7 +69,7 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
             Optional<FoodCatalog> existing = foodCatalogRepository
                     .findBySourceAndFoodCode(source, food.get().getFoodCode());
             if (existing.isPresent()) {
-                existing.get().updateFromImportedCatalog(food.get());
+                existing.get().updateSourceFactsFromImportedCatalog(food.get());
                 foodCatalogRepository.save(existing.get());
                 updated++;
                 continue;

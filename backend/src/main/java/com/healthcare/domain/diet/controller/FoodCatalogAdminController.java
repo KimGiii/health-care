@@ -1,12 +1,11 @@
 package com.healthcare.domain.diet.controller;
 
 import com.healthcare.common.response.ApiResponse;
+import com.healthcare.common.security.AdminOperationGuard;
+import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
-import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
-import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
-import com.healthcare.domain.diet.external.importer.FoodCatalogPublicDataImportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,31 +18,32 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class FoodCatalogAdminController {
 
-    private final FoodCatalogPublicDataImportService importService;
-    private final FoodCatalogDuplicateReportService duplicateReportService;
-    private final BrandMenuCsvImporter brandMenuCsvImporter;
+    private final FoodCatalogAdminOperations adminOperations;
 
     @PostMapping("/import/processed-foods")
     public ResponseEntity<ApiResponse<FoodCatalogBatchImportSummary>> importProcessedFoods(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(defaultValue = "500") int maxPages) {
-        FoodCatalogBatchImportSummary summary = importService.importStandardProcessedFoods(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = adminOperations.importProcessedFoods(adminToken, pageSize, maxPages);
         return ResponseEntity.ok(ApiResponse.ok("가공식품 표준데이터 적재 완료", summary));
     }
 
     @PostMapping("/import/dish-foods")
     public ResponseEntity<ApiResponse<FoodCatalogBatchImportSummary>> importDishFoods(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(defaultValue = "500") int maxPages) {
-        FoodCatalogBatchImportSummary summary = importService.importStandardDishFoods(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = adminOperations.importDishFoods(adminToken, pageSize, maxPages);
         return ResponseEntity.ok(ApiResponse.ok("음식 표준데이터 적재 완료", summary));
     }
 
     @PostMapping("/import/nutrient-db")
     public ResponseEntity<ApiResponse<FoodCatalogBatchImportSummary>> importNutrientDb(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(defaultValue = "500") int maxPages) {
-        FoodCatalogBatchImportSummary summary = importService.importFoodNutrientDb(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = adminOperations.importNutrientDb(adminToken, pageSize, maxPages);
         return ResponseEntity.ok(ApiResponse.ok("식품영양성분DB 적재 완료", summary));
     }
 
@@ -53,14 +53,16 @@ public class FoodCatalogAdminController {
      */
     @PostMapping(value = "/import/brand-csv", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<FoodCatalogImportResult>> importBrandMenuCsv(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
             @RequestParam("file") MultipartFile file) throws IOException {
-        FoodCatalogImportResult result = brandMenuCsvImporter.importFromCsv(file.getInputStream());
+        FoodCatalogImportResult result = adminOperations.importBrandMenuCsv(adminToken, file.getInputStream());
         return ResponseEntity.ok(ApiResponse.ok("브랜드 메뉴 CSV 적재 완료", result));
     }
 
     @GetMapping("/dedup/report")
-    public ResponseEntity<ApiResponse<FoodCatalogDuplicateReportResponse>> getDuplicateReport() {
-        FoodCatalogDuplicateReportResponse report = duplicateReportService.generateReport();
+    public ResponseEntity<ApiResponse<FoodCatalogDuplicateReportResponse>> getDuplicateReport(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken) {
+        FoodCatalogDuplicateReportResponse report = adminOperations.getDuplicateReport(adminToken);
         return ResponseEntity.ok(ApiResponse.ok(report));
     }
 }

@@ -2,10 +2,9 @@ package com.healthcare.domain.diet.controller;
 
 import com.healthcare.common.exception.GlobalExceptionHandler;
 import com.healthcare.common.response.ApiResponse;
-import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
-import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
+import com.healthcare.common.security.AdminOperationGuard;
+import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
-import com.healthcare.domain.diet.external.importer.FoodCatalogPublicDataImportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +13,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,9 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("FoodCatalogAdminController 단위 테스트")
 class FoodCatalogAdminControllerTest {
 
-    @Mock private FoodCatalogPublicDataImportService importService;
-    @Mock private FoodCatalogDuplicateReportService duplicateReportService;
-    @Mock private BrandMenuCsvImporter brandMenuCsvImporter;
+    @Mock private FoodCatalogAdminOperations adminOperations;
 
     @InjectMocks
     private FoodCatalogAdminController controller;
@@ -55,11 +55,13 @@ class FoodCatalogAdminControllerTest {
                 "file", "brand_menu.csv", "text/csv",
                 csvContent.getBytes(StandardCharsets.UTF_8)
         );
-        given(brandMenuCsvImporter.importFromCsv(any())).willReturn(
+        given(adminOperations.importBrandMenuCsv(any(), any())).willReturn(
                 new FoodCatalogImportResult(1, 0, 0)
         );
 
-        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv").file(file))
+        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv")
+                        .file(file)
+                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.createdCount").value(1))
                 .andExpect(jsonPath("$.data.updatedCount").value(0))
@@ -69,12 +71,26 @@ class FoodCatalogAdminControllerTest {
     @Test
     @DisplayName("file 파라미터 없이 요청하면 성공 응답이 아니다")
     void importBrandMenuCsv_returnsErrorWhenFileMissing() throws Exception {
-        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv"))
+        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv")
+                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
                 .andDo(result -> {
                     int status = result.getResponse().getStatus();
                     if (status == 200) {
                         throw new AssertionError("파일 없이도 200이 반환되었습니다");
                     }
                 });
+    }
+
+    @Test
+    @DisplayName("admin token 없이 브랜드 CSV import를 요청하면 403을 반환한다")
+    void importBrandMenuCsv_withoutAdminToken_returnsForbidden() throws Exception {
+        willThrow(new AccessDeniedException("관리자 작업 권한이 없습니다."))
+                .given(adminOperations).importBrandMenuCsv(isNull(), any());
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "brand_menu.csv", "text/csv", "header\n".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv").file(file))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
 }

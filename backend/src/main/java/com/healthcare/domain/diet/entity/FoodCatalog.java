@@ -138,7 +138,7 @@ public class FoodCatalog {
         this.usageCount = Math.max((this.usageCount == null ? 0L : this.usageCount) - 1, 0L);
     }
 
-    public void updateFromImportedCatalog(FoodCatalog imported) {
+    public void updateSourceFactsFromImportedCatalog(FoodCatalog imported) {
         this.name = imported.name;
         this.nameKo = imported.nameKo;
         this.category = imported.category;
@@ -157,11 +157,14 @@ public class FoodCatalog {
         this.maker = imported.maker;
         this.servingSizeG = imported.servingSizeG;
         this.servingReference = imported.servingReference;
-        this.recommendationStatus = imported.recommendationStatus;
-        this.recommendationReason = imported.recommendationReason;
         this.dataVersion = imported.dataVersion;
         this.lastVerifiedAt = imported.lastVerifiedAt;
         this.isCustom = imported.isCustom;
+    }
+
+    public void updateRecommendationCuration(RecommendationStatus status, String reason) {
+        this.recommendationStatus = status;
+        this.recommendationReason = reason;
     }
 
     public enum FoodCategory {

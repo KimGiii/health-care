@@ -11,6 +11,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:test-secret-key-for-ci-min-32-chars-required}
+  admin:
+    operation-token: test-admin-operation-token
   s3:
     bucket: healthcare-photos-test
     region: ap-northeast-2

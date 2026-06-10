@@ -91,4 +91,48 @@ class MfdsFoodNutrientDbImporterTest {
         assertThat(saved.getLastVerifiedAt()).isEqualTo(
                 LocalDate.of(2025, 12, 5).atStartOfDay().atOffset(ZoneOffset.ofHours(9)));
     }
+
+    @Test
+    @DisplayName("기존 식품영양성분DB 항목 갱신 시 추천 검수 상태는 보존한다")
+    void importRows_updatesSourceFactsButPreservesRecommendationCuration() {
+        FoodCatalog existing = FoodCatalog.builder()
+                .id(10L)
+                .foodCode("N001")
+                .source(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB)
+                .sourceDetail("FoodNtrCpntDbInfo02")
+                .name("이전 와퍼")
+                .nameKo("이전 와퍼")
+                .category(FoodCategory.PROCESSED)
+                .caloriesPer100g(500.0)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE_WITH_CAUTION)
+                .recommendationReason("나트륨 주의")
+                .isCustom(false)
+                .build();
+        MfdsFoodNutrientDbImportRow row = MfdsFoodNutrientDbImportRow.builder()
+                .foodCode("N001")
+                .foodNameKr("와퍼")
+                .foodCategoryName("가공식품")
+                .amountNum1("619")
+                .amountNum3("29")
+                .amountNum4("33")
+                .amountNum6("49")
+                .amountNum13("1050")
+                .updateDate("2025-12-05")
+                .build();
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB, "N001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.updatedCount()).isEqualTo(1);
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getNameKo()).isEqualTo("와퍼");
+        assertThat(saved.getCaloriesPer100g()).isEqualTo(619.0);
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE_WITH_CAUTION);
+        assertThat(saved.getRecommendationReason()).isEqualTo("나트륨 주의");
+    }
 }
