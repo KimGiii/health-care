@@ -45,9 +45,9 @@ class BrandMenuCsvImporterTest {
     @DisplayName("헤더 포함 CSV를 파싱하면 행 수가 일치한다")
     void parseCsv_returnsCorrectRowCount() throws IOException {
         String csv = """
-                brand_name,menu_name,category,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
-                샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,300,250,28,15,8,480,5,2,https://saladii.com,2026-01-01,RECOMMENDABLE,
+                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
+                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
+                샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,PER_SERVING,300,250,28,15,8,480,5,2,https://saladii.com,2026-01-01,RECOMMENDABLE,
                 """;
 
         List<BrandMenuCsvRow> rows = importer.parseCsv(csvStream(csv));
@@ -61,8 +61,8 @@ class BrandMenuCsvImporterTest {
     @DisplayName("빈 행은 파싱 결과에 포함되지 않는다")
     void parseCsv_skipsEmptyLines() throws IOException {
         String csv = """
-                brand_name,menu_name,category,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
+                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
+                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
 
                 """;
 
@@ -82,6 +82,7 @@ class BrandMenuCsvImporterTest {
                 .brandName("서브웨이")
                 .menuName("로스트치킨 샌드위치")
                 .category("PROTEIN_SOURCE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("200")
                 .calories("320")       // 320 / 200 * 100 = 160
                 .protein("24")         // 24 / 200 * 100 = 12
@@ -106,12 +107,13 @@ class BrandMenuCsvImporterTest {
     }
 
     @Test
-    @DisplayName("serving_size_g가 없으면 칼로리 값을 100g당으로 그대로 사용한다")
-    void importRows_usesCaloriesDirectlyWhenNoServingSize() {
+    @DisplayName("PER_100G는 칼로리 값을 100g당으로 그대로 사용한다")
+    void importRows_usesCaloriesDirectlyWhenNutritionBasisIsPer100g() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("테스트브랜드")
                 .menuName("테스트메뉴")
                 .category("PROCESSED")
+                .nutritionBasis("PER_100G")
                 .servingSizeG("")
                 .calories("300")
                 .protein("10")
@@ -133,6 +135,39 @@ class BrandMenuCsvImporterTest {
         verify(repository).save(argThat(fc -> fc.getCaloriesPer100g() == 300.0));
     }
 
+    @Test
+    @DisplayName("PER_100G에 serving_size_g가 있으면 기본 제공량으로 보존하고 영양값은 100g당으로 유지한다")
+    void importRows_per100gWithServingSizeKeepsServingSizeAndPer100gNutrition() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("BBQ")
+                .menuName("황금올리브치킨")
+                .category("PROTEIN_SOURCE")
+                .nutritionBasis("PER_100G")
+                .servingSizeG("500")
+                .calories("253")
+                .protein("18")
+                .carbs("10")
+                .fat("16")
+                .sodium("450")
+                .sugar("1")
+                .saturatedFat("3")
+                .sourceUrl("")
+                .lastVerifiedAt("")
+                .recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("")
+                .build();
+        when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))
+                .thenReturn(Optional.empty());
+
+        importer.importRows(List.of(row));
+
+        verify(repository).save(argThat(fc ->
+                fc.getServingSizeG() == 500.0
+                        && fc.getCaloriesPer100g() == 253.0
+                        && fc.getProteinPer100g() == 18.0
+        ));
+    }
+
     // -----------------------------------------------------------------------
     // upsert 동작
     // -----------------------------------------------------------------------
@@ -142,6 +177,7 @@ class BrandMenuCsvImporterTest {
     void importRows_createsNewWhenNotExists() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("200").calories("280").protein("12").carbs("38")
                 .fat("6").sodium("600").sugar("4").saturatedFat("1")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
@@ -171,10 +207,12 @@ class BrandMenuCsvImporterTest {
                 .build();
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("200").calories("280").protein("12").carbs("38")
                 .fat("6").sodium("600").sugar("4").saturatedFat("1")
-                .sourceUrl("").lastVerifiedAt("2026-06-01").recommendationStatus("RECOMMENDABLE")
-                .recommendationReason("검수 완료").build();
+                .sourceUrl("").lastVerifiedAt("2026-06-01")
+                .recommendationStatus("RECOMMENDABLE_WITH_CAUTION")
+                .recommendationReason("고나트륨").build();
         when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))
                 .thenReturn(Optional.of(existing));
 
@@ -184,8 +222,8 @@ class BrandMenuCsvImporterTest {
         assertThat(result.createdCount()).isEqualTo(0);
         verify(repository).save(existing);
         assertThat(existing.getCaloriesPer100g()).isEqualTo(140.0);
-        assertThat(existing.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
-        assertThat(existing.getRecommendationReason()).isEqualTo("검수 완료");
+        assertThat(existing.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE_WITH_CAUTION);
+        assertThat(existing.getRecommendationReason()).isEqualTo("고나트륨");
     }
 
     // -----------------------------------------------------------------------
@@ -197,12 +235,14 @@ class BrandMenuCsvImporterTest {
     void importRows_skipsRowWithoutRequiredFields() {
         BrandMenuCsvRow missingBrand = BrandMenuCsvRow.builder()
                 .brandName("").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("200").calories("280").protein("").carbs("")
                 .fat("").sodium("").sugar("").saturatedFat("")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("")
                 .recommendationReason("").build();
         BrandMenuCsvRow missingCalories = BrandMenuCsvRow.builder()
                 .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("200").calories("").protein("").carbs("")
                 .fat("").sodium("").sugar("").saturatedFat("")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("")
@@ -211,6 +251,44 @@ class BrandMenuCsvImporterTest {
         FoodCatalogImportResult result = importer.importRows(List.of(missingBrand, missingCalories));
 
         assertThat(result.skippedCount()).isEqualTo(2);
+        assertThat(result.rejectedRows()).extracting(FoodCatalogImportRejectedRow::field)
+                .containsExactly("brand_name", "calories");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("nutrition_basis가 없으면 row를 거절하고 사유를 반환한다")
+    void importRows_rejectsRowWithoutNutritionBasis() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .servingSizeG("200").calories("280").protein("").carbs("")
+                .fat("").sodium("").sugar("").saturatedFat("")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("")
+                .recommendationReason("").build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows()).hasSize(1);
+        assertThat(result.rejectedRows().get(0).field()).isEqualTo("nutrition_basis");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("PER_SERVING인데 serving_size_g가 없으면 row를 거절한다")
+    void importRows_rejectsPerServingWithoutServingSize() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("").calories("280").protein("").carbs("")
+                .fat("").sodium("").sugar("").saturatedFat("")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("")
+                .recommendationReason("").build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows().get(0).field()).isEqualTo("serving_size_g");
         verify(repository, never()).save(any());
     }
 
@@ -223,6 +301,7 @@ class BrandMenuCsvImporterTest {
     void importRows_generatesFoodCode() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("서브웨이").menuName("로스트치킨 샌드위치").category("PROTEIN_SOURCE")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("232").calories("320").protein("24").carbs("42")
                 .fat("5").sodium("720").sugar("6").saturatedFat("1.5")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
@@ -247,6 +326,7 @@ class BrandMenuCsvImporterTest {
     void importRows_fallsBackToSearchOnlyForUnknownStatus() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("테스트").menuName("메뉴").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
                 .servingSizeG("100").calories("200").protein("5").carbs("30")
                 .fat("8").sodium("300").sugar("3").saturatedFat("2")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("INVALID_STATUS")

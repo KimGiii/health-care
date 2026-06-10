@@ -1,5 +1,6 @@
 package com.healthcare.domain.diet.external.importer;
 
+import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +35,7 @@ public class BrandMenuCsvImporter {
 
     /**
      * CSV 파일을 파싱해서 BRAND_OFFICIAL 출처로 upsert한다.
-     * 칼로리·영양소 값은 1회 제공량(serving_size_g) 기준으로 입력받고 100g당 값으로 변환한다.
+     * nutrition_basis로 입력 영양값의 기준을 명시하고 내부 저장은 100g당 값으로 정규화한다.
      */
     @Transactional
     public FoodCatalogImportResult importFromCsv(InputStream csvStream) throws IOException {
@@ -43,7 +45,7 @@ public class BrandMenuCsvImporter {
 
     List<BrandMenuCsvRow> parseCsv(InputStream csvStream) throws IOException {
         CSVFormat format = CSVFormat.DEFAULT.builder()
-                .setHeader(BrandMenuCsvRow.HEADERS)
+                .setHeader()
                 .setSkipHeaderRecord(true)
                 .setIgnoreEmptyLines(true)
                 .setTrim(true)
@@ -52,11 +54,14 @@ public class BrandMenuCsvImporter {
         List<BrandMenuCsvRow> rows = new ArrayList<>();
         try (CSVParser parser = new CSVParser(
                 new InputStreamReader(csvStream, StandardCharsets.UTF_8), format)) {
+            validateHeaders(new ArrayList<>(parser.getHeaderMap().keySet()));
             for (CSVRecord record : parser) {
                 rows.add(BrandMenuCsvRow.builder()
+                        .rowNumber(record.getRecordNumber() + 1)
                         .brandName(record.get("brand_name"))
                         .menuName(record.get("menu_name"))
                         .category(record.get("category"))
+                        .nutritionBasis(record.get("nutrition_basis"))
                         .servingSizeG(record.get("serving_size_g"))
                         .calories(record.get("calories"))
                         .protein(record.get("protein"))
@@ -80,22 +85,24 @@ public class BrandMenuCsvImporter {
         int created = 0;
         int updated = 0;
         int skipped = 0;
+        List<FoodCatalogImportRejectedRow> rejectedRows = new ArrayList<>();
 
         for (BrandMenuCsvRow row : rows) {
-            Optional<FoodCatalog> converted = toFoodCatalog(row);
-            if (converted.isEmpty()) {
+            ConversionResult converted = toFoodCatalog(row);
+            if (converted.rejected()) {
                 skipped++;
+                rejectedRows.add(converted.rejection());
                 continue;
             }
 
-            FoodCatalog food = converted.get();
+            FoodCatalog food = converted.food();
             Optional<FoodCatalog> existing = foodCatalogRepository
                     .findBySourceAndFoodCode(FoodCatalogSource.BRAND_OFFICIAL, food.getFoodCode());
 
             if (existing.isPresent()) {
                 FoodCatalog existingFood = existing.get();
                 existingFood.updateSourceFactsFromImportedCatalog(food);
-                existingFood.updateRecommendationCuration(food.getRecommendationStatus(), food.getRecommendationReason());
+                existingFood.updateCuration(food.curation());
                 foodCatalogRepository.save(existingFood);
                 updated++;
             } else {
@@ -104,33 +111,49 @@ public class BrandMenuCsvImporter {
             }
         }
 
-        return new FoodCatalogImportResult(created, updated, skipped);
+        return new FoodCatalogImportResult(created, updated, skipped, rejectedRows);
     }
 
-    private Optional<FoodCatalog> toFoodCatalog(BrandMenuCsvRow row) {
+    private ConversionResult toFoodCatalog(BrandMenuCsvRow row) {
         String brandName = normalize(row.brandName());
         String menuName = normalize(row.menuName());
+        BrandMenuNutritionBasis nutritionBasis = parseNutritionBasis(row.nutritionBasis());
         Double servingSizeG = parseDouble(row.servingSizeG());
         Double caloriesPerServing = parseDouble(row.calories());
 
-        if (brandName == null || menuName == null || caloriesPerServing == null) {
-            return Optional.empty();
+        if (brandName == null) {
+            return ConversionResult.rejected(row, "brand_name", "브랜드명은 필수입니다.");
+        }
+        if (menuName == null) {
+            return ConversionResult.rejected(row, "menu_name", "메뉴명은 필수입니다.");
+        }
+        if (nutritionBasis == null) {
+            return ConversionResult.rejected(row, "nutrition_basis", "PER_SERVING 또는 PER_100G를 입력해야 합니다.");
+        }
+        if (caloriesPerServing == null) {
+            return ConversionResult.rejected(row, "calories", "칼로리는 필수 숫자 값입니다.");
         }
 
-        // serving_size_g가 없거나 0이면 칼로리 값을 100g당으로 그대로 사용
-        Double caloriesPer100g;
-        if (servingSizeG != null && servingSizeG > 0) {
-            caloriesPer100g = (caloriesPerServing / servingSizeG) * 100.0;
-        } else {
-            caloriesPer100g = caloriesPerServing;
+        String invalidNumberField = firstInvalidNumberField(row);
+        if (invalidNumberField != null) {
+            return ConversionResult.rejected(row, invalidNumberField, "숫자 형식이어야 합니다.");
         }
+
+        if (nutritionBasis == BrandMenuNutritionBasis.PER_SERVING && (servingSizeG == null || servingSizeG <= 0)) {
+            return ConversionResult.rejected(row, "serving_size_g", "PER_SERVING은 0보다 큰 제공량이 필요합니다.");
+        }
+        if (nutritionBasis == BrandMenuNutritionBasis.PER_100G && servingSizeG != null && servingSizeG <= 0) {
+            return ConversionResult.rejected(row, "serving_size_g", "제공량을 입력할 때는 0보다 커야 합니다.");
+        }
+
+        Double caloriesPer100g = toNutrientPer100g(caloriesPerServing, servingSizeG, nutritionBasis);
 
         String foodCode = brandName.toLowerCase().replaceAll("\\s+", "_")
                 + ":" + menuName.toLowerCase().replaceAll("\\s+", "_");
 
         RecommendationStatus status = parseRecommendationStatus(row.recommendationStatus());
 
-        return Optional.of(FoodCatalog.builder()
+        return ConversionResult.accepted(FoodCatalog.builder()
                 .foodCode(foodCode)
                 .source(FoodCatalogSource.BRAND_OFFICIAL)
                 .sourceDetail(normalize(row.sourceUrl()))
@@ -139,14 +162,14 @@ public class BrandMenuCsvImporter {
                 .brandName(brandName)
                 .category(parseCategory(row.category()))
                 .servingSizeG(servingSizeG)
-                .servingReference(servingSizeG != null ? servingSizeG.intValue() + "g" : null)
+                .servingReference(servingSizeG != null ? formatGrams(servingSizeG) : "100g")
                 .caloriesPer100g(round(caloriesPer100g))
-                .proteinPer100g(toNutrientPer100g(parseDouble(row.protein()), servingSizeG))
-                .carbsPer100g(toNutrientPer100g(parseDouble(row.carbs()), servingSizeG))
-                .fatPer100g(toNutrientPer100g(parseDouble(row.fat()), servingSizeG))
-                .sodiumPer100gMg(toNutrientPer100g(parseDouble(row.sodium()), servingSizeG))
-                .sugarsPer100g(toNutrientPer100g(parseDouble(row.sugar()), servingSizeG))
-                .saturatedFatPer100g(toNutrientPer100g(parseDouble(row.saturatedFat()), servingSizeG))
+                .proteinPer100g(toNutrientPer100g(parseDouble(row.protein()), servingSizeG, nutritionBasis))
+                .carbsPer100g(toNutrientPer100g(parseDouble(row.carbs()), servingSizeG, nutritionBasis))
+                .fatPer100g(toNutrientPer100g(parseDouble(row.fat()), servingSizeG, nutritionBasis))
+                .sodiumPer100gMg(toNutrientPer100g(parseDouble(row.sodium()), servingSizeG, nutritionBasis))
+                .sugarsPer100g(toNutrientPer100g(parseDouble(row.sugar()), servingSizeG, nutritionBasis))
+                .saturatedFatPer100g(toNutrientPer100g(parseDouble(row.saturatedFat()), servingSizeG, nutritionBasis))
                 .recommendationStatus(status)
                 .recommendationReason(normalize(row.recommendationReason()))
                 .lastVerifiedAt(parseDate(row.lastVerifiedAt()))
@@ -154,14 +177,52 @@ public class BrandMenuCsvImporter {
                 .build());
     }
 
-    private Double toNutrientPer100g(Double perServing, Double servingSizeG) {
-        if (perServing == null) {
+    private void validateHeaders(List<String> actualHeaders) {
+        List<String> expectedHeaders = Arrays.asList(BrandMenuCsvRow.HEADERS);
+        if (!actualHeaders.equals(expectedHeaders)) {
+            throw new ValidationException("브랜드 메뉴 CSV 헤더가 템플릿과 일치해야 합니다.");
+        }
+    }
+
+    private Double toNutrientPer100g(
+            Double inputValue,
+            Double servingSizeG,
+            BrandMenuNutritionBasis nutritionBasis) {
+        if (inputValue == null) {
             return null;
         }
-        if (servingSizeG == null || servingSizeG <= 0) {
-            return round(perServing);
+        if (nutritionBasis == BrandMenuNutritionBasis.PER_100G) {
+            return round(inputValue);
         }
-        return round((perServing / servingSizeG) * 100.0);
+        return round((inputValue / servingSizeG) * 100.0);
+    }
+
+    private String firstInvalidNumberField(BrandMenuCsvRow row) {
+        if (isInvalidNumber(row.servingSizeG())) return "serving_size_g";
+        if (isInvalidNumber(row.calories())) return "calories";
+        if (isInvalidNumber(row.protein())) return "protein";
+        if (isInvalidNumber(row.carbs())) return "carbs";
+        if (isInvalidNumber(row.fat())) return "fat";
+        if (isInvalidNumber(row.sodium())) return "sodium";
+        if (isInvalidNumber(row.sugar())) return "sugar";
+        if (isInvalidNumber(row.saturatedFat())) return "saturated_fat";
+        return null;
+    }
+
+    private boolean isInvalidNumber(String value) {
+        return normalize(value) != null && parseDouble(value) == null;
+    }
+
+    private BrandMenuNutritionBasis parseNutritionBasis(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return null;
+        }
+        try {
+            return BrandMenuNutritionBasis.valueOf(normalized.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private FoodCategory parseCategory(String value) {
@@ -222,5 +283,35 @@ public class BrandMenuCsvImporter {
 
     private double round(double v) {
         return Math.round(v * 100.0) / 100.0;
+    }
+
+    private String formatGrams(Double grams) {
+        if (grams == null) {
+            return null;
+        }
+        if (grams % 1.0 == 0) {
+            return String.format("%.0fg", grams);
+        }
+        return String.format("%.1fg", grams);
+    }
+
+    private record ConversionResult(
+            FoodCatalog food,
+            FoodCatalogImportRejectedRow rejection
+    ) {
+        static ConversionResult accepted(FoodCatalog food) {
+            return new ConversionResult(food, null);
+        }
+
+        static ConversionResult rejected(BrandMenuCsvRow row, String field, String reason) {
+            return new ConversionResult(
+                    null,
+                    new FoodCatalogImportRejectedRow(row.rowNumber(), field, reason)
+            );
+        }
+
+        boolean rejected() {
+            return rejection != null;
+        }
     }
 }

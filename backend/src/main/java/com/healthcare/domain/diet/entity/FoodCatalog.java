@@ -162,10 +162,16 @@ public class FoodCatalog {
         this.isCustom = imported.isCustom;
     }
 
-    public void updateRecommendationCuration(RecommendationStatus status, String reason) {
-        this.recommendationStatus = status;
-        this.recommendationReason = reason;
+    public RecommendationCuration curation() {
+        return RecommendationCuration.of(recommendationStatus, recommendationReason);
     }
+
+    public void updateCuration(RecommendationCuration curation) {
+        this.recommendationStatus = curation.status();
+        this.recommendationReason = curation instanceof RecommendationCuration.WithCaution c
+                ? c.reason() : null;
+    }
+
 
     public enum FoodCategory {
         GRAIN, PROTEIN_SOURCE, VEGETABLE, FRUIT, DAIRY, FAT, BEVERAGE, PROCESSED, OTHER

@@ -3,7 +3,7 @@ package com.healthcare.domain.diet.recommendation.dto;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
-import com.healthcare.domain.diet.entity.RecommendationStatus;
+import com.healthcare.domain.diet.entity.RecommendationCuration;
 
 public record RecommendedFoodEntry(
         Long foodCatalogId,
@@ -21,9 +21,10 @@ public record RecommendedFoodEntry(
 ) {
     public static RecommendedFoodEntry from(FoodCatalog food, double servingG, AllergenConfidenceLevel confidence) {
         double factor = servingG / 100.0;
-        String caution = food.getRecommendationStatus() == RecommendationStatus.RECOMMENDABLE_WITH_CAUTION
-                ? food.getRecommendationReason()
-                : null;
+        String caution = switch (food.curation()) {
+            case RecommendationCuration.WithCaution c -> c.reason();
+            default -> null;
+        };
         return new RecommendedFoodEntry(
                 food.getId(),
                 food.getName(),
