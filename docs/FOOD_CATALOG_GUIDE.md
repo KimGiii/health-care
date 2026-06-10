@@ -113,10 +113,16 @@ backend/src/main/java/com/healthcare/domain/diet/
 ├── service/FoodCatalogService.java      # 커스텀 식품 기본값 USER_CUSTOM / SEARCH_ONLY
 ├── recommendation/usecase/DailyDietRecommendationUseCases.java # 추천 후보 상태 필터 적용
 ├── external/service/FoodImportService.java # 외부 import 기본값 USER_CUSTOM / SEARCH_ONLY
-└── external/importer/                  # 공공데이터 row importer
+└── external/importer/                  # 공공데이터 배치 적재
     ├── StandardProcessedFoodImporter.java
     ├── StandardDishFoodImporter.java
-    └── MfdsFoodNutrientDbImporter.java
+    ├── MfdsFoodNutrientDbImporter.java
+    ├── StandardProcessedFoodPageFetcher.java
+    ├── StandardDishFoodPageFetcher.java
+    ├── MfdsFoodNutrientDbPageFetcher.java
+    ├── FoodCatalogImportBatchRunner.java
+    ├── JpaFoodCatalogImportCheckpointStore.java
+    └── FoodCatalogPublicDataImportService.java
 ```
 
 #### API 응답 추가 필드
@@ -152,6 +158,44 @@ Phase 2의 첫 구현으로 공공데이터 row를 내부 `food_catalog`로 적�
 - `food_code`, 식품명, 열량이 없거나 파싱할 수 없으면 skip 처리합니다.
 - 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. 추천 후보 승격은 별도 추천 적합성 게이트에서 다룹니다.
 - `last_verified_at`은 원본 기준일을 KST 자정 기준으로 저장합니다.
+
+### 0.2 공공데이터 page fetcher와 배치 runner
+
+Phase 2의 두 번째 구현으로 공공데이터 API 페이지 순회와 재시작 체크포인트를 추가했습니다.
+
+| 구성요소 | 역할 |
+|---|---|
+| `StandardProcessedFoodPageFetcher` | 15100066 가공식품 표준데이터 API 응답을 `StandardFoodImportRow`로 변환 |
+| `StandardDishFoodPageFetcher` | 15100070 음식 표준데이터 API 응답을 `StandardFoodImportRow`로 변환 |
+| `MfdsFoodNutrientDbPageFetcher` | `FoodNtrCpntDbInfo02` API 응답을 `MfdsFoodNutrientDbImportRow`로 변환 |
+| `FoodCatalogImportBatchRunner` | 체크포인트 다음 페이지부터 fetch/import/checkpoint 저장을 반복 |
+| `JpaFoodCatalogImportCheckpointStore` | source별 마지막 완료 페이지를 DB에 저장 |
+| `FixedDelayFoodCatalogImportPageThrottle` | 페이지 사이 rate limit 대기. 기본 0ms |
+| `FoodCatalogPublicDataImportService` | 공공데이터 3종 적재 진입점 |
+
+V24 마이그레이션에서 체크포인트 테이블을 추가했습니다.
+
+```sql
+CREATE TABLE food_catalog_import_checkpoints (
+    source              VARCHAR(40) PRIMARY KEY,
+    last_completed_page INTEGER NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+배치 runner는 페이지 fetch나 row import 중 예외가 발생하면 실패한 페이지를 완료 체크포인트로 저장하지 않습니다. 따라서 다음 실행은 마지막 완료 페이지 다음부터 재개합니다.
+
+관련 설정:
+
+```yaml
+app:
+  food-api:
+    public-api-key: ${PUBLIC_FOOD_API_KEY:}
+    processed-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api
+    general-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api
+    food-nutrient-db-api-url: https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02
+    import-page-delay-millis: 0
+```
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
 

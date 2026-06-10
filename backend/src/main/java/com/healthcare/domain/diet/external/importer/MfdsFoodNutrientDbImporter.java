@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class MfdsFoodNutrientDbImporter {
+public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsFoodNutrientDbImportRow> {
 
     private static final String SOURCE_DETAIL = "FoodNtrCpntDbInfo02";
     private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);

@@ -180,5 +180,5 @@ FoodNtr 샘플에서 `AMT_NUM1~13`은 표준데이터의 초반 영양소 순서
 
 - 1~3번은 V23 스키마 보강과 백엔드 엔티티/응답 DTO 반영으로 완료했다.
 - 기존 시드 식품은 `SEED + RECOMMENDABLE`, 사용자 커스텀 식품은 `USER_CUSTOM + SEARCH_ONLY`로 백필했다.
-- 4번 전체 crawl 프로파일러는 아직 미구현이며, 공공데이터 importer 작업과 함께 진행한다.
-- 구현상 다음 작업은 추천 후보 조회에 `recommendation_status IN ('RECOMMENDABLE', 'RECOMMENDABLE_WITH_CAUTION')` 조건을 적용하는 것이다.
+- 4번 전체 crawl 프로파일러의 기반으로 공공데이터 page fetcher, 배치 runner, source별 재시작 체크포인트를 2026-06-10에 구현했다. 남은 작업은 실제 API smoke 검증, 중복 후보 리포트, 운영 실행 트리거다.
+- 구현상 다음 작업은 중복 후보 리포트와 운영 실행 트리거를 붙이고, 실제 공공 API 응답으로 page fetcher smoke 검증을 수행하는 것이다.

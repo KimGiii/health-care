@@ -287,7 +287,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 | 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
 | 4단계 추천 게이트 적용 | 일부 완료 | 추천 후보 조회에 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 필터 적용 | 주의 상태 사유를 추천 응답에 노출할지 모델 검토 |
-| 2단계 공공데이터 배치 적재 | 진행 중 | 표준데이터 2종과 `FoodNtrCpntDbInfo02` row importer, `source + food_code` upsert 구현 | API 페이지 순회, 재시작 체크포인트, 중복 리포트 구현 |
+| 2단계 공공데이터 배치 적재 | 진행 중 | row importer, API 페이지 fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅 구현 | 중복 후보 리포트, 운영 실행 트리거, 실제 API smoke 검증 |
 | 3단계 브랜드 CSV 적재 | 대기 | 브랜드 공식 영양정보 수동 검수 적재 방식 유지 | CSV 템플릿과 관리자 검수 플로우 정의 |
 | 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
 | 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태 Spec 테스트 보강 | DB가 있는 환경에서 전체 테스트와 Flyway 적용 검증 |
@@ -343,7 +343,12 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - `StandardDishFoodImporter`를 추가해 15100070 음식 표준데이터 row를 `MFDS_STANDARD_DISH` 출처로 적재한다. `restNm` 성격의 값은 `brand_name`/`maker`에 보존한다.
 - `MfdsFoodNutrientDbImporter`를 추가해 `FoodNtrCpntDbInfo02` row를 `MFDS_FOOD_NUTRIENT_DB` 출처로 적재한다.
 - 공통 동작은 `source + food_code` 기준 신규 생성/기존 항목 갱신이며, 필수값(`food_code`, 식품명, 열량)이 없으면 skip 처리한다.
-- 현재 importer는 핵심 영양소와 운영 메타데이터 매핑까지 담당한다. 실제 API 페이지 순회, rate limit, 재시작 체크포인트, 중복 후보 리포트는 아직 남아 있다.
+- `StandardProcessedFoodPageFetcher`, `StandardDishFoodPageFetcher`, `MfdsFoodNutrientDbPageFetcher`를 추가해 공공데이터 API 페이지 응답을 importer row로 변환한다.
+- `FoodCatalogImportBatchRunner`는 체크포인트의 다음 페이지부터 `fetcher -> importer -> checkpoint 저장` 순서로 순회한다. 페이지 처리 중 예외가 나면 해당 페이지는 완료로 기록하지 않아 재시작 시 같은 페이지부터 다시 처리한다.
+- `V24__food_catalog_import_checkpoints.sql`와 `JpaFoodCatalogImportCheckpointStore`를 추가해 source별 마지막 완료 페이지를 저장한다.
+- `FixedDelayFoodCatalogImportPageThrottle`를 추가했다. 기본 delay는 0ms이며 `app.food-api.import-page-delay-millis`로 페이지 사이 대기 시간을 조정할 수 있다.
+- `FoodCatalogPublicDataImportService`를 추가해 15100066, 15100070, `FoodNtrCpntDbInfo02` 적재 경로를 한 진입점에서 실행할 수 있게 했다.
+- 남은 작업은 동일 식품 추정 중복 후보 리포트, 운영자가 실행할 batch/관리자 트리거, 실제 공공 API smoke 검증이다.
 
 ### 3단계: 브랜드 공식 메뉴 CSV 적재
 

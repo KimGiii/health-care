@@ -57,6 +57,9 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
     /** 외부/배치 적재 시 source + foodCode 기준으로 기존 카탈로그 항목을 찾는다. */
     Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode);
 
+    /** 중복 후보 리포트용: 사용자 커스텀 식품을 제외한 전체 카탈로그를 반환한다. */
+    List<FoodCatalog> findByIsCustomFalse();
+
     /** 커스텀 식품 중복 검사: 같은 이름(대소문자 무시) + 카테고리 조합 */
     @Query("""
             SELECT f FROM FoodCatalog f

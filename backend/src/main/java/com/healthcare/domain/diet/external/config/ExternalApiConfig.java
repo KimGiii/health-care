@@ -28,4 +28,13 @@ public class ExternalApiConfig {
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
+
+    /** 식약처 식품영양성분DB정보 API */
+    @Bean("foodNutrientDbRestClient")
+    public RestClient foodNutrientDbRestClient() {
+        return RestClient.builder()
+                .baseUrl(props.getFoodNutrientDbApiUrl())
+                .defaultHeader("Accept", "application/json")
+                .build();
+    }
 }

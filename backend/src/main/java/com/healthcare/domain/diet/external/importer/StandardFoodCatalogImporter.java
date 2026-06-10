@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-abstract class StandardFoodCatalogImporter {
+abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<StandardFoodImportRow> {
 
     private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);
     private static final Map<String, FoodCategory> CATEGORY_MAPPING = Map.ofEntries(
