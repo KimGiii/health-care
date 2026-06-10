@@ -257,6 +257,45 @@ class DietRecommendationEngineTest {
             // 같은 식품이 여러 끼니에 반복될 수 있음 — 결과는 non-null
             assertThat(result).isNotNull();
         }
+
+        @Test
+        @DisplayName("RECOMMENDABLE_WITH_CAUTION 식품은 추천되고 caution 필드에 사유가 담긴다")
+        void recommend_cautionFood_hasCautionField() {
+            FoodCatalog cautionFood = FoodCatalog.builder()
+                    .id(1L).name("와퍼").category(FoodCategory.PROCESSED)
+                    .caloriesPer100g(300.0).proteinPer100g(15.0)
+                    .carbsPer100g(25.0).fatPer100g(18.0)
+                    .recommendationStatus(com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE_WITH_CAUTION)
+                    .recommendationReason("고지방·고나트륨")
+                    .isCustom(false).usageCount(5L)
+                    .build();
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<RecommendedMeal> result = engine.recommend(
+                    targets, List.of(MealType.LUNCH), List.of(cautionFood), Map.of(), false);
+
+            List<RecommendedFoodEntry> items = result.stream()
+                    .flatMap(m -> m.items().stream())
+                    .toList();
+            assertThat(items).isNotEmpty();
+            assertThat(items).allMatch(e -> "고지방·고나트륨".equals(e.caution()));
+        }
+
+        @Test
+        @DisplayName("RECOMMENDABLE 식품은 추천되고 caution 필드가 null이다")
+        void recommend_normalFood_hasCautionNull() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+            List<FoodCatalog> candidates = diverseCandidates();
+
+            List<RecommendedMeal> result = engine.recommend(
+                    targets, List.of(MealType.LUNCH), candidates, Map.of(), false);
+
+            List<RecommendedFoodEntry> items = result.stream()
+                    .flatMap(m -> m.items().stream())
+                    .toList();
+            assertThat(items).isNotEmpty();
+            assertThat(items).allMatch(e -> e.caution() == null);
+        }
     }
 
     // ─── 헬퍼 ───

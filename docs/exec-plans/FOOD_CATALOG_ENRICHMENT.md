@@ -4,7 +4,7 @@
 
 개정일: 2026-06-11
 
-상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료
+상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료, 4단계 완료
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -286,7 +286,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 |---|---|---|---|
 | 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
-| 4단계 추천 게이트 적용 | 일부 완료 | 추천 후보 조회에 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 필터 적용 | 주의 상태 사유를 추천 응답에 노출할지 모델 검토 |
+| 4단계 추천 게이트 적용 | **완료** | 추천 후보 조회 필터 + `RecommendedFoodEntry.caution` 필드로 주의 사유 응답 노출 | — |
 | 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
 | 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
 | 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
@@ -343,6 +343,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - `StandardDishFoodImporter`를 추가해 15100070 음식 표준데이터 row를 `MFDS_STANDARD_DISH` 출처로 적재한다. `restNm` 성격의 값은 `brand_name`/`maker`에 보존한다.
 - `MfdsFoodNutrientDbImporter`를 추가해 `FoodNtrCpntDbInfo02` row를 `MFDS_FOOD_NUTRIENT_DB` 출처로 적재한다.
 - 공통 동작은 `source + food_code` 기준 신규 생성/기존 항목 갱신이며, 필수값(`food_code`, 식품명, 열량)이 없으면 skip 처리한다.
+- 공공데이터 재적재는 원본 메타데이터와 영양값만 갱신하고, 기존 항목의 추천 검수 상태(`recommendation_status`, `recommendation_reason`)는 보존한다.
 - `StandardProcessedFoodPageFetcher`, `StandardDishFoodPageFetcher`, `MfdsFoodNutrientDbPageFetcher`를 추가해 공공데이터 API 페이지 응답을 importer row로 변환한다.
 - `FoodCatalogImportBatchRunner`는 체크포인트의 다음 페이지부터 `fetcher -> importer -> checkpoint 저장` 순서로 순회한다. 페이지 처리 중 예외가 나면 해당 페이지는 완료로 기록하지 않아 재시작 시 같은 페이지부터 다시 처리한다.
 - `V24__food_catalog_import_checkpoints.sql`와 `JpaFoodCatalogImportCheckpointStore`를 추가해 source별 마지막 완료 페이지를 저장한다.
@@ -351,6 +352,8 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - `FoodCatalogDuplicateCandidateReporter`를 추가해 정규화 이름(`[공백, -, _, /, (), （）]` 제거 후 소문자) 기준으로 동일 추정 중복 그룹을 찾는다. 자동 병합 없이 리포트만 반환한다.
 - `FoodCatalogDuplicateReportService`가 DB에서 비커스텀 카탈로그를 로드해 reporter에 전달하고, 컨트롤러 응답 DTO로 매핑한다.
 - `FoodCatalogAdminController`를 추가해 운영 실행 트리거 3종(`POST /api/v1/admin/diet/catalog/import/{processed-foods|dish-foods|nutrient-db}`)과 중복 후보 리포트(`GET /api/v1/admin/diet/catalog/dedup/report`)를 제공한다.
+- 관리자 카탈로그 작업은 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` operation token을 요구한다. `app.admin.operation-token`이 비어 있으면 fail-closed로 거부된다.
+- `FoodCatalogAdminOperations`를 추가해 관리자 카탈로그 작업의 권한 검증, `pageSize`/`maxPages` 상한, 실행 로그, 실제 작업 호출을 한 module에 모았다.
 - 남은 작업은 실제 공공 API smoke 검증(API 키 설정 후 수동 실행)과 운영 rate limit 값 확정이다.
 
 ### 3단계: 브랜드 공식 메뉴 CSV 적재

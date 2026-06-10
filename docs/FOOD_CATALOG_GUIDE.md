@@ -162,6 +162,7 @@ Phase 2의 첫 구현으로 공공데이터 row를 내부 `food_catalog`로 적�
 
 - `source + food_code` 기준으로 기존 항목을 찾고, 없으면 생성합니다.
 - 같은 `source + food_code`가 다시 들어오면 기존 항목의 원본 메타데이터와 영양값을 갱신합니다.
+- 공공데이터 재적재는 추천 검수 상태(`recommendation_status`, `recommendation_reason`)를 덮어쓰지 않습니다.
 - `food_code`, 식품명, 열량이 없거나 파싱할 수 없으면 skip 처리합니다.
 - 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. 추천 후보 승격은 별도 추천 적합성 게이트에서 다룹니다.
 - `last_verified_at`은 원본 기준일을 KST 자정 기준으로 저장합니다.
@@ -196,6 +197,8 @@ CREATE TABLE food_catalog_import_checkpoints (
 
 ```yaml
 app:
+  admin:
+    operation-token: ${ADMIN_OPERATION_TOKEN:}
   food-api:
     public-api-key: ${PUBLIC_FOOD_API_KEY:}
     processed-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api
@@ -220,14 +223,17 @@ app:
 
 `FoodCatalogAdminController` — `/api/v1/admin/diet/catalog`
 
+모든 관리자 카탈로그 작업은 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` 헤더가 필요합니다. 서버의 `app.admin.operation-token`이 비어 있거나 요청 헤더가 일치하지 않으면 403으로 거부됩니다.
+
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | `POST` | `/import/processed-foods` | 가공식품 표준데이터(15100066) 배치 적재 |
 | `POST` | `/import/dish-foods` | 음식 표준데이터(15100070) 배치 적재 |
 | `POST` | `/import/nutrient-db` | 식품영양성분DB(`FoodNtrCpntDbInfo02`) 배치 적재 |
+| `POST` | `/import/brand-csv` | 브랜드 공식 메뉴 CSV 수동 검수 적재 |
 | `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트 |
 
-import 엔드포인트는 `pageSize`(기본 100)와 `maxPages`(기본 500) 쿼리 파라미터를 받습니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, created/updated/skipped 수, exhausted 여부)를 포함합니다.
+import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, created/updated/skipped 수, exhausted 여부)를 포함합니다.
 
 dedup 리포트 응답 예시:
 
