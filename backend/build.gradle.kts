@@ -70,6 +70,9 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // smoke 테스트에서 @EnabledIfEnvironmentVariable 조건이 동작하려면 데몬 JVM에서
+    // 테스트 JVM으로 명시적으로 전달해야 한다.
+    System.getenv("PUBLIC_FOOD_API_KEY")?.let { environment("PUBLIC_FOOD_API_KEY", it) }
 }
 
 tasks.named<BootJar>("bootJar") {

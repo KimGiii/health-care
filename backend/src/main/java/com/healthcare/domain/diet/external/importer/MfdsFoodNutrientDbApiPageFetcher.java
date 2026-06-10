@@ -32,9 +32,8 @@ public class MfdsFoodNutrientDbApiPageFetcher implements FoodCatalogImportPageFe
                 .retrieve()
                 .body(MfdsFoodNutrientDbApiResponse.class);
 
-        MfdsFoodNutrientDbApiBody body = response == null || response.getResponse() == null
-                ? null
-                : response.getResponse().getBody();
+        // 실제 응답 구조: { "header": {...}, "body": { "items": [...], ... } }
+        MfdsFoodNutrientDbApiBody body = response == null ? null : response.getBody();
         if (body == null || body.getItems() == null) {
             return new FoodCatalogImportPage<>(List.of(), false);
         }
@@ -47,36 +46,18 @@ public class MfdsFoodNutrientDbApiPageFetcher implements FoodCatalogImportPageFe
     }
 
     private boolean hasNext(MfdsFoodNutrientDbApiBody body, int fallbackPageNo, int fallbackPageSize) {
-        int totalCount = parseInt(body.getTotalCount(), 0);
-        int pageNo = parseInt(body.getPageNo(), fallbackPageNo);
-        int pageSize = parseInt(body.getNumOfRows(), fallbackPageSize);
-        return pageNo * pageSize < totalCount;
+        int totalCount = body.getTotalCount() != null ? body.getTotalCount() : 0;
+        int currentPage = body.getPageNo() != null ? body.getPageNo() : fallbackPageNo;
+        int currentSize = body.getNumOfRows() != null ? body.getNumOfRows() : fallbackPageSize;
+        return currentPage * currentSize < totalCount;
     }
 
-    private int parseInt(String value, int fallback) {
-        if (value == null || value.isBlank()) {
-            return fallback;
-        }
-        try {
-            return Integer.parseInt(value.trim().replace(",", ""));
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
+    // 실제 응답: { "header": {...}, "body": { "pageNo": 1, "totalCount": 282296, ... } }
     @Getter
     @Setter
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class MfdsFoodNutrientDbApiResponse {
-        private MfdsFoodNutrientDbApiResponseData response;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class MfdsFoodNutrientDbApiResponseData {
         private MfdsFoodNutrientDbApiBody body;
     }
 
@@ -86,9 +67,9 @@ public class MfdsFoodNutrientDbApiPageFetcher implements FoodCatalogImportPageFe
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class MfdsFoodNutrientDbApiBody {
         private List<MfdsFoodNutrientDbApiItem> items;
-        private String totalCount;
-        private String numOfRows;
-        private String pageNo;
+        private Integer totalCount;
+        private Integer numOfRows;
+        private Integer pageNo;
     }
 
     @Getter
