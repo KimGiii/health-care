@@ -4,7 +4,7 @@
 
 개정일: 2026-06-10
 
-상태: 1단계 구현 완료, 2단계 준비
+상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기)
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -282,15 +282,15 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 
 ### 현재 작업 목록(2026-06-10)
 
-| 단계 | 상태 | 현재 작업 | 다음 액션 |
+| 단계 | 상태 | 완료 내용 | 다음 액션 |
 |---|---|---|---|
 | 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
 | 4단계 추천 게이트 적용 | 일부 완료 | 추천 후보 조회에 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 필터 적용 | 주의 상태 사유를 추천 응답에 노출할지 모델 검토 |
-| 2단계 공공데이터 배치 적재 | 진행 중 | row importer, API 페이지 fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅 구현 | 중복 후보 리포트, 운영 실행 트리거, 실제 API smoke 검증 |
+| 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
 | 3단계 브랜드 CSV 적재 | 대기 | 브랜드 공식 영양정보 수동 검수 적재 방식 유지 | CSV 템플릿과 관리자 검수 플로우 정의 |
 | 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
-| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태 Spec 테스트 보강 | DB가 있는 환경에서 전체 테스트와 Flyway 적용 검증 |
+| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터 테스트 완료 | DB가 있는 환경에서 Flyway V23/V24 적용 검증, 실제 API smoke 검증 |
 
 ### 0단계: 데이터 프로파일링
 
@@ -348,7 +348,10 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - `V24__food_catalog_import_checkpoints.sql`와 `JpaFoodCatalogImportCheckpointStore`를 추가해 source별 마지막 완료 페이지를 저장한다.
 - `FixedDelayFoodCatalogImportPageThrottle`를 추가했다. 기본 delay는 0ms이며 `app.food-api.import-page-delay-millis`로 페이지 사이 대기 시간을 조정할 수 있다.
 - `FoodCatalogPublicDataImportService`를 추가해 15100066, 15100070, `FoodNtrCpntDbInfo02` 적재 경로를 한 진입점에서 실행할 수 있게 했다.
-- 남은 작업은 동일 식품 추정 중복 후보 리포트, 운영자가 실행할 batch/관리자 트리거, 실제 공공 API smoke 검증이다.
+- `FoodCatalogDuplicateCandidateReporter`를 추가해 정규화 이름(`[공백, -, _, /, (), （）]` 제거 후 소문자) 기준으로 동일 추정 중복 그룹을 찾는다. 자동 병합 없이 리포트만 반환한다.
+- `FoodCatalogDuplicateReportService`가 DB에서 비커스텀 카탈로그를 로드해 reporter에 전달하고, 컨트롤러 응답 DTO로 매핑한다.
+- `FoodCatalogAdminController`를 추가해 운영 실행 트리거 3종(`POST /api/v1/admin/diet/catalog/import/{processed-foods|dish-foods|nutrient-db}`)과 중복 후보 리포트(`GET /api/v1/admin/diet/catalog/dedup/report`)를 제공한다.
+- 남은 작업은 실제 공공 API smoke 검증(API 키 설정 후 수동 실행)과 운영 rate limit 값 확정이다.
 
 ### 3단계: 브랜드 공식 메뉴 CSV 적재
 
@@ -398,11 +401,14 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 
 ## 12. 오픈 이슈
 
-- `FoodNtrCpntDbInfo02`와 가공식품/음식 표준데이터의 실제 중복률 확인
+- 실제 공공 API smoke 검증: `PUBLIC_FOOD_API_KEY` 설정 후 각 importer 수동 실행 및 응답 확인
+- 운영 rate limit 값 확정: 현재 기본 0ms, 공공 API 트래픽 제한에 맞는 값으로 조정 필요
+- `FoodNtrCpntDbInfo02`와 가공식품/음식 표준데이터의 실제 중복률 확인(dedup 리포트 실행 후)
 - 표준데이터 2종의 라이선스/재사용 조건 근거 문서화
 - 브랜드 공식 영양정보의 약관/재사용 조건 확인
 - 세트 메뉴를 단일 항목으로 둘지 구성품 기반으로 분리할지 v2에서 결정
 - 추천 적합성 게이트의 초기 나트륨/당류/포화지방 기준값 확정
+- `RECOMMENDABLE_WITH_CAUTION`의 주의 사유를 추천 응답 모델에 노출할지 결정
 - 사용자 커스텀 식품을 추천 후보로 승격할 수 있는 검수 기준 정의
 - 앱 내 출처 고지 UI 위치 결정
 

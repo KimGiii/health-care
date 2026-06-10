@@ -4,7 +4,7 @@
 
 **개정일**: 2026-06-10
 
-**상태**: MVP 구현 완료 / 카탈로그 강화 Phase 1 스키마 + 추천 후보 필터 구현
+**상태**: MVP 구현 완료 / Phase 1 스키마 + 추천 후보 필터 + Phase 2 배치 파이프라인·중복 리포터·관리자 API 구현
 
 **작업 브랜치**: `feat/allegen-recommendation`
 
@@ -14,7 +14,7 @@
 
 HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용자 커스텀 식품의 조합으로 운영됩니다. 이 문서는 2026-05-04에 구현된 **사용 횟수 추적** 및 **사용자 직접 등록** 기능을 설명합니다.
 
-2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 `food_catalog`의 출처, 브랜드, 제공량, 추천 상태를 담기 위한 V23 스키마 보강과 백엔드 엔티티/응답 DTO 반영, 추천 후보 조회의 `recommendation_status` 필터 적용이 완료되었습니다.
+2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 V23 스키마 보강과 추천 후보 필터(Phase 1)에 이어, 공공데이터 배치 적재 파이프라인, 동일 추정 중복 후보 리포터, 관리자 실행 API(Phase 2)가 완료되었습니다.
 
 앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
 
@@ -123,6 +123,13 @@ backend/src/main/java/com/healthcare/domain/diet/
     ├── FoodCatalogImportBatchRunner.java
     ├── JpaFoodCatalogImportCheckpointStore.java
     └── FoodCatalogPublicDataImportService.java
+├── external/dedup/                     # 중복 후보 리포터
+│   ├── FoodCatalogDuplicateCandidateReporter.java
+│   ├── FoodCatalogDuplicateCandidateReport.java
+│   ├── FoodCatalogDuplicateGroup.java
+│   ├── FoodCatalogDuplicateReportService.java
+│   └── (Response DTOs)
+└── controller/FoodCatalogAdminController.java  # 관리자 API
 ```
 
 #### API 응답 추가 필드
@@ -195,6 +202,51 @@ app:
     general-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api
     food-nutrient-db-api-url: https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02
     import-page-delay-millis: 0
+```
+
+### 0.3 중복 후보 리포터와 관리자 API
+
+#### 중복 후보 리포터
+
+`FoodCatalogDuplicateCandidateReporter`는 정규화 이름 기준으로 동일 추정 중복 그룹을 찾습니다. DB 의존 없이 `List<FoodCatalog>`를 받아 in-memory로 동작합니다.
+
+정규화 규칙:
+- `nameKo`(없으면 `name`) 기준
+- 소문자 변환 후 `[공백, -, _, /, (), （）]` 제거
+
+자동 병합은 하지 않습니다. 그룹 정보(`normalizedKey`, 항목 목록)만 반환하며, 병합 여부는 운영자가 직접 판단합니다.
+
+#### 관리자 API 엔드포인트
+
+`FoodCatalogAdminController` — `/api/v1/admin/diet/catalog`
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| `POST` | `/import/processed-foods` | 가공식품 표준데이터(15100066) 배치 적재 |
+| `POST` | `/import/dish-foods` | 음식 표준데이터(15100070) 배치 적재 |
+| `POST` | `/import/nutrient-db` | 식품영양성분DB(`FoodNtrCpntDbInfo02`) 배치 적재 |
+| `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트 |
+
+import 엔드포인트는 `pageSize`(기본 100)와 `maxPages`(기본 500) 쿼리 파라미터를 받습니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, created/updated/skipped 수, exhausted 여부)를 포함합니다.
+
+dedup 리포트 응답 예시:
+
+```json
+{
+  "totalGroups": 3,
+  "totalCandidates": 7,
+  "groups": [
+    {
+      "normalizedKey": "닭가슴살",
+      "count": 3,
+      "entries": [
+        { "id": 1, "name": "닭가슴살", "source": "SEED", "caloriesPer100g": 165.0, ... },
+        { "id": 42, "name": "닭 가슴살", "source": "MFDS_FOOD_NUTRIENT_DB", ... },
+        { "id": 87, "name": "닭가슴살(구운)", "source": "MFDS_STANDARD_PROCESSED", ... }
+      ]
+    }
+  ]
+}
 ```
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
@@ -459,6 +511,23 @@ NavigationStack(path: $recordTabPath) {
 - StandardDishFoodImporterTest: importRows_createsDishFoodCatalogItem()
 - MfdsFoodNutrientDbImporterTest: importRows_createsFoodNutrientDbCatalogItem()
 
+// Phase 2 배치 파이프라인
+- FoodCatalogImportBatchRunnerTest: importPages_resumesFromNextCheckpointAndMarksCompletedPages()
+- FoodCatalogImportBatchRunnerTest: importPages_doesNotAdvanceCheckpointWhenPageFails()
+- FoodCatalogPublicDataImportServiceTest: importStandardProcessedFoods_routesToProcessedFetcherAndImporter()
+- JpaFoodCatalogImportCheckpointStoreTest: 체크포인트 저장/조회 E2E
+
+// Phase 2 중복 후보 리포터
+- FoodCatalogDuplicateCandidateReporterTest: report_emptyInput_returnsEmptyReport()
+- FoodCatalogDuplicateCandidateReporterTest: report_singleEntry_noGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_sameNormalizedName_formsGroup()
+- FoodCatalogDuplicateCandidateReporterTest: report_differentNames_noGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_threeEntriesSameName_allInOneGroup()
+- FoodCatalogDuplicateCandidateReporterTest: report_multipleNameGroups_separateGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_nullNameKo_usesNameForNormalization()
+- FoodCatalogDuplicateCandidateReporterTest: report_groupHasNormalizedKey()
+- FoodCatalogDuplicateCandidateReporterTest: report_parenthesesDifference_normalizedToSameKey()
+
 // FoodCatalogServiceTest
 - createCustomFood_이미_존재하는_이름_카테고리_조합_중복_거절()
 - createCustomFood_NFC_정규화()
@@ -494,6 +563,10 @@ NavigationStack(path: $recordTabPath) {
    - 기존 시드 식품은 추천 후보 유지를 위해 `RECOMMENDABLE`로 백필됩니다.
    - 기존 사용자 커스텀 식품은 검증 전 추천 제외를 위해 `SEARCH_ONLY`로 백필됩니다.
 
+3. **V24 마이그레이션 실행**
+   - Flyway가 `V24__food_catalog_import_checkpoints.sql`을 자동 적용합니다.
+   - 공공데이터 배치 적재 시 source별 마지막 완료 페이지를 추적하는 `food_catalog_import_checkpoints` 테이블이 생성됩니다.
+
 3. **초기 usage_count 계산 (선택 사항)**
    ```sql
    -- 기존 식단 기록을 기반으로 usage_count 초기화
@@ -510,9 +583,11 @@ NavigationStack(path: $recordTabPath) {
    - AI로 추정된 영양성분 표시 UI 미구현
    - 향후: "AI 추정값" 배지 + disclaimer 텍스트 추가
 
-3. **공공데이터 사전 적재 미완료**
-   - 현재 외부 공공데이터를 사용자 경로에서 직접 조회하는 흐름이 남아 있음
-   - 향후: 배치/관리자 적재로 내부 `food_catalog`를 보강하고, 사용자 검색/추천은 내부 DB 기준으로 고정
+3. **공공데이터 사전 적재 파이프라인 구현 완료, 실제 실행 대기**
+   - 배치 파이프라인(importer, fetcher, runner, checkpoint) 구현 완료
+   - `POST /api/v1/admin/diet/catalog/import/*` 관리자 API로 실행 가능
+   - 실제 실행 전 `PUBLIC_FOOD_API_KEY` 환경 변수 설정 필요
+   - 5단계(검색/기록 경로 정리)에서 사용자 검색 경로의 외부 API 의존을 내부 DB 기준으로 고정 예정
 
 4. **주의 상태 추천 응답 모델 미확정**
    - `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되지만, 추천 응답에서 `recommendation_reason`을 어떤 형태로 노출할지는 아직 확정되지 않음
