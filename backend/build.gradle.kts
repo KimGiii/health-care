@@ -57,6 +57,9 @@ dependencies {
     // Firebase Admin SDK
     implementation("com.google.firebase:firebase-admin:9.3.0")
 
+    // CSV parsing
+    implementation("org.apache.commons:commons-csv:1.12.0")
+
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

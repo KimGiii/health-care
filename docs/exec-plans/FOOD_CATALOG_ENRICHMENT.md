@@ -2,9 +2,9 @@
 
 작성일: 2026-06-04
 
-개정일: 2026-06-10
+개정일: 2026-06-11
 
-상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기)
+상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -288,7 +288,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
 | 4단계 추천 게이트 적용 | 일부 완료 | 추천 후보 조회에 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 필터 적용 | 주의 상태 사유를 추천 응답에 노출할지 모델 검토 |
 | 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
-| 3단계 브랜드 CSV 적재 | 대기 | 브랜드 공식 영양정보 수동 검수 적재 방식 유지 | CSV 템플릿과 관리자 검수 플로우 정의 |
+| 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
 | 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
 | 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터 테스트 완료 | DB가 있는 환경에서 Flyway V23/V24 적용 검증, 실제 API smoke 검증 |
 
@@ -359,6 +359,16 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 2. 관리자 검수 플로우 정의
 3. 상위 브랜드 일부 수동 입력
 4. `BRAND_OFFICIAL` 출처로 적재
+
+진행 메모(2026-06-11):
+
+- `BrandMenuCsvRow`를 추가해 CSV 행의 필드 구조를 정의했다. 헤더 배열은 `BrandMenuCsvRow.HEADERS`로 노출한다.
+- `BrandMenuCsvImporter`를 추가해 Apache Commons CSV로 UTF-8 CSV를 파싱하고, 1회 제공량(serving_size_g) 기준 영양소 값을 100g당 값으로 변환한 뒤 `BRAND_OFFICIAL` 출처로 upsert한다. `serving_size_g`가 없으면 입력값을 100g당 값으로 그대로 사용한다.
+- `food_code`는 `brandName:menuName` 소문자 형식으로 생성한다. `source + food_code` 유니크 인덱스를 활용해 중복 없이 upsert한다.
+- `recommendation_status` 컬럼으로 메뉴 단위 추천 여부를 제어한다. 알 수 없는 값은 `SEARCH_ONLY`로 폴백한다.
+- `FoodCatalogAdminController`에 `POST /api/v1/admin/diet/catalog/import/brand-csv` 엔드포인트를 추가해 `multipart/form-data` CSV 업로드를 받는다.
+- `docs/references/brand_menu_csv_template.csv`에 헤더·예시 행 포함 CSV 템플릿을 추가했다.
+- `build.gradle.kts`에 `org.apache.commons:commons-csv:1.12.0` 의존성을 추가했다.
 
 ### 4단계: 추천 게이트 적용
 
