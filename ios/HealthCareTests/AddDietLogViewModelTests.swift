@@ -22,7 +22,6 @@ final class AddDietLogViewModelTests: XCTestCase {
         let executedQueries = await searcher.executedQueries
         XCTAssertEqual(executedQueries, ["닭가슴살"])
         XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
-        XCTAssertEqual(source.externalResults.map(\.displayName), ["닭가슴살 외부"])
     }
 
     func testScheduleSearch_디바운스이전새입력이오면이전대기작업이취소된다() async throws {
@@ -62,7 +61,6 @@ final class AddDietLogViewModelTests: XCTestCase {
         let source = FoodEntrySource()
         source.searchQuery = "비빔밥"
         source.catalogResults = [makeCatalogItem(name: "비빔밥")]
-        source.externalResults = [makeExternalFood(name: "비빔밥 외부")]
         source.aiEstimateResult = makeAiEstimate(foodName: "비빔밥")
         source.isSearching = true
 
@@ -70,7 +68,6 @@ final class AddDietLogViewModelTests: XCTestCase {
 
         XCTAssertEqual(source.searchQuery, "")
         XCTAssertTrue(source.catalogResults.isEmpty)
-        XCTAssertTrue(source.externalResults.isEmpty)
         XCTAssertNil(source.aiEstimateResult)
         XCTAssertFalse(source.isSearching)
     }
@@ -78,10 +75,6 @@ final class AddDietLogViewModelTests: XCTestCase {
     func testSearchAll_느린이전응답이최신결과를덮어쓰지못한다() async throws {
         let searcher = MockDietFoodSearcher(
             catalogDelay: [
-                "닭": .milliseconds(200),
-                "닭가슴살": .milliseconds(20)
-            ],
-            externalDelay: [
                 "닭": .milliseconds(200),
                 "닭가슴살": .milliseconds(20)
             ]
@@ -99,7 +92,6 @@ final class AddDietLogViewModelTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
-        XCTAssertEqual(source.externalResults.map(\.displayName), ["닭가슴살 외부"])
     }
 
     func testEntryBinding_삭제된식품항목을다시읽어도안전한마지막값을반환한다() {
@@ -133,6 +125,19 @@ final class AddDietLogViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.draft.entries.first?.servingGText, "100")
     }
 
+    func testDraftFoodEntry_브랜드공식메뉴는제공량을기본기록량으로사용한다() {
+        var food = makeCatalogItem(name: "와퍼")
+        food.source = "BRAND_OFFICIAL"
+        food.servingSizeG = 290
+        food.servingReference = "290g"
+
+        let draft = DraftFoodEntry(food: food)
+
+        XCTAssertEqual(draft.servingGText, "290")
+        XCTAssertEqual(draft.calories, 290)
+        XCTAssertEqual(food.catalogNutritionSummary, "290 kcal / 290g")
+    }
+
     private func makeCatalogItem(name: String) -> FoodCatalogItem {
         FoodCatalogItem(
             id: abs(name.hashValue),
@@ -152,27 +157,6 @@ final class AddDietLogViewModelTests: XCTestCase {
             custom: false,
             usageCount: 0,
             createdByUserId: nil
-        )
-    }
-
-    private func makeExternalFood(name: String) -> ExternalFoodResult {
-        ExternalFoodResult(
-            source: .PUBLIC_FOOD_API,
-            externalId: name,
-            name: name,
-            nameKo: name,
-            brand: nil,
-            category: .OTHER,
-            caloriesPer100g: 100,
-            proteinPer100g: 10,
-            carbsPer100g: 10,
-            fatPer100g: 5,
-            sugarsPer100g: nil,
-            dietaryFiberPer100g: nil,
-            saturatedFatPer100g: nil,
-            transFatPer100g: nil,
-            cholesterolPer100gMg: nil,
-            sodiumPer100gMg: nil
         )
     }
 
@@ -208,14 +192,9 @@ private actor MockDietFoodSearcher: DietFoodSearching {
     private(set) var executedQueries: [String] = []
 
     private let catalogDelay: [String: Duration]
-    private let externalDelay: [String: Duration]
 
-    init(
-        catalogDelay: [String: Duration] = [:],
-        externalDelay: [String: Duration] = [:]
-    ) {
+    init(catalogDelay: [String: Duration] = [:]) {
         self.catalogDelay = catalogDelay
-        self.externalDelay = externalDelay
     }
 
     func searchFoodCatalog(query: String) async throws -> [FoodCatalogItem] {
@@ -243,33 +222,6 @@ private actor MockDietFoodSearcher: DietFoodSearching {
                 custom: false,
                 usageCount: 0,
                 createdByUserId: nil
-            )
-        ]
-    }
-
-    func searchExternalFoods(query: String) async throws -> [ExternalFoodResult] {
-        if let delay = externalDelay[query] {
-            try await Task.sleep(for: delay)
-        }
-        try Task.checkCancellation()
-        return [
-            ExternalFoodResult(
-                source: .PUBLIC_FOOD_API,
-                externalId: query,
-                name: "\(query) 외부",
-                nameKo: "\(query) 외부",
-                brand: nil,
-                category: .OTHER,
-                caloriesPer100g: 100,
-                proteinPer100g: 10,
-                carbsPer100g: 10,
-                fatPer100g: 5,
-                sugarsPer100g: nil,
-                dietaryFiberPer100g: nil,
-                saturatedFatPer100g: nil,
-                transFatPer100g: nil,
-                cholesterolPer100gMg: nil,
-                sodiumPer100gMg: nil
             )
         ]
     }

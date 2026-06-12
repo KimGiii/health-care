@@ -46,9 +46,6 @@ enum APIEndpoint {
     // Diet - Catalog
     case getFoodCatalog(query: String?)
     case createCustomFood(body: Data)
-    // Diet - External Foods
-    case searchExternalFoods(query: String, source: String, page: Int, size: Int)
-    case importExternalFood(body: Data)
 
     // Body Measurement
     case createBodyMeasurement(body: Data)
@@ -114,8 +111,6 @@ extension APIEndpoint {
         case .confirmMealPhotoAnalysis(let id, _):
                                                  return "/api/v1/diet/photo-analyses/\(id)/confirm"
         case .getFoodCatalog, .createCustomFood: return "/api/v1/diet/catalog"
-        case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
-        case .importExternalFood:                return "/api/v1/diet/external-foods/import"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
@@ -148,7 +143,7 @@ extension APIEndpoint {
         switch self {
         case .register, .login, .socialLogin, .socialLoginCheck, .socialLoginCommit, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
-             .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
+             .analyzeMealPhoto, .confirmMealPhotoAnalysis,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
              .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise:
             return .POST
@@ -174,7 +169,6 @@ extension APIEndpoint {
              .createExerciseSession(let b),
              .createDietLog(let b), .updateDietLog(_, let b), .initiateMealPhotoAnalysis(let b),
              .analyzeMealPhoto(_, let b), .confirmMealPhotoAnalysis(_, let b),
-             .importExternalFood(let b),
              .createBodyMeasurement(let b), .initiatePhotoUpload(let b), .registerProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b),
              .aiEstimateFood(let b), .aiEstimateExercise(let b),
@@ -210,13 +204,6 @@ extension APIEndpoint {
             if let from { items.append(.init(name: "from", value: from)) }
             if let to   { items.append(.init(name: "to",   value: to))   }
             return items
-        case .searchExternalFoods(let q, let source, let page, let size):
-            return [
-                .init(name: "q",      value: q),
-                .init(name: "source", value: source),
-                .init(name: "page",   value: "\(page)"),
-                .init(name: "size",   value: "\(size)")
-            ]
         case .getBodyMeasurements(let page, let size):
             return [
                 .init(name: "page", value: "\(page)"),

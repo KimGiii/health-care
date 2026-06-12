@@ -4,7 +4,7 @@
 
 개정일: 2026-06-11
 
-상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료, 4단계 완료
+상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료, 4단계 완료, 5단계 완료
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -188,11 +188,14 @@ CREATE INDEX idx_food_catalog_recommendation_status
 
 v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 수집/검수한 데이터만 `BRAND_OFFICIAL`로 적재한다.
 
+v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재를 기준 경로로 둔다. 개별 식품의 추천 상태를 직접 수정하는 관리자 API는 원본 CSV와 DB 상태가 갈라질 수 있으므로 즉시 만들지 않는다. 운영 중 CSV 재적재가 과하게 무겁다는 근거가 쌓이면, 변경 이력과 원본 충돌 정책을 함께 설계한 뒤 후속으로 검토한다.
+
 필수 컬럼:
 
 - `brand_name`
 - `menu_name`
 - `category`
+- `nutrition_basis` (`PER_SERVING` 또는 `PER_100G`)
 - `serving_size_g`
 - `calories`
 - `protein`
@@ -210,14 +213,14 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 
 ## 7. 추천 적합성 게이트
 
-추천 후보는 `food_catalog` 전체가 아니라 추천 적합성 게이트를 통과한 일부 항목만 사용한다.
+추천 후보는 `food_catalog` 전체가 아니라 추천 적합성 게이트를 통과한 일부 항목만 사용한다. 다만 Phase 4의 런타임 범위는 `recommendation_status` 계약과 추천 응답 노출까지로 제한한다. 나트륨/당류/포화지방의 자동 판정 기준값 산정은 데이터 운영 작업으로 분리해, CSV/관리자 검수 정책에서 먼저 검증한 뒤 후속 자동화 여부를 결정한다.
 
 초기 판단 기준:
 
 | 상태 | 기준 |
 |---|---|
-| `RECOMMENDABLE` | 제공량 기준 영양값이 완전하고, 단백질/칼로리/나트륨/당류/포화지방이 정책 기준 내 |
-| `RECOMMENDABLE_WITH_CAUTION` | 추천 가능하지만 나트륨, 당류, 포화지방 중 하나가 주의 기준에 근접 또는 초과 |
+| `RECOMMENDABLE` | 제공량 기준 영양값이 완전하고, 운영 검수 기준상 일반 추천에 적합 |
+| `RECOMMENDABLE_WITH_CAUTION` | 추천 가능하지만 나트륨, 당류, 포화지방 등 운영 검수 기준상 주의 표시가 필요 |
 | `SEARCH_ONLY` | 검색/기록에는 유용하지만 추천 목표와 맞지 않거나 영양/알러젠 정보가 부족 |
 | `DISABLED` | 결측/오류/검수 실패/만료 |
 
@@ -289,7 +292,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 | 4단계 추천 게이트 적용 | **완료** | 추천 후보 조회 필터 + `RecommendedFoodEntry.caution` 필드로 주의 사유 응답 노출 | — |
 | 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
 | 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
-| 5단계 검색/기록 경로 정리 | 대기 | 사용자 검색 경로의 외부 API 의존 제거 방향 확정 | 내부 `food_catalog` 우선 검색으로 정리 |
+| 5단계 검색/기록 경로 정리 | **완료** | iOS 외부 API 경로 전면 제거(`ExternalFoodResult`, `ImportFoodRequest`, `FoodDataSource` 삭제, `DietFoodSearching` 프로토콜 단순화), 내부 카탈로그 단일 경로 고정. `ExternalFoodController`는 관리자 도구 전용으로 유지 | — |
 | 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터 테스트 완료 | DB가 있는 환경에서 Flyway V23/V24 적용 검증, 실제 API smoke 검증 |
 
 ### 0단계: 데이터 프로파일링
@@ -366,18 +369,25 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 진행 메모(2026-06-11):
 
 - `BrandMenuCsvRow`를 추가해 CSV 행의 필드 구조를 정의했다. 헤더 배열은 `BrandMenuCsvRow.HEADERS`로 노출한다.
-- `BrandMenuCsvImporter`를 추가해 Apache Commons CSV로 UTF-8 CSV를 파싱하고, 1회 제공량(serving_size_g) 기준 영양소 값을 100g당 값으로 변환한 뒤 `BRAND_OFFICIAL` 출처로 upsert한다. `serving_size_g`가 없으면 입력값을 100g당 값으로 그대로 사용한다.
+- `BrandMenuCsvImporter`를 추가해 Apache Commons CSV로 UTF-8 CSV를 파싱하고, `nutrition_basis`에 따라 입력 영양값을 내부 저장 기준인 100g당 값으로 정규화한 뒤 `BRAND_OFFICIAL` 출처로 upsert한다.
+- `nutrition_basis = PER_SERVING`이면 `serving_size_g`가 필수이며, 입력 영양값은 1회 제공량 전체 기준이다.
+- `nutrition_basis = PER_100G`이면 입력 영양값은 이미 100g당 기준이다. 공식 전체 제공량이 있으면 `serving_size_g`를 보존하고, 없으면 비워 둔다.
+- CSV 헤더가 템플릿과 다르면 파일을 거절한다. 개별 row의 필수값/숫자 형식/제공량 기준이 잘못되면 DB에 저장하지 않고 `rejectedRows`에 row 번호, 필드, 사유를 반환한다.
 - `food_code`는 `brandName:menuName` 소문자 형식으로 생성한다. `source + food_code` 유니크 인덱스를 활용해 중복 없이 upsert한다.
 - `recommendation_status` 컬럼으로 메뉴 단위 추천 여부를 제어한다. 알 수 없는 값은 `SEARCH_ONLY`로 폴백한다.
+- `recommendation_status = RECOMMENDABLE_WITH_CAUTION`은 `recommendation_reason`을 필수로 요구한다. 다른 상태에서는 추천 사유를 저장하지 않아 추천 큐레이션 값 객체의 불변 조건과 맞춘다.
+- v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재로 처리한다. 개별 카탈로그 큐레이션 수정 API는 원본 CSV와 DB 상태 불일치 리스크가 있으므로 후속 운영 필요가 확인될 때 검토한다.
 - `FoodCatalogAdminController`에 `POST /api/v1/admin/diet/catalog/import/brand-csv` 엔드포인트를 추가해 `multipart/form-data` CSV 업로드를 받는다.
 - `docs/references/brand_menu_csv_template.csv`에 헤더·예시 행 포함 CSV 템플릿을 추가했다.
 - `build.gradle.kts`에 `org.apache.commons:commons-csv:1.12.0` 의존성을 추가했다.
+- architecture 정리로 `FoodCatalogIngestService`를 추가했다. 소스별 importer는 원본 row를 `FoodCatalogIngestCandidate`로 변환하고, 공통 적재 모듈이 `source + food_code` upsert, 생성/갱신/거절 집계, 추천 큐레이션 보존/교체 정책을 처리한다.
+- phase 3 architecture 정리로 `FoodCatalogIdentity`를 추가했다. 브랜드 공식 메뉴 `food_code`, 브랜드 인식 중복 후보 키, 표시 이름 정규화를 한곳으로 모아 dedup false positive를 줄이고 이후 검색 정규화에서 재사용할 수 있게 했다.
 
 ### 4단계: 추천 게이트 적용
 
 1. 추천 상태 enum/정책 구현
 2. 추천 후보 조회에 `recommendation_status` 조건 추가
-3. 주의 상태 응답 모델 검토
+3. 주의 상태 응답 모델 확정
 4. 추천 엔진 테스트 보강
 
 진행 메모(2026-06-10):
@@ -385,7 +395,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - 추천 상태 enum과 저장 모델은 1단계에서 선반영되었다.
 - `FoodCatalogSpecs.isRecommendable()`을 추가하고 `DailyDietRecommendationUseCases.loadCandidates()`가 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION`만 조회하도록 변경했다.
 - `FoodCatalogSpecsTest`와 `DailyDietRecommendationUseCasesTest`로 `SEARCH_ONLY`, `DISABLED`가 추천 후보에서 제외되는 조건을 검증했다.
-- 남은 작업은 `RECOMMENDABLE_WITH_CAUTION`의 주의 사유를 추천 응답 모델에 노출할지 결정하는 것이다.
+- `RECOMMENDABLE_WITH_CAUTION`의 주의 사유는 추천 응답의 `RecommendedFoodEntry.caution` 필드로 노출하는 것으로 확정했다. 일반 `RECOMMENDABLE` 식품의 `caution`은 `null`이다.
 
 ### 5단계: 검색/기록 경로 정리
 
@@ -393,6 +403,18 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 2. 외부 API 검색은 관리자/배치 경로로 이동
 3. 사용자 커스텀 식품은 기본 추천 제외
 4. 검색 결과에 브랜드/제공량/출처 표시 여부 검토
+
+진행 메모(2026-06-12):
+
+- iOS 6개 파일 수정, 외부 API 의존 전면 제거.
+- `DietModels.swift`에서 `ExternalFoodResult`, `ImportFoodRequest`, `FoodDataSource` 삭제.
+- `AddDietLogViewModel.swift`의 `DietFoodSearching` 프로토콜을 `searchFoodCatalog(query:)` 단일 메서드로 단순화.
+- `FoodEntrySource.swift`에서 `externalResults` published property, `importAndAdd()`, `fetchExternal()`, 병렬 fetch 로직 제거. `searchAll()`은 카탈로그 단일 경로로 단순화.
+- `AddDietLogView.swift`에서 "외부 검색" 섹션과 `ExternalFoodRow` 구조체 제거.
+- `APIEndpoint.swift`에서 `searchExternalFoods`, `importExternalFood` case 제거.
+- `AddDietLogViewModelTests.swift`에서 `MockDietFoodSearcher`의 `searchExternalFoods` 메서드와 `externalDelay` 파라미터 제거, `makeExternalFood()` 헬퍼 삭제.
+- 백엔드 `ExternalFoodController.java`에 Phase 5 주석 추가 — 엔드포인트는 관리자 도구 전용으로 유지.
+- 제거된 심볼 전수 grep 확인, 백엔드 `compileJava` 오류 없음.
 
 ### 6단계: 테스트와 운영 검증
 
@@ -420,8 +442,7 @@ v1에서는 자동 크롤링을 하지 않는다. 관리자 CSV 템플릿으로 
 - 표준데이터 2종의 라이선스/재사용 조건 근거 문서화
 - 브랜드 공식 영양정보의 약관/재사용 조건 확인
 - 세트 메뉴를 단일 항목으로 둘지 구성품 기반으로 분리할지 v2에서 결정
-- 추천 적합성 게이트의 초기 나트륨/당류/포화지방 기준값 확정
-- `RECOMMENDABLE_WITH_CAUTION`의 주의 사유를 추천 응답 모델에 노출할지 결정
+- 추천 적합성 게이트의 초기 나트륨/당류/포화지방 기준값 확정(Phase 4 런타임과 분리된 데이터 운영 작업)
 - 사용자 커스텀 식품을 추천 후보로 승격할 수 있는 검수 기준 정의
 - 앱 내 출처 고지 UI 위치 결정
 

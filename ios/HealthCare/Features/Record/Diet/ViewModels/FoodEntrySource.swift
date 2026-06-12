@@ -6,7 +6,6 @@ import Foundation
 final class FoodEntrySource: ObservableObject {
     @Published var searchQuery: String = ""
     @Published var catalogResults: [FoodCatalogItem] = []
-    @Published var externalResults: [ExternalFoodResult] = []
     @Published var isSearching = false
     @Published var showCustomFoodForm = false
     @Published var isSubmittingCustomFood = false
@@ -35,7 +34,6 @@ final class FoodEntrySource: ObservableObject {
     func reset() {
         searchQuery = ""
         catalogResults = []
-        externalResults = []
         aiEstimateResult = nil
         errorMessage = nil
         cancelPendingSearches()
@@ -91,15 +89,12 @@ final class FoodEntrySource: ObservableObject {
 
         searchTask = Task { [weak self] in
             do {
-                async let catalogFetch = Self.fetchCatalog(apiClient: apiClient, query: query)
-                async let externalFetch = Self.fetchExternal(apiClient: apiClient, query: query)
-                let (catalog, external) = await (catalogFetch, externalFetch)
+                let catalog = await Self.fetchCatalog(apiClient: apiClient, query: query)
                 try Task.checkCancellation()
 
                 await MainActor.run {
                     guard let self, self.normalizedQuery == query else { return }
                     self.catalogResults = catalog.uniqued(by: \.displayName)
-                    self.externalResults = external.uniqued(by: \.displayName)
                     self.errorMessage = nil
                     self.isSearching = false
                     self.searchTask = nil
@@ -114,7 +109,6 @@ final class FoodEntrySource: ObservableObject {
                 await MainActor.run {
                     guard let self, self.normalizedQuery == query else { return }
                     self.catalogResults = []
-                    self.externalResults = []
                     self.errorMessage = String(localized: "diet.error.foodSearch2")
                     self.isSearching = false
                     self.searchTask = nil
@@ -128,37 +122,6 @@ final class FoodEntrySource: ObservableObject {
 
     func select(food: FoodCatalogItem) {
         onEntryProduced?(DraftFoodEntry(food: food))
-    }
-
-    // MARK: - 외부 식품 임포트 후 추가
-
-    func importAndAdd(external: ExternalFoodResult, apiClient: APIClient) async {
-        do {
-            let body = try JSONEncoder().encode(ImportFoodRequest(
-                source: external.source.rawValue,
-                externalId: external.externalId,
-                name: external.name,
-                nameKo: external.nameKo,
-                brand: external.brand,
-                category: external.category?.rawValue ?? "OTHER",
-                caloriesPer100g: external.caloriesPer100g ?? 0,
-                proteinPer100g: external.proteinPer100g,
-                carbsPer100g: external.carbsPer100g,
-                fatPer100g: external.fatPer100g,
-                sugarsPer100g: external.sugarsPer100g,
-                dietaryFiberPer100g: external.dietaryFiberPer100g,
-                saturatedFatPer100g: external.saturatedFatPer100g,
-                transFatPer100g: external.transFatPer100g,
-                cholesterolPer100gMg: external.cholesterolPer100gMg,
-                sodiumPer100gMg: external.sodiumPer100gMg
-            ))
-            let item: FoodCatalogItem = try await apiClient.request(.importExternalFood(body: body))
-            onEntryProduced?(DraftFoodEntry(food: item))
-        } catch let error as APIError {
-            errorMessage = error.errorDescription
-        } catch {
-            errorMessage = String(localized: "diet.error.foodAdd")
-        }
     }
 
     // MARK: - AI 영양 추정
@@ -275,16 +238,11 @@ final class FoodEntrySource: ObservableObject {
 
     private func resetResults() {
         catalogResults = []
-        externalResults = []
         aiEstimateResult = nil
         isSearching = false
     }
 
     private static func fetchCatalog(apiClient: any DietFoodSearching, query: String) async -> [FoodCatalogItem] {
         (try? await apiClient.searchFoodCatalog(query: query)) ?? []
-    }
-
-    private static func fetchExternal(apiClient: any DietFoodSearching, query: String) async -> [ExternalFoodResult] {
-        (try? await apiClient.searchExternalFoods(query: query)) ?? []
     }
 }

@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 외부 식품 검색 및 임포트 API.
+ * 사용자 경로에서 제거됨(Phase 5) — 관리자 도구 및 데이터 검증 용도로만 유지.
+ * 운영 시 AdminOperationGuard 또는 IP 제한을 적용할 것.
+ */
 @RestController
 @RequestMapping("/api/v1/diet/external-foods")
 @RequiredArgsConstructor

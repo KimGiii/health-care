@@ -499,7 +499,7 @@ struct FoodSearchSheet: View {
 
     private var combinedList: some View {
         let hasQuery = !source.searchQuery.isEmpty
-        let hasAny = !source.catalogResults.isEmpty || !source.externalResults.isEmpty
+        let hasAny = !source.catalogResults.isEmpty
 
         return Group {
             if hasQuery && !hasAny {
@@ -517,15 +517,6 @@ struct FoodSearchSheet: View {
                             Section(header: Text("내 카탈로그")) {
                                 ForEach(source.catalogResults) { item in
                                     CatalogFoodRow(item: item) { source.select(food: item) }
-                                }
-                            }
-                        }
-                        if !source.externalResults.isEmpty {
-                            Section(header: Text("외부 검색")) {
-                                ForEach(source.externalResults) { item in
-                                    ExternalFoodRow(item: item) {
-                                        Task { await source.importAndAdd(external: item, apiClient: container.apiClient) }
-                                    }
                                 }
                             }
                         }
@@ -686,48 +677,9 @@ private struct CatalogFoodRow: View {
                             .clipShape(Capsule())
                     }
                 }
-                if let kcal = item.caloriesPer100g {
-                    Text(String(format: "%.0f kcal / 100g", kcal))
-                        .font(.caption)
-                        .foregroundColor(Color.textSecondary)
-                }
-            }
-            Spacer()
-            Button(action: onAdd) {
-                Image(systemName: "plus.circle.fill").font(.title2).foregroundColor(Color.brandAccent)
-            }
-        }
-        .padding(.vertical, Spacing.xs)
-    }
-}
-
-// MARK: - ExternalFoodRow
-
-private struct ExternalFoodRow: View {
-    let item: ExternalFoodResult
-    let onAdd: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: item.category?.sfSymbol ?? "magnifyingglass")
-                .font(.title2)
-                .frame(width: 40, height: 40)
-                .background(Color.backgroundPage)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(item.displayName).font(.subheadline.bold()).lineLimit(1)
-                HStack(spacing: 4) {
-                    Text(item.source.displayName)
-                        .font(.caption2.bold())
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, Spacing.xs)
-                        .background(Color.hairline)
-                        .clipShape(Capsule())
-                    Text(item.nutritionSummary)
-                        .font(.caption)
-                        .foregroundColor(Color.textSecondary)
-                        .lineLimit(1)
-                }
+                Text(item.catalogNutritionSummary)
+                    .font(.caption)
+                    .foregroundColor(Color.textSecondary)
             }
             Spacer()
             Button(action: onAdd) {

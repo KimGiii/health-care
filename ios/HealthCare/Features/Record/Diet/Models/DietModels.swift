@@ -56,17 +56,6 @@ enum FoodCategory: String, Codable, CaseIterable {
     }
 }
 
-enum FoodDataSource: String, Codable {
-    case PUBLIC_FOOD_API, ALL
-
-    var displayName: String {
-        switch self {
-        case .PUBLIC_FOOD_API: return String(localized: "diet.dataSource.publicFoodApi")
-        case .ALL:             return String(localized: "diet.dataSource.all")
-        }
-    }
-}
-
 /// 영양표시기준 10종(앱 전체 표준 — 백엔드와 일치).
 /// 표시명은 locale 별로 재계산되므로 static computed 으로 노출.
 enum NutrientLabel {
@@ -196,6 +185,13 @@ struct FoodCatalogItem: Codable, Identifiable {
     let custom: Bool
     let usageCount: Int?
     let createdByUserId: Int?
+    var foodCode: String? = nil
+    var source: String? = nil
+    var sourceDetail: String? = nil
+    var brandName: String? = nil
+    var maker: String? = nil
+    var servingSizeG: Double? = nil
+    var servingReference: String? = nil
 
     var displayName: String {
         let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
@@ -203,8 +199,41 @@ struct FoodCatalogItem: Codable, Identifiable {
         return name
     }
 
+    var isBrandOfficialMenu: Bool {
+        source == "BRAND_OFFICIAL"
+    }
+
+    var defaultServingG: Double {
+        if isBrandOfficialMenu, let servingSizeG, servingSizeG > 0 {
+            return servingSizeG
+        }
+        return 100
+    }
+
+    var displayServingReference: String {
+        if let servingReference, !servingReference.isEmpty {
+            return servingReference
+        }
+        return formatGrams(defaultServingG)
+    }
+
+    var catalogNutritionSummary: String {
+        guard let caloriesPer100g else { return "-" }
+        if isBrandOfficialMenu {
+            let calories = calories(forServing: defaultServingG)
+            return String(format: "%.0f kcal / %@", calories, displayServingReference)
+        }
+        return String(format: "%.0f kcal / 100g", caloriesPer100g)
+    }
+
     private func amount(_ per100g: Double?, forServing g: Double) -> Double {
         ((per100g ?? 0) * g) / 100
+    }
+
+    private func formatGrams(_ grams: Double) -> String {
+        grams.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0fg", grams)
+            : String(format: "%.1fg", grams)
     }
 
     func calories(forServing g: Double)       -> Double { amount(caloriesPer100g, forServing: g) }
@@ -217,42 +246,6 @@ struct FoodCatalogItem: Codable, Identifiable {
     func transFat(forServing g: Double)       -> Double { amount(transFatPer100g, forServing: g) }
     func cholesterol(forServing g: Double)    -> Double { amount(cholesterolPer100gMg, forServing: g) }
     func sodium(forServing g: Double)         -> Double { amount(sodiumPer100gMg, forServing: g) }
-}
-
-// MARK: - External Food
-
-struct ExternalFoodResult: Codable, Identifiable {
-    let source: FoodDataSource
-    let externalId: String
-    let name: String
-    let nameKo: String?
-    let brand: String?
-    let category: FoodCategory?
-    let caloriesPer100g: Double?
-    let proteinPer100g: Double?
-    let carbsPer100g: Double?
-    let fatPer100g: Double?
-    let sugarsPer100g: Double?
-    let dietaryFiberPer100g: Double?
-    let saturatedFatPer100g: Double?
-    let transFatPer100g: Double?
-    let cholesterolPer100gMg: Double?
-    let sodiumPer100gMg: Double?
-
-    var id: String { "\(source.rawValue)-\(externalId)" }
-    var displayName: String {
-        let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
-        if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
-        return name
-    }
-
-    var nutritionSummary: String {
-        let kcal = caloriesPer100g.map { String(format: "%.0f kcal", $0) } ?? "-"
-        let p    = proteinPer100g.map  { String(format: "P %.1fg", $0) }   ?? ""
-        let c    = carbsPer100g.map    { String(format: "C %.1fg", $0) }   ?? ""
-        let f    = fatPer100g.map      { String(format: "F %.1fg", $0) }   ?? ""
-        return [kcal, p, c, f].filter { !$0.isEmpty }.joined(separator: " · ")
-    }
 }
 
 // MARK: - Request DTOs
@@ -275,25 +268,6 @@ struct UpdateDietLogRequest: Codable {
     let mealType: String
     let entries: [CreateFoodEntryRequest]
     let notes: String?
-}
-
-struct ImportFoodRequest: Codable {
-    let source: String            // FoodDataSource.rawValue
-    let externalId: String
-    let name: String
-    let nameKo: String?
-    let brand: String?
-    let category: String          // FoodCategory.rawValue
-    let caloriesPer100g: Double
-    let proteinPer100g: Double?
-    let carbsPer100g: Double?
-    let fatPer100g: Double?
-    let sugarsPer100g: Double?
-    let dietaryFiberPer100g: Double?
-    let saturatedFatPer100g: Double?
-    let transFatPer100g: Double?
-    let cholesterolPer100gMg: Double?
-    let sodiumPer100gMg: Double?
 }
 
 struct CreateDietLogResponse: Codable {
@@ -443,8 +417,14 @@ extension DraftFoodEntry {
 
     init(food: FoodCatalogItem) {
         self.food = food
-        self.servingGText = "100"
+        self.servingGText = Self.formatServingG(food.defaultServingG)
         self.notes = ""
+    }
+
+    private static func formatServingG(_ grams: Double) -> String {
+        grams.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", grams)
+            : String(format: "%.1f", grams)
     }
 
     init(analysisItem: MealPhotoAnalysisItem) {
