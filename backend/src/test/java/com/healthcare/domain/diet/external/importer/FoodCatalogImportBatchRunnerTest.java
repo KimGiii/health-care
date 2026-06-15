@@ -21,24 +21,30 @@ class FoodCatalogImportBatchRunnerTest {
         InMemoryCheckpointStore checkpoints = new InMemoryCheckpointStore();
         checkpoints.markPageCompleted(FoodCatalogSource.MFDS_STANDARD_PROCESSED, 1);
 
-        RecordingFetcher fetcher = new RecordingFetcher(Map.of(
+        Map<Integer, FoodCatalogImportPage<StandardFoodImportRow>> pages = Map.of(
                 2, new FoodCatalogImportPage<>(List.of(row("P002"), row("P003")), true),
                 3, new FoodCatalogImportPage<>(List.of(row("P004")), false)
-        ));
-        CountingImporter importer = new CountingImporter();
-        RecordingPageThrottle throttle = new RecordingPageThrottle();
+        );
+        List<Integer> requestedPages = new ArrayList<>();
+        List<String> importedFoodCodes = new ArrayList<>();
+        List<Integer> throttledPages = new ArrayList<>();
+
+        FoodCatalogImportPageFetcher<StandardFoodImportRow> fetcher = (pageNo, pageSize) -> {
+            requestedPages.add(pageNo);
+            return pages.getOrDefault(pageNo, new FoodCatalogImportPage<>(List.of(), false));
+        };
+        FoodCatalogPageImporter<StandardFoodImportRow> importer = rows -> {
+            rows.forEach(r -> importedFoodCodes.add(r.getFoodCode()));
+            return new FoodCatalogImportResult(rows.size(), 0, 0);
+        };
+        FoodCatalogImportPageThrottle throttle = (source, completedPageNo) -> throttledPages.add(completedPageNo);
         FoodCatalogImportBatchRunner runner = new FoodCatalogImportBatchRunner(checkpoints, throttle);
 
         FoodCatalogBatchImportSummary summary = runner.importPages(
-                FoodCatalogSource.MFDS_STANDARD_PROCESSED,
-                100,
-                10,
-                fetcher,
-                importer
-        );
+                FoodCatalogSource.MFDS_STANDARD_PROCESSED, 100, 10, fetcher, importer);
 
-        assertThat(fetcher.requestedPages()).containsExactly(2, 3);
-        assertThat(importer.importedFoodCodes()).containsExactly("P002", "P003", "P004");
+        assertThat(requestedPages).containsExactly(2, 3);
+        assertThat(importedFoodCodes).containsExactly("P002", "P003", "P004");
         assertThat(checkpoints.nextPage(FoodCatalogSource.MFDS_STANDARD_PROCESSED)).isEqualTo(4);
         assertThat(summary.source()).isEqualTo(FoodCatalogSource.MFDS_STANDARD_PROCESSED);
         assertThat(summary.startPage()).isEqualTo(2);
@@ -48,7 +54,7 @@ class FoodCatalogImportBatchRunnerTest {
         assertThat(summary.updatedCount()).isZero();
         assertThat(summary.skippedCount()).isZero();
         assertThat(summary.exhausted()).isTrue();
-        assertThat(throttle.completedPages()).containsExactly(2);
+        assertThat(throttledPages).containsExactly(2);
     }
 
     @Test
@@ -56,7 +62,10 @@ class FoodCatalogImportBatchRunnerTest {
     void importPages_doesNotAdvanceCheckpointWhenPageFails() {
         InMemoryCheckpointStore checkpoints = new InMemoryCheckpointStore();
         checkpoints.markPageCompleted(FoodCatalogSource.MFDS_STANDARD_PROCESSED, 1);
+
         List<Integer> requestedPages = new ArrayList<>();
+        List<String> importedFoodCodes = new ArrayList<>();
+
         FoodCatalogImportPageFetcher<StandardFoodImportRow> fetcher = (pageNo, pageSize) -> {
             requestedPages.add(pageNo);
             if (pageNo == 3) {
@@ -64,20 +73,19 @@ class FoodCatalogImportBatchRunnerTest {
             }
             return new FoodCatalogImportPage<>(List.of(row("P002")), true);
         };
-        CountingImporter importer = new CountingImporter();
+        FoodCatalogPageImporter<StandardFoodImportRow> importer = rows -> {
+            rows.forEach(r -> importedFoodCodes.add(r.getFoodCode()));
+            return new FoodCatalogImportResult(rows.size(), 0, 0);
+        };
         FoodCatalogImportBatchRunner runner = new FoodCatalogImportBatchRunner(checkpoints);
 
         assertThatThrownBy(() -> runner.importPages(
-                FoodCatalogSource.MFDS_STANDARD_PROCESSED,
-                100,
-                10,
-                fetcher,
-                importer
-        )).isInstanceOf(IllegalStateException.class)
+                FoodCatalogSource.MFDS_STANDARD_PROCESSED, 100, 10, fetcher, importer))
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessage("식약처 API 응답 실패");
 
         assertThat(requestedPages).containsExactly(2, 3);
-        assertThat(importer.importedFoodCodes()).containsExactly("P002");
+        assertThat(importedFoodCodes).containsExactly("P002");
         assertThat(checkpoints.nextPage(FoodCatalogSource.MFDS_STANDARD_PROCESSED)).isEqualTo(3);
     }
 
@@ -100,52 +108,6 @@ class FoodCatalogImportBatchRunnerTest {
         @Override
         public void markPageCompleted(FoodCatalogSource source, int pageNo) {
             lastCompletedPages.put(source, pageNo);
-        }
-    }
-
-    private static class RecordingFetcher implements FoodCatalogImportPageFetcher<StandardFoodImportRow> {
-        private final Map<Integer, FoodCatalogImportPage<StandardFoodImportRow>> pages;
-        private final List<Integer> requestedPages = new ArrayList<>();
-
-        private RecordingFetcher(Map<Integer, FoodCatalogImportPage<StandardFoodImportRow>> pages) {
-            this.pages = pages;
-        }
-
-        @Override
-        public FoodCatalogImportPage<StandardFoodImportRow> fetch(int pageNo, int pageSize) {
-            requestedPages.add(pageNo);
-            return pages.getOrDefault(pageNo, new FoodCatalogImportPage<>(List.of(), false));
-        }
-
-        private List<Integer> requestedPages() {
-            return requestedPages;
-        }
-    }
-
-    private static class CountingImporter implements FoodCatalogPageImporter<StandardFoodImportRow> {
-        private final List<String> importedFoodCodes = new ArrayList<>();
-
-        @Override
-        public FoodCatalogImportResult importRows(List<StandardFoodImportRow> rows) {
-            rows.forEach(row -> importedFoodCodes.add(row.getFoodCode()));
-            return new FoodCatalogImportResult(rows.size(), 0, 0);
-        }
-
-        private List<String> importedFoodCodes() {
-            return importedFoodCodes;
-        }
-    }
-
-    private static class RecordingPageThrottle implements FoodCatalogImportPageThrottle {
-        private final List<Integer> completedPages = new ArrayList<>();
-
-        @Override
-        public void pauseAfterPage(FoodCatalogSource source, int completedPageNo) {
-            completedPages.add(completedPageNo);
-        }
-
-        private List<Integer> completedPages() {
-            return completedPages;
         }
     }
 }
