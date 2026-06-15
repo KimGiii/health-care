@@ -117,7 +117,8 @@ backend/src/main/java/com/healthcare/domain/diet/
 ├── repository/FoodCatalogRepository.java # source + foodCode 조회, usage_count 갱신
 ├── repository/FoodCatalogSpecs.java     # 추천 후보 상태 Specification
 ├── service/FoodCatalogService.java      # 커스텀 식품 기본값 USER_CUSTOM / SEARCH_ONLY
-├── recommendation/usecase/DailyDietRecommendationUseCases.java # 추천 후보 상태 필터 적용
+├── recommendation/candidate/          # 추천 후보 풀과 Engine 입력 후보 값
+├── recommendation/usecase/DailyDietRecommendationUseCases.java # 후보 풀 로드 후 Engine 호출
 ├── external/service/FoodImportService.java # 외부 import 기본값 USER_CUSTOM / SEARCH_ONLY
 └── external/importer/                  # 공공데이터 배치 적재
     ├── StandardProcessedFoodImporter.java
@@ -532,8 +533,9 @@ NavigationStack(path: $recordTabPath) {
 // V23 카탈로그 메타데이터
 - FoodCatalogServiceTest: createCustomFood_success_returnsCreatedFood()
 - FoodImportServiceTest: importFood_fromPublicApi_savesAsUserCustomFood()
-- FoodCatalogSpecsTest: isRecommendable_includesOnlyRecommendableStatuses()
-- DailyDietRecommendationUseCasesTest: loadCandidates_alwaysAppliesRecommendationStatusFilter()
+- RecommendationStatusTest: recommendationCandidateStatuses_includeRecommendableAndWithCaution()
+- FoodCatalogSpecsTest: hasRecommendationCandidateStatus_includesOnlyCandidateStatuses()
+- DietRecommendationCandidatePoolTest: load_alwaysAppliesRecommendationStatusFilter()
 - StandardProcessedFoodImporterTest: importRows_createsProcessedFoodCatalogItem()
 - StandardProcessedFoodImporterTest: importRows_updatesExistingFoodCatalogItem()
 - StandardDishFoodImporterTest: importRows_createsDishFoodCatalogItem()

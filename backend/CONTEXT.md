@@ -94,6 +94,36 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ---
 
+## 추천 큐레이션 (Recommendation Curation)
+
+**Definition:** 식품 카탈로그 항목이 추천 후보로 쓰일 수 있는지와 주의 사유를 함께 표현하는 값 객체. CSV 운영 입력 검증, DB 저장용 사유, 추천 응답의 주의 문구를 같은 불변 조건으로 다룬다.
+
+**Avoid:** "status flag", "reason helper", "caution string" (추천 후보 상태와 주의 사유의 불변 조건이 분리되어 보임)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/entity/RecommendationCuration.java`
+
+---
+
+## 식단 추천 후보 풀 (Diet Recommendation Candidate Pool)
+
+**Definition:** 식단 추천 런타임에서 사용할 수 있는 후보 값을 생성하는 모듈. 추천 적합성 상태, 사용자 제한 조건, 알러젠 신뢰 게이트를 통과한 식품 카탈로그를 엔진 입력용 `DietRecommendationCandidate`로 변환한다.
+
+**Avoid:** "filtered catalog list", "candidate helper", "recommendation spec" (추천 후보 정책이 단순 조회 조건처럼 보임)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java`
+
+---
+
+## 식단 추천 후보 (Diet Recommendation Candidate)
+
+**Definition:** 식단 추천 엔진이 끼니 구성과 제공량 계산에 사용하는 식품 후보 스냅샷. 식품 카탈로그 ID, 영양값, 카테고리, 사용 횟수, 안정적인 rotation key, 알러젠 신뢰도, 응답용 주의 문구를 포함하며 JPA 엔티티와 알러젠 태그 맵을 엔진에서 숨긴다.
+
+**Avoid:** "FoodCatalog row", "tag map", "recommendation DTO" (엔진 입력 경계가 persistence나 응답 형태에 다시 결합됨)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidate.java`
+
+---
+
 ## 식품 카탈로그 동일성 (Food Catalog Identity)
 
 **Definition:** 식품 카탈로그 항목을 소스 적재, 중복 후보 리포트, 검색 정규화에서 같은 개념으로 다루기 위한 식별 규칙. 브랜드 공식 메뉴의 `food_code`, 브랜드 인식 중복 키, 표시 이름 정규화를 한곳에서 계산한다.

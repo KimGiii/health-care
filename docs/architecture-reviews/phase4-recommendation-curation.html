@@ -118,15 +118,18 @@
         <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <pre class="mermaid">
 flowchart LR
-  A["DailyDietRecommendationUseCases"] --> B["FoodCatalogSpecs.isRecommendable"]
-  B --> C["FoodCatalogRepository.findAll"]
-  C --> D["DietRecommendationEngine.filterCandidates"]
-  D --> E["DietRecommendationEngine.recommend"]
-  E --> F["RecommendedFoodEntry.from"]
-  F --> G["caution response field"]
+  A["DailyDietRecommendationUseCases"] --> B["DietRecommendationCandidatePool"]
+  B --> C["FoodCatalogSpecs.hasRecommendationCandidateStatus"]
+  C --> D["FoodCatalogRepository.findAll"]
+  B --> E["알러젠/제한 조건 게이트"]
+  B --> X["DietRecommendationCandidate"]
+  X --> F["DietRecommendationEngine.recommend"]
+  F --> G["RecommendedFoodEntry.from"]
+  B --> H["RecommendationCuration.cautionForResponse"]
+  H --> X
 
-  C -. "추천 적합성 상태 지식" .-> D
-  F -. "추천 큐레이션 읽기" .-> H["FoodCatalog.curation"]
+  C -. "후보 상태 조회만" .-> D
+  G -. "후보 스냅샷에서 응답 생성" .-> I["caution response field"]
 
   classDef deep fill:#0f172a,color:#fff,stroke:#0f172a;
   classDef leak stroke:#dc2626,color:#dc2626,stroke-width:2px;
@@ -144,7 +147,7 @@ flowchart LR
             </div>
             <div class="flex gap-2">
               <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Strong</span>
-              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">in-process</span>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">done</span>
             </div>
           </div>
 
@@ -217,12 +220,13 @@ flowchart LR
         <article id="candidate-curation" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 class="text-xl font-semibold text-slate-950">2. 추천 큐레이션 오류 모드를 한 Seam에 모으기</h2>
+              <h2 class="text-xl font-semibold text-slate-950">2. 추천 큐레이션 오류 모드를 한 경계에 모으기</h2>
               <p class="mt-1 text-sm text-slate-600"><code>RecommendationCuration</code>은 좋은 시작이지만 입출력 Adapter가 아직 각자 규칙을 만진다.</p>
             </div>
             <div class="flex gap-2">
               <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Strong</span>
               <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">local-substitutable</span>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">done</span>
             </div>
           </div>
 
@@ -316,7 +320,7 @@ flowchart LR
             </div>
             <div class="flex gap-2">
               <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">Worth exploring</span>
-              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">in-process</span>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">done</span>
             </div>
           </div>
 
@@ -326,21 +330,22 @@ flowchart LR
                 <h3 class="text-xs uppercase tracking-wider text-slate-500">Files</h3>
                 <ul class="mt-2 space-y-1 font-mono text-sm text-slate-700">
                   <li>DietRecommendationEngine.java</li>
+                  <li>DietRecommendationCandidate.java</li>
+                  <li>DietRecommendationCandidatePool.java</li>
                   <li>RecommendedFoodEntry.java</li>
-                  <li>AllergenConfidenceGate.java</li>
                   <li>DailyDietRecommendationUseCases.java</li>
                 </ul>
               </div>
               <div>
                 <h3 class="text-xs uppercase tracking-wider text-slate-500">Problem</h3>
                 <p class="mt-2 text-sm leading-6 text-slate-700">
-                  Engine Interface가 <code>FoodCatalog</code>, <code>DietRestriction</code>, <code>FoodAllergenTag</code>, <code>strictMode</code>를 그대로 요구해 호출자가 Implementation 세부 지식을 알아야 한다.
+                  기존 Engine Interface가 <code>FoodCatalog</code>, <code>FoodAllergenTag</code>, <code>strictMode</code>를 그대로 요구해 호출자가 Implementation 세부 지식을 알아야 했다.
                 </p>
               </div>
               <div>
                 <h3 class="text-xs uppercase tracking-wider text-slate-500">Solution</h3>
                 <p class="mt-2 text-sm leading-6 text-slate-700">
-                  추천 후보 필터링과 끼니 구성 사이의 Seam을 선명히 하고, Engine은 이미 추천 가능한 후보로 끼니를 구성하는 deep Module로 좁힌다.
+                  <code>DietRecommendationCandidate</code> 값 객체를 도입해 추천 후보 필터링과 끼니 구성 사이의 경계를 선명히 하고, Engine은 이미 추천 가능한 후보로 끼니를 구성하는 deep Module로 좁힌다.
                 </p>
               </div>
               <div>
@@ -359,7 +364,7 @@ flowchart LR
                 <h3 class="text-sm font-semibold text-red-700">Before mass</h3>
                 <div class="mt-4 space-y-3">
                   <div class="mass-interface rounded p-3 text-xs">
-                    Interface: targets, mealTypes, FoodCatalog, DietRestriction, tagsByFoodId, strictMode, date
+                    Interface: targets, mealTypes, FoodCatalog, tagsByFoodId, strictMode, date
                   </div>
                   <div class="mass-implementation rounded p-10 text-xs">
                     Implementation: filtering, confidence, rotation, serving, DTO
@@ -373,7 +378,7 @@ flowchart LR
                 <h3 class="text-sm font-semibold text-emerald-700">After mass</h3>
                 <div class="mt-4 space-y-3">
                   <div class="mass-interface rounded p-2 text-xs">
-                    Interface: 목표, 끼니, 추천 가능한 후보
+                    Interface: 목표, 끼니, 추천 후보 값, date
                   </div>
                   <div class="deep-module rounded p-12 text-xs">
                     Implementation: rotation, serving, category balance, output facts

@@ -412,9 +412,10 @@ seed allowlist 최소 기준:
 진행 메모(2026-06-10):
 
 - 추천 상태 enum과 저장 모델은 1단계에서 선반영되었다.
-- `FoodCatalogSpecs.isRecommendable()`을 추가하고 `DailyDietRecommendationUseCases.loadCandidates()`가 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION`만 조회하도록 변경했다.
-- `FoodCatalogSpecsTest`와 `DailyDietRecommendationUseCasesTest`로 `SEARCH_ONLY`, `DISABLED`가 추천 후보에서 제외되는 조건을 검증했다.
-- `RECOMMENDABLE_WITH_CAUTION`의 주의 사유는 추천 응답의 `RecommendedFoodEntry.caution` 필드로 노출하는 것으로 확정했다. 일반 `RECOMMENDABLE` 식품의 `caution`은 `null`이다.
+- `RecommendationStatus.recommendationCandidateStatuses()`와 `FoodCatalogSpecs.hasRecommendationCandidateStatus()`로 추천 후보 상태 조회 레이어를 분리했다.
+- `DietRecommendationCandidatePoolTest`로 `SEARCH_ONLY`, `DISABLED`가 추천 후보에서 제외되는 조건을 검증했다.
+- `RECOMMENDABLE_WITH_CAUTION`의 주의 사유는 `RecommendationCuration.cautionForResponse()`를 거쳐 추천 응답의 `RecommendedFoodEntry.caution` 필드로 노출한다. 일반 `RECOMMENDABLE` 식품의 `caution`은 `null`이다.
+- `DietRecommendationCandidate` 값 객체를 추가해 Engine 입력에서 `FoodCatalog`, 알러젠 태그 맵, `strictMode`를 제거했다. 알러젠 신뢰도와 caution은 후보 풀에서 계산된 후보 스냅샷으로 전달한다.
 
 ### 5단계: 검색/기록 경로 정리
 
