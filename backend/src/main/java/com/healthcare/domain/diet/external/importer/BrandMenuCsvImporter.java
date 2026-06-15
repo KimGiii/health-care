@@ -33,7 +33,6 @@ public class BrandMenuCsvImporter {
     private static final int NAME_MAX_LENGTH = 150;
     private static final int SOURCE_DETAIL_MAX_LENGTH = 120;
     private static final int SERVING_REFERENCE_MAX_LENGTH = 80;
-    private static final int RECOMMENDATION_REASON_MAX_LENGTH = 255;
 
     private final FoodCatalogIngestService ingestService;
 
@@ -137,16 +136,15 @@ public class BrandMenuCsvImporter {
                 menuName,
                 foodCode,
                 sourceDetail,
-                servingReference,
-                row
+                servingReference
         );
         if (lengthFailure != null) {
             return rejected(row, lengthFailure.field(), lengthFailure.reason());
         }
 
-        CurationResult curationResult = parseCuration(row);
+        RecommendationCuration.ImportResult curationResult = parseCuration(row);
         if (curationResult.rejected()) {
-            return rejected(row, curationResult.rejection().field(), curationResult.rejection().reason());
+            return rejected(row, "recommendation_reason", curationResult.rejectionReason());
         }
         RecommendationCuration curation = curationResult.curation();
 
@@ -168,7 +166,7 @@ public class BrandMenuCsvImporter {
                 .sugarsPer100g(toNutrientPer100g(parseDouble(row.sugar()), servingSizeG, nutritionBasis))
                 .saturatedFatPer100g(toNutrientPer100g(parseDouble(row.saturatedFat()), servingSizeG, nutritionBasis))
                 .recommendationStatus(curation.status())
-                .recommendationReason(recommendationReason(curation))
+                .recommendationReason(curation.reasonForStorage())
                 .lastVerifiedAt(parseDate(row.lastVerifiedAt()))
                 .isCustom(false)
                 .build());
@@ -266,28 +264,10 @@ public class BrandMenuCsvImporter {
         }
     }
 
-    private CurationResult parseCuration(BrandMenuCsvRow row) {
+    private RecommendationCuration.ImportResult parseCuration(BrandMenuCsvRow row) {
         RecommendationStatus status = parseRecommendationStatus(row.recommendationStatus());
         String reason = normalize(row.recommendationReason());
-        if (status == RecommendationStatus.RECOMMENDABLE_WITH_CAUTION) {
-            if (reason == null) {
-                return CurationResult.rejected(row, "recommendation_reason", "주의 추천 상태는 사유가 필요합니다.");
-            }
-            if (reason.length() > RECOMMENDATION_REASON_MAX_LENGTH) {
-                return CurationResult.rejected(row, "recommendation_reason", "255자 이하여야 합니다.");
-            }
-            return CurationResult.accepted(new RecommendationCuration.WithCaution(reason));
-        }
-        return CurationResult.accepted(switch (status) {
-            case RECOMMENDABLE -> new RecommendationCuration.Recommendable();
-            case SEARCH_ONLY -> new RecommendationCuration.SearchOnly();
-            case DISABLED -> new RecommendationCuration.Disabled();
-            case RECOMMENDABLE_WITH_CAUTION -> throw new IllegalStateException("handled above");
-        });
-    }
-
-    private String recommendationReason(RecommendationCuration curation) {
-        return curation instanceof RecommendationCuration.WithCaution c ? c.reason() : null;
+        return RecommendationCuration.fromImport(status, reason);
     }
 
     private ValidationFailure firstFieldEnvelopeFailure(
@@ -295,8 +275,7 @@ public class BrandMenuCsvImporter {
             String menuName,
             String foodCode,
             String sourceDetail,
-            String servingReference,
-            BrandMenuCsvRow row) {
+            String servingReference) {
         if (brandName.length() > NAME_MAX_LENGTH) {
             return new ValidationFailure("brand_name", "150자 이하여야 합니다.");
         }
@@ -311,10 +290,6 @@ public class BrandMenuCsvImporter {
         }
         if (servingReference != null && servingReference.length() > SERVING_REFERENCE_MAX_LENGTH) {
             return new ValidationFailure("serving_size_g", "제공량 표기는 80자 이하여야 합니다.");
-        }
-        String recommendationReason = normalize(row.recommendationReason());
-        if (recommendationReason != null && recommendationReason.length() > RECOMMENDATION_REASON_MAX_LENGTH) {
-            return new ValidationFailure("recommendation_reason", "255자 이하여야 합니다.");
         }
         return null;
     }
@@ -364,26 +339,6 @@ public class BrandMenuCsvImporter {
             return String.format("%.0fg", grams);
         }
         return String.format("%.1fg", grams);
-    }
-
-    private record CurationResult(
-            RecommendationCuration curation,
-            FoodCatalogImportRejectedRow rejection
-    ) {
-        static CurationResult accepted(RecommendationCuration curation) {
-            return new CurationResult(curation, null);
-        }
-
-        static CurationResult rejected(BrandMenuCsvRow row, String field, String reason) {
-            return new CurationResult(
-                    null,
-                    new FoodCatalogImportRejectedRow(row.rowNumber(), field, reason)
-            );
-        }
-
-        boolean rejected() {
-            return rejection != null;
-        }
     }
 
     private record ValidationFailure(String field, String reason) {

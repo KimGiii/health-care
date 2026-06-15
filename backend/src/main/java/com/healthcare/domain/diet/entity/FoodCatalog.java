@@ -168,8 +168,7 @@ public class FoodCatalog {
 
     public void updateCuration(RecommendationCuration curation) {
         this.recommendationStatus = curation.status();
-        this.recommendationReason = curation instanceof RecommendationCuration.WithCaution c
-                ? c.reason() : null;
+        this.recommendationReason = curation.reasonForStorage();
     }
 
 
