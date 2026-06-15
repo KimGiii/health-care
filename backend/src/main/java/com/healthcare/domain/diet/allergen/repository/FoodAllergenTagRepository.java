@@ -19,4 +19,8 @@ public interface FoodAllergenTagRepository extends JpaRepository<FoodAllergenTag
             @Param("ids") Collection<Long> ids,
             @Param("tags") Collection<AllergenTag> tags
     );
+
+    List<FoodAllergenTag> findByFoodCatalogId(Long foodCatalogId);
+
+    boolean existsByFoodCatalogIdAndAllergenTag(Long foodCatalogId, AllergenTag allergenTag);
 }
