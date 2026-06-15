@@ -4,14 +4,14 @@ import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationCuration;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
-import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import com.healthcare.domain.diet.identity.FoodCatalogIdentity;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,21 +23,24 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class BrandMenuCsvImporter {
 
     private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);
+    private static final int FOOD_CODE_MAX_LENGTH = 60;
+    private static final int NAME_MAX_LENGTH = 150;
+    private static final int SOURCE_DETAIL_MAX_LENGTH = 120;
+    private static final int SERVING_REFERENCE_MAX_LENGTH = 80;
+    private static final int RECOMMENDATION_REASON_MAX_LENGTH = 255;
 
-    private final FoodCatalogRepository foodCatalogRepository;
+    private final FoodCatalogIngestService ingestService;
 
     /**
      * CSV 파일을 파싱해서 BRAND_OFFICIAL 출처로 upsert한다.
      * nutrition_basis로 입력 영양값의 기준을 명시하고 내부 저장은 100g당 값으로 정규화한다.
      */
-    @Transactional
     public FoodCatalogImportResult importFromCsv(InputStream csvStream) throws IOException {
         List<BrandMenuCsvRow> rows = parseCsv(csvStream);
         return importRows(rows);
@@ -80,41 +83,14 @@ public class BrandMenuCsvImporter {
         return rows;
     }
 
-    @Transactional
     public FoodCatalogImportResult importRows(List<BrandMenuCsvRow> rows) {
-        int created = 0;
-        int updated = 0;
-        int skipped = 0;
-        List<FoodCatalogImportRejectedRow> rejectedRows = new ArrayList<>();
-
-        for (BrandMenuCsvRow row : rows) {
-            ConversionResult converted = toFoodCatalog(row);
-            if (converted.rejected()) {
-                skipped++;
-                rejectedRows.add(converted.rejection());
-                continue;
-            }
-
-            FoodCatalog food = converted.food();
-            Optional<FoodCatalog> existing = foodCatalogRepository
-                    .findBySourceAndFoodCode(FoodCatalogSource.BRAND_OFFICIAL, food.getFoodCode());
-
-            if (existing.isPresent()) {
-                FoodCatalog existingFood = existing.get();
-                existingFood.updateSourceFactsFromImportedCatalog(food);
-                existingFood.updateCuration(food.curation());
-                foodCatalogRepository.save(existingFood);
-                updated++;
-            } else {
-                foodCatalogRepository.save(food);
-                created++;
-            }
-        }
-
-        return new FoodCatalogImportResult(created, updated, skipped, rejectedRows);
+        List<FoodCatalogIngestCandidate> candidates = rows.stream()
+                .map(this::toFoodCatalog)
+                .toList();
+        return ingestService.ingest(candidates, FoodCatalogIngestCurationMode.REPLACE_FROM_IMPORT);
     }
 
-    private ConversionResult toFoodCatalog(BrandMenuCsvRow row) {
+    private FoodCatalogIngestCandidate toFoodCatalog(BrandMenuCsvRow row) {
         String brandName = normalize(row.brandName());
         String menuName = normalize(row.menuName());
         BrandMenuNutritionBasis nutritionBasis = parseNutritionBasis(row.nutritionBasis());
@@ -122,47 +98,68 @@ public class BrandMenuCsvImporter {
         Double caloriesPerServing = parseDouble(row.calories());
 
         if (brandName == null) {
-            return ConversionResult.rejected(row, "brand_name", "브랜드명은 필수입니다.");
+            return rejected(row, "brand_name", "브랜드명은 필수입니다.");
         }
         if (menuName == null) {
-            return ConversionResult.rejected(row, "menu_name", "메뉴명은 필수입니다.");
+            return rejected(row, "menu_name", "메뉴명은 필수입니다.");
         }
         if (nutritionBasis == null) {
-            return ConversionResult.rejected(row, "nutrition_basis", "PER_SERVING 또는 PER_100G를 입력해야 합니다.");
+            return rejected(row, "nutrition_basis", "PER_SERVING 또는 PER_100G를 입력해야 합니다.");
         }
         if (caloriesPerServing == null) {
-            return ConversionResult.rejected(row, "calories", "칼로리는 필수 숫자 값입니다.");
+            return rejected(row, "calories", "칼로리는 필수 숫자 값입니다.");
         }
 
         String invalidNumberField = firstInvalidNumberField(row);
         if (invalidNumberField != null) {
-            return ConversionResult.rejected(row, invalidNumberField, "숫자 형식이어야 합니다.");
+            return rejected(row, invalidNumberField, "숫자 형식이어야 합니다.");
+        }
+        String negativeNumberField = firstNegativeNumberField(row);
+        if (negativeNumberField != null) {
+            return rejected(row, negativeNumberField, "0 이상이어야 합니다.");
         }
 
         if (nutritionBasis == BrandMenuNutritionBasis.PER_SERVING && (servingSizeG == null || servingSizeG <= 0)) {
-            return ConversionResult.rejected(row, "serving_size_g", "PER_SERVING은 0보다 큰 제공량이 필요합니다.");
+            return rejected(row, "serving_size_g", "PER_SERVING은 0보다 큰 제공량이 필요합니다.");
         }
         if (nutritionBasis == BrandMenuNutritionBasis.PER_100G && servingSizeG != null && servingSizeG <= 0) {
-            return ConversionResult.rejected(row, "serving_size_g", "제공량을 입력할 때는 0보다 커야 합니다.");
+            return rejected(row, "serving_size_g", "제공량을 입력할 때는 0보다 커야 합니다.");
         }
 
         Double caloriesPer100g = toNutrientPer100g(caloriesPerServing, servingSizeG, nutritionBasis);
 
-        String foodCode = brandName.toLowerCase().replaceAll("\\s+", "_")
-                + ":" + menuName.toLowerCase().replaceAll("\\s+", "_");
+        String foodCode = FoodCatalogIdentity.brandOfficialFoodCode(brandName, menuName);
+        String sourceDetail = normalize(row.sourceUrl());
+        String servingReference = servingSizeG != null ? formatGrams(servingSizeG) : "100g";
 
-        RecommendationStatus status = parseRecommendationStatus(row.recommendationStatus());
+        ValidationFailure lengthFailure = firstFieldEnvelopeFailure(
+                brandName,
+                menuName,
+                foodCode,
+                sourceDetail,
+                servingReference,
+                row
+        );
+        if (lengthFailure != null) {
+            return rejected(row, lengthFailure.field(), lengthFailure.reason());
+        }
 
-        return ConversionResult.accepted(FoodCatalog.builder()
+        CurationResult curationResult = parseCuration(row);
+        if (curationResult.rejected()) {
+            return rejected(row, curationResult.rejection().field(), curationResult.rejection().reason());
+        }
+        RecommendationCuration curation = curationResult.curation();
+
+        return FoodCatalogIngestCandidate.accepted(FoodCatalog.builder()
                 .foodCode(foodCode)
                 .source(FoodCatalogSource.BRAND_OFFICIAL)
-                .sourceDetail(normalize(row.sourceUrl()))
+                .sourceDetail(sourceDetail)
                 .name(menuName)
                 .nameKo(menuName)
                 .brandName(brandName)
                 .category(parseCategory(row.category()))
                 .servingSizeG(servingSizeG)
-                .servingReference(servingSizeG != null ? formatGrams(servingSizeG) : "100g")
+                .servingReference(servingReference)
                 .caloriesPer100g(round(caloriesPer100g))
                 .proteinPer100g(toNutrientPer100g(parseDouble(row.protein()), servingSizeG, nutritionBasis))
                 .carbsPer100g(toNutrientPer100g(parseDouble(row.carbs()), servingSizeG, nutritionBasis))
@@ -170,11 +167,15 @@ public class BrandMenuCsvImporter {
                 .sodiumPer100gMg(toNutrientPer100g(parseDouble(row.sodium()), servingSizeG, nutritionBasis))
                 .sugarsPer100g(toNutrientPer100g(parseDouble(row.sugar()), servingSizeG, nutritionBasis))
                 .saturatedFatPer100g(toNutrientPer100g(parseDouble(row.saturatedFat()), servingSizeG, nutritionBasis))
-                .recommendationStatus(status)
-                .recommendationReason(normalize(row.recommendationReason()))
+                .recommendationStatus(curation.status())
+                .recommendationReason(recommendationReason(curation))
                 .lastVerifiedAt(parseDate(row.lastVerifiedAt()))
                 .isCustom(false)
                 .build());
+    }
+
+    private FoodCatalogIngestCandidate rejected(BrandMenuCsvRow row, String field, String reason) {
+        return FoodCatalogIngestCandidate.rejected(row.rowNumber(), field, reason);
     }
 
     private void validateHeaders(List<String> actualHeaders) {
@@ -213,6 +214,22 @@ public class BrandMenuCsvImporter {
         return normalize(value) != null && parseDouble(value) == null;
     }
 
+    private String firstNegativeNumberField(BrandMenuCsvRow row) {
+        if (isNegativeNumber(row.calories())) return "calories";
+        if (isNegativeNumber(row.protein())) return "protein";
+        if (isNegativeNumber(row.carbs())) return "carbs";
+        if (isNegativeNumber(row.fat())) return "fat";
+        if (isNegativeNumber(row.sodium())) return "sodium";
+        if (isNegativeNumber(row.sugar())) return "sugar";
+        if (isNegativeNumber(row.saturatedFat())) return "saturated_fat";
+        return null;
+    }
+
+    private boolean isNegativeNumber(String value) {
+        Double parsed = parseDouble(value);
+        return parsed != null && parsed < 0;
+    }
+
     private BrandMenuNutritionBasis parseNutritionBasis(String value) {
         String normalized = normalize(value);
         if (normalized == null) {
@@ -249,6 +266,59 @@ public class BrandMenuCsvImporter {
         }
     }
 
+    private CurationResult parseCuration(BrandMenuCsvRow row) {
+        RecommendationStatus status = parseRecommendationStatus(row.recommendationStatus());
+        String reason = normalize(row.recommendationReason());
+        if (status == RecommendationStatus.RECOMMENDABLE_WITH_CAUTION) {
+            if (reason == null) {
+                return CurationResult.rejected(row, "recommendation_reason", "주의 추천 상태는 사유가 필요합니다.");
+            }
+            if (reason.length() > RECOMMENDATION_REASON_MAX_LENGTH) {
+                return CurationResult.rejected(row, "recommendation_reason", "255자 이하여야 합니다.");
+            }
+            return CurationResult.accepted(new RecommendationCuration.WithCaution(reason));
+        }
+        return CurationResult.accepted(switch (status) {
+            case RECOMMENDABLE -> new RecommendationCuration.Recommendable();
+            case SEARCH_ONLY -> new RecommendationCuration.SearchOnly();
+            case DISABLED -> new RecommendationCuration.Disabled();
+            case RECOMMENDABLE_WITH_CAUTION -> throw new IllegalStateException("handled above");
+        });
+    }
+
+    private String recommendationReason(RecommendationCuration curation) {
+        return curation instanceof RecommendationCuration.WithCaution c ? c.reason() : null;
+    }
+
+    private ValidationFailure firstFieldEnvelopeFailure(
+            String brandName,
+            String menuName,
+            String foodCode,
+            String sourceDetail,
+            String servingReference,
+            BrandMenuCsvRow row) {
+        if (brandName.length() > NAME_MAX_LENGTH) {
+            return new ValidationFailure("brand_name", "150자 이하여야 합니다.");
+        }
+        if (menuName.length() > NAME_MAX_LENGTH) {
+            return new ValidationFailure("menu_name", "150자 이하여야 합니다.");
+        }
+        if (foodCode.length() > FOOD_CODE_MAX_LENGTH) {
+            return new ValidationFailure("food_code", "브랜드명과 메뉴명으로 만든 food_code는 60자 이하여야 합니다.");
+        }
+        if (sourceDetail != null && sourceDetail.length() > SOURCE_DETAIL_MAX_LENGTH) {
+            return new ValidationFailure("source_url", "120자 이하여야 합니다.");
+        }
+        if (servingReference != null && servingReference.length() > SERVING_REFERENCE_MAX_LENGTH) {
+            return new ValidationFailure("serving_size_g", "제공량 표기는 80자 이하여야 합니다.");
+        }
+        String recommendationReason = normalize(row.recommendationReason());
+        if (recommendationReason != null && recommendationReason.length() > RECOMMENDATION_REASON_MAX_LENGTH) {
+            return new ValidationFailure("recommendation_reason", "255자 이하여야 합니다.");
+        }
+        return null;
+    }
+
     private OffsetDateTime parseDate(String value) {
         String normalized = normalize(value);
         if (normalized == null) {
@@ -267,7 +337,8 @@ public class BrandMenuCsvImporter {
             return null;
         }
         try {
-            return Double.parseDouble(normalized.replace(",", ""));
+            double parsed = Double.parseDouble(normalized.replace(",", ""));
+            return Double.isFinite(parsed) ? parsed : null;
         } catch (NumberFormatException e) {
             return null;
         }
@@ -295,16 +366,16 @@ public class BrandMenuCsvImporter {
         return String.format("%.1fg", grams);
     }
 
-    private record ConversionResult(
-            FoodCatalog food,
+    private record CurationResult(
+            RecommendationCuration curation,
             FoodCatalogImportRejectedRow rejection
     ) {
-        static ConversionResult accepted(FoodCatalog food) {
-            return new ConversionResult(food, null);
+        static CurationResult accepted(RecommendationCuration curation) {
+            return new CurationResult(curation, null);
         }
 
-        static ConversionResult rejected(BrandMenuCsvRow row, String field, String reason) {
-            return new ConversionResult(
+        static CurationResult rejected(BrandMenuCsvRow row, String field, String reason) {
+            return new CurationResult(
                     null,
                     new FoodCatalogImportRejectedRow(row.rowNumber(), field, reason)
             );
@@ -313,5 +384,8 @@ public class BrandMenuCsvImporter {
         boolean rejected() {
             return rejection != null;
         }
+    }
+
+    private record ValidationFailure(String field, String reason) {
     }
 }

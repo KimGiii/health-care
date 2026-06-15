@@ -4,8 +4,6 @@ import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
-import com.healthcare.domain.diet.repository.FoodCatalogRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -40,46 +38,27 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
             Map.entry("가공", FoodCategory.PROCESSED)
     );
 
-    private final FoodCatalogRepository foodCatalogRepository;
+    private final FoodCatalogIngestService ingestService;
     private final FoodCatalogSource source;
     private final String sourceDetail;
 
     protected StandardFoodCatalogImporter(
-            FoodCatalogRepository foodCatalogRepository,
+            FoodCatalogIngestService ingestService,
             FoodCatalogSource source,
             String sourceDetail) {
-        this.foodCatalogRepository = foodCatalogRepository;
+        this.ingestService = ingestService;
         this.source = source;
         this.sourceDetail = sourceDetail;
     }
 
-    @Transactional
     public FoodCatalogImportResult importRows(List<StandardFoodImportRow> rows) {
-        int created = 0;
-        int updated = 0;
-        int skipped = 0;
-
-        for (StandardFoodImportRow row : rows) {
-            Optional<FoodCatalog> food = toFoodCatalog(row);
-            if (food.isEmpty()) {
-                skipped++;
-                continue;
-            }
-
-            Optional<FoodCatalog> existing = foodCatalogRepository
-                    .findBySourceAndFoodCode(source, food.get().getFoodCode());
-            if (existing.isPresent()) {
-                existing.get().updateSourceFactsFromImportedCatalog(food.get());
-                foodCatalogRepository.save(existing.get());
-                updated++;
-                continue;
-            }
-
-            foodCatalogRepository.save(food.get());
-            created++;
-        }
-
-        return new FoodCatalogImportResult(created, updated, skipped);
+        List<FoodCatalogIngestCandidate> candidates = rows.stream()
+                .map(this::toFoodCatalog)
+                .map(food -> food
+                        .map(FoodCatalogIngestCandidate::accepted)
+                        .orElseGet(FoodCatalogIngestCandidate::skipped))
+                .toList();
+        return ingestService.ingest(candidates, FoodCatalogIngestCurationMode.PRESERVE_EXISTING);
     }
 
     protected String maker(StandardFoodImportRow row) {

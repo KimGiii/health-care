@@ -4,9 +4,11 @@ import lombok.Builder;
 
 @Builder
 public record BrandMenuCsvRow(
+        long rowNumber,
         String brandName,
         String menuName,
         String category,
+        String nutritionBasis,
         String servingSizeG,
         String calories,
         String protein,
@@ -21,7 +23,7 @@ public record BrandMenuCsvRow(
         String recommendationReason
 ) {
     static final String[] HEADERS = {
-            "brand_name", "menu_name", "category",
+            "brand_name", "menu_name", "category", "nutrition_basis",
             "serving_size_g", "calories", "protein", "carbs", "fat",
             "sodium", "sugar", "saturated_fat",
             "source_url", "last_verified_at",

@@ -6,13 +6,13 @@ import com.healthcare.domain.diet.dto.FoodSearchParams;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
+import com.healthcare.domain.diet.identity.FoodCatalogIdentity;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Normalizer;
 import java.util.List;
 
 @Service
@@ -80,8 +80,6 @@ public class FoodCatalogService {
 
     /** NFC 정규화 + 연속 공백 축약 + 앞뒤 공백 제거 */
     private String normalizeName(String name) {
-        if (name == null) return null;
-        String nfc = Normalizer.normalize(name, Normalizer.Form.NFC);
-        return nfc.trim().replaceAll("\\s+", " ");
+        return FoodCatalogIdentity.normalizeDisplayName(name);
     }
 }
