@@ -29,7 +29,7 @@ class BrandMenuCsvImporterTest {
     @BeforeEach
     void setUp() {
         repository = mock(FoodCatalogRepository.class);
-        importer = new BrandMenuCsvImporter(repository);
+        importer = new BrandMenuCsvImporter(new FoodCatalogIngestService(repository));
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
@@ -292,6 +292,44 @@ class BrandMenuCsvImporterTest {
         verify(repository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("RECOMMENDABLE_WITH_CAUTION인데 사유가 없으면 row를 거절한다")
+    void importRows_rejectsCautionStatusWithoutReason() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("버거킹").menuName("와퍼").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("290").calories("660").protein("28").carbs("49")
+                .fat("40").sodium("980").sugar("11").saturatedFat("12")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE_WITH_CAUTION")
+                .recommendationReason("").build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows()).extracting(FoodCatalogImportRejectedRow::field)
+                .containsExactly("recommendation_reason");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("DB 저장 길이를 넘는 source_url은 row를 거절한다")
+    void importRows_rejectsSourceUrlLongerThanDbEnvelope() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("서브웨이").menuName("베지").category("VEGETABLE")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("200").calories("280").protein("12").carbs("38")
+                .fat("6").sodium("600").sugar("4").saturatedFat("1")
+                .sourceUrl("https://example.com/" + "a".repeat(121))
+                .lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
+                .recommendationReason("").build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows().get(0).field()).isEqualTo("source_url");
+        verify(repository, never()).save(any());
+    }
+
     // -----------------------------------------------------------------------
     // food_code 생성
     // -----------------------------------------------------------------------
@@ -338,6 +376,27 @@ class BrandMenuCsvImporterTest {
 
         verify(repository).save(argThat(fc ->
                 fc.getRecommendationStatus() == RecommendationStatus.SEARCH_ONLY
+        ));
+    }
+
+    @Test
+    @DisplayName("RECOMMENDABLE_WITH_CAUTION이 아닌 상태의 recommendation_reason은 저장하지 않는다")
+    void importRows_clearsReasonForNonCautionStatus() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("테스트").menuName("메뉴").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("100").calories("200").protein("5").carbs("30")
+                .fat("8").sodium("300").sugar("3").saturatedFat("2")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("추천 제외 사유 메모").build();
+        when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))
+                .thenReturn(Optional.empty());
+
+        importer.importRows(List.of(row));
+
+        verify(repository).save(argThat(fc ->
+                fc.getRecommendationStatus() == RecommendationStatus.SEARCH_ONLY
+                        && fc.getRecommendationReason() == null
         ));
     }
 }

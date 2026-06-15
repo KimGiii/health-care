@@ -5,11 +5,11 @@ import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,8 +30,12 @@ class MfdsFoodNutrientDbImporterTest {
     @Mock
     private FoodCatalogRepository foodCatalogRepository;
 
-    @InjectMocks
     private MfdsFoodNutrientDbImporter importer;
+
+    @BeforeEach
+    void setUp() {
+        importer = new MfdsFoodNutrientDbImporter(new FoodCatalogIngestService(foodCatalogRepository));
+    }
 
     @Test
     @DisplayName("FoodNtrCpntDbInfo02 행의 핵심 영양소와 제공량 메타데이터를 적재한다")

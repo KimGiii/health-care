@@ -123,6 +123,29 @@ class FoodCatalogDuplicateCandidateReporterTest {
         assertThat(report.groups()).hasSize(1);
     }
 
+    @Test
+    @DisplayName("브랜드명이 다른 같은 메뉴명은 중복 그룹으로 묶지 않는다")
+    void report_sameMenuDifferentBrand_noGroups() {
+        FoodCatalog a = catalog("와퍼", "버거킹", FoodCatalogSource.BRAND_OFFICIAL);
+        FoodCatalog b = catalog("와퍼", "롯데리아", FoodCatalogSource.BRAND_OFFICIAL);
+
+        FoodCatalogDuplicateCandidateReport report = reporter.report(List.of(a, b));
+
+        assertThat(report.groups()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("브랜드명과 메뉴명이 모두 같으면 브랜드 포함 키로 그룹화한다")
+    void report_sameBrandAndMenu_formsBrandAwareGroup() {
+        FoodCatalog a = catalog("통새우 와퍼", "버거킹", FoodCatalogSource.BRAND_OFFICIAL);
+        FoodCatalog b = catalog("통새우와퍼", "버거 킹", FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB);
+
+        FoodCatalogDuplicateCandidateReport report = reporter.report(List.of(a, b));
+
+        assertThat(report.groups()).hasSize(1);
+        assertThat(report.groups().get(0).normalizedKey()).isEqualTo("버거킹:통새우와퍼");
+    }
+
     // ---- 헬퍼 ----
 
     private FoodCatalog catalog(String nameKo, String brandName, FoodCatalogSource source) {

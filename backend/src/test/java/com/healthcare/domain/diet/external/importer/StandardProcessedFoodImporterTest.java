@@ -5,11 +5,11 @@ import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,8 +30,12 @@ class StandardProcessedFoodImporterTest {
     @Mock
     private FoodCatalogRepository foodCatalogRepository;
 
-    @InjectMocks
     private StandardProcessedFoodImporter importer;
+
+    @BeforeEach
+    void setUp() {
+        importer = new StandardProcessedFoodImporter(new FoodCatalogIngestService(foodCatalogRepository));
+    }
 
     @Test
     @DisplayName("가공식품 표준데이터 행을 내부 카탈로그 항목으로 신규 적재한다")
