@@ -38,6 +38,9 @@ packages:
   GoogleMobileAds:
     url: https://github.com/googleads/swift-package-manager-google-mobile-ads
     from: "11.0.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "7.0.0"
 
 targets:
   HealthCare:
@@ -88,6 +91,8 @@ targets:
         product: FirebaseMessaging
       - package: GoogleMobileAds
         product: GoogleMobileAds
+      - package: GoogleSignIn
+        product: GoogleSignIn
     scheme:
       testTargets:
         - HealthCareTests
