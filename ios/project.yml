@@ -40,7 +40,7 @@ packages:
     from: "11.0.0"
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS
-    from: "7.0.0"
+    from: "7.1.0"
 
 targets:
   HealthCare:
