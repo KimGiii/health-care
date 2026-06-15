@@ -2,12 +2,19 @@ package com.healthcare.domain.diet.admin;
 
 import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
 import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
+import com.healthcare.domain.diet.external.importer.FoodCatalogImportBatchRunner;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
-import com.healthcare.domain.diet.external.importer.FoodCatalogPublicDataImportService;
+import com.healthcare.domain.diet.external.importer.MfdsFoodNutrientDbImporter;
+import com.healthcare.domain.diet.external.importer.MfdsFoodNutrientDbPageFetcher;
+import com.healthcare.domain.diet.external.importer.StandardDishFoodImporter;
+import com.healthcare.domain.diet.external.importer.StandardDishFoodPageFetcher;
+import com.healthcare.domain.diet.external.importer.StandardProcessedFoodImporter;
+import com.healthcare.domain.diet.external.importer.StandardProcessedFoodPageFetcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,27 +35,39 @@ public class FoodCatalogAdminOperations {
     public static final int MAX_IMPORT_PAGES = 500;
 
     private final AdminOperationGuard adminOperationGuard;
-    private final FoodCatalogPublicDataImportService importService;
+    private final FoodCatalogImportBatchRunner batchRunner;
+    private final StandardProcessedFoodPageFetcher processedFoodPageFetcher;
+    private final StandardProcessedFoodImporter processedFoodImporter;
+    private final StandardDishFoodPageFetcher dishFoodPageFetcher;
+    private final StandardDishFoodImporter dishFoodImporter;
+    private final MfdsFoodNutrientDbPageFetcher foodNutrientDbPageFetcher;
+    private final MfdsFoodNutrientDbImporter foodNutrientDbImporter;
     private final FoodCatalogDuplicateReportService duplicateReportService;
     private final BrandMenuCsvImporter brandMenuCsvImporter;
 
     public FoodCatalogBatchImportSummary importProcessedFoods(String adminToken, int pageSize, int maxPages) {
         assertBatchOperationAllowed(adminToken, "processed-foods", pageSize, maxPages);
-        FoodCatalogBatchImportSummary summary = importService.importStandardProcessedFoods(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = batchRunner.importPages(
+                FoodCatalogSource.MFDS_STANDARD_PROCESSED, pageSize, maxPages,
+                processedFoodPageFetcher, processedFoodImporter);
         logBatchCompleted("processed-foods", summary);
         return summary;
     }
 
     public FoodCatalogBatchImportSummary importDishFoods(String adminToken, int pageSize, int maxPages) {
         assertBatchOperationAllowed(adminToken, "dish-foods", pageSize, maxPages);
-        FoodCatalogBatchImportSummary summary = importService.importStandardDishFoods(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = batchRunner.importPages(
+                FoodCatalogSource.MFDS_STANDARD_DISH, pageSize, maxPages,
+                dishFoodPageFetcher, dishFoodImporter);
         logBatchCompleted("dish-foods", summary);
         return summary;
     }
 
     public FoodCatalogBatchImportSummary importNutrientDb(String adminToken, int pageSize, int maxPages) {
         assertBatchOperationAllowed(adminToken, "nutrient-db", pageSize, maxPages);
-        FoodCatalogBatchImportSummary summary = importService.importFoodNutrientDb(pageSize, maxPages);
+        FoodCatalogBatchImportSummary summary = batchRunner.importPages(
+                FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB, pageSize, maxPages,
+                foodNutrientDbPageFetcher, foodNutrientDbImporter);
         logBatchCompleted("nutrient-db", summary);
         return summary;
     }
