@@ -475,7 +475,7 @@ struct FoodSearchSheet: View {
                     source.scheduleSearch(apiClient: container.apiClient)
                 }
 
-                if source.isSearching {
+                if source.state.isSearching {
                     Spacer()
                     ProgressView(String(localized: "diet.search.loading"))
                     Spacer()
@@ -494,12 +494,20 @@ struct FoodSearchSheet: View {
             .sheet(isPresented: $source.showCustomFoodForm) {
                 AddCustomFoodView(source: source)
             }
+            .alert(Text("오류"), isPresented: Binding(
+                get: { source.state.failureMessage != nil },
+                set: { if !$0 { source.dismissError() } }
+            )) {
+                Button(String(localized: "common.ok"), role: .cancel) {}
+            } message: {
+                Text(source.state.failureMessage ?? "")
+            }
         }
     }
 
     private var combinedList: some View {
         let hasQuery = !source.searchQuery.isEmpty
-        let hasAny = !source.catalogResults.isEmpty
+        let hasAny = !source.state.items.isEmpty
 
         return Group {
             if hasQuery && !hasAny {
@@ -513,9 +521,9 @@ struct FoodSearchSheet: View {
             } else {
                 VStack(spacing: 0) {
                     List {
-                        if !source.catalogResults.isEmpty {
+                        if !source.state.items.isEmpty {
                             Section(header: Text("내 카탈로그")) {
-                                ForEach(source.catalogResults) { item in
+                                ForEach(source.state.items) { item in
                                     CatalogFoodRow(item: item) { source.select(food: item) }
                                 }
                             }
@@ -548,7 +556,7 @@ struct FoodSearchSheet: View {
 
     @ViewBuilder
     private var aiActionSection: some View {
-        if let estimate = source.aiEstimateResult,
+        if let estimate = source.state.aiEstimate,
            estimate.isFood,
            let item = estimate.firstItem {
             VStack(alignment: .leading, spacing: 10) {
@@ -609,7 +617,7 @@ struct FoodSearchSheet: View {
                 Button {
                     Task { await source.estimateWithAI(apiClient: container.apiClient) }
                 } label: {
-                    if source.isAiEstimating {
+                    if source.state.isAiEstimating {
                         ProgressView().frame(maxWidth: .infinity)
                     } else {
                         Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
@@ -619,7 +627,7 @@ struct FoodSearchSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.brandPrimary)
-                .disabled(source.isAiEstimating)
+                .disabled(source.state.isAiEstimating)
 
                 Button {
                     source.showCustomFoodForm = true

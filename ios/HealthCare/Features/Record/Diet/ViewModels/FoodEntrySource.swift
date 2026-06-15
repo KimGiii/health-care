@@ -4,17 +4,24 @@ import Foundation
 /// 검색, AI 추정, 직접 등록 세 경로 모두 이 모듈을 통해 DraftFoodEntry를 생산한다.
 @MainActor
 final class FoodEntrySource: ObservableObject {
+    // MARK: - 공개 인터페이스
+
+    /// TextField 양방향 바인딩용 쿼리 문자열.
     @Published var searchQuery: String = ""
-    @Published var catalogResults: [FoodCatalogItem] = []
-    @Published var isSearching = false
+
+    /// 검색·AI 추정·오류를 하나의 타입으로 표현. View는 이 프로퍼티 하나를 관찰한다.
+    @Published var state: FoodEntryState = .idle
+
+    /// 직접 등록 폼 시트 표시 여부 (네비게이션 상태).
     @Published var showCustomFoodForm = false
+
+    /// 직접 등록 API 호출 진행 중 여부 (폼 버튼 스피너용).
     @Published var isSubmittingCustomFood = false
-    @Published var aiEstimateResult: AiNutritionEstimateResponse?
-    @Published var isAiEstimating = false
-    @Published var errorMessage: String?
 
     /// 항목이 확정되면 호출. ViewModel이 draft에 추가하고 시트를 닫는다.
     var onEntryProduced: ((DraftFoodEntry) -> Void)?
+
+    // MARK: - Private
 
     private let debounceDuration: Duration
     private var searchDebounceTask: Task<Void, Never>?
@@ -33,9 +40,7 @@ final class FoodEntrySource: ObservableObject {
 
     func reset() {
         searchQuery = ""
-        catalogResults = []
-        aiEstimateResult = nil
-        errorMessage = nil
+        state = .idle
         cancelPendingSearches()
     }
 
@@ -45,7 +50,7 @@ final class FoodEntrySource: ObservableObject {
         let query = normalizedQuery
         guard !query.isEmpty else {
             cancelPendingSearches()
-            resetResults()
+            state = .idle
             return
         }
         searchDebounceTask?.cancel()
@@ -64,7 +69,7 @@ final class FoodEntrySource: ObservableObject {
         searchDebounceTask = nil
         guard !normalizedQuery.isEmpty else {
             cancelPendingSearches()
-            resetResults()
+            state = .idle
             return
         }
         Task { [weak self] in
@@ -76,16 +81,18 @@ final class FoodEntrySource: ObservableObject {
     func clearSearch() {
         searchQuery = ""
         cancelPendingSearches()
-        resetResults()
+        state = .idle
     }
 
     func searchAll(apiClient: any DietFoodSearching) async {
         let query = normalizedQuery
-        guard !query.isEmpty else { resetResults(); return }
+        guard !query.isEmpty else {
+            state = .idle
+            return
+        }
 
         searchTask?.cancel()
-        isSearching = true
-        aiEstimateResult = nil
+        state = .searching(query: query)
 
         searchTask = Task { [weak self] in
             do {
@@ -94,23 +101,25 @@ final class FoodEntrySource: ObservableObject {
 
                 await MainActor.run {
                     guard let self, self.normalizedQuery == query else { return }
-                    self.catalogResults = catalog.uniqued(by: \.displayName)
-                    self.errorMessage = nil
-                    self.isSearching = false
+                    self.state = .results(query: query, items: catalog.uniqued(by: \.displayName))
                     self.searchTask = nil
                 }
             } catch is CancellationError {
                 await MainActor.run {
                     guard let self else { return }
-                    if self.normalizedQuery == query { self.isSearching = false }
+                    if case .searching(let q) = self.state, q == query {
+                        self.state = .idle
+                    }
                     self.searchTask = nil
                 }
             } catch {
                 await MainActor.run {
                     guard let self, self.normalizedQuery == query else { return }
-                    self.catalogResults = []
-                    self.errorMessage = String(localized: "diet.error.foodSearch2")
-                    self.isSearching = false
+                    self.state = .failed(
+                        query: query,
+                        items: [],
+                        message: String(localized: "diet.error.foodSearch2")
+                    )
                     self.searchTask = nil
                 }
             }
@@ -129,26 +138,33 @@ final class FoodEntrySource: ObservableObject {
     func estimateWithAI(apiClient: APIClient) async {
         let query = searchQuery.trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else { return }
-        isAiEstimating = true
-        defer { isAiEstimating = false }
+        let currentItems = state.items
+        state = .aiEstimating(query: query, items: currentItems)
         do {
             let body = try JSONEncoder().encode(AiNutritionEstimateRequest(foodName: query))
             let result: AiNutritionEstimateResponse = try await apiClient.request(.aiEstimateFood(body: body))
-            aiEstimateResult = result
-            if !result.isFood, let error = result.error {
-                switch error.code {
-                case "NOT_FOOD_OR_UNKNOWN": errorMessage = String(localized: "diet.error.ai.notFood")
-                case "AI_UNAVAILABLE":      errorMessage = String(localized: "diet.error.ai.unavailable")
-                default:                    errorMessage = error.message
+            if result.isFood {
+                state = .aiEstimated(query: query, items: currentItems, estimate: result)
+            } else {
+                let message: String
+                if let error = result.error {
+                    switch error.code {
+                    case "NOT_FOOD_OR_UNKNOWN": message = String(localized: "diet.error.ai.notFood")
+                    case "AI_UNAVAILABLE":      message = String(localized: "diet.error.ai.unavailable")
+                    default:                    message = error.message
+                    }
+                } else {
+                    message = String(localized: "diet.error.ai.estimate")
                 }
+                state = .failed(query: query, items: currentItems, message: message)
             }
         } catch {
-            errorMessage = String(localized: "diet.error.ai.estimate")
+            state = .failed(query: query, items: currentItems, message: String(localized: "diet.error.ai.estimate"))
         }
     }
 
     func addAiEstimatedFood(apiClient: APIClient) async {
-        guard let estimate = aiEstimateResult,
+        guard case .aiEstimated(let query, let items, let estimate) = state,
               estimate.isFood,
               let item = estimate.firstItem else { return }
 
@@ -182,10 +198,10 @@ final class FoodEntrySource: ObservableObject {
             let catalogItem: FoodCatalogItem = try await apiClient.request(.createCustomFood(body: body))
             var draft = DraftFoodEntry(food: catalogItem)
             draft.servingGText = String(format: "%.0f", weight)
-            aiEstimateResult = nil
+            state = .results(query: query, items: items)
             onEntryProduced?(draft)
         } catch {
-            errorMessage = String(localized: "diet.error.ai.save")
+            state = .failed(query: query, items: items, message: String(localized: "diet.error.ai.save"))
         }
     }
 
@@ -216,11 +232,19 @@ final class FoodEntrySource: ObservableObject {
                 fatPer100g: fatPer100g
             ))
             let saved: FoodCatalogItem = try await apiClient.request(.createCustomFood(body: body))
-            catalogResults.insert(saved, at: 0)
+            state = .results(query: state.query, items: [saved] + state.items)
             showCustomFoodForm = false
             onEntryProduced?(DraftFoodEntry(food: saved))
         } catch {
-            errorMessage = String(localized: "diet.error.foodRegister")
+            // submitCustomFood 오류는 현재 View에 노출 경로 없음 — 추후 개선 필요
+        }
+    }
+
+    // MARK: - 오류 해제
+
+    func dismissError() {
+        if case .failed(let query, let items, _) = state {
+            state = items.isEmpty ? .idle : .results(query: query, items: items)
         }
     }
 
@@ -233,13 +257,6 @@ final class FoodEntrySource: ObservableObject {
     private func cancelPendingSearches() {
         searchDebounceTask?.cancel(); searchDebounceTask = nil
         searchTask?.cancel(); searchTask = nil
-        isSearching = false
-    }
-
-    private func resetResults() {
-        catalogResults = []
-        aiEstimateResult = nil
-        isSearching = false
     }
 
     private static func fetchCatalog(apiClient: any DietFoodSearching, query: String) async -> [FoodCatalogItem] {

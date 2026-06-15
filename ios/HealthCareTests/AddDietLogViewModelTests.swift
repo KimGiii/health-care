@@ -21,7 +21,7 @@ final class AddDietLogViewModelTests: XCTestCase {
 
         let executedQueries = await searcher.executedQueries
         XCTAssertEqual(executedQueries, ["닭가슴살"])
-        XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
+        XCTAssertEqual(source.state.items.map(\.displayName), ["닭가슴살"])
     }
 
     func testScheduleSearch_디바운스이전새입력이오면이전대기작업이취소된다() async throws {
@@ -54,22 +54,27 @@ final class AddDietLogViewModelTests: XCTestCase {
 
         let executedQueries = await searcher.executedQueries
         XCTAssertEqual(executedQueries, ["닭가슴살"])
-        XCTAssertFalse(source.isSearching)
+        XCTAssertFalse(source.state.isSearching)
     }
 
     func testClearSearch_결과와AI상태를즉시초기화한다() async {
         let source = FoodEntrySource()
         source.searchQuery = "비빔밥"
-        source.catalogResults = [makeCatalogItem(name: "비빔밥")]
-        source.aiEstimateResult = makeAiEstimate(foodName: "비빔밥")
-        source.isSearching = true
+        source.state = .aiEstimated(
+            query: "비빔밥",
+            items: [makeCatalogItem(name: "비빔밥")],
+            estimate: makeAiEstimate(foodName: "비빔밥")
+        )
 
         source.clearSearch()
 
         XCTAssertEqual(source.searchQuery, "")
-        XCTAssertTrue(source.catalogResults.isEmpty)
-        XCTAssertNil(source.aiEstimateResult)
-        XCTAssertFalse(source.isSearching)
+        XCTAssertTrue(source.state.items.isEmpty)
+        XCTAssertNil(source.state.aiEstimate)
+        XCTAssertFalse(source.state.isSearching)
+        guard case .idle = source.state else {
+            return XCTFail("Expected .idle after clearSearch, got \(source.state)")
+        }
     }
 
     func testSearchAll_느린이전응답이최신결과를덮어쓰지못한다() async throws {
@@ -91,7 +96,7 @@ final class AddDietLogViewModelTests: XCTestCase {
 
         try await Task.sleep(for: .milliseconds(120))
 
-        XCTAssertEqual(source.catalogResults.map(\.displayName), ["닭가슴살"])
+        XCTAssertEqual(source.state.items.map(\.displayName), ["닭가슴살"])
     }
 
     func testEntryBinding_삭제된식품항목을다시읽어도안전한마지막값을반환한다() {
