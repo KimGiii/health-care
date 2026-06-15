@@ -34,13 +34,13 @@ class FoodCatalogSpecsTest {
     @Mock private Predicate predicate;
 
     @Test
-    @DisplayName("isRecommendable: RECOMMENDABLE, RECOMMENDABLE_WITH_CAUTION만 포함한다")
+    @DisplayName("hasRecommendationCandidateStatus: 추천 후보 상태만 포함한다")
     @SuppressWarnings("unchecked")
-    void isRecommendable_includesOnlyRecommendableStatuses() {
+    void hasRecommendationCandidateStatus_includesOnlyCandidateStatuses() {
         given(root.get("recommendationStatus")).willReturn(statusPath);
         given(statusPath.in(any(Collection.class))).willReturn(predicate);
 
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.isRecommendable();
+        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasRecommendationCandidateStatus();
         spec.toPredicate(root, query, cb);
 
         ArgumentCaptor<Collection<RecommendationStatus>> captor =
@@ -54,13 +54,13 @@ class FoodCatalogSpecsTest {
     }
 
     @Test
-    @DisplayName("isRecommendable: SEARCH_ONLY는 포함하지 않는다")
+    @DisplayName("hasRecommendationCandidateStatus: SEARCH_ONLY는 포함하지 않는다")
     @SuppressWarnings("unchecked")
-    void isRecommendable_excludesSearchOnly() {
+    void hasRecommendationCandidateStatus_excludesSearchOnly() {
         given(root.get("recommendationStatus")).willReturn(statusPath);
         given(statusPath.in(any(Collection.class))).willReturn(predicate);
 
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.isRecommendable();
+        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasRecommendationCandidateStatus();
         spec.toPredicate(root, query, cb);
 
         ArgumentCaptor<Collection<RecommendationStatus>> captor =
@@ -71,13 +71,13 @@ class FoodCatalogSpecsTest {
     }
 
     @Test
-    @DisplayName("isRecommendable: DISABLED는 포함하지 않는다")
+    @DisplayName("hasRecommendationCandidateStatus: DISABLED는 포함하지 않는다")
     @SuppressWarnings("unchecked")
-    void isRecommendable_excludesDisabled() {
+    void hasRecommendationCandidateStatus_excludesDisabled() {
         given(root.get("recommendationStatus")).willReturn(statusPath);
         given(statusPath.in(any(Collection.class))).willReturn(predicate);
 
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.isRecommendable();
+        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasRecommendationCandidateStatus();
         spec.toPredicate(root, query, cb);
 
         ArgumentCaptor<Collection<RecommendationStatus>> captor =

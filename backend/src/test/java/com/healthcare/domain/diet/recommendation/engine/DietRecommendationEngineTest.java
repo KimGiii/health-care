@@ -1,18 +1,11 @@
 package com.healthcare.domain.diet.recommendation.engine;
 
-import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
-import com.healthcare.domain.diet.allergen.AllergenDataSource;
-import com.healthcare.domain.diet.allergen.AllergenTag;
-import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
-import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedFoodEntry;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction.RestrictionType;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +25,7 @@ class DietRecommendationEngineTest {
 
     @BeforeEach
     void setUp() {
-        engine = new DietRecommendationEngine(new AllergenConfidenceGate());
+        engine = new DietRecommendationEngine();
     }
 
     // ─── 칼로리 분배 ───
@@ -75,116 +68,6 @@ class DietRecommendationEngineTest {
         }
     }
 
-    // ─── 후보 필터링 ───
-
-    @Nested
-    @DisplayName("후보 필터링")
-    class CandidateFiltering {
-
-        @Test
-        @DisplayName("FOOD 제한 조건의 식품은 후보에서 제외된다")
-        void filter_foodRestriction_excludesFood() {
-            FoodCatalog chicken = food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
-            FoodCatalog rice = food(2L, "백미밥", FoodCategory.GRAIN, 130.0);
-            DietRestriction restriction = foodRestriction(1L, RestrictionType.AVOID, 1L);
-
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(chicken, rice), List.of(restriction), Map.of(), false);
-
-            assertThat(result).doesNotContain(chicken);
-            assertThat(result).contains(rice);
-        }
-
-        @Test
-        @DisplayName("CATEGORY 제한 조건의 카테고리 식품은 모두 제외된다")
-        void filter_categoryRestriction_excludesAllInCategory() {
-            FoodCatalog chicken = food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
-            FoodCatalog egg = food(2L, "달걀", FoodCategory.PROTEIN_SOURCE, 155.0);
-            FoodCatalog rice = food(3L, "백미밥", FoodCategory.GRAIN, 130.0);
-            DietRestriction restriction = categoryRestriction(RestrictionType.AVOID, FoodCategory.PROTEIN_SOURCE);
-
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(chicken, egg, rice), List.of(restriction), Map.of(), false);
-
-            assertThat(result).doesNotContain(chicken, egg);
-            assertThat(result).contains(rice);
-        }
-
-        @Test
-        @DisplayName("KEYWORD 제한 조건과 이름이 매칭되는 식품은 제외된다")
-        void filter_keywordRestriction_excludesMatchingFoods() {
-            FoodCatalog porkBelly = food(1L, "삼겹살", FoodCategory.PROTEIN_SOURCE, 331.0);
-            FoodCatalog porkLoin = food(2L, "돼지등심", FoodCategory.PROTEIN_SOURCE, 182.0);
-            FoodCatalog chicken = food(3L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
-            DietRestriction restriction = keywordRestriction("돼지");
-
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(porkBelly, porkLoin, chicken), List.of(restriction), Map.of(), false);
-
-            assertThat(result).doesNotContain(porkLoin);
-            assertThat(result).contains(porkBelly, chicken); // "삼겹살"은 "돼지" 미포함
-        }
-
-        @Test
-        @DisplayName("ALLERGEN_TAG 제한 조건 - 알러젠이 있는 식품은 Step6에서 제외된다")
-        void filter_allergenTag_excludesFoodsWithAllergen() {
-            FoodCatalog milk = food(1L, "우유", FoodCategory.DAIRY, 61.0);
-            FoodCatalog chicken = food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
-            DietRestriction restriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
-
-            // 우유에 MILK 알러젠 태그 존재 → 제외
-            FoodAllergenTag milkTag = allergenTag(1L, AllergenConfidenceLevel.DIRECT_VERIFIED);
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(1L, List.of(milkTag));
-
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(milk, chicken), List.of(restriction), tagsByFoodId, false);
-
-            assertThat(result).doesNotContain(milk);
-            assertThat(result).contains(chicken);
-        }
-
-        @Test
-        @DisplayName("Strict 모드에서 알러젠 태그 없는 식품은 UNKNOWN 취급으로 제외된다")
-        void filter_strictMode_excludesUnknownAllergenFoods() {
-            FoodCatalog riceNoodle = food(1L, "쌀국수", FoodCategory.GRAIN, 100.0);
-            FoodCatalog plainRice = food(2L, "백미밥", FoodCategory.GRAIN, 130.0);
-            DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
-
-            // 쌀국수: 알러젠 태그 없음 (UNKNOWN 취급)
-            // 백미밥: MILK 없음을 DIRECT_VERIFIED로 확인 (아무 allergen tag가 없지만, 여기서는 다른 알러젠 확인 레코드가 있다고 가정)
-            FoodAllergenTag riceVerified = FoodAllergenTag.builder()
-                    .foodCatalogId(2L)
-                    .allergenTag(AllergenTag.WHEAT)  // 밀 없음 확인
-                    .confidenceLevel(AllergenConfidenceLevel.DIRECT_VERIFIED)
-                    .source(AllergenDataSource.MFDS_CLASS)
-                    .build();
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(2L, List.of(riceVerified));
-
-            // strict=true: 알러젠 레코드가 DIRECT_VERIFIED/LABEL_DERIVED인 식품만 통과
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(riceNoodle, plainRice), List.of(milkRestriction), tagsByFoodId, true);
-
-            assertThat(result).doesNotContain(riceNoodle);
-            assertThat(result).contains(plainRice);
-        }
-
-        @Test
-        @DisplayName("영양 정보가 없는 식품(calories null)은 후보에서 제외된다")
-        void filter_noNutritionInfo_excluded() {
-            FoodCatalog noCalFood = FoodCatalog.builder()
-                    .id(1L).name("미지정").category(FoodCategory.OTHER)
-                    .caloriesPer100g(null).isCustom(false)
-                    .build();
-            FoodCatalog normalFood = food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
-
-            List<FoodCatalog> result = engine.filterCandidates(
-                    List.of(noCalFood, normalFood), List.of(), Map.of(), false);
-
-            assertThat(result).doesNotContain(noCalFood);
-            assertThat(result).contains(normalFood);
-        }
-    }
-
     // ─── 끼니별 추천 ───
 
     @Nested
@@ -194,11 +77,11 @@ class DietRecommendationEngineTest {
         @Test
         @DisplayName("추천 결과의 끼니별 칼로리 합이 목표의 ±10% 이내에 든다")
         void recommend_caloriesWithinTenPercent() {
-            List<FoodCatalog> candidates = diverseCandidates();
+            List<DietRecommendationCandidate> candidates = diverseCandidates();
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
             List<MealType> meals = List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER);
 
-            List<RecommendedMeal> result = engine.recommend(targets, meals, candidates, Map.of(), false);
+            List<RecommendedMeal> result = engine.recommend(targets, meals, candidates);
 
             double totalCal = result.stream()
                     .flatMap(m -> m.items().stream())
@@ -210,15 +93,13 @@ class DietRecommendationEngineTest {
         @Test
         @DisplayName("각 끼니 결과에 최소 1개 이상의 식품이 포함된다")
         void recommend_eachMealHasAtLeastOneFood() {
-            List<FoodCatalog> candidates = diverseCandidates();
+            List<DietRecommendationCandidate> candidates = diverseCandidates();
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
 
             List<RecommendedMeal> result = engine.recommend(
                     targets,
                     List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER),
-                    candidates,
-                    Map.of(),
-                    false
+                    candidates
             );
 
             assertThat(result).hasSize(3);
@@ -228,31 +109,29 @@ class DietRecommendationEngineTest {
         @Test
         @DisplayName("제한 조건 적용 후 후보가 없으면 빈 결과를 반환한다")
         void recommend_noValidCandidates_returnsEmptyItems() {
-            FoodCatalog onlyFood = food(1L, "우유", FoodCategory.DAIRY, 61.0);
-            FoodAllergenTag milkTag = allergenTag(1L, AllergenConfidenceLevel.DIRECT_VERIFIED);
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(1L, List.of(milkTag));
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+            List<RecommendedMeal> result = engine.recommend(
+                    targets,
+                    List.of(MealType.BREAKFAST),
+                    List.of()
+            );
 
-            // MILK 제한 적용 → 후보 0개
-            DietRestriction restriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
-            List<FoodCatalog> filtered = engine.filterCandidates(
-                    List.of(onlyFood), List.of(restriction), tagsByFoodId, false);
-
-            assertThat(filtered).isEmpty();
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).items()).isEmpty();
         }
 
         @Test
         @DisplayName("추천 결과에 추천 불가 사유가 포함된다 (후보 부족)")
         void recommend_insufficientCandidates_hasWarning() {
             // 후보가 1개뿐인 극단적 케이스
-            List<FoodCatalog> candidates = List.of(food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0));
+            List<DietRecommendationCandidate> candidates =
+                    List.of(food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0));
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
 
             List<RecommendedMeal> result = engine.recommend(
                     targets,
                     List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER, MealType.SNACK),
-                    candidates,
-                    Map.of(),
-                    false
+                    candidates
             );
 
             // 같은 식품이 여러 끼니에 반복될 수 있음 — 결과는 non-null
@@ -262,18 +141,12 @@ class DietRecommendationEngineTest {
         @Test
         @DisplayName("RECOMMENDABLE_WITH_CAUTION 식품은 추천되고 caution 필드에 사유가 담긴다")
         void recommend_cautionFood_hasCautionField() {
-            FoodCatalog cautionFood = FoodCatalog.builder()
-                    .id(1L).name("와퍼").category(FoodCategory.PROCESSED)
-                    .caloriesPer100g(300.0).proteinPer100g(15.0)
-                    .carbsPer100g(25.0).fatPer100g(18.0)
-                    .recommendationStatus(com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE_WITH_CAUTION)
-                    .recommendationReason("고지방·고나트륨")
-                    .isCustom(false).usageCount(5L)
-                    .build();
+            DietRecommendationCandidate cautionFood =
+                    food(1L, "와퍼", FoodCategory.PROCESSED, 300.0, "고지방·고나트륨");
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
 
             List<RecommendedMeal> result = engine.recommend(
-                    targets, List.of(MealType.LUNCH), List.of(cautionFood), Map.of(), false);
+                    targets, List.of(MealType.LUNCH), List.of(cautionFood));
 
             List<RecommendedFoodEntry> items = result.stream()
                     .flatMap(m -> m.items().stream())
@@ -286,10 +159,10 @@ class DietRecommendationEngineTest {
         @DisplayName("RECOMMENDABLE 식품은 추천되고 caution 필드가 null이다")
         void recommend_normalFood_hasCautionNull() {
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
-            List<FoodCatalog> candidates = diverseCandidates();
+            List<DietRecommendationCandidate> candidates = diverseCandidates();
 
             List<RecommendedMeal> result = engine.recommend(
-                    targets, List.of(MealType.LUNCH), candidates, Map.of(), false);
+                    targets, List.of(MealType.LUNCH), candidates);
 
             List<RecommendedFoodEntry> items = result.stream()
                     .flatMap(m -> m.items().stream())
@@ -302,31 +175,25 @@ class DietRecommendationEngineTest {
         @DisplayName("같은 후보라도 날짜가 바뀌면 추천 우선순위가 deterministic rotation으로 달라진다")
         void recommend_differentDate_rotatesCandidatePriority() {
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
-            List<FoodCatalog> candidates = diverseCandidates();
+            List<DietRecommendationCandidate> candidates = diverseCandidates();
 
             List<RecommendedMeal> firstDay = engine.recommend(
                     LocalDate.of(2026, 6, 12),
                     targets,
                     List.of(MealType.LUNCH),
-                    candidates,
-                    Map.of(),
-                    false
+                    candidates
             );
             List<RecommendedMeal> sameDay = engine.recommend(
                     LocalDate.of(2026, 6, 12),
                     targets,
                     List.of(MealType.LUNCH),
-                    candidates,
-                    Map.of(),
-                    false
+                    candidates
             );
             List<RecommendedMeal> nextDay = engine.recommend(
                     LocalDate.of(2026, 6, 13),
                     targets,
                     List.of(MealType.LUNCH),
-                    candidates,
-                    Map.of(),
-                    false
+                    candidates
             );
 
             List<Long> firstDayIds = recommendedFoodIds(firstDay);
@@ -344,7 +211,7 @@ class DietRecommendationEngineTest {
                 .toList();
     }
 
-    private List<FoodCatalog> diverseCandidates() {
+    private List<DietRecommendationCandidate> diverseCandidates() {
         return List.of(
                 food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
                 food(2L, "현미밥", FoodCategory.GRAIN, 150.0),
@@ -359,49 +226,31 @@ class DietRecommendationEngineTest {
         );
     }
 
-    private FoodCatalog food(Long id, String name, FoodCategory category, double calories) {
-        return FoodCatalog.builder()
-                .id(id).name(name).category(category)
-                .caloriesPer100g(calories).proteinPer100g(20.0)
-                .carbsPer100g(10.0).fatPer100g(5.0)
-                .isCustom(false).usageCount((long) (11 - id))
-                .build();
+    private DietRecommendationCandidate food(Long id, String name, FoodCategory category, double calories) {
+        return food(id, name, category, calories, null);
     }
 
-    private DietRestriction foodRestriction(Long id, RestrictionType type, Long foodCatalogId) {
-        return DietRestriction.builder()
-                .id(id).userId(1L).restrictionType(type)
-                .targetType(TargetType.FOOD).foodCatalogId(foodCatalogId)
-                .build();
+    private DietRecommendationCandidate food(
+            Long id,
+            String name,
+            FoodCategory category,
+            double calories,
+            String caution
+    ) {
+        return new DietRecommendationCandidate(
+                id,
+                name,
+                null,
+                category,
+                calories,
+                20.0,
+                10.0,
+                5.0,
+                11 - id,
+                id,
+                AllergenConfidenceLevel.UNKNOWN,
+                caution
+        );
     }
 
-    private DietRestriction categoryRestriction(RestrictionType type, FoodCatalog.FoodCategory category) {
-        return DietRestriction.builder()
-                .id(1L).userId(1L).restrictionType(type)
-                .targetType(TargetType.CATEGORY).category(category)
-                .build();
-    }
-
-    private DietRestriction keywordRestriction(String keyword) {
-        return DietRestriction.builder()
-                .id(1L).userId(1L).restrictionType(RestrictionType.AVOID)
-                .targetType(TargetType.KEYWORD).keyword(keyword)
-                .build();
-    }
-
-    private DietRestriction allergenTagRestriction(RestrictionType type, AllergenTag tag) {
-        return DietRestriction.builder()
-                .id(1L).userId(1L).restrictionType(type)
-                .targetType(TargetType.ALLERGEN_TAG).allergenTag(tag)
-                .build();
-    }
-
-    private FoodAllergenTag allergenTag(Long foodCatalogId, AllergenConfidenceLevel level) {
-        return FoodAllergenTag.builder()
-                .foodCatalogId(foodCatalogId)
-                .allergenTag(AllergenTag.MILK)
-                .confidenceLevel(level)
-                .source(AllergenDataSource.MFDS_CLASS)
-                .build();
-    }
 }

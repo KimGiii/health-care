@@ -1,20 +1,15 @@
 package com.healthcare.domain.diet.recommendation.usecase;
 
 import com.healthcare.common.exception.BusinessRuleViolationException;
-import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
-import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
-import com.healthcare.domain.diet.entity.FoodCatalog;
-import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
-import com.healthcare.domain.diet.repository.FoodCatalogRepository;
-import com.healthcare.domain.diet.repository.FoodCatalogSpecs;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
@@ -23,15 +18,10 @@ import com.healthcare.domain.nutrition.service.NutritionCalculator;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +35,7 @@ public class DailyDietRecommendationUseCases {
     private final UserRepository userRepository;
     private final GoalRepository goalRepository;
     private final DietRestrictionRepository dietRestrictionRepository;
-    private final FoodCatalogRepository foodCatalogRepository;
-    private final FoodAllergenTagRepository foodAllergenTagRepository;
+    private final DietRecommendationCandidatePool candidatePool;
     private final DietRecommendationEngine engine;
 
     public DailyDietRecommendationResponse recommend(Long userId, DailyDietRecommendationRequest request) {
@@ -66,19 +55,13 @@ public class DailyDietRecommendationUseCases {
         List<DietRestriction> restrictions = dietRestrictionRepository
                 .findByUserIdAndDeletedAtIsNull(userId);
 
-        List<FoodCatalog> candidates = loadCandidates(restrictions);
-        List<Long> foodIds = candidates.stream().map(FoodCatalog::getId).toList();
-
-        Map<Long, List<FoodAllergenTag>> tagsByFoodId = foodAllergenTagRepository
-                .findByFoodCatalogIdIn(foodIds)
-                .stream()
-                .collect(Collectors.groupingBy(FoodAllergenTag::getFoodCatalogId));
-
-        List<FoodCatalog> filtered = engine.filterCandidates(
-                candidates, restrictions, tagsByFoodId, request.strictAllergyMode());
+        DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
 
         List<RecommendedMeal> meals = engine.recommend(
-                request.date(), targets, request.mealTypes(), filtered, tagsByFoodId, request.strictAllergyMode());
+                request.date(),
+                targets,
+                request.mealTypes(),
+                candidates.foods());
 
         NutrientSummary summary = buildSummary(meals);
         List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
@@ -94,33 +77,6 @@ public class DailyDietRecommendationUseCases {
                 request.strictAllergyMode(),
                 DISCLAIMER
         );
-    }
-
-    /**
-     * FOOD 타입 제한(food_catalog_id 목록)과 CATEGORY 타입 제한을 DB WHERE 절로 밀어 넣어
-     * 추천 후보를 로드한다. 칼로리 정보 없는 식품도 DB 레벨에서 제외된다.
-     */
-    private List<FoodCatalog> loadCandidates(List<DietRestriction> restrictions) {
-        Set<Long> excludedFoodIds = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.FOOD)
-                .map(DietRestriction::getFoodCatalogId)
-                .collect(Collectors.toSet());
-
-        Set<FoodCategory> excludedCategories = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.CATEGORY)
-                .map(DietRestriction::getCategory)
-                .collect(Collectors.toSet());
-
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasCalories()
-                .and(FoodCatalogSpecs.isRecommendable());
-        if (!excludedFoodIds.isEmpty()) {
-            spec = spec.and(FoodCatalogSpecs.idNotIn(excludedFoodIds));
-        }
-        if (!excludedCategories.isEmpty()) {
-            spec = spec.and(FoodCatalogSpecs.categoryNotIn(excludedCategories));
-        }
-
-        return foodCatalogRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "usageCount"));
     }
 
     private NutrientSummary buildSummary(List<RecommendedMeal> meals) {

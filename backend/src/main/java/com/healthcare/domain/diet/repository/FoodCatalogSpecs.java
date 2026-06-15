@@ -6,14 +6,9 @@ import com.healthcare.domain.diet.entity.RecommendationStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collection;
-import java.util.List;
 
 /** FoodCatalog 조회용 JPA Specification 팩토리. */
 public final class FoodCatalogSpecs {
-
-    private static final List<RecommendationStatus> RECOMMENDABLE_STATUSES = List.of(
-            RecommendationStatus.RECOMMENDABLE,
-            RecommendationStatus.RECOMMENDABLE_WITH_CAUTION);
 
     private FoodCatalogSpecs() {}
 
@@ -23,11 +18,11 @@ public final class FoodCatalogSpecs {
     }
 
     /**
-     * 추천 후보로 사용 가능한 상태(RECOMMENDABLE, RECOMMENDABLE_WITH_CAUTION)만 포함.
-     * SEARCH_ONLY·DISABLED 식품은 이 필터로 추천 후보에서 제외된다.
+     * 추천 후보 상태만 포함한다. 주의 표시(caution) 의미는 RecommendationCuration이 해석한다.
      */
-    public static Specification<FoodCatalog> isRecommendable() {
-        return (root, query, cb) -> root.get("recommendationStatus").in(RECOMMENDABLE_STATUSES);
+    public static Specification<FoodCatalog> hasRecommendationCandidateStatus() {
+        return (root, query, cb) -> root.get("recommendationStatus")
+                .in(RecommendationStatus.recommendationCandidateStatuses());
     }
 
     /** 지정한 식품 ID 목록을 제외한다 (FOOD 타입 제한 적용). */
