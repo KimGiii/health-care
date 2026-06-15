@@ -180,21 +180,21 @@ final class FoodEntrySource: ObservableObject {
         let displayName = item.normalizedName.isEmpty ? item.name : item.normalizedName
 
         do {
-            let payload: [String: Any] = [
-                "name": displayName, "nameKo": displayName,
-                "category": (item.category ?? .OTHER).rawValue,
-                "caloriesPer100g":      n.caloriesKcal * factor,
-                "proteinPer100g":       n.proteinG * factor,
-                "carbsPer100g":         n.carbohydrateG * factor,
-                "fatPer100g":           n.fatG * factor,
-                "sugarsPer100g":        n.sugarsG * factor,
-                "dietaryFiberPer100g":  n.dietaryFiberG * factor,
-                "saturatedFatPer100g":  n.saturatedFatG * factor,
-                "transFatPer100g":      n.transFatG * factor,
-                "cholesterolPer100gMg": n.cholesterolMg * factor,
-                "sodiumPer100gMg":      n.sodiumMg * factor
-            ]
-            let body = try JSONSerialization.data(withJSONObject: payload)
+            let body = try JSONEncoder().encode(CreateCustomFoodRequest(
+                name: displayName,
+                nameKo: displayName,
+                category: (item.category ?? .OTHER).rawValue,
+                caloriesPer100g:      n.caloriesKcal * factor,
+                proteinPer100g:       n.proteinG * factor,
+                carbsPer100g:         n.carbohydrateG * factor,
+                fatPer100g:           n.fatG * factor,
+                sugarsPer100g:        n.sugarsG * factor,
+                dietaryFiberPer100g:  n.dietaryFiberG * factor,
+                saturatedFatPer100g:  n.saturatedFatG * factor,
+                transFatPer100g:      n.transFatG * factor,
+                cholesterolPer100gMg: n.cholesterolMg * factor,
+                sodiumPer100gMg:      n.sodiumMg * factor
+            ))
             let catalogItem: FoodCatalogItem = try await apiClient.request(.createCustomFood(body: body))
             var draft = DraftFoodEntry(food: catalogItem)
             draft.servingGText = String(format: "%.0f", weight)
@@ -219,17 +219,20 @@ final class FoodEntrySource: ObservableObject {
         isSubmittingCustomFood = true
         defer { isSubmittingCustomFood = false }
         do {
-            struct CustomFoodBody: Encodable {
-                let name, nameKo, category: String
-                let caloriesPer100g: Double
-                let proteinPer100g, carbsPer100g, fatPer100g: Double?
-            }
-            let body = try JSONEncoder().encode(CustomFoodBody(
-                name: name, nameKo: name, category: category.rawValue,
+            let body = try JSONEncoder().encode(CreateCustomFoodRequest(
+                name: name,
+                nameKo: name,
+                category: category.rawValue,
                 caloriesPer100g: caloriesPer100g,
                 proteinPer100g: proteinPer100g,
                 carbsPer100g: carbsPer100g,
-                fatPer100g: fatPer100g
+                fatPer100g: fatPer100g,
+                sugarsPer100g: nil,
+                dietaryFiberPer100g: nil,
+                saturatedFatPer100g: nil,
+                transFatPer100g: nil,
+                cholesterolPer100gMg: nil,
+                sodiumPer100gMg: nil
             ))
             let saved: FoodCatalogItem = try await apiClient.request(.createCustomFood(body: body))
             state = .results(query: state.query, items: [saved] + state.items)

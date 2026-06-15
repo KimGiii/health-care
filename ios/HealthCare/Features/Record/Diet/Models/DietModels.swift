@@ -585,3 +585,19 @@ struct AiNutritionEstimateResponse: Codable {
 struct AiNutritionEstimateRequest: Encodable {
     let foodName: String
 }
+
+struct CreateCustomFoodRequest: Encodable {
+    let name: String
+    let nameKo: String
+    let category: String
+    let caloriesPer100g: Double
+    let proteinPer100g: Double?
+    let carbsPer100g: Double?
+    let fatPer100g: Double?
+    let sugarsPer100g: Double?
+    let dietaryFiberPer100g: Double?
+    let saturatedFatPer100g: Double?
+    let transFatPer100g: Double?
+    let cholesterolPer100gMg: Double?
+    let sodiumPer100gMg: Double?
+}
