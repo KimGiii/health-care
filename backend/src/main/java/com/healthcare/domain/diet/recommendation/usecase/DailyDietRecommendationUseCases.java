@@ -78,7 +78,7 @@ public class DailyDietRecommendationUseCases {
                 candidates, restrictions, tagsByFoodId, request.strictAllergyMode());
 
         List<RecommendedMeal> meals = engine.recommend(
-                targets, request.mealTypes(), filtered, tagsByFoodId, request.strictAllergyMode());
+                request.date(), targets, request.mealTypes(), filtered, tagsByFoodId, request.strictAllergyMode());
 
         NutrientSummary summary = buildSummary(meals);
         List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()

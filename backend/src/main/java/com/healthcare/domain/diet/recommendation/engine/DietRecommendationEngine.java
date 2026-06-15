@@ -15,6 +15,7 @@ import com.healthcare.domain.nutrition.dto.NutritionTargets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,7 @@ public class DietRecommendationEngine {
      * 전체 하루 식단 추천을 생성한다.
      */
     public List<RecommendedMeal> recommend(
+            LocalDate date,
             NutritionTargets targets,
             List<MealType> selectedMeals,
             List<FoodCatalog> filteredCandidates,
@@ -132,7 +134,7 @@ public class DietRecommendationEngine {
             double targetCal = calorieDistribution.getOrDefault(mealType, 0.0);
             double targetProtein = targets.proteinTargetG() * (targetCal / targets.calorieTarget());
 
-            List<FoodCatalog> mealCandidates = sortByScore(filteredCandidates, usedFoodIds);
+            List<FoodCatalog> mealCandidates = sortByScore(filteredCandidates, usedFoodIds, date);
             List<RecommendedFoodEntry> items = selectItemsForMeal(
                     mealType, mealCandidates, targetCal, tagsByFoodId);
 
@@ -147,6 +149,16 @@ public class DietRecommendationEngine {
                     round(totalProtein), round(totalCarbs), round(totalFat), items));
         }
         return meals;
+    }
+
+    public List<RecommendedMeal> recommend(
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<FoodCatalog> filteredCandidates,
+            Map<Long, List<FoodAllergenTag>> tagsByFoodId,
+            boolean strictMode
+    ) {
+        return recommend(LocalDate.now(), targets, selectedMeals, filteredCandidates, tagsByFoodId, strictMode);
     }
 
     // ─── 내부 로직 ───
@@ -207,15 +219,33 @@ public class DietRecommendationEngine {
         return Math.max(25.0, Math.min(500.0, rounded));
     }
 
-    /** 사용 빈도(usageCount) 내림차순 + 이미 사용된 식품 페널티 정렬 */
-    private List<FoodCatalog> sortByScore(List<FoodCatalog> candidates, Set<Long> usedFoodIds) {
+    /** 이미 사용된 식품 페널티를 먼저 적용하고, 같은 후보 풀은 날짜 기준으로 안정적으로 회전한다. */
+    private List<FoodCatalog> sortByScore(List<FoodCatalog> candidates, Set<Long> usedFoodIds, LocalDate date) {
         return candidates.stream()
                 .sorted(Comparator
-                        .comparingLong((FoodCatalog f) -> usedFoodIds.contains(f.getId()) ? 0L : 1L)
-                        .reversed()
-                        .thenComparingLong(f -> f.getUsageCount() != null ? f.getUsageCount() : 0L)
-                        .reversed())
+                        .comparingInt((FoodCatalog f) -> usedFoodIds.contains(f.getId()) ? 1 : 0)
+                        .thenComparingLong(f -> rotationKey(date, f))
+                        .thenComparing(Comparator.comparingLong(this::usageCount).reversed())
+                        .thenComparingLong(this::stableFoodKey))
                 .toList();
+    }
+
+    private long usageCount(FoodCatalog food) {
+        return food.getUsageCount() != null ? food.getUsageCount() : 0L;
+    }
+
+    private long rotationKey(LocalDate date, FoodCatalog food) {
+        long value = date.toEpochDay() ^ (stableFoodKey(food) * 0x9E3779B97F4A7C15L);
+        value = (value ^ (value >>> 30)) * 0xBF58476D1CE4E5B9L;
+        value = (value ^ (value >>> 27)) * 0x94D049BB133111EBL;
+        return value ^ (value >>> 31);
+    }
+
+    private long stableFoodKey(FoodCatalog food) {
+        if (food.getId() != null) {
+            return food.getId();
+        }
+        return Objects.hash(food.getSource(), food.getFoodCode(), food.getName(), food.getNameKo());
     }
 
     /** KEYWORD 제한: 식품명 또는 한국어명에 키워드가 포함되면 제외 */

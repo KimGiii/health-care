@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -296,9 +297,52 @@ class DietRecommendationEngineTest {
             assertThat(items).isNotEmpty();
             assertThat(items).allMatch(e -> e.caution() == null);
         }
+
+        @Test
+        @DisplayName("같은 후보라도 날짜가 바뀌면 추천 우선순위가 deterministic rotation으로 달라진다")
+        void recommend_differentDate_rotatesCandidatePriority() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+            List<FoodCatalog> candidates = diverseCandidates();
+
+            List<RecommendedMeal> firstDay = engine.recommend(
+                    LocalDate.of(2026, 6, 12),
+                    targets,
+                    List.of(MealType.LUNCH),
+                    candidates,
+                    Map.of(),
+                    false
+            );
+            List<RecommendedMeal> sameDay = engine.recommend(
+                    LocalDate.of(2026, 6, 12),
+                    targets,
+                    List.of(MealType.LUNCH),
+                    candidates,
+                    Map.of(),
+                    false
+            );
+            List<RecommendedMeal> nextDay = engine.recommend(
+                    LocalDate.of(2026, 6, 13),
+                    targets,
+                    List.of(MealType.LUNCH),
+                    candidates,
+                    Map.of(),
+                    false
+            );
+
+            List<Long> firstDayIds = recommendedFoodIds(firstDay);
+            assertThat(recommendedFoodIds(sameDay)).isEqualTo(firstDayIds);
+            assertThat(recommendedFoodIds(nextDay)).isNotEqualTo(firstDayIds);
+        }
     }
 
     // ─── 헬퍼 ───
+
+    private List<Long> recommendedFoodIds(List<RecommendedMeal> meals) {
+        return meals.stream()
+                .flatMap(meal -> meal.items().stream())
+                .map(RecommendedFoodEntry::foodCatalogId)
+                .toList();
+    }
 
     private List<FoodCatalog> diverseCandidates() {
         return List.of(
