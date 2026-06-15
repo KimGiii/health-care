@@ -4,7 +4,7 @@
 
 **개정일**: 2026-06-10
 
-**상태**: MVP 구현 완료 / Phase 1 스키마 + 추천 후보 필터 + Phase 2 배치 파이프라인·중복 리포터·관리자 API 구현
+**상태**: MVP 구현 완료 / Phase 1 스키마 + Phase 2 배치 파이프라인·중복 리포터·관리자 API + Phase 3 브랜드 CSV + Phase 4 추천 큐레이션 응답 구현
 
 **작업 브랜치**: `feat/allegen-recommendation`
 
@@ -60,6 +60,10 @@ HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용
 
 현재 추천 후보 조회는 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 상태만 포함합니다. `SEARCH_ONLY`, `DISABLED` 항목은 검색/기록 정책과 별개로 추천 후보에서는 제외됩니다.
 
+나트륨·당류·포화지방 기준값으로 추천 상태를 자동 판정하는 작업은 런타임 추천 로직과 분리된 데이터 운영 작업입니다. v1에서는 CSV/관리자 검수로 `recommendation_status`를 명시하고, 기준값은 실제 샘플과 운영 리포트를 본 뒤 후속 자동화 여부를 결정합니다.
+
+추천 다양성은 큐레이션 상태가 아니라 추천 엔진의 선택 전략에서 다룹니다. 같은 사용자/날짜/입력에서는 재현 가능한 결과를 주되, 날짜가 바뀌면 후보 우선순위가 회전하도록 deterministic rotation을 적용합니다. 최근 추천/최근 기록 기반 중복 억제는 v2 품질 개선으로 분리합니다.
+
 ## 주요 기능
 
 ### 0. 카탈로그 강화 메타데이터 (V23)
@@ -83,10 +87,12 @@ ALTER TABLE food_catalog
     ADD COLUMN last_verified_at      TIMESTAMPTZ;
 ```
 
-백필 기본값:
+백필/큐레이션 원칙:
 
-- 기존 시드 식품: `source = SEED`, `recommendation_status = RECOMMENDABLE`
+- 기존 시드 식품: `source = SEED`, 추천 상태는 명시 큐레이션 목록에 따라 결정
 - 기존 사용자 커스텀 식품: `source = USER_CUSTOM`, `recommendation_status = SEARCH_ONLY`
+- seed 전체를 자동 `RECOMMENDABLE`로 보지 않습니다. 컵라면, 주류, 설탕, 마요네즈, 튀김류, 고지방 가공육처럼 검색/기록에는 유용하지만 추천 후보로 부적합하거나 주의 표시가 필요한 항목이 섞여 있기 때문입니다.
+- seed allowlist는 전체 40~60개 이상을 목표로 하고, 단백질 10개 이상, 곡류/주식 8개 이상, 채소 10개 이상, 과일 6개 이상, 유제품/간식 대체 4개 이상을 최소 운영 기준으로 둡니다. 기준을 만족하지 못하면 추천 엔진을 임시로 넓히기보다 seed/브랜드 후보를 먼저 보강합니다.
 
 추가 인덱스:
 
@@ -164,7 +170,8 @@ Phase 2의 첫 구현으로 공공데이터 row를 내부 `food_catalog`로 적�
 - 같은 `source + food_code`가 다시 들어오면 기존 항목의 원본 메타데이터와 영양값을 갱신합니다.
 - 공공데이터 재적재는 추천 검수 상태(`recommendation_status`, `recommendation_reason`)를 덮어쓰지 않습니다.
 - `food_code`, 식품명, 열량이 없거나 파싱할 수 없으면 skip 처리합니다.
-- 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. 추천 후보 승격은 별도 추천 적합성 게이트에서 다룹니다.
+- 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. v1에서는 공공데이터 항목을 추천 후보로 대량 자동 승격하지 않고, 추천 후보는 기존 검수 seed와 `BRAND_OFFICIAL` CSV 검수 항목 중심으로 제한합니다.
+- 공공데이터 항목 승격이 필요해지면 개별 수정 API보다 `source + food_code` 기준 큐레이션 오버레이 CSV를 별도 운영 작업으로 검토합니다.
 - `last_verified_at`은 원본 기준일을 KST 자정 기준으로 저장합니다.
 
 ### 0.2 공공데이터 page fetcher와 배치 runner
@@ -254,6 +261,21 @@ dedup 리포트 응답 예시:
   ]
 }
 ```
+
+#### 브랜드 공식 메뉴 CSV 계약
+
+브랜드 공식 메뉴 CSV는 입력 영양값의 기준을 `nutrition_basis`로 명시합니다.
+
+| `nutrition_basis` | 입력 영양값 기준 | `serving_size_g` | 처리 |
+|---|---|---|---|
+| `PER_SERVING` | 1회 제공량 전체 기준 | 필수 | 100g당 값으로 환산 저장 |
+| `PER_100G` | 100g당 기준 | 선택 | 그대로 100g당 값으로 저장, 공식 전체 제공량이 있으면 기본 기록량으로 보존 |
+
+CSV 헤더가 템플릿과 다르면 파일 전체를 거절합니다. 개별 row의 필수값, 숫자 형식, 제공량 기준이 잘못되면 해당 row만 저장하지 않고 `rejectedRows`에 row 번호, 필드, 사유를 반환합니다.
+
+`recommendation_reason`은 `recommendation_status = RECOMMENDABLE_WITH_CAUTION`일 때만 저장되는 주의 사유입니다. 이 상태에서는 사유가 필수이며, 다른 상태의 사유 입력은 저장하지 않습니다.
+
+v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재를 기준 경로로 둡니다. 개별 식품의 추천 상태를 직접 수정하는 관리자 API는 원본 CSV와 DB 상태가 갈라질 수 있으므로 즉시 제공하지 않습니다. 운영 중 CSV 재적재가 과하게 무겁다는 근거가 쌓이면 변경 이력과 원본 충돌 정책을 함께 설계한 뒤 후속으로 검토합니다.
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
 
@@ -566,14 +588,20 @@ NavigationStack(path: $recordTabPath) {
 
 2. **V23 마이그레이션 실행**
    - Flyway가 `V23__food_catalog_source_recommendation_fields.sql`을 자동 적용합니다.
-   - 기존 시드 식품은 추천 후보 유지를 위해 `RECOMMENDABLE`로 백필됩니다.
    - 기존 사용자 커스텀 식품은 검증 전 추천 제외를 위해 `SEARCH_ONLY`로 백필됩니다.
 
 3. **V24 마이그레이션 실행**
    - Flyway가 `V24__food_catalog_import_checkpoints.sql`을 자동 적용합니다.
    - 공공데이터 배치 적재 시 source별 마지막 완료 페이지를 추적하는 `food_catalog_import_checkpoints` 테이블이 생성됩니다.
 
-3. **초기 usage_count 계산 (선택 사항)**
+4. **V25 seed 큐레이션 보정 마이그레이션 실행**
+   - V23은 이미 적용됐을 수 있으므로 직접 수정하지 않습니다.
+   - V25에서 기존 seed 전체를 `SEARCH_ONLY`로 낮춘 뒤, 명시 큐레이션 allowlist만 `RECOMMENDABLE`로 승격합니다.
+   - V25 seed 보정에서는 `RECOMMENDABLE_WITH_CAUTION`을 사용하지 않습니다. 주의 추천은 출처와 사유가 더 명확한 브랜드 CSV 등 운영 검수 데이터에 우선 적용합니다.
+   - V25는 마이그레이션 SQL 내부의 inline `VALUES` allowlist로 처리합니다. 현재 seed는 V4/V12 시점에 생성되어 `food_code`가 없으므로 `source = 'SEED' AND name_ko AND category` 조합으로 매칭합니다.
+   - 이번 V25에는 seed synthetic `food_code` 백필을 포함하지 않습니다. seed identity 체계가 필요해지면 별도 마이그레이션에서 `seed:<normalized-name>` 같은 규칙을 설계합니다.
+
+5. **초기 usage_count 계산 (선택 사항)**
    ```sql
    -- 기존 식단 기록을 기반으로 usage_count 초기화
    -- (현재는 0부터 시작, 향후 히스토리 분석 시 필요)
@@ -595,9 +623,9 @@ NavigationStack(path: $recordTabPath) {
    - 실제 실행 전 `PUBLIC_FOOD_API_KEY` 환경 변수 설정 필요
    - 5단계(검색/기록 경로 정리)에서 사용자 검색 경로의 외부 API 의존을 내부 DB 기준으로 고정 예정
 
-4. **주의 상태 추천 응답 모델 미확정**
-   - `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되지만, 추천 응답에서 `recommendation_reason`을 어떤 형태로 노출할지는 아직 확정되지 않음
-   - 향후: 끼니 추천 응답 모델에 주의 사유/출처 표시 여부 검토
+4. **주의 상태 iOS 표시 후속 작업**
+   - 백엔드 응답 모델은 확정됨: `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되며, `RecommendedFoodEntry.caution`에 `recommendation_reason`을 담아 노출합니다.
+   - 일반 `RECOMMENDABLE` 식품의 `caution`은 `null`입니다. iOS 화면 표시는 후속 UI 작업에서 처리합니다.
 
 ## 성능 고려사항
 

@@ -94,6 +94,36 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ---
 
+## 식품 카탈로그 동일성 (Food Catalog Identity)
+
+**Definition:** 식품 카탈로그 항목을 소스 적재, 중복 후보 리포트, 검색 정규화에서 같은 개념으로 다루기 위한 식별 규칙. 브랜드 공식 메뉴의 `food_code`, 브랜드 인식 중복 키, 표시 이름 정규화를 한곳에서 계산한다.
+
+**Avoid:** "name util", "dedup helper", "food code formatter" (동일성 규칙이 단순 문자열 처리처럼 보임)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/identity/FoodCatalogIdentity.java`
+
+---
+
+## 식품 카탈로그 적재 (Food Catalog Ingest)
+
+**Definition:** 공공 식품 데이터나 브랜드 공식 메뉴 입력을 검증된 식품 카탈로그 후보로 바꾼 뒤, `source + food_code` 기준으로 생성/갱신/거절 결과를 집계하는 백엔드 모듈. 소스별 importer는 원본 row를 후보로 변환하고, 적재 모듈은 upsert와 추천 큐레이션 보존/교체 정책을 처리한다.
+
+**Avoid:** "import helper", "upsert util", "catalog sync" (소스 변환과 저장 정책의 역할 분리가 흐려짐)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogIngestService.java`
+
+---
+
+## 브랜드 공식 메뉴 (Brand Official Menu)
+
+**Definition:** 브랜드가 공식 영양정보로 공개하고 운영자가 검수한 메뉴 단위 식품 데이터. 자동 크롤링 결과가 아니라 관리자 카탈로그 작업을 통해 식품 카탈로그에 적재된다.
+
+**Avoid:** "brand food", "franchise item", "crawled menu"
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/external/importer/BrandMenuCsvImporter.java`
+
+---
+
 ## 관리자 카탈로그 작업 (Admin Catalog Operation)
 
 **Definition:** 공공 식품 데이터 배치 적재, 브랜드 공식 메뉴 CSV 적재, 식품 카탈로그 중복 후보 리포트처럼 운영자가 내부 카탈로그를 변경하거나 점검하는 작업. 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` operation token을 요구한다.

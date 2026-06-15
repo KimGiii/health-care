@@ -28,6 +28,8 @@
 6. 검색/기록 가능 여부와 추천 가능 여부를 분리한다. 모든 카탈로그 항목이 추천 후보가 되지는 않는다.
 7. 추천 가능 여부는 브랜드 단위가 아니라 메뉴/식품 단위의 추천 적합성 게이트로 판단한다.
 8. 사용자 검색/추천 시점의 외부 API 실시간 호출은 제거하거나 관리자/배치 경로로 강등한다.
+9. v1 추천 후보는 명시적으로 큐레이션한 seed와 `BRAND_OFFICIAL` CSV 검수 항목 중심으로 제한한다. 기존 seed 전체를 자동 추천 후보로 보지 않으며, 공공데이터 배치 적재 항목은 기본 `SEARCH_ONLY`로 두고 대량 자동 승격하지 않는다.
+10. 보수적인 allowlist로 후보 풀이 얇아지는 문제를 막기 위해 seed 큐레이션은 최소 후보 규모와 카테고리별 하한을 통과해야 한다. 추천 엔진은 같은 후보 풀에서도 날짜 기준으로 우선순위를 회전해 매번 동일한 식단이 반복되는 상황을 줄인다.
 
 ---
 
@@ -228,9 +230,23 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 
 1. DB WHERE 절에서 `recommendation_status IN ('RECOMMENDABLE', 'RECOMMENDABLE_WITH_CAUTION')`
 2. 알러젠/기피식품/목표 칼로리/목표 단백질 조건으로 1차 필터링
-3. 후보를 200~500개 수준으로 제한
-4. 추천 엔진에서 끼니 구성 최적화
-5. `RECOMMENDABLE_WITH_CAUTION`은 응답에 주의 근거 표시 가능하도록 유지
+3. seed/브랜드 추천 후보 풀이 최소 규모를 충족하는지 운영 검증
+4. 후보를 200~500개 수준으로 제한
+5. 추천 엔진에서 끼니 구성 최적화와 날짜 기반 deterministic rotation 적용
+6. `RECOMMENDABLE_WITH_CAUTION`은 응답에 주의 근거 표시 가능하도록 유지
+
+seed allowlist 최소 기준:
+
+| 구분 | 최소 후보 수 |
+|---|---:|
+| 전체 추천 가능 seed | 40~60개 이상 |
+| 단백질 | 10개 이상 |
+| 곡류/주식 | 8개 이상 |
+| 채소 | 10개 이상 |
+| 과일 | 6개 이상 |
+| 유제품/간식 대체 | 4개 이상 |
+
+이 기준을 만족하지 못하면 추천 엔진을 임시로 넓히기보다 seed/브랜드 후보를 먼저 보강한다. 날짜 기반 회전은 추천 엔진의 선택 전략에만 적용하고, 어떤 식품이 추천 가능한지는 큐레이션 상태가 계속 결정한다. 최근 추천/최근 기록 기반 중복 억제는 v2 품질 개선으로 분리한다.
 
 ---
 
@@ -293,7 +309,7 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 | 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
 | 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
 | 5단계 검색/기록 경로 정리 | **완료** | iOS 외부 API 경로 전면 제거(`ExternalFoodResult`, `ImportFoodRequest`, `FoodDataSource` 삭제, `DietFoodSearching` 프로토콜 단순화), 내부 카탈로그 단일 경로 고정. `ExternalFoodController`는 관리자 도구 전용으로 유지 | — |
-| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터 테스트 완료 | DB가 있는 환경에서 Flyway V23/V24 적용 검증, 실제 API smoke 검증 |
+| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터, V25 seed 큐레이션 보정 테스트 완료 | DB가 있는 환경에서 Flyway V23~V25 적용 검증, 실제 API smoke 검증 |
 
 ### 0단계: 데이터 프로파일링
 
@@ -326,7 +342,9 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 진행 메모(2026-06-10):
 
 - `V23__food_catalog_source_recommendation_fields.sql`로 출처, 브랜드/제조사, 제공량, 추천 상태, 데이터 버전, 검수 시각 필드를 추가했다.
-- 기존 시드 식품은 `SEED + RECOMMENDABLE`, 기존 사용자 커스텀 식품은 `USER_CUSTOM + SEARCH_ONLY`로 백필했다.
+- 기존 seed 전체를 `RECOMMENDABLE`로 자동 백필하는 정책은 폐기한다. V23은 이미 적용됐을 수 있으므로 직접 수정하지 않고, V25 보정 마이그레이션에서 seed 전체를 `SEARCH_ONLY`로 낮춘 뒤 명시 큐레이션 allowlist만 `RECOMMENDABLE`로 승격한다. V25 seed 보정에서는 `RECOMMENDABLE_WITH_CAUTION`을 사용하지 않는다.
+- V25 seed 보정은 일회성 정적 데이터 보정이므로 마이그레이션 SQL 내부의 inline `VALUES` allowlist로 처리한다. 현재 seed는 V4/V12 시점에 생성되어 `food_code`가 없으므로 `source = 'SEED' AND name_ko AND category` 조합으로 매칭한다. 이번 V25에는 seed synthetic `food_code` 백필을 포함하지 않는다. seed identity 체계가 필요해지면 별도 마이그레이션에서 `seed:<normalized-name>` 같은 규칙을 설계한다.
+- `V25__seed_recommendation_curation.sql`을 추가해 seed 전체 하향과 allowlist 승격을 구현했다. 전체 40~60개 범위와 카테고리별 최소 후보 수는 `FoodCatalogSeedCurationMigrationTest`로 검증한다.
 - `FoodCatalogSource`, `RecommendationStatus` enum과 `FoodCatalog` 엔티티, `FoodCatalogResponse` 응답 DTO 반영을 완료했다.
 - 사용자 직접 등록과 기존 외부 import 경로는 `USER_CUSTOM + SEARCH_ONLY`로 저장되도록 조정했다.
 - `FoodCatalogRepository.findBySourceAndFoodCode()`를 추가해 `source + food_code` 기반 적재/upsert 경로를 준비했다.
@@ -347,6 +365,7 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 - `MfdsFoodNutrientDbImporter`를 추가해 `FoodNtrCpntDbInfo02` row를 `MFDS_FOOD_NUTRIENT_DB` 출처로 적재한다.
 - 공통 동작은 `source + food_code` 기준 신규 생성/기존 항목 갱신이며, 필수값(`food_code`, 식품명, 열량)이 없으면 skip 처리한다.
 - 공공데이터 재적재는 원본 메타데이터와 영양값만 갱신하고, 기존 항목의 추천 검수 상태(`recommendation_status`, `recommendation_reason`)는 보존한다.
+- 공공데이터로 신규 적재되는 항목은 기본 `SEARCH_ONLY`로 둔다. v1에서는 공공데이터 항목을 추천 후보로 대량 자동 승격하지 않고, 필요 시 `source + food_code` 기준 큐레이션 오버레이 CSV를 별도 운영 작업으로 검토한다.
 - `StandardProcessedFoodPageFetcher`, `StandardDishFoodPageFetcher`, `MfdsFoodNutrientDbPageFetcher`를 추가해 공공데이터 API 페이지 응답을 importer row로 변환한다.
 - `FoodCatalogImportBatchRunner`는 체크포인트의 다음 페이지부터 `fetcher -> importer -> checkpoint 저장` 순서로 순회한다. 페이지 처리 중 예외가 나면 해당 페이지는 완료로 기록하지 않아 재시작 시 같은 페이지부터 다시 처리한다.
 - `V24__food_catalog_import_checkpoints.sql`와 `JpaFoodCatalogImportCheckpointStore`를 추가해 source별 마지막 완료 페이지를 저장한다.

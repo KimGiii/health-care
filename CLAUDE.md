@@ -71,3 +71,7 @@ canonical 라벨 이름을 그대로 사용 (`needs-triage`, `needs-info`, `read
 ### Domain docs
 
 멀티 컨텍스트 — 루트의 `CONTEXT-MAP.md`, `backend/CONTEXT.md`, `ios/CONTEXT.md`, 전역/컨텍스트별 ADR을 읽습니다. 누락된 기본 문서는 생성해서 유지합니다. See `docs/agents/domain.md`.
+
+### Architecture reviews
+
+`/improve-codebase-architecture` 스킬 실행 시 생성하는 HTML 리포트는 `/tmp`에 먼저 열되, 반드시 `docs/architecture-reviews/<phase-or-topic>.html` 경로에도 복사해 영구 저장한다. 파일명 규칙: `phase<N>-<topic-kebab>.html` (예: `phase4-recommendation-curation.html`). 새 파일 저장 후 git add 대상에 포함시킨다.

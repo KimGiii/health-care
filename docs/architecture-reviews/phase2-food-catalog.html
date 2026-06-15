@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Architecture review - food catalog phase2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      .seam { border-style: dashed; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; }
+      .thin { background: #fff; border: 1px solid #cbd5e1; }
+      .leak { color: #dc2626; border-color: #dc2626; }
+      .module-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #64748b; }
+      .line { height: 2px; background: #cbd5e1; flex: 1; }
+      .red-line { height: 2px; background: #dc2626; flex: 1; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans">
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-10">
+      <header class="space-y-5">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-500">Gainsy backend</p>
+            <h1 class="text-3xl font-semibold">식품 카탈로그 Phase 2 architecture review</h1>
+          </div>
+          <div class="text-sm text-slate-600">2026-06-11 00:49 KST</div>
+        </div>
+        <div class="grid gap-3 md:grid-cols-4">
+          <div class="rounded border border-slate-200 bg-white p-3"><span class="module-label">solid box</span><div>module</div></div>
+          <div class="rounded border-2 border-dashed border-slate-300 bg-white p-3"><span class="module-label">dashed line</span><div>seam</div></div>
+          <div class="rounded border border-red-300 bg-red-50 p-3 text-red-700"><span class="module-label text-red-500">red arrow</span><div>leakage</div></div>
+          <div class="rounded deep p-3"><span class="module-label text-slate-300">dark box</span><div>deep module</div></div>
+        </div>
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+          Phase 2 핵심 구현은 문서와 맞다: public-data importer, page fetcher, batch runner, checkpoint, duplicate report, admin trigger가 존재한다. 실제 공공 API smoke 검증은 아직 남아 있고, 현재 워크트리에는 Phase 3 성격의 브랜드 CSV 초안이 untracked로 섞여 있다.
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-8">
+        <article id="admin-operation-seam" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-semibold mr-auto">Deepen the admin catalog operation seam</h2>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">Strong</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">in-process</span>
+          </div>
+          <div class="font-mono text-sm text-slate-700">
+            backend/src/main/java/com/healthcare/domain/diet/controller/FoodCatalogAdminController.java<br />
+            backend/src/main/java/com/healthcare/common/config/SecurityConfig.java<br />
+            backend/src/main/java/com/healthcare/security/CustomUserDetailsService.java
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">Before</p>
+              <div class="flex items-center gap-2">
+                <div class="thin rounded p-3 text-center">Any authenticated user</div>
+                <div class="red-line"></div>
+                <div class="thin leak rounded p-3 text-center">FoodCatalogAdminController<br /><span class="text-xs">import, dedup, CSV</span></div>
+              </div>
+              <div class="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">admin operation leaks through the global authenticated seam</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">After</p>
+              <div class="flex items-center gap-2">
+                <div class="thin rounded p-3 text-center">Caller</div>
+                <div class="line"></div>
+                <div class="deep rounded-lg p-4 text-center">Admin Catalog Operation<br /><span class="text-xs text-slate-300">auth, limits, audit, execution</span></div>
+                <div class="line"></div>
+                <div class="thin rounded p-3 text-center">importers</div>
+              </div>
+              <div class="mt-4 rounded border border-slate-200 bg-white p-3 text-sm">one interface, one place to test operation rules</div>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3 text-sm">
+            <div><p class="font-semibold">Problem</p><p class="text-slate-700">The admin catalog module is shallow because its interface is just authenticated HTTP, while the implementation mutates large operational data.</p></div>
+            <div><p class="font-semibold">Solution</p><p class="text-slate-700">Deepen admin catalog operations so authorization, page bounds, audit, and execution sit behind one seam.</p></div>
+            <div><p class="font-semibold">Benefits</p><ul class="list-disc pl-5 text-slate-700"><li>locality: operation rules concentrate</li><li>leverage: controller tests shrink</li><li>interface matches production risk</li></ul></div>
+          </div>
+        </article>
+
+        <article id="curation-state" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-semibold mr-auto">Separate source facts from recommendation curation</h2>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">Strong</span>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">local-substitutable</span>
+          </div>
+          <div class="font-mono text-sm text-slate-700">
+            backend/src/main/java/com/healthcare/domain/diet/entity/FoodCatalog.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/StandardFoodCatalogImporter.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/MfdsFoodNutrientDbImporter.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/BrandMenuCsvImporter.java
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">Before</p>
+              <div class="space-y-2">
+                <div class="thin rounded p-3">import row - source facts</div>
+                <div class="thin leak rounded p-3">FoodCatalog.updateFromImportedCatalog<br /><span class="text-xs">overwrites recommendationStatus</span></div>
+                <div class="thin rounded p-3">recommendation gate</div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">After</p>
+              <div class="relative rounded-lg deep p-5">
+                <p class="font-semibold">Food Catalog Curation</p>
+                <div class="mt-3 grid gap-2 text-sm text-slate-200">
+                  <div class="rounded border border-slate-500 p-2">source facts update</div>
+                  <div class="rounded border border-slate-500 p-2">recommendation status ownership</div>
+                  <div class="rounded border border-slate-500 p-2">curation tests</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3 text-sm">
+            <div><p class="font-semibold">Problem</p><p class="text-slate-700">Imported refreshes can erase recommendation curation because the source adapter sends SEARCH_ONLY and updateFromImportedCatalog copies it.</p></div>
+            <div><p class="font-semibold">Solution</p><p class="text-slate-700">Deepen curation so import updates source facts, while recommendation status changes through its own module.</p></div>
+            <div><p class="font-semibold">Benefits</p><ul class="list-disc pl-5 text-slate-700"><li>locality: curation bugs concentrate</li><li>leverage: reimport stays safe</li><li>tests hit one interface</li></ul></div>
+          </div>
+        </article>
+
+        <article id="mapping-kernel" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-semibold mr-auto">Collapse food source mapping into a deeper module</h2>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Worth exploring</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">local-substitutable</span>
+          </div>
+          <div class="font-mono text-sm text-slate-700">
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/StandardFoodCatalogImporter.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/MfdsFoodNutrientDbImporter.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/BrandMenuCsvImporter.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/client/PublicFoodApiClientImpl.java
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">Before</p>
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div class="thin rounded p-3">standard importer<br /><span class="text-xs text-slate-500">normalize, parse, category</span></div>
+                <div class="thin rounded p-3">nutrient importer<br /><span class="text-xs text-slate-500">normalize, parse, category</span></div>
+                <div class="thin rounded p-3">brand CSV<br /><span class="text-xs text-slate-500">parse, per100g, status</span></div>
+                <div class="thin rounded p-3">external client<br /><span class="text-xs text-slate-500">parse, category</span></div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">After</p>
+              <div class="deep rounded-lg p-5 text-center">
+                Food Source Mapping<br />
+                <span class="text-sm text-slate-300">source rows in, Food Catalog facts out</span>
+              </div>
+              <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div class="thin rounded p-2 text-center">standard adapter</div>
+                <div class="thin rounded p-2 text-center">nutrient adapter</div>
+                <div class="thin rounded p-2 text-center">brand adapter</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3 text-sm">
+            <div><p class="font-semibold">Problem</p><p class="text-slate-700">Parsing, category mapping, serving conversion, and default status rules are repeated across shallow modules.</p></div>
+            <div><p class="font-semibold">Solution</p><p class="text-slate-700">Deepen one source mapping module and leave source-specific adapters narrow.</p></div>
+            <div><p class="font-semibold">Benefits</p><ul class="list-disc pl-5 text-slate-700"><li>locality: mapping changes once</li><li>leverage: every source shares rules</li><li>deletion test favors depth</li></ul></div>
+          </div>
+        </article>
+
+        <article id="import-runner" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-semibold mr-auto">Keep the batch runner seam, deepen operation limits</h2>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Worth exploring</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">ports & adapters</span>
+          </div>
+          <div class="font-mono text-sm text-slate-700">
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogImportBatchRunner.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogImportCheckpointStore.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogImportPageThrottle.java<br />
+            backend/src/main/java/com/healthcare/domain/diet/controller/FoodCatalogAdminController.java
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <pre class="mermaid">
+                flowchart LR
+                  A[AdminController] --> B[BatchRunner]
+                  A -. pageSize/maxPages raw .-> B
+                  B --> C[Fetcher]
+                  B --> D[Importer]
+                  B --> E[Checkpoint]
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <pre class="mermaid">
+                flowchart LR
+                  A[AdminController] --> B[Import Operation]
+                  B --> C[validated request]
+                  B --> D[BatchRunner]
+                  B --> E[audit result]
+                  D --> F[Fetcher]
+                  D --> G[Importer]
+                  D --> H[Checkpoint]
+              </pre>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3 text-sm">
+            <div><p class="font-semibold">Problem</p><p class="text-slate-700">The runner seam is good, but operation-level limits, audit, and future async state are still outside the deep module.</p></div>
+            <div><p class="font-semibold">Solution</p><p class="text-slate-700">Keep fetcher/importer/checkpoint adapters and deepen the operation module around them.</p></div>
+            <div><p class="font-semibold">Benefits</p><ul class="list-disc pl-5 text-slate-700"><li>locality: run rules concentrate</li><li>leverage: one operation surface</li><li>tests cover failure modes</li></ul></div>
+          </div>
+        </article>
+
+        <article id="smoke-test-seam" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-semibold mr-auto">Make smoke verification an explicit test seam</h2>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Speculative</span>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">mock</span>
+          </div>
+          <div class="font-mono text-sm text-slate-700">
+            backend/src/test/java/com/healthcare/domain/diet/external/importer/FoodCatalogPublicApiSmokeTest.java<br />
+            backend/build.gradle.kts
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">Before</p>
+              <div class="thin rounded p-4 text-center">test task<br /><span class="text-xs text-slate-500">may run smoke when env exists</span></div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-stone-50 p-4">
+              <p class="module-label mb-3">After</p>
+              <div class="deep rounded-lg p-4 text-center">Smoke Verification<br /><span class="text-xs text-slate-300">explicit task, explicit env, explicit docs</span></div>
+            </div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3 text-sm">
+            <div><p class="font-semibold">Problem</p><p class="text-slate-700">Smoke tests are tagged, but the Gradle task does not yet make the smoke seam explicit.</p></div>
+            <div><p class="font-semibold">Solution</p><p class="text-slate-700">Deepen smoke verification as a separate test task or documented command.</p></div>
+            <div><p class="font-semibold">Benefits</p><ul class="list-disc pl-5 text-slate-700"><li>locality: external checks separate</li><li>leverage: CI intent is clear</li><li>unit tests stay deterministic</li></ul></div>
+          </div>
+        </article>
+      </section>
+
+      <section id="top-recommendation" class="rounded-xl border border-slate-300 bg-white p-6 shadow-sm">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Top recommendation</p>
+        <h2 class="mt-2 text-2xl font-semibold"><a class="text-slate-900 underline decoration-emerald-400 underline-offset-4" href="#admin-operation-seam">Deepen the admin catalog operation seam</a></h2>
+        <p class="mt-2 text-slate-700">먼저 이 후보를 다루는 것이 좋다. Phase 2 구현은 동작하지만 admin import와 dedup report가 현재 전역 authenticated seam 뒤에 있어, operation risk가 가장 작게 보이지 않는다.</p>
+      </section>
+    </main>
+  </body>
+</html>
