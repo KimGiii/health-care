@@ -46,6 +46,15 @@ enum APIEndpoint {
     // Diet - Catalog
     case getFoodCatalog(query: String?)
     case createCustomFood(body: Data)
+    // Diet - External Foods
+    case searchExternalFoods(query: String, source: String, page: Int, size: Int)
+    case importExternalFood(body: Data)
+    // Diet - Restrictions
+    case listDietRestrictions
+    case createDietRestriction(body: Data)
+    case deleteDietRestriction(id: Int)
+    // Diet - Recommendation
+    case getDailyRecommendation(body: Data)
 
     // Body Measurement
     case createBodyMeasurement(body: Data)
@@ -111,6 +120,12 @@ extension APIEndpoint {
         case .confirmMealPhotoAnalysis(let id, _):
                                                  return "/api/v1/diet/photo-analyses/\(id)/confirm"
         case .getFoodCatalog, .createCustomFood: return "/api/v1/diet/catalog"
+        case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
+        case .importExternalFood:                return "/api/v1/diet/external-foods/import"
+        case .listDietRestrictions, .createDietRestriction:
+                                                 return "/api/v1/diet/restrictions"
+        case .deleteDietRestriction(let id):     return "/api/v1/diet/restrictions/\(id)"
+        case .getDailyRecommendation:            return "/api/v1/diet/recommendations/daily"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
@@ -145,7 +160,8 @@ extension APIEndpoint {
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
              .analyzeMealPhoto, .confirmMealPhotoAnalysis,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
-             .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise:
+             .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise,
+             .createDietRestriction, .getDailyRecommendation:
             return .POST
         case .updateProfile, .updateGoal,
              .markNotificationRead, .markAllNotificationsRead:
@@ -154,7 +170,7 @@ extension APIEndpoint {
             return .PUT
         case .deleteAccount, .deleteExerciseSession, .deleteDietLog,
              .deleteGoal, .deleteBodyMeasurement, .deleteProgressPhoto,
-             .deleteNotification:
+             .deleteNotification, .deleteDietRestriction:
             return .DELETE
         default:
             return .GET
@@ -172,7 +188,8 @@ extension APIEndpoint {
              .createBodyMeasurement(let b), .initiatePhotoUpload(let b), .registerProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b),
              .aiEstimateFood(let b), .aiEstimateExercise(let b),
-             .createCustomFood(let b), .createCustomExercise(let b):
+             .createCustomFood(let b), .createCustomExercise(let b),
+             .createDietRestriction(let b), .getDailyRecommendation(let b):
             return b
         default:
             return nil

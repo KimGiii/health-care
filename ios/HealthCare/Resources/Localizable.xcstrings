@@ -10973,6 +10973,204 @@
         }
       }
     },
+    "mypage.section.diet" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Diet" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "식단" } }
+      }
+    },
+    "mypage.menu.dietRestriction" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Diet Restrictions" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "식단 제한 설정" } }
+      }
+    },
+    "mypage.menu.dietRecommendation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily Diet Recommendation" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "하루 식단 추천" } }
+      }
+    },
+    "restriction.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Diet Restrictions" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "식단 제한 설정" } }
+      }
+    },
+    "restriction.tab.allergen" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allergens" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "알러젠" } }
+      }
+    },
+    "restriction.tab.category" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Category" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "카테고리" } }
+      }
+    },
+    "restriction.tab.keyword" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keyword" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "키워드" } }
+      }
+    },
+    "restriction.type.allergy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allergy" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "알레르기" } }
+      }
+    },
+    "restriction.type.avoid" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Avoid" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "기피" } }
+      }
+    },
+    "restriction.active.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active Restrictions" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "적용 중인 제한" } }
+      }
+    },
+    "restriction.empty.allergen" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No allergen restrictions set." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "설정된 알러젠 제한이 없습니다." } }
+      }
+    },
+    "restriction.empty.category" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No category restrictions set." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "설정된 카테고리 제한이 없습니다." } }
+      }
+    },
+    "restriction.empty.keyword" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No keyword restrictions set." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "설정된 키워드 제한이 없습니다." } }
+      }
+    },
+    "restriction.keyword.placeholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. pork belly, spicy" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "예) 삼겹살, 매운 음식" } }
+      }
+    },
+    "restriction.food.id" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Food #%lld" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "음식 #%lld" } }
+      }
+    },
+    "restriction.error.load" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load restrictions." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "제한 목록을 불러오지 못했습니다." } }
+      }
+    },
+    "restriction.error.add" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to add restriction." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "제한을 추가하지 못했습니다." } }
+      }
+    },
+    "restriction.error.delete" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to remove restriction." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "제한을 삭제하지 못했습니다." } }
+      }
+    },
+    "allergen.egg" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Egg" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "달걀" } } } },
+    "allergen.milk" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Milk" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "우유" } } } },
+    "allergen.buckwheat" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Buckwheat" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "메밀" } } } },
+    "allergen.peanut" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Peanut" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "땅콩" } } } },
+    "allergen.soy" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Soy" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "대두" } } } },
+    "allergen.wheat" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Wheat" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "밀" } } } },
+    "allergen.mackerel" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mackerel" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "고등어" } } } },
+    "allergen.crab" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Crab" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "게" } } } },
+    "allergen.shrimp" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shrimp" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "새우" } } } },
+    "allergen.pineNut" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pine Nut" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "잣" } } } },
+    "allergen.pork" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pork" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "돼지고기" } } } },
+    "allergen.peach" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Peach" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "복숭아" } } } },
+    "allergen.tomato" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Tomato" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "토마토" } } } },
+    "allergen.sulfite" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sulfite" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "아황산류" } } } },
+    "allergen.walnut" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Walnut" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "호두" } } } },
+    "allergen.chicken" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Chicken" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "닭고기" } } } },
+    "allergen.beef" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Beef" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "쇠고기" } } } },
+    "allergen.squid" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Squid" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "오징어" } } } },
+    "allergen.shellfish" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Shellfish" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "조개류" } } } },
+    "allergen.gluten" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Gluten" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "글루텐" } } } },
+    "allergen.confidence.directVerified" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Direct verified" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "직접 확인" } } } },
+    "allergen.confidence.labelDerived" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Label derived" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "표시 기반" } } } },
+    "allergen.confidence.recipeDerived" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recipe derived" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "레시피 기반" } } } },
+    "allergen.confidence.unknown" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown" } }, "ko" : { "stringUnit" : { "state" : "translated", "value" : "불확실" } } } },
+    "recommend.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily Diet Recommendation" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "하루 식단 추천" } }
+      }
+    },
+    "recommend.date" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Date" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "날짜" } }
+      }
+    },
+    "recommend.meals" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Meal Types" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "식사 종류" } }
+      }
+    },
+    "recommend.strictMode" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Strict Allergy Mode" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "알레르기 강력 차단" } }
+      }
+    },
+    "recommend.strictMode.desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Excludes all foods with unverified allergen data" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "알러젠 정보 불확실 음식 제외" } }
+      }
+    },
+    "recommend.cta" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get Recommendation" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "추천 받기" } }
+      }
+    },
+    "recommend.loading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Generating recommendation…" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "추천 식단을 생성 중입니다…" } }
+      }
+    },
+    "recommend.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a date and meal types, then tap Get Recommendation." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "날짜와 식사 종류를 선택한 뒤 추천 받기를 누르세요." } }
+      }
+    },
+    "recommend.targets" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nutrition Targets" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "영양 목표" } }
+      }
+    },
+    "recommend.total" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "합계" } }
+      }
+    },
+    "recommend.error.load" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load recommendation." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "추천 식단을 불러오지 못했습니다." } }
+      }
+    },
     "notifications.action.delete" : {
       "extractionState" : "stale",
       "localizations" : {

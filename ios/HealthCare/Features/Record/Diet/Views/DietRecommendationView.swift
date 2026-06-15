@@ -1,0 +1,297 @@
+import SwiftUI
+
+struct DietRecommendationView: View {
+    @StateObject private var viewModel = DietRecommendationViewModel()
+    @EnvironmentObject private var container: AppContainer
+    @State private var showDisclaimer = false
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                configCard
+                if viewModel.isLoading {
+                    loadingView
+                } else if let result = viewModel.result {
+                    resultSection(result)
+                } else {
+                    emptyState
+                }
+            }
+            .padding(20)
+        }
+        .background(Color.backgroundPage)
+        .navigationTitle(Text("recommend.title"))
+        .navigationBarTitleDisplayMode(.large)
+        .alert(Text("common.error.title"), isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("common.ok") {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+    }
+
+    // MARK: - Config Card
+
+    private var configCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            datePicker
+            Divider()
+            mealTypePicker
+            Divider()
+            strictModeToggle
+            recommendButton
+        }
+        .padding(16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .elevation(.low)
+    }
+
+    private var datePicker: some View {
+        HStack {
+            Label {
+                Text("recommend.date")
+                    .font(.subheadline).fontWeight(.medium)
+                    .foregroundStyle(Color.textPrimary)
+            } icon: {
+                Image(systemName: "calendar")
+                    .foregroundStyle(Color.brandPrimary)
+            }
+            Spacer()
+            DatePicker("", selection: $viewModel.selectedDate, displayedComponents: .date)
+                .labelsHidden()
+        }
+    }
+
+    private var mealTypePicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("recommend.meals")
+                .font(.subheadline).fontWeight(.medium)
+                .foregroundStyle(Color.textPrimary)
+            HStack(spacing: 8) {
+                ForEach(viewModel.orderedMeals, id: \.self) { meal in
+                    let selected = viewModel.selectedMeals.contains(meal)
+                    Button {
+                        viewModel.toggleMeal(meal)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: meal.sfSymbol)
+                                .font(.system(size: 16))
+                            Text(meal.displayName)
+                                .font(.caption2).fontWeight(.medium)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(selected ? Color.brandPrimary : Color.surfaceSecondary)
+                        .foregroundStyle(selected ? Color.white : Color.textSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+        }
+    }
+
+    private var strictModeToggle: some View {
+        Toggle(isOn: $viewModel.strictAllergyMode) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("recommend.strictMode")
+                    .font(.subheadline).fontWeight(.medium)
+                    .foregroundStyle(Color.textPrimary)
+                Text("recommend.strictMode.desc")
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+            }
+        }
+        .tint(Color.brandDanger)
+    }
+
+    private var recommendButton: some View {
+        Button {
+            Task { await viewModel.recommend(apiClient: container.apiClient) }
+        } label: {
+            Text("recommend.cta")
+                .font(.subheadline).fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(viewModel.canRecommend ? Color.brandPrimary : Color.surfaceSecondary)
+                .foregroundStyle(viewModel.canRecommend ? Color.white : Color.textSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .disabled(!viewModel.canRecommend || viewModel.isLoading)
+    }
+
+    // MARK: - Loading
+
+    private var loadingView: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("recommend.loading")
+                .font(.subheadline)
+                .foregroundStyle(Color.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "fork.knife.circle")
+                .font(.system(size: 44))
+                .foregroundStyle(Color.brandAccent)
+            Text("recommend.empty")
+                .font(.subheadline)
+                .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+
+    // MARK: - Result
+
+    @ViewBuilder
+    private func resultSection(_ result: DailyDietRecommendationResponse) -> some View {
+        targetsCard(result.targets)
+        ForEach(result.meals) { meal in
+            mealCard(meal)
+        }
+        totalsCard(result)
+        disclaimerCard(result.disclaimer)
+    }
+
+    private func targetsCard(_ t: NutritionTargets) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("recommend.targets")
+                .font(.subheadline).fontWeight(.semibold)
+                .foregroundStyle(Color.textPrimary)
+            HStack(spacing: 0) {
+                nutrientPill(label: String(localized: "nutrition.kcal"), value: String(format: "%.0f", t.targetKcal), unit: "kcal", color: .brandPrimary)
+                Spacer()
+                nutrientPill(label: String(localized: "nutrition.protein"), value: String(format: "%.0f", t.proteinG), unit: "g", color: .brandAccent)
+                Spacer()
+                nutrientPill(label: String(localized: "nutrition.carbs"), value: String(format: "%.0f", t.carbsG), unit: "g", color: .brandSunrise)
+                Spacer()
+                nutrientPill(label: String(localized: "nutrition.fat"), value: String(format: "%.0f", t.fatG), unit: "g", color: .brandEmber)
+            }
+        }
+        .padding(16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .elevation(.low)
+    }
+
+    private func nutrientPill(label: String, value: String, unit: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption2).fontWeight(.medium)
+                .foregroundStyle(Color.textSecondary)
+            Text(value)
+                .font(.headline).fontWeight(.bold)
+                .foregroundStyle(color)
+            Text(unit)
+                .font(.caption2)
+                .foregroundStyle(Color.textSecondary)
+        }
+        .frame(minWidth: 60)
+    }
+
+    private func mealCard(_ meal: RecommendedMeal) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label {
+                    Text(meal.mealType.displayName)
+                        .font(.subheadline).fontWeight(.semibold)
+                        .foregroundStyle(Color.textPrimary)
+                } icon: {
+                    Image(systemName: meal.mealType.sfSymbol)
+                        .foregroundStyle(Color.brandPrimary)
+                }
+                Spacer()
+                Text(String(format: "%.0f kcal", meal.totalCalories))
+                    .font(.caption).fontWeight(.medium)
+                    .foregroundStyle(Color.textSecondary)
+            }
+            ForEach(meal.items) { item in
+                foodRow(item)
+            }
+        }
+        .padding(16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .elevation(.low)
+    }
+
+    private func foodRow(_ item: RecommendedFoodEntry) -> some View {
+        HStack(spacing: 10) {
+            if item.needsCaution {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.brandWarning)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.displayName)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.textPrimary)
+                Text(String(format: "%.0fg · %.0f kcal", item.servingG, item.calories))
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(String(format: "P %.0fg", item.proteinG))
+                    .font(.caption2)
+                    .foregroundStyle(Color.brandAccent)
+                Text(String(format: "C %.0fg", item.carbsG))
+                    .font(.caption2)
+                    .foregroundStyle(Color.brandSunrise)
+            }
+        }
+        .padding(10)
+        .background(Color.backgroundPage)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func totalsCard(_ result: DailyDietRecommendationResponse) -> some View {
+        HStack {
+            Text("recommend.total")
+                .font(.subheadline).fontWeight(.semibold)
+                .foregroundStyle(Color.textPrimary)
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(String(format: "%.0f kcal", result.totalNutrients.totalCalories))
+                    .font(.subheadline).fontWeight(.bold)
+                    .foregroundStyle(Color.brandPrimary)
+                Text(String(format: "P%.0f · C%.0f · F%.0f (g)",
+                     result.totalNutrients.totalProteinG,
+                     result.totalNutrients.totalCarbsG,
+                     result.totalNutrients.totalFatG))
+                    .font(.caption)
+                    .foregroundStyle(Color.textSecondary)
+            }
+        }
+        .padding(16)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .elevation(.low)
+    }
+
+    private func disclaimerCard(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(Color.textTertiary)
+                .font(.caption)
+                .padding(.top, 1)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(Color.textTertiary)
+        }
+        .padding(12)
+        .background(Color.surfaceSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
