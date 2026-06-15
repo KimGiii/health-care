@@ -1,6 +1,8 @@
 package com.healthcare.common.notification;
 
 import com.google.firebase.FirebaseApp;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -12,6 +14,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FcmConfigTest {
 
     private final FcmConfig fcmConfig = new FcmConfig();
+
+    @BeforeEach
+    @AfterEach
+    void cleanUpFirebaseApps() {
+        FirebaseApp.getApps().forEach(FirebaseApp::delete);
+    }
 
     @TempDir
     Path tempDir;

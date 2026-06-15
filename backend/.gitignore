@@ -22,6 +22,7 @@ out/
 ### Application secrets
 src/main/resources/application-local.yml
 src/main/resources/firebase-service-account.json
+src/main/resources/*firebase-adminsdk*.json
 **/google-services.json
 
 ### Logs
