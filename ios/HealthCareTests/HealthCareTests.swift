@@ -252,6 +252,99 @@ final class HealthCareTests: XCTestCase {
             XCTFail("예상하지 못한 에러: \(error)")
         }
     }
+
+    func testAPIClientDecodesRawSuccessResponseForCompatibility() async throws {
+        let store = TokenStore()
+        store.clearTokens()
+        store.save(accessToken: Self.jwt(expiringIn: 3600), refreshToken: "refresh")
+
+        let session = Self.stubbedSession { request in
+            XCTAssertEqual(request.url?.path, "/api/v1/users/me")
+            return Self.jsonResponse(path: request.url?.path, body: """
+            {
+              "value": "raw-success"
+            }
+            """)
+        }
+
+        let client = APIClient(baseURL: Self.baseURL, tokenStore: store, session: session)
+        let response: StubPayload = try await client.request(.getProfile)
+
+        XCTAssertEqual(response.value, "raw-success")
+    }
+
+    func testAPIClientDecodesRawDietRestrictionsForCompatibility() async throws {
+        let store = TokenStore()
+        store.clearTokens()
+        store.save(accessToken: Self.jwt(expiringIn: 3600), refreshToken: "refresh")
+
+        let session = Self.stubbedSession { request in
+            XCTAssertEqual(request.url?.path, "/api/v1/diet/restrictions")
+            return Self.jsonResponse(path: request.url?.path, body: """
+            [
+              {
+                "id": 1,
+                "restrictionType": "ALLERGY",
+                "targetType": "ALLERGEN_TAG",
+                "foodCatalogId": null,
+                "category": null,
+                "keyword": null,
+                "allergenTag": "MILK",
+                "createdAt": "2026-06-16T15:20:00+09:00"
+              }
+            ]
+            """)
+        }
+
+        let client = APIClient(baseURL: Self.baseURL, tokenStore: store, session: session)
+        let response: [DietRestriction] = try await client.request(.listDietRestrictions)
+
+        XCTAssertEqual(response.count, 1)
+        XCTAssertEqual(response[0].id, 1)
+        XCTAssertEqual(response[0].restrictionType, .ALLERGY)
+        XCTAssertEqual(response[0].targetType, .ALLERGEN_TAG)
+        XCTAssertEqual(response[0].allergenTag, .MILK)
+    }
+
+    func testAPIClientDecodesRawDietRecommendationForCompatibility() async throws {
+        let store = TokenStore()
+        store.clearTokens()
+        store.save(accessToken: Self.jwt(expiringIn: 3600), refreshToken: "refresh")
+
+        let session = Self.stubbedSession { request in
+            XCTAssertEqual(request.url?.path, "/api/v1/diet/recommendations/daily")
+            return Self.jsonResponse(path: request.url?.path, body: """
+            {
+              "date": "2026-06-16",
+              "targets": {
+                "calorieTarget": 2000,
+                "proteinTargetG": 150,
+                "carbTargetG": 230,
+                "fatTargetG": 67
+              },
+              "appliedRestrictions": [],
+              "meals": [],
+              "totalNutrients": {
+                "totalCalories": 0,
+                "totalProteinG": 0,
+                "totalCarbsG": 0,
+                "totalFatG": 0
+              },
+              "strictAllergyMode": false,
+              "disclaimer": "이 추천은 참고용입니다."
+            }
+            """)
+        }
+
+        let client = APIClient(baseURL: Self.baseURL, tokenStore: store, session: session)
+        let response: DailyDietRecommendationResponse = try await client.request(.getDailyRecommendation(body: Data()))
+
+        XCTAssertEqual(response.date, "2026-06-16")
+        XCTAssertEqual(response.targets.calorieTarget, 2000)
+        XCTAssertTrue(response.appliedRestrictions.isEmpty)
+        XCTAssertTrue(response.meals.isEmpty)
+        XCTAssertEqual(response.disclaimer, "이 추천은 참고용입니다.")
+    }
 }
 
 private extension HealthCareTests {

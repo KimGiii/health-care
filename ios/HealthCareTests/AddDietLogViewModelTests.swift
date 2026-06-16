@@ -143,6 +143,62 @@ final class AddDietLogViewModelTests: XCTestCase {
         XCTAssertEqual(food.catalogNutritionSummary, "290 kcal / 290g")
     }
 
+    func testRecommendationMeal_식단기록요청으로변환된다() {
+        let meal = RecommendedMeal(
+            mealType: .LUNCH,
+            targetCalories: 700,
+            totalCalories: 650,
+            totalProteinG: 42,
+            totalCarbsG: 72,
+            totalFatG: 18,
+            items: [
+                RecommendedFoodEntry(
+                    foodCatalogId: 101,
+                    name: "brown rice",
+                    nameKo: "현미밥",
+                    category: .GRAIN,
+                    servingG: 180,
+                    calories: 270,
+                    proteinG: 5,
+                    carbsG: 58,
+                    fatG: 2,
+                    allergenConfidenceLevel: .DIRECT_VERIFIED,
+                    caution: nil
+                ),
+                RecommendedFoodEntry(
+                    foodCatalogId: 202,
+                    name: "grilled chicken breast",
+                    nameKo: "닭가슴살구이",
+                    category: .PROTEIN_SOURCE,
+                    servingG: 150,
+                    calories: 240,
+                    proteinG: 37,
+                    carbsG: 0,
+                    fatG: 8,
+                    allergenConfidenceLevel: .UNKNOWN,
+                    caution: "알러젠 정보 확인 필요"
+                )
+            ]
+        )
+
+        let request = DietRecommendationViewModel.makeCreateDietLogRequest(
+            for: meal,
+            date: "2026-06-16",
+            note: "추천 식단"
+        )
+
+        XCTAssertEqual(request.logDate, "2026-06-16")
+        XCTAssertEqual(request.mealType, MealType.LUNCH.rawValue)
+        XCTAssertEqual(request.notes, "추천 식단")
+        XCTAssertEqual(request.entries.count, 2)
+        XCTAssertEqual(request.entries[0].foodCatalogId, 101)
+        XCTAssertEqual(request.entries[0].servingG, 180)
+        XCTAssertNil(request.entries[0].notes)
+        XCTAssertEqual(request.entries[1].foodCatalogId, 202)
+        XCTAssertEqual(request.entries[1].servingG, 150)
+        XCTAssertEqual(request.entries[1].notes, "알러젠 정보 확인 필요")
+    }
+
     private func makeCatalogItem(name: String) -> FoodCatalogItem {
         FoodCatalogItem(
             id: abs(name.hashValue),
