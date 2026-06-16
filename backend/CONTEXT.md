@@ -136,11 +136,21 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ## 식품 카탈로그 적재 (Food Catalog Ingest)
 
-**Definition:** 공공 식품 데이터나 브랜드 공식 메뉴 입력을 검증된 식품 카탈로그 후보로 바꾼 뒤, `source + food_code` 기준으로 생성/갱신/거절 결과를 집계하는 백엔드 모듈. 소스별 importer는 원본 row를 후보로 변환하고, 적재 모듈은 upsert와 추천 큐레이션 보존/교체 정책을 처리한다.
+**Definition:** 공공 식품 데이터나 브랜드 공식 메뉴 입력을 검증된 식품 카탈로그 후보로 바꾼 뒤, `source + food_code` 기준으로 생성/갱신/거절 결과를 집계하는 백엔드 모듈. 소스별 importer는 원본 row를 후보로 변환하고, 적재 모듈은 upsert와 추천 큐레이션 보존/교체 정책을 처리한다. 외부 공공데이터 문자열은 `food_catalog` 컬럼 한도에 맞춰 정규화하며, 식별자인 `food_code`가 한도를 넘으면 후보를 거절한다.
 
 **Avoid:** "import helper", "upsert util", "catalog sync" (소스 변환과 저장 정책의 역할 분리가 흐려짐)
 
 **Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogIngestService.java`
+
+---
+
+## 공공데이터 전량 적재 실행 (Public Data Full Ingest Run)
+
+**Definition:** 공공데이터 3개 source(`MFDS_STANDARD_PROCESSED`, `MFDS_STANDARD_DISH`, `MFDS_FOOD_NUTRIENT_DB`)를 내부 `food_catalog`에 채우는 운영 절차. smoke, 제한 배치, source별 반복 적재, 체크포인트 검증, 중복 후보 리포트 순서로 진행하며, 각 source는 `FoodCatalogBatchImportSummary.exhausted=true`가 나올 때까지 같은 관리자 카탈로그 작업을 반복한다. local DB에서는 smoke, 제한 배치, 대표 장애 케이스 검증까지만 수행해도 충분하며 모든 row를 끝까지 적재하지 않는다.
+
+**Avoid:** "API 한번 돌리기", "전체 동기화", "추천 데이터 적재" (한 번의 호출로 끝나지 않고, 신규 공공데이터 항목은 기본 `SEARCH_ONLY`라 추천 후보 승격과 다름)
+
+**Where it lives:** `docs/exec-plans/FOOD_CATALOG_ENRICHMENT.md`, `docs/FOOD_CATALOG_GUIDE.md`, `backend/src/main/java/com/healthcare/domain/diet/admin/FoodCatalogAdminOperations.java`
 
 ---
 
@@ -221,3 +231,13 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 **Avoid:** "analytics" (내부 통계 시스템처럼 들릴 수 있음)
 
 **Where it lives:** `backend/src/main/java/com/healthcare/domain/insights/`
+
+---
+
+## 정량 지표 갱신 규칙 (Quantified Progress)
+
+**Definition:** Gainsy의 구현 API 수, DB 테이블 수, 운영 장애/버그 해결 수, AWS 운영 기간, AI 음식 분석 정확도처럼 숫자로 표현하는 프로젝트 변화 지표. 기준 문서는 `docs/product-specs/GAINSY_QUANTIFIED_PROGRESS.md`이다.
+
+**Backend update triggers:** Controller mapping 추가·삭제, Flyway table 추가·삭제, 운영 장애 해결, 보안/품질 리뷰 이슈 해결, AI 음식 분석 provider·prompt·매칭 로직 변경.
+
+**Rule:** 백엔드 변경이 위 지표의 값이나 집계 기준을 바꾸면 구현 문서나 회고만 갱신하지 말고 정량 지표 문서도 함께 갱신한다. AI 정확도 개선 수치는 고정 benchmark 결과가 있을 때만 확정 수치로 작성한다.

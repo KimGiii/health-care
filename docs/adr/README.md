@@ -4,7 +4,7 @@
 
 ## Current ADRs
 
-아직 전역 ADR은 없습니다.
+- [0001. 식단 추천 알러젠 회피 모델과 Strict 모드](0001-diet-allergen-strict-mode.md)
 
 ## When To Add One
 
