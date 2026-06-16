@@ -10,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 import java.util.List;
 
@@ -112,6 +113,11 @@ public class GlobalExceptionHandler {
                 .code("FORBIDDEN")
                 .message("접근 권한이 없습니다.")
                 .build());
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException e) {
+        log.debug("Client disconnected before response completed: {}", e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
