@@ -73,6 +73,13 @@ targets:
         GADApplicationIdentifier: "ca-app-pub-6600084915621974~8422643430"
         NSUserTrackingUsageDescription: "맞춤 광고를 보여드리기 위해 광고 추적 권한을 요청합니다. 거부하셔도 광고는 표시되지만 관련성이 낮을 수 있습니다."
         NSLocalNetworkUsageDescription: "개발 중 Mac에서 실행 중인 로컬 API 서버에 연결하기 위해 로컬 네트워크 접근이 필요합니다."
+        # GoogleSignIn은 Info.plist의 GIDClientID와 reversed-client-id URL 스킴(OAuth 콜백)을 읽는다.
+        GIDClientID: "997735853542-redj6fm1ca7klv4v9fkfrollb85p443i.apps.googleusercontent.com"
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLName: com.kingloo.gainsy.ios.google
+            CFBundleURLSchemes:
+              - com.googleusercontent.apps.997735853542-redj6fm1ca7klv4v9fkfrollb85p443i
     entitlements:
       path: HealthCare/HealthCare.entitlements
       properties:
