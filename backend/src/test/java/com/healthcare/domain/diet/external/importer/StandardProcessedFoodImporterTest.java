@@ -98,6 +98,39 @@ class StandardProcessedFoodImporterTest {
     }
 
     @Test
+    @DisplayName("DB 한도를 넘는 제조사명은 150자로 잘라 적재한다")
+    void importRows_truncatesLongMakerName() {
+        String longMakerName = "A".repeat(163);
+        StandardFoodImportRow row = StandardFoodImportRow.builder()
+                .foodCode("P-LONG-MAKER")
+                .foodName("명태알포")
+                .manufacturerName(longMakerName)
+                .categoryName("수산가공식품류")
+                .nutritionServingSize("100g")
+                .foodSize("100 g")
+                .calories("300")
+                .build();
+
+        given(foodCatalogRepository.findBySourceAndFoodCode(
+                FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P-LONG-MAKER"))
+                .willReturn(Optional.empty());
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.createdCount()).isEqualTo(1);
+        assertThat(result.skippedCount()).isZero();
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+
+        assertThat(saved.getMaker()).hasSize(150);
+        assertThat(saved.getMaker()).isEqualTo("A".repeat(150));
+    }
+
+    @Test
     @DisplayName("같은 source와 food_code를 다시 적재하면 기존 항목을 갱신한다")
     void importRows_updatesExistingFoodCatalogItem() {
         FoodCatalog existing = FoodCatalog.builder()

@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.DATA_VERSION_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.FOOD_CODE_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.NAME_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.ORGANIZATION_NAME_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.SERVING_REFERENCE_MAX_LENGTH;
+
 abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<StandardFoodImportRow> {
 
     private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);
@@ -70,18 +76,14 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
     }
 
     protected String normalize(String value) {
-        if (value == null) {
-            return null;
-        }
-        String normalized = value.trim().replaceAll("\\s+", " ");
-        return normalized.isBlank() ? null : normalized;
+        return FoodCatalogImportText.normalize(value);
     }
 
     private Optional<FoodCatalog> toFoodCatalog(StandardFoodImportRow row) {
         String foodCode = normalize(row.getFoodCode());
-        String foodName = normalize(row.getFoodName());
+        String foodName = FoodCatalogImportText.normalizeToMaxLength(row.getFoodName(), NAME_MAX_LENGTH);
         Double calories = parseDouble(row.getCalories());
-        if (foodCode == null || foodName == null || calories == null) {
+        if (foodCode == null || foodCode.length() > FOOD_CODE_MAX_LENGTH || foodName == null || calories == null) {
             return Optional.empty();
         }
 
@@ -91,11 +93,12 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
                 .sourceDetail(sourceDetail)
                 .name(foodName)
                 .nameKo(foodName)
-                .brandName(brandName(row))
-                .maker(maker(row))
+                .brandName(FoodCatalogImportText.normalizeToMaxLength(brandName(row), ORGANIZATION_NAME_MAX_LENGTH))
+                .maker(FoodCatalogImportText.normalizeToMaxLength(maker(row), ORGANIZATION_NAME_MAX_LENGTH))
                 .category(mapCategory(row.getCategoryName()))
                 .servingSizeG(parseServingSizeG(row.getFoodSize()))
-                .servingReference(normalize(row.getNutritionServingSize()))
+                .servingReference(FoodCatalogImportText.normalizeToMaxLength(
+                        row.getNutritionServingSize(), SERVING_REFERENCE_MAX_LENGTH))
                 .caloriesPer100g(calories)
                 .proteinPer100g(parseDouble(row.getProtein()))
                 .carbsPer100g(parseDouble(row.getCarbs()))
@@ -107,7 +110,7 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
                 .cholesterolPer100gMg(parseDouble(row.getCholesterol()))
                 .sodiumPer100gMg(parseDouble(row.getSodium()))
                 .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
-                .dataVersion(normalize(row.getDataVersion()))
+                .dataVersion(FoodCatalogImportText.normalizeToMaxLength(row.getDataVersion(), DATA_VERSION_MAX_LENGTH))
                 .lastVerifiedAt(parseDate(row.getLastVerifiedDate()))
                 .isCustom(false)
                 .build());

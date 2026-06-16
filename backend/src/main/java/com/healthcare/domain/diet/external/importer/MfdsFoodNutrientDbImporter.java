@@ -14,6 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.DATA_VERSION_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.FOOD_CODE_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.NAME_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.ORGANIZATION_NAME_MAX_LENGTH;
+import static com.healthcare.domain.diet.external.importer.FoodCatalogImportText.SERVING_REFERENCE_MAX_LENGTH;
+
 @Service
 @RequiredArgsConstructor
 public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsFoodNutrientDbImportRow> {
@@ -56,9 +62,9 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
 
     private Optional<FoodCatalog> toFoodCatalog(MfdsFoodNutrientDbImportRow row) {
         String foodCode = normalize(row.getFoodCode());
-        String foodName = normalize(row.getFoodNameKr());
+        String foodName = FoodCatalogImportText.normalizeToMaxLength(row.getFoodNameKr(), NAME_MAX_LENGTH);
         Double calories = parseDouble(row.getAmountNum1());
-        if (foodCode == null || foodName == null || calories == null) {
+        if (foodCode == null || foodCode.length() > FOOD_CODE_MAX_LENGTH || foodName == null || calories == null) {
             return Optional.empty();
         }
 
@@ -68,11 +74,19 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
                 .sourceDetail(SOURCE_DETAIL)
                 .name(foodName)
                 .nameKo(foodName)
-                .brandName(normalize(row.getSellerManufacturerName()))
-                .maker(firstNonBlank(row.getMakerName(), row.getImportedManufacturerName(), row.getSellerManufacturerName()))
+                .brandName(FoodCatalogImportText.normalizeToMaxLength(
+                        row.getSellerManufacturerName(), ORGANIZATION_NAME_MAX_LENGTH))
+                .maker(FoodCatalogImportText.firstNonBlankToMaxLength(
+                        ORGANIZATION_NAME_MAX_LENGTH,
+                        row.getMakerName(),
+                        row.getImportedManufacturerName(),
+                        row.getSellerManufacturerName()))
                 .category(mapCategory(row.getFoodCategoryName()))
                 .servingSizeG(servingSizeG(row))
-                .servingReference(firstNonBlank(row.getNutritionAmountServing(), row.getServingSize()))
+                .servingReference(FoodCatalogImportText.firstNonBlankToMaxLength(
+                        SERVING_REFERENCE_MAX_LENGTH,
+                        row.getNutritionAmountServing(),
+                        row.getServingSize()))
                 .caloriesPer100g(calories)
                 .proteinPer100g(parseDouble(row.getAmountNum3()))
                 .fatPer100g(parseDouble(row.getAmountNum4()))
@@ -81,7 +95,7 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
                 .dietaryFiberPer100g(parseDouble(row.getAmountNum8()))
                 .sodiumPer100gMg(parseDouble(row.getAmountNum13()))
                 .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
-                .dataVersion(normalize(row.getUpdateDate()))
+                .dataVersion(FoodCatalogImportText.normalizeToMaxLength(row.getUpdateDate(), DATA_VERSION_MAX_LENGTH))
                 .lastVerifiedAt(parseDate(row.getUpdateDate()))
                 .isCustom(false)
                 .build());
@@ -139,21 +153,7 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
         }
     }
 
-    private String firstNonBlank(String... values) {
-        for (String value : values) {
-            String normalized = normalize(value);
-            if (normalized != null) {
-                return normalized;
-            }
-        }
-        return null;
-    }
-
     private String normalize(String value) {
-        if (value == null) {
-            return null;
-        }
-        String normalized = value.trim().replaceAll("\\s+", " ");
-        return normalized.isBlank() ? null : normalized;
+        return FoodCatalogImportText.normalize(value);
     }
 }

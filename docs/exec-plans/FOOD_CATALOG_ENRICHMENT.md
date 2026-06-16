@@ -2,9 +2,9 @@
 
 작성일: 2026-06-04
 
-개정일: 2026-06-11
+개정일: 2026-06-16
 
-상태: 1단계 완료, 2단계 완료(실제 API smoke 검증 대기), 3단계 완료, 4단계 완료, 5단계 완료
+상태: 1단계 완료, 2단계 파이프라인 완료 및 local 검증 충분, 3단계 완료, 4단계 완료, 5단계 완료
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -299,17 +299,17 @@ seed allowlist 최소 기준:
 
 ## 10. 구현 순서
 
-### 현재 작업 목록(2026-06-10)
+### 현재 작업 목록(2026-06-15)
 
 | 단계 | 상태 | 완료 내용 | 다음 액션 |
 |---|---|---|---|
 | 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
 | 4단계 추천 게이트 적용 | **완료** | 추천 후보 조회 필터 + `RecommendedFoodEntry.caution` 필드로 주의 사유 응답 노출 | — |
-| 2단계 공공데이터 배치 적재 | **완료** | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현 | 실제 공공 API smoke 검증(API 키 설정 후 수동 실행) |
+| 2단계 공공데이터 배치 적재 | 파이프라인 완료, local 검증 충분 | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현. local DB에서 smoke/제한 배치와 대량 적재 중 길이 초과 장애 케이스까지 확인 | 전량 적재는 local 필수 작업이 아니라 staging/운영 runbook으로 전환 |
 | 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
 | 5단계 검색/기록 경로 정리 | **완료** | iOS 외부 API 경로 전면 제거(`ExternalFoodResult`, `ImportFoodRequest`, `FoodDataSource` 삭제, `DietFoodSearching` 프로토콜 단순화), 내부 카탈로그 단일 경로 고정. `ExternalFoodController`는 관리자 도구 전용으로 유지 | — |
-| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터, V25 seed 큐레이션 보정 테스트 완료 | DB가 있는 환경에서 Flyway V23~V25 적용 검증, 실제 API smoke 검증 |
+| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터, V25 seed 큐레이션 보정 테스트, 실제 API smoke/제한 배치 완료 | source별 전량 적재 완료 후 row count, skip 비율, `SEARCH_ONLY` 기본값, dedup 리포트 검증 |
 
 ### 0단계: 데이터 프로파일링
 
@@ -376,7 +376,59 @@ seed allowlist 최소 기준:
 - `FoodCatalogAdminController`를 추가해 운영 실행 트리거 3종(`POST /api/v1/admin/diet/catalog/import/{processed-foods|dish-foods|nutrient-db}`)과 중복 후보 리포트(`GET /api/v1/admin/diet/catalog/dedup/report`)를 제공한다.
 - 관리자 카탈로그 작업은 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` operation token을 요구한다. `app.admin.operation-token`이 비어 있으면 fail-closed로 거부된다.
 - `FoodCatalogAdminOperations`를 추가해 관리자 카탈로그 작업의 권한 검증, `pageSize`/`maxPages` 상한, 실행 로그, 실제 작업 호출을 한 module에 모았다.
-- 남은 작업은 실제 공공 API smoke 검증(API 키 설정 후 수동 실행)과 운영 rate limit 값 확정이다.
+- 남은 작업은 source별 전량 적재 완료 판정, 운영 rate limit 값 확정, 적재 후 row count/skip 비율/중복 후보 검증이다.
+
+#### 2.1 공공데이터 전량 적재 실행 순서
+
+전량 적재는 "한 번 호출"이 아니라 source별 체크포인트를 기준으로 `exhausted=true`가 나올 때까지 반복 실행하는 운영 절차다. 각 단계는 운영 DB 또는 staging DB에서 결과를 확인한 뒤 다음 단계로 넘어간다. local DB는 smoke, 제한 배치, 대표 장애 케이스 검증까지만 수행해도 충분하며, 모든 row를 local에 끝까지 적재할 필요는 없다.
+
+| 순서 | 단계 | 작업 | 완료 기준 |
+|---:|---|---|---|
+| 0 | 사전 조건 고정 | 운영/스테이징 DB 백업, Flyway V23/V24/V25 적용 확인, `PUBLIC_FOOD_API_KEY`, `ADMIN_OPERATION_TOKEN`, `app.food-api.import-page-delay-millis` 설정 | 앱 기동 시 Flyway 통과, admin token fail-closed 확인, 공공 API 키가 빈 값이 아님 |
+| 1 | 실제 API smoke | `FoodCatalogPublicApiSmokeTest` 또는 관리자 API `pageSize=100&maxPages=1`로 3개 source를 각각 1페이지 호출 | 3개 source 모두 200 응답, `fetchedPageCount=1`, 과도한 `skippedCount` 없음 |
+| 2 | 제한 배치 | smoke와 같은 `pageSize=100`으로 source별 `maxPages=2~5` 실행. 순서는 `processed-foods` → `dish-foods` → `nutrient-db` | 각 source 체크포인트가 증가하고, `food_catalog.source`별 row count가 증가 |
+| 3 | 운영 rate limit 확정 | smoke/제한 배치 응답 시간과 공공 API 제한을 보고 `import-page-delay-millis` 조정 | 429/timeout 없이 안정적으로 여러 페이지 처리 |
+| 4 | 기준 source 전량 적재 | `processed-foods`를 smoke/제한 배치와 같은 `pageSize`로 반복 실행 | 응답 summary의 `exhausted=true`, 체크포인트와 row count 기록 |
+| 5 | 음식 source 전량 적재 | `dish-foods`를 같은 방식으로 반복 실행 | 응답 summary의 `exhausted=true`, 체크포인트와 row count 기록 |
+| 6 | 보강 source 전량 적재 | `nutrient-db`를 같은 방식으로 반복 실행 | 응답 summary의 `exhausted=true`, 체크포인트와 row count 기록 |
+| 7 | 적재 후 검증 | source별 count, `SEARCH_ONLY` 기본값, 필수 영양값 결측 skip 비율, 대표 검색어 결과 확인 | 대표 검색어(`김치찌개`, `닭가슴살`, `샐러드`, `와퍼`)가 내부 `food_catalog`에서 조회되고, 공공데이터 신규 항목이 추천 후보로 자동 승격되지 않음 |
+| 8 | 중복 후보 리포트 | `GET /api/v1/admin/diet/catalog/dedup/report` 실행 | 상위 중복 그룹을 운영 검수 목록으로 분리. 자동 병합은 하지 않음 |
+| 9 | 후속 큐레이션 결정 | 검색/기록 커버리지, 중복 리포트, 브랜드 공백을 바탕으로 브랜드 CSV와 추천 후보 큐레이션 작업 범위 결정 | 추천 후보 승격은 별도 큐레이션 CSV/정책으로 분리 |
+
+staging/운영 전량 적재 완료 판정:
+
+- 3개 source(`MFDS_STANDARD_PROCESSED`, `MFDS_STANDARD_DISH`, `MFDS_FOOD_NUTRIENT_DB`)의 마지막 실행 summary가 모두 `exhausted=true`다.
+- `food_catalog_import_checkpoints`에 source별 마지막 완료 페이지가 남아 있다.
+- `food_catalog` source별 row count와 skipped 비율을 운영 기록에 남겼다.
+- 신규 공공데이터 항목의 `recommendation_status`는 기본 `SEARCH_ONLY`이며, seed/브랜드 추천 후보 정책을 덮어쓰지 않았다.
+- dedup 리포트를 실행했고, 자동 병합 없이 검수 목록만 만들었다.
+
+local 검증 완료 판정:
+
+- 실제 API smoke와 제한 배치가 성공했다.
+- source별 체크포인트 증가와 `SEARCH_ONLY` 기본값을 확인했다.
+- 대표 대량 적재 중 발생한 문자열 길이 초과 장애를 재현하고 importer 한도 정규화로 보정했다.
+- 추가 local 적재는 선택 사항이며, 운영 전량 적재 전 로컬 디스크/시간을 써서 모든 source를 `exhausted=true`까지 채우지 않는다.
+
+주의: 현재 체크포인트는 source별 `last_completed_page`만 저장하고 `pageSize`는 저장하지 않는다. 같은 source의 이어달리기 중 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있다. smoke 이후 더 큰 `pageSize`로 넘어가려면 smoke row와 체크포인트를 초기화한 뒤 다시 시작한다.
+
+사전 조건 확인 메모(2026-06-15, local DB):
+
+- DB 백업 생성 완료: `/private/tmp/healthcare_local_pre_public_ingest_20260615_163236.dump`
+- Docker compose 기준 `healthcare-postgres`는 실행 중이며 healthy 상태다.
+- Flyway V23, V24, V25, V26은 local DB에 성공 적용되어 있다. `flyway_schema_history` 성공 migration 수는 26개다.
+- `food_catalog` 현재 source별 row count는 `SEED=300`, `USER_CUSTOM=25`다. 공공데이터 source 3종은 아직 0건이다.
+- `food_catalog_import_checkpoints`는 비어 있다. 전량 적재는 아직 시작되지 않았다.
+- `backend/.env`에는 `PUBLIC_FOOD_API_KEY`가 설정되어 있으나 현재 셸 환경에는 export되어 있지 않다.
+- `ADMIN_OPERATION_TOKEN`은 `backend/.env`에 설정했다. 현재 셸에는 export되어 있지 않으므로 앱 기동 시 `.env`를 source하거나 실행 환경 변수로 전달해야 한다.
+- `app.food-api.import-page-delay-millis`는 별도 설정이 없어 기본 0ms로 동작한다. smoke/제한 배치 후 조정한다.
+- 백엔드 앱은 현재 `localhost:8080`에서 실행 중이 아니다. endpoint smoke 전 앱 기동이 필요하다.
+- `AdminOperationGuardTest`, `FoodCatalogAdminControllerTest`는 통과해 admin token 미설정/누락 시 fail-closed 동작은 코드 수준에서 확인했다.
+- 실제 API smoke 1차에서 `pageSize=10&maxPages=1`로 3개 source 각 10건 적재와 체크포인트 생성을 확인했다. 이후 `pageSize` 변경 시 row skip 위험을 발견해 smoke row 30건과 체크포인트 3건을 초기화했다. 다음 실행은 `pageSize=100` 고정으로 다시 시작한다.
+- 실제 API smoke 2차 완료: `pageSize=100&maxPages=1`로 `processed-foods`, `dish-foods`, `nutrient-db` 모두 성공했다. local DB 기준 체크포인트는 3개 source 모두 `last_completed_page=1`, 공공데이터 row count는 source별 100건, `recommendation_status`는 모두 `SEARCH_ONLY`다.
+- 제한 배치 완료: smoke와 같은 `pageSize=100`으로 source별 `maxPages=4`를 실행해 2~5페이지를 처리했다. local DB 기준 체크포인트는 3개 source 모두 `last_completed_page=5`, row count는 `MFDS_STANDARD_PROCESSED=500`, `MFDS_STANDARD_DISH=500`, `MFDS_FOOD_NUTRIENT_DB=499`다. `nutrient-db`는 1건 skip이 있었고, 공공데이터 항목의 `recommendation_status`는 모두 `SEARCH_ONLY`다.
+- local 대량 검증 중단 결정(2026-06-16): `processed-foods?pageSize=100&maxPages=500`를 반복 실행해 `MFDS_STANDARD_PROCESSED`가 `lastCompletedPage=2484`까지 진행됐다. local DB 기준 총 `food_catalog` row count는 136783건이고, source별 row count는 `MFDS_STANDARD_PROCESSED=135459`, `MFDS_STANDARD_DISH=500`, `MFDS_FOOD_NUTRIENT_DB=499`, `SEED=300`, `USER_CUSTOM=25`다. 공공데이터 항목의 `recommendation_status`는 모두 `SEARCH_ONLY`다. local에서는 파이프라인 검증 목적을 충족했으므로 모든 공공데이터 source를 끝까지 적재하지 않는다.
+- 전량 적재 이슈 처리(2026-06-16): `processed-foods` 1484페이지에서 제조사명(`mfrNm`) 163자 row가 `food_catalog.maker varchar(150)` 한도를 넘어 `DataIntegrityViolationException`이 발생했다. 외부 식별자인 `foodCode`는 한도 초과 시 skip하고, 식품명/브랜드/제조사/제공량/버전 문자열은 `food_catalog` 컬럼 한도에 맞춰 정규화 후 절단하도록 importer를 수정했다. local 추가 검증이 필요하면 앱 재기동 후 같은 `pageSize=100`으로 1484페이지부터 이어서 실행할 수 있지만, 필수 작업은 아니다.
 
 ### 3단계: 브랜드 공식 메뉴 CSV 적재
 
@@ -456,9 +508,9 @@ seed allowlist 최소 기준:
 
 ## 12. 오픈 이슈
 
-- 실제 공공 API smoke 검증: `PUBLIC_FOOD_API_KEY` 설정 후 각 importer 수동 실행 및 응답 확인
-- 운영 rate limit 값 확정: 현재 기본 0ms, 공공 API 트래픽 제한에 맞는 값으로 조정 필요
-- `FoodNtrCpntDbInfo02`와 가공식품/음식 표준데이터의 실제 중복률 확인(dedup 리포트 실행 후)
+- staging/운영 공공데이터 전량 적재 실행 여부 결정: local에서는 smoke/제한 배치/대표 장애 케이스 검증으로 충분하므로 전량 적재를 중단한다. 실제 전량 적재가 필요하면 staging 또는 운영 DB에서 `processed-foods` → `dish-foods` → `nutrient-db` 순서로 진행하고, 3개 source 모두 `exhausted=true`여야 완료다.
+- 운영 rate limit 값 확정: local 대량 검증에서는 기본 0ms로 일부 대량 적재가 가능했다. staging/운영에서 429/timeout이 발생하면 `app.food-api.import-page-delay-millis`를 설정한다.
+- `FoodNtrCpntDbInfo02`와 가공식품/음식 표준데이터의 실제 중복률 확인: 전량 적재 후 dedup 리포트 실행
 - 표준데이터 2종의 라이선스/재사용 조건 근거 문서화
 - 브랜드 공식 영양정보의 약관/재사용 조건 확인
 - 세트 메뉴를 단일 항목으로 둘지 구성품 기반으로 분리할지 v2에서 결정

@@ -243,6 +243,42 @@ app:
 
 import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, created/updated/skipped 수, exhausted 여부)를 포함합니다.
 
+#### 공공데이터 전량 적재 운영 순서
+
+공공데이터 전량 적재는 source별 체크포인트를 사용하는 반복 실행 작업입니다. 한 번의 관리자 API 호출이 전체 데이터 적재를 보장하지 않으므로, 각 source의 응답 summary에서 `exhausted=true`가 나올 때까지 같은 source를 반복 실행합니다. 이 절차는 staging/운영 DB 기준 runbook이며, local DB에서는 smoke, 제한 배치, 대표 장애 케이스 검증까지만 수행해도 충분합니다.
+
+| 순서 | 작업 | 호출/확인 |
+|---:|---|---|
+| 0 | 사전 조건 확인 | DB 백업, Flyway V23/V24/V25 적용, `PUBLIC_FOOD_API_KEY`, `ADMIN_OPERATION_TOKEN`, `app.food-api.import-page-delay-millis` 설정 |
+| 1 | 실제 API smoke | 각 source를 `pageSize=100&maxPages=1`로 1페이지 호출 |
+| 2 | 제한 배치 | `processed-foods` → `dish-foods` → `nutrient-db` 순서로, smoke와 같은 `pageSize=100`을 유지해 `maxPages=2~5` 실행 |
+| 3 | rate limit 확정 | timeout/429 여부를 보고 `import-page-delay-millis` 조정 |
+| 4 | 가공식품 전량 적재 | smoke/제한 배치와 같은 `pageSize`로 `/import/processed-foods` 반복 실행, `exhausted=true`까지 |
+| 5 | 음식 전량 적재 | 같은 `pageSize`로 `/import/dish-foods` 반복 실행, `exhausted=true`까지 |
+| 6 | 식품영양성분DB 전량 적재 | 같은 `pageSize`로 `/import/nutrient-db` 반복 실행, `exhausted=true`까지 |
+| 7 | 적재 검증 | source별 row count, 체크포인트, skipped 비율, 대표 검색어 조회 확인 |
+| 8 | 중복 후보 점검 | `/dedup/report` 실행 후 운영 검수 목록 생성. 자동 병합 금지 |
+| 9 | 후속 큐레이션 | 브랜드 CSV 보강과 추천 후보 승격은 별도 작업으로 분리 |
+
+주의: 체크포인트는 source별 마지막 완료 페이지 번호만 저장하고 `pageSize`는 저장하지 않습니다. 같은 source를 이어서 적재하는 동안 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있습니다. smoke 후 다른 `pageSize`로 전환해야 한다면 해당 source의 smoke row와 체크포인트를 초기화한 뒤 다시 시작합니다.
+
+권장 호출 예시:
+
+```bash
+curl -X POST "$BASE_URL/api/v1/admin/diet/catalog/import/processed-foods?pageSize=100&maxPages=500" \
+  -H "X-Admin-Token: $ADMIN_OPERATION_TOKEN"
+```
+
+local에서 추가 적재를 이어 실행해야 한다면 이미 smoke/제한 배치에 사용한 `pageSize=100`을 유지합니다. 다만 local에 모든 공공데이터 row를 끝까지 적재하는 것은 필수 작업이 아닙니다.
+
+전량 적재 완료 기준:
+
+- `processed-foods`, `dish-foods`, `nutrient-db` 마지막 실행 응답이 모두 `exhausted=true`
+- `food_catalog_import_checkpoints`에 source별 마지막 완료 페이지 기록 존재
+- 신규 공공데이터 항목의 `recommendation_status` 기본값이 `SEARCH_ONLY`
+- 대표 검색어가 내부 `food_catalog`에서 조회됨
+- dedup 리포트를 실행했고 자동 병합 없이 검수 목록으로 분리함
+
 dedup 리포트 응답 예시:
 
 ```json
@@ -619,11 +655,12 @@ NavigationStack(path: $recordTabPath) {
    - AI로 추정된 영양성분 표시 UI 미구현
    - 향후: "AI 추정값" 배지 + disclaimer 텍스트 추가
 
-3. **공공데이터 사전 적재 파이프라인 구현 완료, 실제 실행 대기**
+3. **공공데이터 사전 적재 파이프라인 구현 완료, local 검증 충분**
    - 배치 파이프라인(importer, fetcher, runner, checkpoint) 구현 완료
    - `POST /api/v1/admin/diet/catalog/import/*` 관리자 API로 실행 가능
-   - 실제 실행 전 `PUBLIC_FOOD_API_KEY` 환경 변수 설정 필요
-   - 5단계(검색/기록 경로 정리)에서 사용자 검색 경로의 외부 API 의존을 내부 DB 기준으로 고정 예정
+   - local에서는 smoke/제한 배치와 대표 대량 적재 장애 케이스를 확인했으므로 모든 row를 끝까지 적재하지 않음
+   - staging/운영 전량 적재가 필요하면 `processed-foods` → `dish-foods` → `nutrient-db` 순서로 진행하고, source별 `exhausted=true`가 나올 때까지 반복 실행
+   - 신규 공공데이터 항목은 기본 `SEARCH_ONLY`로 유지하며 추천 후보 승격은 별도 큐레이션 작업으로 분리
 
 4. **주의 상태 iOS 표시 후속 작업**
    - 백엔드 응답 모델은 확정됨: `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되며, `RecommendedFoodEntry.caution`에 `recommendation_reason`을 담아 노출합니다.
