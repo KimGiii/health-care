@@ -13,6 +13,7 @@ struct DietRecordView: View {
                     DietHeroSection(viewModel: viewModel, onDismiss: { dismiss() })
                     VStack(spacing: 20) {
                         todayNutritionBar
+                        recommendationEntryCard
                         if viewModel.isLoading {
                             ProgressView().padding(.top, Spacing.xxxl)
                         } else if viewModel.todayLogs.isEmpty {
@@ -141,6 +142,51 @@ struct DietRecordView: View {
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
+    }
+
+    private var recommendationEntryCard: some View {
+        NavigationLink {
+            DietRecommendationView()
+                .environmentObject(container)
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.brandPrimary.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(Color.brandPrimary)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "diet.recommendationCard.title"))
+                        .font(.subheadline.bold())
+                        .foregroundColor(Color.textPrimary)
+                    Text(recommendationEntrySubtitle)
+                        .font(.caption)
+                        .foregroundColor(Color.textSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundColor(Color.textTertiary)
+            }
+            .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+            .background(Color.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var recommendationEntrySubtitle: String {
+        if viewModel.todayLogs.isEmpty {
+            return String(localized: "diet.recommendationCard.emptySubtitle")
+        }
+        return String(
+            format: String(localized: "diet.recommendationCard.remainingSubtitle"),
+            max(viewModel.remainingCalories, 0)
+        )
     }
 
     // MARK: - 오늘 식단 기록 리스트

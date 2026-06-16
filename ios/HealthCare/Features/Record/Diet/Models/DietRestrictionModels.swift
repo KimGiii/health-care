@@ -143,11 +143,15 @@ struct DailyDietRecommendationResponse: Codable {
 }
 
 struct NutritionTargets: Codable {
-    let tdeeKcal: Double
-    let targetKcal: Double
-    let proteinG: Double
-    let carbsG: Double
-    let fatG: Double
+    let calorieTarget: Double
+    let proteinTargetG: Double
+    let carbTargetG: Double
+    let fatTargetG: Double
+
+    var targetKcal: Double { calorieTarget }
+    var proteinG: Double { proteinTargetG }
+    var carbsG: Double { carbTargetG }
+    var fatG: Double { fatTargetG }
 }
 
 struct RecommendedMeal: Codable, Identifiable {
@@ -173,6 +177,7 @@ struct RecommendedFoodEntry: Codable, Identifiable {
     let carbsG: Double
     let fatG: Double
     let allergenConfidenceLevel: AllergenConfidenceLevel
+    let caution: String?
 
     var id: Int { foodCatalogId }
 
@@ -182,5 +187,5 @@ struct RecommendedFoodEntry: Codable, Identifiable {
         return name
     }
 
-    var needsCaution: Bool { allergenConfidenceLevel.cautionRequired }
+    var needsCaution: Bool { caution != nil || allergenConfidenceLevel.cautionRequired }
 }

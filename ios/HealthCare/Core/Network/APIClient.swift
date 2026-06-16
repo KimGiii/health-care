@@ -71,8 +71,12 @@ actor APIClient {
         do {
             let envelope = try decoder.decode(SuccessEnvelope<T>.self, from: data)
             return envelope.data
-        } catch {
-            throw APIError.decodingError(error)
+        } catch let envelopeError {
+            do {
+                return try decoder.decode(T.self, from: data)
+            } catch {
+                throw APIError.decodingError(envelopeError)
+            }
         }
     }
 

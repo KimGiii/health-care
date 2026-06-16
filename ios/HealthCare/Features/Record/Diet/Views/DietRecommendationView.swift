@@ -215,6 +215,7 @@ struct DietRecommendationView: View {
                 Text(String(format: "%.0f kcal", meal.totalCalories))
                     .font(.caption).fontWeight(.medium)
                     .foregroundStyle(Color.textSecondary)
+                saveMealButton(meal)
             }
             ForEach(meal.items) { item in
                 foodRow(item)
@@ -224,6 +225,44 @@ struct DietRecommendationView: View {
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .elevation(.low)
+    }
+
+    private func saveMealButton(_ meal: RecommendedMeal) -> some View {
+        let isSaving = viewModel.isSaving(meal)
+        let isSaved = viewModel.isSaved(meal)
+        let isDisabled = isSaving || isSaved || meal.items.isEmpty
+        let usesDisabledStyle = isSaved || meal.items.isEmpty
+
+        return Button {
+            Task { await viewModel.saveMeal(meal, apiClient: container.apiClient) }
+        } label: {
+            HStack(spacing: 4) {
+                if isSaving {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(Color.white)
+                } else {
+                    Image(systemName: isSaved ? "checkmark.circle.fill" : "plus.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                Text(saveMealButtonTitle(isSaving: isSaving, isSaved: isSaved))
+                    .lineLimit(1)
+            }
+            .font(.caption2).fontWeight(.semibold)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(usesDisabledStyle ? Color.surfaceSecondary : Color.brandPrimary)
+            .foregroundStyle(usesDisabledStyle ? Color.textSecondary : Color.white)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+    }
+
+    private func saveMealButtonTitle(isSaving: Bool, isSaved: Bool) -> String {
+        if isSaving { return String(localized: "recommend.saving") }
+        if isSaved { return String(localized: "recommend.saved") }
+        return String(localized: "recommend.save")
     }
 
     private func foodRow(_ item: RecommendedFoodEntry) -> some View {
@@ -240,6 +279,12 @@ struct DietRecommendationView: View {
                 Text(String(format: "%.0fg · %.0f kcal", item.servingG, item.calories))
                     .font(.caption)
                     .foregroundStyle(Color.textSecondary)
+                if let caution = item.caution, !caution.isEmpty {
+                    Text(caution)
+                        .font(.caption2)
+                        .foregroundStyle(Color.brandWarning)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {

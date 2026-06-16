@@ -68,7 +68,7 @@ final class DietRestrictionViewModel: ObservableObject {
 
     func delete(restriction: DietRestriction, apiClient: APIClient) async {
         do {
-            let _: EmptyResponse = try await apiClient.request(.deleteDietRestriction(id: restriction.id))
+            try await apiClient.requestVoid(.deleteDietRestriction(id: restriction.id))
             restrictions.removeAll { $0.id == restriction.id }
         } catch let error as APIError {
             errorMessage = error.errorDescription
@@ -113,5 +113,3 @@ final class DietRestrictionViewModel: ObservableObject {
         }
     }
 }
-
-private struct EmptyResponse: Decodable {}

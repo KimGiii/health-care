@@ -190,7 +190,7 @@ struct MyPageView: View {
                 NavigationLink {
                     DietRecommendationView()
                 } label: {
-                    DietMenuRow(icon: "fork.knife.circle", iconColor: Color.brandAccent,
+                    DietMenuRow(icon: "fork.knife", iconColor: Color.brandAccent,
                                 label: String(localized: "mypage.menu.dietRecommendation"))
                 }
             }
@@ -435,7 +435,8 @@ private struct DietMenuRow: View {
                 .font(.captionBold)
                 .foregroundStyle(Color.textSecondary.opacity(0.6))
         }
-        .padding(.vertical, Spacing.sm)
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — matches menu row gutter
+        .padding(.vertical, Spacing.lg) // design-lint:ignore — matches menu row height
         .contentShape(Rectangle())
     }
 }
