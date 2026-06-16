@@ -92,8 +92,9 @@ class DietRecommendationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.targets.calorieTarget").value(2000))
-                .andExpect(jsonPath("$.disclaimer").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.targets.calorieTarget").value(2000))
+                .andExpect(jsonPath("$.data.disclaimer").exists());
     }
 
     @Test

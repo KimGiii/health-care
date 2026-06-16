@@ -143,7 +143,7 @@ class DietRecommendationCandidatePoolTest {
         FoodCatalog plainRice = food(2L, "백미밥", FoodCategory.GRAIN, 130.0);
         givenCatalogCandidates(List.of(riceNoodle, plainRice));
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
-                .willReturn(List.of(allergenTag(2L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED)));
+                .willReturn(List.of(allergenTag(2L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED, true)));
 
         DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
         List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), true).foods();
@@ -280,11 +280,20 @@ class DietRecommendationCandidatePoolTest {
             Long foodCatalogId,
             AllergenTag tag,
             AllergenConfidenceLevel level) {
+        return allergenTag(foodCatalogId, tag, level, false);
+    }
+
+    private FoodAllergenTag allergenTag(
+            Long foodCatalogId,
+            AllergenTag tag,
+            AllergenConfidenceLevel level,
+            boolean allergenProfileVerified) {
         return FoodAllergenTag.builder()
                 .foodCatalogId(foodCatalogId)
                 .allergenTag(tag)
                 .confidenceLevel(level)
                 .source(AllergenDataSource.MFDS_CLASS)
+                .allergenProfileVerified(allergenProfileVerified)
                 .build();
     }
 }

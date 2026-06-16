@@ -122,6 +122,38 @@ class DailyDietRecommendationUseCasesTest {
         assertThat(response.appliedRestrictions()).hasSize(1);
     }
 
+    @Test
+    @DisplayName("제한 적용 후 추천 후보가 없으면 BusinessRuleViolationException을 던진다")
+    void recommend_noCandidates_throws() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+        given(candidatePool.load(any(), anyBoolean()))
+                .willReturn(new DietRecommendationCandidates(List.of()));
+
+        assertThatThrownBy(() -> useCases.recommend(1L, request(List.of(MealType.BREAKFAST))))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("후보");
+    }
+
+    @Test
+    @DisplayName("추천 결과가 하루 영양 목표 범위를 만족하지 못하면 BusinessRuleViolationException을 던진다")
+    void recommend_targetMismatch_throws() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+        given(candidatePool.load(any(), anyBoolean()))
+                .willReturn(new DietRecommendationCandidates(List.of(
+                        food(1L, "오이", FoodCategory.VEGETABLE, 1.0)
+                )));
+
+        assertThatThrownBy(() -> useCases.recommend(1L, request(List.of(MealType.BREAKFAST))))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .hasMessageContaining("칼로리");
+    }
+
     // ─── 헬퍼 ───
 
     private DailyDietRecommendationRequest request(List<MealType> mealTypes) {
@@ -140,12 +172,12 @@ class DailyDietRecommendationUseCasesTest {
 
     private List<DietRecommendationCandidate> diverseFoods() {
         return List.of(
-                food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
-                food(2L, "현미밥", FoodCategory.GRAIN, 150.0),
-                food(3L, "브로콜리", FoodCategory.VEGETABLE, 34.0),
-                food(4L, "사과", FoodCategory.FRUIT, 52.0),
-                food(5L, "두부", FoodCategory.PROTEIN_SOURCE, 76.0),
-                food(6L, "고구마", FoodCategory.GRAIN, 86.0)
+                food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 250.0),
+                food(2L, "현미밥", FoodCategory.GRAIN, 250.0),
+                food(3L, "브로콜리", FoodCategory.VEGETABLE, 250.0),
+                food(4L, "사과", FoodCategory.FRUIT, 250.0),
+                food(5L, "두부", FoodCategory.PROTEIN_SOURCE, 250.0),
+                food(6L, "고구마", FoodCategory.GRAIN, 250.0)
         );
     }
 
