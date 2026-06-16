@@ -81,8 +81,9 @@ class DietRestrictionControllerTest {
 
         mockMvc.perform(get("/api/v1/diet/restrictions"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].restrictionType").value("ALLERGY"))
-                .andExpect(jsonPath("$[0].allergenTag").value("MILK"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].restrictionType").value("ALLERGY"))
+                .andExpect(jsonPath("$.data[0].allergenTag").value("MILK"));
     }
 
     @Test
@@ -102,7 +103,8 @@ class DietRestrictionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.allergenTag").value("MILK"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.allergenTag").value("MILK"));
     }
 
     @Test
@@ -123,10 +125,11 @@ class DietRestrictionControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/diet/restrictions/{id} - 본인 제한 삭제 성공 204")
-    void deleteRestriction_ownRecord_returns204() throws Exception {
+    @DisplayName("DELETE /api/v1/diet/restrictions/{id} - 본인 제한 삭제 성공 200")
+    void deleteRestriction_ownRecord_returns200() throws Exception {
         mockMvc.perform(delete("/api/v1/diet/restrictions/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test

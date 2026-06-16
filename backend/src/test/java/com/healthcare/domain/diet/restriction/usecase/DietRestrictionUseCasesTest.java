@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +73,7 @@ class DietRestrictionUseCasesTest {
                     .build();
             given(dietRestrictionRepository.findActiveAllergenTagRestriction(1L, RestrictionType.ALLERGY, AllergenTag.MILK))
                     .willReturn(Optional.empty());
-            given(dietRestrictionRepository.save(any())).willAnswer(inv -> {
+            given(dietRestrictionRepository.saveAndFlush(any())).willAnswer(inv -> {
                 DietRestriction r = inv.getArgument(0);
                 return allergenTagRestriction(10L, 1L, r.getRestrictionType(), r.getAllergenTag());
             });
@@ -96,7 +97,25 @@ class DietRestrictionUseCasesTest {
 
             assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
                     .isInstanceOf(DuplicateResourceException.class);
-            verify(dietRestrictionRepository, never()).save(any());
+            verify(dietRestrictionRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("동시 요청으로 DB 중복 제약이 발생해도 DuplicateResourceException으로 변환한다")
+        void create_allergenTag_databaseDuplicate_throwsDuplicateResourceException() {
+            var request = CreateDietRestrictionRequest.builder()
+                    .restrictionType(RestrictionType.ALLERGY)
+                    .targetType(TargetType.ALLERGEN_TAG)
+                    .allergenTag(AllergenTag.MILK)
+                    .build();
+            given(dietRestrictionRepository.findActiveAllergenTagRestriction(1L, RestrictionType.ALLERGY, AllergenTag.MILK))
+                    .willReturn(Optional.empty());
+            given(dietRestrictionRepository.saveAndFlush(any()))
+                    .willThrow(new DataIntegrityViolationException("uq_diet_restrictions_active_allergen_tag"));
+
+            assertThatThrownBy(() -> dietRestrictionUseCases.createRestriction(1L, request))
+                    .isInstanceOf(DuplicateResourceException.class)
+                    .hasMessage("이미 등록된 식단 제한 조건입니다.");
         }
     }
 
@@ -116,7 +135,7 @@ class DietRestrictionUseCasesTest {
                     .build();
             given(dietRestrictionRepository.findActiveCategoryRestriction(1L, RestrictionType.AVOID, FoodCategory.DAIRY))
                     .willReturn(Optional.empty());
-            given(dietRestrictionRepository.save(any())).willAnswer(inv -> categoryRestriction(20L, 1L, FoodCategory.DAIRY));
+            given(dietRestrictionRepository.saveAndFlush(any())).willAnswer(inv -> categoryRestriction(20L, 1L, FoodCategory.DAIRY));
 
             DietRestrictionResponse result = dietRestrictionUseCases.createRestriction(1L, request);
 
@@ -152,7 +171,7 @@ class DietRestrictionUseCasesTest {
                     .build();
             given(dietRestrictionRepository.findActiveKeywordRestriction(1L, RestrictionType.AVOID, "돼지 고기"))
                     .willReturn(Optional.empty());
-            given(dietRestrictionRepository.save(any())).willAnswer(inv -> {
+            given(dietRestrictionRepository.saveAndFlush(any())).willAnswer(inv -> {
                 DietRestriction r = inv.getArgument(0);
                 return keywordRestriction(30L, 1L, r.getKeyword());
             });
