@@ -31,10 +31,10 @@ public class AllergenConfidenceGate {
 
     /**
      * Strict 모드 신뢰 레벨 게이트 통과 여부를 반환한다.
-     * <ul>
-     *   <li>제한 알러젠 없음 / 기본 모드: 항상 통과</li>
-     *   <li>Strict 모드: DIRECT_VERIFIED 또는 LABEL_DERIVED 레코드가 최소 하나 있어야 통과</li>
-     * </ul>
+     * <p>
+     * Positive allergen tag 모델에서는 "태그가 없음"만으로 제한 알러젠 부재를 증명할 수 없다.
+     * Strict 모드에서는 포함 알러젠 태그를 먼저 제외한 뒤, 해당 식품의 알러젠 프로필 전체가
+     * 고신뢰 출처로 검토되었음을 나타내는 레코드가 있을 때만 통과시킨다.
      */
     public boolean passesGate(
             Long foodId,
@@ -46,8 +46,10 @@ public class AllergenConfidenceGate {
         if (!strictMode) return true;
         List<FoodAllergenTag> tags = tagsByFoodId.getOrDefault(foodId, List.of());
         return tags.stream().anyMatch(t ->
-                t.getConfidenceLevel() == AllergenConfidenceLevel.DIRECT_VERIFIED ||
-                t.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED);
+                t.isAllergenProfileVerified() && (
+                        t.getConfidenceLevel() == AllergenConfidenceLevel.DIRECT_VERIFIED ||
+                        t.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+                ));
     }
 
     /**

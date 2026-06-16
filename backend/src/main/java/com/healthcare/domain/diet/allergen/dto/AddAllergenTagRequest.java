@@ -11,5 +11,16 @@ public record AddAllergenTagRequest(
         AllergenTag allergenTag,
         AllergenConfidenceLevel confidenceLevel,
         AllergenDataSource source,
-        OffsetDateTime reviewedAt
-) {}
+        OffsetDateTime reviewedAt,
+        Boolean allergenProfileVerified
+) {
+    public AddAllergenTagRequest(
+            Long foodCatalogId,
+            AllergenTag allergenTag,
+            AllergenConfidenceLevel confidenceLevel,
+            AllergenDataSource source,
+            OffsetDateTime reviewedAt
+    ) {
+        this(foodCatalogId, allergenTag, confidenceLevel, source, reviewedAt, false);
+    }
+}

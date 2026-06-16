@@ -78,21 +78,30 @@ class AllergenConfidenceGateTest {
         }
 
         @Test
-        @DisplayName("Strict 모드에서 DIRECT_VERIFIED 레코드가 있으면 통과한다")
+        @DisplayName("Strict 모드에서 DIRECT_VERIFIED 프로필 검토 완료 레코드가 있으면 통과한다")
         void strictMode_directVerified_passes() {
-            FoodAllergenTag t = tag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED);
+            FoodAllergenTag t = tag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED, true);
             Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(1L, List.of(t));
 
             assertThat(gate.passesGate(1L, Set.of(AllergenTag.MILK), tagsByFoodId, true)).isTrue();
         }
 
         @Test
-        @DisplayName("Strict 모드에서 LABEL_DERIVED 레코드가 있으면 통과한다")
+        @DisplayName("Strict 모드에서 LABEL_DERIVED 프로필 검토 완료 레코드가 있으면 통과한다")
         void strictMode_labelDerived_passes() {
-            FoodAllergenTag t = tag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.LABEL_DERIVED);
+            FoodAllergenTag t = tag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.LABEL_DERIVED, true);
             Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(1L, List.of(t));
 
             assertThat(gate.passesGate(1L, Set.of(AllergenTag.MILK), tagsByFoodId, true)).isTrue();
+        }
+
+        @Test
+        @DisplayName("Strict 모드에서 고신뢰 태그가 있어도 프로필 검토 완료가 아니면 차단된다")
+        void strictMode_highConfidenceWithoutProfileVerification_blocked() {
+            FoodAllergenTag t = tag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED, false);
+            Map<Long, List<FoodAllergenTag>> tagsByFoodId = Map.of(1L, List.of(t));
+
+            assertThat(gate.passesGate(1L, Set.of(AllergenTag.MILK), tagsByFoodId, true)).isFalse();
         }
 
         @Test
@@ -144,11 +153,21 @@ class AllergenConfidenceGateTest {
     // ─── 헬퍼 ───
 
     private FoodAllergenTag tag(Long foodCatalogId, AllergenTag allergenTag, AllergenConfidenceLevel level) {
+        return tag(foodCatalogId, allergenTag, level, false);
+    }
+
+    private FoodAllergenTag tag(
+            Long foodCatalogId,
+            AllergenTag allergenTag,
+            AllergenConfidenceLevel level,
+            boolean allergenProfileVerified
+    ) {
         return FoodAllergenTag.builder()
                 .foodCatalogId(foodCatalogId)
                 .allergenTag(allergenTag)
                 .confidenceLevel(level)
                 .source(AllergenDataSource.MFDS_CLASS)
+                .allergenProfileVerified(allergenProfileVerified)
                 .build();
     }
 }

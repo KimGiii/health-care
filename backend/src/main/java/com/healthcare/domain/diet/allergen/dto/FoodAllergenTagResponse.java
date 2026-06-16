@@ -13,9 +13,22 @@ public record FoodAllergenTagResponse(
         AllergenTag allergenTag,
         AllergenConfidenceLevel confidenceLevel,
         AllergenDataSource source,
+        boolean allergenProfileVerified,
         OffsetDateTime reviewedAt,
         OffsetDateTime createdAt
 ) {
+    public FoodAllergenTagResponse(
+            Long id,
+            Long foodCatalogId,
+            AllergenTag allergenTag,
+            AllergenConfidenceLevel confidenceLevel,
+            AllergenDataSource source,
+            OffsetDateTime reviewedAt,
+            OffsetDateTime createdAt
+    ) {
+        this(id, foodCatalogId, allergenTag, confidenceLevel, source, false, reviewedAt, createdAt);
+    }
+
     public static FoodAllergenTagResponse from(FoodAllergenTag tag) {
         return new FoodAllergenTagResponse(
                 tag.getId(),
@@ -23,6 +36,7 @@ public record FoodAllergenTagResponse(
                 tag.getAllergenTag(),
                 tag.getConfidenceLevel(),
                 tag.getSource(),
+                tag.isAllergenProfileVerified(),
                 tag.getReviewedAt(),
                 tag.getCreatedAt()
         );

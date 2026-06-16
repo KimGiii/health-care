@@ -1,6 +1,7 @@
 package com.healthcare.domain.diet.allergen;
 
 import com.healthcare.common.exception.ResourceNotFoundException;
+import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.allergen.dto.AddAllergenTagRequest;
 import com.healthcare.domain.diet.allergen.dto.BulkAddAllergenTagsRequest;
@@ -54,13 +55,14 @@ class FoodAllergenTagAdminOperationsTest {
         void add_validRequest_savesAndReturnsTag() {
             AddAllergenTagRequest request = new AddAllergenTagRequest(
                     FOOD_ID, AllergenTag.EGG, AllergenConfidenceLevel.LABEL_DERIVED,
-                    AllergenDataSource.MFDS_CLASS, null
+                    AllergenDataSource.MFDS_CLASS, null, true
             );
             FoodAllergenTag saved = FoodAllergenTag.builder()
                     .foodCatalogId(FOOD_ID)
                     .allergenTag(AllergenTag.EGG)
                     .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
                     .source(AllergenDataSource.MFDS_CLASS)
+                    .allergenProfileVerified(true)
                     .build();
 
             given(foodCatalogRepository.existsById(FOOD_ID)).willReturn(true);
@@ -71,6 +73,7 @@ class FoodAllergenTagAdminOperationsTest {
 
             assertThat(response.allergenTag()).isEqualTo(AllergenTag.EGG);
             assertThat(response.foodCatalogId()).isEqualTo(FOOD_ID);
+            assertThat(response.allergenProfileVerified()).isTrue();
             verify(tagRepository).save(any());
         }
 
@@ -122,6 +125,32 @@ class FoodAllergenTagAdminOperationsTest {
 
             assertThatThrownBy(() -> operations.add(null, request))
                     .isInstanceOf(AccessDeniedException.class);
+        }
+
+        @Test
+        @DisplayName("프로필 검토 완료 플래그는 UNKNOWN 태그에 사용할 수 없다")
+        void add_profileVerifiedWithUnknown_throwsValidationException() {
+            AddAllergenTagRequest request = new AddAllergenTagRequest(
+                    FOOD_ID, AllergenTag.EGG, AllergenConfidenceLevel.UNKNOWN,
+                    AllergenDataSource.USER_CUSTOM, null, true
+            );
+
+            assertThatThrownBy(() -> operations.add(TOKEN, request))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessageContaining("allergenProfileVerified");
+        }
+
+        @Test
+        @DisplayName("프로필 검토 완료 플래그는 RECIPE_DERIVED 태그에 사용할 수 없다")
+        void add_profileVerifiedWithRecipeDerived_throwsValidationException() {
+            AddAllergenTagRequest request = new AddAllergenTagRequest(
+                    FOOD_ID, AllergenTag.EGG, AllergenConfidenceLevel.RECIPE_DERIVED,
+                    AllergenDataSource.KHANES_RECIPE, null, true
+            );
+
+            assertThatThrownBy(() -> operations.add(TOKEN, request))
+                    .isInstanceOf(ValidationException.class)
+                    .hasMessageContaining("DIRECT_VERIFIED");
         }
     }
 

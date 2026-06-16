@@ -36,6 +36,10 @@ public class FoodAllergenTag {
     @Column(name = "source", nullable = false, length = 30)
     private AllergenDataSource source;
 
+    @Builder.Default
+    @Column(name = "allergen_profile_verified", nullable = false)
+    private boolean allergenProfileVerified = false;
+
     @Column(name = "reviewed_at")
     private OffsetDateTime reviewedAt;
 

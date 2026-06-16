@@ -1,6 +1,7 @@
 package com.healthcare.domain.diet.allergen;
 
 import com.healthcare.common.exception.ResourceNotFoundException;
+import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.allergen.dto.AddAllergenTagRequest;
 import com.healthcare.domain.diet.allergen.dto.BulkAddAllergenTagsRequest;
@@ -28,6 +29,7 @@ public class FoodAllergenTagAdminOperations {
     @Transactional
     public FoodAllergenTagResponse add(String adminToken, AddAllergenTagRequest request) {
         adminOperationGuard.assertAllowed(adminToken);
+        validate(request);
         assertFoodExists(request.foodCatalogId());
 
         if (tagRepository.existsByFoodCatalogIdAndAllergenTag(request.foodCatalogId(), request.allergenTag())) {
@@ -52,6 +54,7 @@ public class FoodAllergenTagAdminOperations {
         int created = 0;
         int skipped = 0;
         for (AddAllergenTagRequest item : request.tags()) {
+            validate(item);
             if (!foodCatalogRepository.existsById(item.foodCatalogId())) {
                 log.warn("알러젠 태그 벌크 추가 — 식품 없음, 스킵: foodId={}", item.foodCatalogId());
                 skipped++;
@@ -88,6 +91,30 @@ public class FoodAllergenTagAdminOperations {
         log.info("알러젠 태그 삭제: tagId={}", tagId);
     }
 
+    private void validate(AddAllergenTagRequest request) {
+        if (request.foodCatalogId() == null) {
+            throw new ValidationException("foodCatalogId는 필수입니다.");
+        }
+        if (request.allergenTag() == null) {
+            throw new ValidationException("allergenTag는 필수입니다.");
+        }
+        if (request.confidenceLevel() == null) {
+            throw new ValidationException("confidenceLevel은 필수입니다.");
+        }
+        if (request.source() == null) {
+            throw new ValidationException("source는 필수입니다.");
+        }
+        if (Boolean.TRUE.equals(request.allergenProfileVerified()) && !strictEligibleConfidence(request.confidenceLevel())) {
+            throw new ValidationException(
+                    "allergenProfileVerified는 DIRECT_VERIFIED 또는 LABEL_DERIVED 태그에만 사용할 수 있습니다.");
+        }
+    }
+
+    private boolean strictEligibleConfidence(AllergenConfidenceLevel confidenceLevel) {
+        return confidenceLevel == AllergenConfidenceLevel.DIRECT_VERIFIED
+                || confidenceLevel == AllergenConfidenceLevel.LABEL_DERIVED;
+    }
+
     private void assertFoodExists(Long foodCatalogId) {
         if (!foodCatalogRepository.existsById(foodCatalogId)) {
             throw new ResourceNotFoundException("식품 카탈로그를 찾을 수 없습니다: id=" + foodCatalogId);
@@ -100,6 +127,7 @@ public class FoodAllergenTagAdminOperations {
                 .allergenTag(request.allergenTag())
                 .confidenceLevel(request.confidenceLevel())
                 .source(request.source())
+                .allergenProfileVerified(Boolean.TRUE.equals(request.allergenProfileVerified()))
                 .reviewedAt(request.reviewedAt())
                 .build();
     }
