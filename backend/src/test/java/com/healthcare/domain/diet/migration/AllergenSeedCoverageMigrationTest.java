@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("V25/V26/V27 알러젠 seed 커버리지 리포트")
+@DisplayName("V25/V26/V27/V30 알러젠 seed 커버리지 리포트")
 class AllergenSeedCoverageMigrationTest {
 
     private static final Pattern FOOD_SEED_ROW =
@@ -22,12 +22,16 @@ class AllergenSeedCoverageMigrationTest {
             Pattern.compile("\\('((?:[^']|'')*)',\\s*'([A-Z_]+)'\\)");
     private static final Pattern ALLERGEN_TAG_SELECT =
             Pattern.compile("SELECT id, '([A-Z_]+)'");
+    private static final Pattern DELETE_ALLERGEN_TAG =
+            Pattern.compile("fat\\.allergen_tag\\s*=\\s*'([A-Z_]+)'");
+    private static final Pattern DELETE_FOOD_NAME =
+            Pattern.compile("fc\\.name\\s*=\\s*'([^']+)'");
     private static final Pattern QUOTED_VALUE =
             Pattern.compile("'([^']+)'");
 
     @Test
-    @DisplayName("현재 V26 seed는 추천 allowlist 42개 중 12개에 포함 태그를 제공한다")
-    void v26Coverage_matchesCurrentReport() throws Exception {
+    @DisplayName("P1 보강 후 seed는 추천 allowlist 42개 중 18개에 포함 태그를 제공한다")
+    void p1Coverage_matchesCurrentReport() throws Exception {
         Map<SeedFoodKey, String> seedFoods = readSeedFoods();
         List<SeedFoodKey> allowlist = readAllowlist();
         Map<String, Set<String>> tagsByFoodName = readAllergenTagsByFoodName();
@@ -45,19 +49,27 @@ class AllergenSeedCoverageMigrationTest {
                 })
                 .toList();
 
-        assertThat(coverage.stream().filter(row -> !row.tags().isEmpty()).count()).isEqualTo(12);
-        assertThat(coverage.stream().filter(AllowlistCoverage::strictVerified).count()).isEqualTo(6);
+        assertThat(coverage.stream().filter(row -> !row.tags().isEmpty()).count()).isEqualTo(18);
+        assertThat(coverage.stream().filter(AllowlistCoverage::strictVerified).count()).isEqualTo(10);
 
-        assertThat(rowByKoreanName(coverage, "토마토").tags()).isEmpty();
-        assertThat(rowByKoreanName(coverage, "두부").tags()).isEmpty();
-        assertThat(rowByKoreanName(coverage, "통밀빵").tags()).isEmpty();
+        assertThat(rowByKoreanName(coverage, "토마토").tags()).containsExactly("TOMATO");
+        assertThat(rowByKoreanName(coverage, "토마토").strictVerified()).isTrue();
+        assertThat(rowByKoreanName(coverage, "두부").tags()).containsExactly("SOY");
+        assertThat(rowByKoreanName(coverage, "두부").strictVerified()).isFalse();
+        assertThat(rowByKoreanName(coverage, "콩나물").tags()).containsExactly("SOY");
+        assertThat(rowByKoreanName(coverage, "콩나물").strictVerified()).isTrue();
+        assertThat(rowByKoreanName(coverage, "통밀빵").tags()).containsExactlyInAnyOrder("GLUTEN", "WHEAT");
+        assertThat(rowByKoreanName(coverage, "통밀빵").strictVerified()).isFalse();
+        assertThat(rowByKoreanName(coverage, "오트밀").tags()).containsExactly("GLUTEN");
+        assertThat(rowByKoreanName(coverage, "보리").tags()).containsExactly("GLUTEN");
+        assertThat(rowByKoreanName(coverage, "메밀").tags()).containsExactly("BUCKWHEAT");
         assertThat(rowByKoreanName(coverage, "닭가슴살").tags()).containsExactly("CHICKEN");
         assertThat(rowByKoreanName(coverage, "우유(저지방)").strictVerified()).isTrue();
     }
 
     @Test
-    @DisplayName("V26 자체에 seed row가 없는 태그는 PEACH, TOMATO, SULFITE다")
-    void v26MissingTags_areCurrentKnownGaps() throws Exception {
+    @DisplayName("P1 보강 후 seed row가 없는 태그는 SULFITE만 남는다")
+    void p1MissingTags_areCurrentKnownGaps() throws Exception {
         Set<String> seededTags = readAllergenTagsByFoodName().values().stream()
                 .flatMap(Set::stream)
                 .collect(Collectors.toCollection(TreeSet::new));
@@ -67,7 +79,7 @@ class AllergenSeedCoverageMigrationTest {
 
         allTags.removeAll(seededTags);
 
-        assertThat(allTags).containsExactly("PEACH", "SULFITE", "TOMATO");
+        assertThat(allTags).containsExactly("SULFITE");
     }
 
     private AllowlistCoverage rowByKoreanName(List<AllowlistCoverage> coverage, String koreanName) {
@@ -101,38 +113,74 @@ class AllergenSeedCoverageMigrationTest {
     }
 
     private Map<String, Set<String>> readAllergenTagsByFoodName() throws Exception {
-        String sql = readMigration("V26__seed_allergen_tags.sql");
         Map<String, Set<String>> tagsByFoodName = new TreeMap<>();
-        for (String block : sql.split("ON CONFLICT \\(food_catalog_id, allergen_tag\\) DO NOTHING;")) {
-            var tagMatcher = ALLERGEN_TAG_SELECT.matcher(block);
-            if (!tagMatcher.find()) {
-                continue;
-            }
-            String tag = tagMatcher.group(1);
-            int whereIndex = block.indexOf("FROM food_catalog WHERE name");
-            if (whereIndex < 0) {
-                continue;
-            }
-            String whereClause = block.substring(whereIndex);
-            var nameMatcher = QUOTED_VALUE.matcher(whereClause);
-            while (nameMatcher.find()) {
-                tagsByFoodName.computeIfAbsent(nameMatcher.group(1), ignored -> new TreeSet<>()).add(tag);
+        for (String migration : List.of(
+                "V26__seed_allergen_tags.sql",
+                "V30__seed_allergen_tags_p1_coverage.sql"
+        )) {
+            String sql = readMigration(migration);
+            for (String block : sql.split("ON CONFLICT \\(food_catalog_id, allergen_tag\\) DO NOTHING;")) {
+                applyDeleteBlock(block, tagsByFoodName);
+                var tagMatcher = ALLERGEN_TAG_SELECT.matcher(block);
+                if (!tagMatcher.find()) {
+                    continue;
+                }
+                String tag = tagMatcher.group(1);
+                int whereIndex = block.indexOf("FROM food_catalog WHERE name");
+                if (whereIndex < 0) {
+                    continue;
+                }
+                String whereClause = block.substring(whereIndex);
+                var nameMatcher = QUOTED_VALUE.matcher(whereClause);
+                while (nameMatcher.find()) {
+                    tagsByFoodName.computeIfAbsent(nameMatcher.group(1), ignored -> new TreeSet<>()).add(tag);
+                }
             }
         }
         return tagsByFoodName;
     }
 
-    private Set<String> readStrictVerifiedFoodNames() throws Exception {
-        String sql = readMigration("V27__allergen_profile_verified.sql");
-        int start = sql.indexOf("fc.name IN (");
-        int end = sql.indexOf(");", start);
-        assertThat(start).isGreaterThanOrEqualTo(0);
-        assertThat(end).isGreaterThan(start);
+    private void applyDeleteBlock(String block, Map<String, Set<String>> tagsByFoodName) {
+        if (!block.contains("DELETE FROM food_allergen_tags")) {
+            return;
+        }
 
-        var matcher = QUOTED_VALUE.matcher(sql.substring(start, end));
+        var tagMatcher = DELETE_ALLERGEN_TAG.matcher(block);
+        var foodMatcher = DELETE_FOOD_NAME.matcher(block);
+        if (!tagMatcher.find() || !foodMatcher.find()) {
+            return;
+        }
+
+        String tag = tagMatcher.group(1);
+        String foodName = foodMatcher.group(1);
+        Set<String> tags = tagsByFoodName.get(foodName);
+        if (tags != null) {
+            tags.remove(tag);
+        }
+    }
+
+    private Set<String> readStrictVerifiedFoodNames() throws Exception {
         Set<String> names = new TreeSet<>();
-        while (matcher.find()) {
-            names.add(matcher.group(1));
+        for (String migration : List.of(
+                "V27__allergen_profile_verified.sql",
+                "V30__seed_allergen_tags_p1_coverage.sql"
+        )) {
+            String sql = readMigration(migration);
+            int cursor = 0;
+            while (true) {
+                int start = sql.indexOf("fc.name IN (", cursor);
+                if (start < 0) {
+                    break;
+                }
+                int end = sql.indexOf(");", start);
+                assertThat(end).isGreaterThan(start);
+
+                var matcher = QUOTED_VALUE.matcher(sql.substring(start, end));
+                while (matcher.find()) {
+                    names.add(matcher.group(1));
+                }
+                cursor = end + 2;
+            }
         }
         return names;
     }
