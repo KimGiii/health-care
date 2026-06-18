@@ -29,6 +29,9 @@ public interface FoodAllergenTagRepository extends JpaRepository<FoodAllergenTag
 
     void deleteByFoodCatalogIdAndSource(Long foodCatalogId, AllergenDataSource source);
 
+    @Query("SELECT DISTINCT f.foodCatalogId FROM FoodAllergenTag f")
+    List<Long> findFoodIdsWithAnyAllergenTag();
+
     default void replaceBySource(Long foodCatalogId, AllergenDataSource source, List<FoodAllergenTag> tags) {
         deleteByFoodCatalogIdAndSource(foodCatalogId, source);
         flush();
