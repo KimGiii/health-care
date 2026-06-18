@@ -12205,6 +12205,166 @@
         }
       }
     },
+    "recommend.error.feedback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to send feedback."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "피드백 전송에 실패했습니다."
+          }
+        }
+      }
+    },
+    "recommend.feedback.hardToPrepare" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard to prepare"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조리가 어려워요"
+          }
+        }
+      }
+    },
+    "recommend.feedback.noReason" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Just refresh"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그냥 다시 추천"
+          }
+        }
+      }
+    },
+    "recommend.feedback.notHungry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not hungry right now"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 배가 안 고파요"
+          }
+        }
+      }
+    },
+    "recommend.feedback.nutritionDislike" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not feeling this nutrition balance"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영양 구성이 마음에 안 들어요"
+          }
+        }
+      }
+    },
+    "recommend.feedback.portionWrong" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portion size is off"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "양이 맞지 않아요"
+          }
+        }
+      }
+    },
+    "recommend.feedback.recentlyAte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recently ate this"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근에 먹었어요"
+          }
+        }
+      }
+    },
+    "recommend.feedback.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll use your reason to find a better match."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이유를 알려주시면 더 잘 맞는 식단을 추천해 드릴게요."
+          }
+        }
+      }
+    },
+    "recommend.feedback.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why refresh?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 추천받는 이유를 알려주세요"
+          }
+        }
+      }
+    },
+    "recommend.refresh.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get New Recommendation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 추천받기"
+          }
+        }
+      }
+    },
     "recommend.loading" : {
       "localizations" : {
         "en" : {

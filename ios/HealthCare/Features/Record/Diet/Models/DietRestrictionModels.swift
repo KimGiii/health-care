@@ -119,11 +119,32 @@ struct CreateDietRestrictionRequest: Encodable {
 
 // MARK: - Recommendation
 
+struct FeedbackRequest: Encodable {
+    let reason: RecommendationFeedbackReason
+}
+
 struct DailyDietRecommendationRequest: Encodable {
     let date: String           // "yyyy-MM-dd"
     let mealTypes: [String]
     let strictAllergyMode: Bool
     let alternativeCount: Int
+}
+
+enum RecommendationFeedbackReason: String, Codable, CaseIterable, Identifiable {
+    case NOT_HUNGRY, RECENTLY_ATE, PORTION_WRONG, HARD_TO_PREPARE, NUTRITION_DISLIKE, NO_REASON
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .NOT_HUNGRY:       return String(localized: "recommend.feedback.notHungry")
+        case .RECENTLY_ATE:     return String(localized: "recommend.feedback.recentlyAte")
+        case .PORTION_WRONG:    return String(localized: "recommend.feedback.portionWrong")
+        case .HARD_TO_PREPARE:  return String(localized: "recommend.feedback.hardToPrepare")
+        case .NUTRITION_DISLIKE:return String(localized: "recommend.feedback.nutritionDislike")
+        case .NO_REASON:        return String(localized: "recommend.feedback.noReason")
+        }
+    }
 }
 
 struct DailyDietRecommendationResponse: Codable {
@@ -137,6 +158,7 @@ struct DailyDietRecommendationResponse: Codable {
     let strictAllergyMode: Bool
     let disclaimer: String
     let alternatives: [[RecommendedMeal]]
+    let snapshotId: Int?
 
     var succeeded: Bool { failureReason == nil }
 

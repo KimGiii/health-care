@@ -30,6 +30,12 @@ struct DietRecommendationView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .sheet(isPresented: $viewModel.showFeedbackSheet) {
+            RecommendationFeedbackSheet { reason in
+                Task { await viewModel.requestRefresh(reason: reason, apiClient: container.apiClient) }
+            }
+            .presentationDetents([.medium])
+        }
     }
 
     // MARK: - Config Card
@@ -168,6 +174,9 @@ struct DietRecommendationView: View {
         }
         if !result.alternatives.isEmpty {
             alternativesSection(result.alternatives)
+        }
+        if result.snapshotId != nil {
+            refreshButton
         }
         disclaimerCard(result.disclaimer)
     }
@@ -434,6 +443,34 @@ struct DietRecommendationView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    private var refreshButton: some View {
+        Button {
+            viewModel.showFeedbackSheet = true
+        } label: {
+            HStack(spacing: 6) {
+                if viewModel.isSendingFeedback {
+                    ProgressView().controlSize(.small).tint(Color.brandAccent)
+                } else {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                Text("recommend.refresh.cta")
+                    .font(.subheadline).fontWeight(.medium)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.surfaceCard)
+            .foregroundStyle(Color.brandAccent)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.brandAccent.opacity(0.4), lineWidth: 1)
+            )
+            .elevation(.low)
+        }
+        .disabled(viewModel.isSendingFeedback)
+    }
+
     private func disclaimerCard(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "info.circle")
@@ -447,5 +484,53 @@ struct DietRecommendationView: View {
         .padding(12)
         .background(Color.surfaceSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+// MARK: - Feedback Sheet
+
+struct RecommendationFeedbackSheet: View {
+    let onSelect: (RecommendationFeedbackReason) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("recommend.feedback.title")
+                    .font(.title3).fontWeight(.bold)
+                    .foregroundStyle(Color.textPrimary)
+                Text("recommend.feedback.subtitle")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.textSecondary)
+            }
+            .padding(.top, 8)
+
+            VStack(spacing: 10) {
+                ForEach(RecommendationFeedbackReason.allCases) { reason in
+                    Button {
+                        dismiss()
+                        onSelect(reason)
+                    } label: {
+                        HStack {
+                            Text(reason.displayName)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(Color.textTertiary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(Color.surfaceCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .background(Color.backgroundPage)
     }
 }

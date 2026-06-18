@@ -55,6 +55,7 @@ enum APIEndpoint {
     case deleteDietRestriction(id: Int)
     // Diet - Recommendation
     case getDailyRecommendation(body: Data)
+    case postRecommendationFeedback(snapshotId: Int, body: Data)
 
     // Body Measurement
     case createBodyMeasurement(body: Data)
@@ -126,6 +127,8 @@ extension APIEndpoint {
                                                  return "/api/v1/diet/restrictions"
         case .deleteDietRestriction(let id):     return "/api/v1/diet/restrictions/\(id)"
         case .getDailyRecommendation:            return "/api/v1/diet/recommendations/daily"
+        case .postRecommendationFeedback(let snapshotId, _):
+                                                 return "/api/v1/diet/recommendations/\(snapshotId)/feedback"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
@@ -161,7 +164,8 @@ extension APIEndpoint {
              .analyzeMealPhoto, .confirmMealPhotoAnalysis,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
              .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise,
-             .createDietRestriction, .getDailyRecommendation:
+             .createDietRestriction, .getDailyRecommendation,
+             .postRecommendationFeedback:
             return .POST
         case .updateProfile, .updateGoal,
              .markNotificationRead, .markAllNotificationsRead:
@@ -189,7 +193,8 @@ extension APIEndpoint {
              .createGoal(let b), .updateGoal(_, let b),
              .aiEstimateFood(let b), .aiEstimateExercise(let b),
              .createCustomFood(let b), .createCustomExercise(let b),
-             .createDietRestriction(let b), .getDailyRecommendation(let b):
+             .createDietRestriction(let b), .getDailyRecommendation(let b),
+             .postRecommendationFeedback(_, let b):
             return b
         default:
             return nil

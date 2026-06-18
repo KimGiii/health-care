@@ -10,6 +10,8 @@ final class DietRecommendationViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published private(set) var savingMealTypes: Set<MealType> = []
     @Published private(set) var savedMealTypes: Set<MealType> = []
+    @Published var showFeedbackSheet = false
+    @Published private(set) var isSendingFeedback = false
 
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -74,6 +76,24 @@ final class DietRecommendationViewModel: ObservableObject {
 
     func isSaved(_ meal: RecommendedMeal) -> Bool {
         savedMealTypes.contains(meal.mealType)
+    }
+
+    func requestRefresh(reason: RecommendationFeedbackReason, apiClient: APIClient) async {
+        guard let snapshotId = result?.snapshotId else { return }
+        isSendingFeedback = true
+        showFeedbackSheet = false
+        defer { isSendingFeedback = false }
+        do {
+            let body = try JSONEncoder().encode(FeedbackRequest(reason: reason))
+            try await apiClient.requestVoid(
+                .postRecommendationFeedback(snapshotId: snapshotId, body: body)
+            )
+            await recommend(apiClient: apiClient)
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = String(localized: "recommend.error.feedback")
+        }
     }
 
     func toggleMeal(_ meal: MealType) {
