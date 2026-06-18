@@ -313,6 +313,33 @@ class DietRecommendationEngineTest {
         }
 
         @Test
+        @DisplayName("후보가 소진되면 요청한 수보다 적은 대안을 반환하고 중복 대안을 만들지 않는다")
+        void recommendAlternatives_candidatesExhausted_returnsFewerThanRequested() {
+            // LUNCH 1끼 × 3대안 = 9개 고유 음식 필요, 후보는 6개뿐 → 2개 대안만 가능
+            List<DietRecommendationCandidate> smallPool = List.of(
+                    food(1L, "현미밥",   FoodCategory.GRAIN,          350.0),
+                    food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
+                    food(3L, "브로콜리", FoodCategory.VEGETABLE,       34.0),
+                    food(4L, "보리밥",   FoodCategory.GRAIN,          340.0),
+                    food(5L, "두부",     FoodCategory.PROTEIN_SOURCE,  76.0),
+                    food(6L, "시금치",   FoodCategory.VEGETABLE,       23.0)
+            );
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<List<RecommendedMeal>> alts = engine.recommendAlternatives(
+                    3, LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.LUNCH), smallPool);
+
+            // 후보 소진 후 중복 대안은 생성하지 않는다
+            assertThat(alts).hasSizeLessThan(3);
+            // 반환된 대안들 간 음식 겹침이 없다
+            if (alts.size() == 2) {
+                assertThat(recommendedFoodIdsSet(alts.get(0)))
+                        .doesNotContainAnyElementsOf(recommendedFoodIdsSet(alts.get(1)));
+            }
+        }
+
+        @Test
         @DisplayName("대안 식단 간 음식 ID가 중복되지 않는다 (후보가 충분할 때)")
         void recommendAlternatives_noFoodOverlapAcrossAlts() {
             NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);

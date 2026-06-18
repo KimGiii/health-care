@@ -113,7 +113,7 @@ public class DietRecommendationEngine {
             List<DietRecommendationCandidate> pool = candidates.stream()
                     .filter(f -> !excludedFoodIds.contains(f.foodCatalogId()))
                     .toList();
-            if (pool.isEmpty()) pool = candidates;
+            if (pool.isEmpty()) break;
 
             List<RecommendedMeal> alt = recommend(date, targets, selectedMeals, pool);
             results.add(alt);

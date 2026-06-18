@@ -250,12 +250,39 @@ class DailyDietRecommendationUseCasesTest {
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
         given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        // LUNCH 1끼 × 대안 2개 → 후보 6개로 충분 (각 대안 3슬롯 × 2 = 6)
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
-                requestWithAlternatives(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER), 2));
+                requestWithAlternatives(List.of(MealType.LUNCH), 2));
 
         assertThat(response.alternatives()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("후보가 부족해 alternativeCount보다 적은 대안이 생성되면 실제 생성된 수만큼 반환된다")
+    void recommend_alternativeCountExceedsCandidates_returnsFewerAlternatives() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        // 후보 6개 — LUNCH 1끼 3슬롯 기준 최대 2개 대안 가능
+        given(candidatePool.load(any(), anyBoolean())).willReturn(new DietRecommendationCandidates(List.of(
+                food(1L, "현미밥",   FoodCategory.GRAIN,          350.0),
+                food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
+                food(3L, "브로콜리", FoodCategory.VEGETABLE,       34.0),
+                food(4L, "보리밥",   FoodCategory.GRAIN,          340.0),
+                food(5L, "두부",     FoodCategory.PROTEIN_SOURCE,  76.0),
+                food(6L, "시금치",   FoodCategory.VEGETABLE,       23.0)
+        )));
+
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                requestWithAlternatives(List.of(MealType.LUNCH), 5));
+
+        // 요청 5개지만 후보 소진으로 실제 가능한 수만 반환
+        assertThat(response.alternatives()).hasSizeLessThan(5);
+        assertThat(response.alternatives()).isNotEmpty();
     }
 
     @Test
