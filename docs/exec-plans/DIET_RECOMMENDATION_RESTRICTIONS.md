@@ -1,8 +1,8 @@
 # 제외 식품·알러지 기반 하루 식단 추천 실행 계획
 
 작성일: 2026-06-02
-개정일: 2026-06-16
-상태: P0 계약/안전 게이트/후보 부족 처리 완료, P1 iOS UX 연결·DB 중복 제약·식품 카탈로그 local 검증·seed 커버리지 리포트 완료, seed 보강·브랜드 알러젠 경로·iOS 테스트·staging/운영 전량 적재 결정 남음
+개정일: 2026-06-17
+상태: P0 계약/안전 게이트/후보 부족 처리 완료, P1 iOS UX 연결·DB 중복 제약·식품 카탈로그 local 검증·seed 커버리지 리포트·seed 보강·브랜드 알러젠 CSV 경로·iOS 테스트 완료, staging/운영 검증 남음
 대상: 백엔드, iOS, 제품 기획
 상위 문서: [DIET_RECOMMENDATION_RESTRICTIONS_PRD.md](../product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md) (제품 기획서)
 결정 기준: 제품 PRD와 `docs/exec-plans/diet_recommendation_prd.md`의 합의 사항을 함께 따른다.
@@ -11,7 +11,7 @@
 > 본 문서는 **구현 방법(How)**을 다룬다. 기능의 목적·범위·제품 결정(What/Why)은 위 결정 기준 문서를 따른다.
 > 2026-06-04 확정된 두 PRD 기준에 맞춰 v1 출시 범위, 안전 원칙, 데이터 운영 경계, iOS 진입점을 재정리함.
 
-## 0. 2026-06-16 작업 현황
+## 0. 2026-06-17 작업 현황
 
 현재 작업 브랜치는 `feat/allegen-recommendation`이며, 알러젠 식단 추천과 식품 카탈로그 강화 작업을 이 브랜치에서만 진행한다는 운영 원칙과 일치한다.
 
@@ -22,7 +22,8 @@
 | 백엔드 스키마 | `V22__allergen_restriction_schema.sql`로 `diet_restrictions`, `food_allergen_tags` 테이블 추가 완료 |
 | 알러젠 태그 | 한국 의무표시 19종 + 합성 식이 제한 태그 `GLUTEN` enum 구현 완료 |
 | 알러젠 시드 | `V26__seed_allergen_tags.sql`로 단일재료 중심 `DIRECT_VERIFIED` 태그 seed 추가 완료 |
-| P1 seed 커버리지 리포트 | `docs/references/ALLERGEN_SEED_COVERAGE_2026-06-16.md`로 V25 추천 후보 42개 기준 커버리지와 보강 우선순위 정리 완료 |
+| P1 seed 커버리지 리포트 | `docs/references/ALLERGEN_SEED_COVERAGE_2026-06-16.md`로 V25 추천 후보 42개 기준 커버리지와 `V30` 보강 결과 정리 완료 |
+| P1 seed 보강 | `V30__seed_allergen_tags_p1_coverage.sql`로 `TOMATO`, `SOY`, `WHEAT`/`GLUTEN`, `PEACH`를 보강하고 `Buckwheat`의 `GLUTEN` 태그 제거 완료 |
 | 사용자 제한 조건 API | `GET/POST/DELETE /api/v1/diet/restrictions` 구현 완료 |
 | 관리자 알러젠 태그 API | `POST /api/v1/admin/diet/allergen-tags`, `POST /bulk`, `GET /food/{foodCatalogId}`, `DELETE /{tagId}` 구현 완료 |
 | 하루 식단 추천 API | `POST /api/v1/diet/recommendations/daily` 구현 완료 |
@@ -34,9 +35,11 @@
 | P1 DB 중복 제약 | `V29__diet_restrictions_active_unique_indexes.sql`로 활성 제한 조건의 대상별 부분 유니크 인덱스 추가 완료 |
 | iOS 모델/네트워크 | `APIEndpoint`, 제한 조건 모델, 하루 추천 모델 추가 완료 |
 | iOS 화면 | `DietRestrictionView`, `DietRecommendationView`와 ViewModel 1차 구현, 식단 탭 상단 추천 카드, 추천 끼니 기록하기 연결 완료 |
-| 테스트 | 백엔드 제한 조건, 알러젠 게이트, 관리자 알러젠 태그, 추천 후보 풀, 추천 API 단위/컨트롤러 테스트 추가 완료 |
+| 테스트 | 백엔드 제한 조건, 알러젠 게이트, 관리자 알러젠 태그, 추천 후보 풀, 추천 API 단위/컨트롤러 테스트와 iOS 제한/추천 ViewModel 테스트 추가 완료 |
 | 식품 카탈로그 local 검증 | 공공데이터 smoke/제한 배치와 `processed-foods` 대량 적재 검증 완료. local DB는 총 `food_catalog=136783`, `MFDS_STANDARD_PROCESSED=135459`, `MFDS_STANDARD_DISH=500`, `MFDS_FOOD_NUTRIENT_DB=499`, `SEED=300`, `USER_CUSTOM=25` 상태이며 공공데이터 항목은 모두 `SEARCH_ONLY` |
 | 공공데이터 importer 보정 | `processed-foods` 1484페이지의 제조사명 150자 초과 장애를 재현하고, 외부 문자열을 `food_catalog` 컬럼 한도에 맞춰 정규화/절단하도록 보정 완료 |
+| 브랜드 알러젠 적재 경로 | 브랜드 메뉴 CSV에 `allergen_tags`, `allergen_profile_verified`를 추가하고 `LABEL_DERIVED`/`BRAND_OFFICIAL` 태그 적재 경로 확정 완료 |
+| 브랜드 공식 메뉴 알러젠 CSV | 버거킹·맥도날드·롯데리아 공식 알러젠/영양 376행을 `docs/references/brand_menu_allergen_verified_2026-06-17.csv`로 검수 완료. 실제 CSV 검증 결과 3개 브랜드, 전부 `SEARCH_ONLY`, `allergen_profile_verified=true` 331행, 알러젠 공란 45행, `profile_true_without_tags=0` |
 
 ### 0.2 현행 구현 기준
 
@@ -48,16 +51,16 @@
 - 이 모델은 PRD §6.6과 정합화했다. 별도 "없음 주장" 테이블은 v1에서 만들지 않고, 태그 없음만으로 안전을 단정하지 않는다.
 - 공공데이터 적재 항목은 검색/기록 커버리지 보강용이며, 알러젠 검토와 추천 큐레이션 없이 추천 후보로 자동 승격하지 않는다. local에서는 smoke/제한 배치/대표 대량 장애 케이스 검증으로 충분하므로 모든 공공데이터를 끝까지 적재하지 않는다.
 
-### 0.3 남은 작업
+### 0.3 이후 작업
 
 | 우선순위 | 작업 | 이유/완료 기준 |
 |---:|---|---|
-| P1 | 알러젠 seed 보강 마이그레이션 | 커버리지 리포트 기준 `TOMATO`, `SOY`, `WHEAT/GLUTEN`, `PEACH`를 우선 보강하고 `Buckwheat`의 `GLUTEN` 태그 정책을 확정한다. |
-| P1 | 브랜드 공식 메뉴 알러젠 적재 경로 확정 | 버거킹/서브웨이/롯데리아 등 수집 레퍼런스를 `BRAND_OFFICIAL` 식품과 `LABEL_DERIVED` 태그로 연결할 CSV/관리자 운영 절차가 필요하다. |
-| P1 | iOS 테스트 추가 | 제한 조건 목록/추가/삭제, 추천 성공/실패, Strict 토글, 후보 부족 메시지, 의료 안전 단정 문구 부재를 테스트한다. |
+| 완료 | 출시 추천 후보 큐레이션 보강 | 브랜드 공식 메뉴 CSV 376행 중 12개를 `RECOMMENDABLE_WITH_CAUTION`으로 승격했다. 현재 로컬 DB 추천 후보는 seed 42개 + 브랜드 공식 주의 후보 12개 = 54개다. 브랜드 후보는 탄수화물·총지방 공식 미공개와 나트륨/포화지방 주의 사유를 응답 caution으로 남긴다. |
+| 완료 | iOS 테스트 추가 | 제한 조건 목록/추가/삭제, 추천 성공/실패, Strict 토글, 후보 부족 메시지, 의료 안전 단정 문구 부재를 ViewModel 단위 테스트로 확인했다. |
 | P2 | staging/운영 검증 | local DB에서는 Flyway, admin token fail-closed, 실제 공공 API smoke/제한 배치, `SEARCH_ONLY` 기본값, importer 길이 초과 보정을 확인했다. staging/운영에서는 전량 적재 실행 여부, rate limit, dedup 리포트, 출시 후보 추천 수를 별도 검증한다. |
 | P2 | 데이터 라이선스 근거 정리 | 국민건강영양조사 음식별 식품재료량 DB, 푸드QR/OFF, 브랜드 공식 자료의 사용 범위를 문서화한다. |
 | P2 | 카피/표시 정책 다듬기 | 알러젠 주의 문구, Strict 설명, `GLUTEN`의 의무표시 외 합성 태그 표현을 한국어/영어 로컬라이징 기준으로 고정한다. |
+| P2 | 브랜드 공식 메뉴 추가 커버리지 | 서브웨이 알러젠 이미지표 OCR/수동 검수와 버거킹 무영양 플래그십 21개 재수집은 v1 필수 CSV 완료 범위에서 분리한다. |
 
 ## 1. 기능 목표
 
@@ -127,7 +130,7 @@ CREATE TABLE diet_restrictions (
 현행 구현 메모:
 
 - 실제 `V22__allergen_restriction_schema.sql`은 `restriction_type VARCHAR(10)`과 조회 인덱스를 사용한다.
-- DB 유니크 인덱스는 아직 없고, 중복 방지는 `DietRestrictionUseCases`와 repository 조회로 처리한다. 동시 요청까지 막으려면 DB 제약을 후속 보강해야 한다.
+- `V29__diet_restrictions_active_unique_indexes.sql`로 활성 제한 조건의 대상별 부분 유니크 인덱스를 추가했다. 애플리케이션 레벨 중복 검증은 사용자에게 빠른 오류 메시지를 주는 1차 방어로 유지한다.
 
 ### 3.2 알러지 태그 매핑
 
@@ -433,10 +436,10 @@ iOS에서는 추천 결과를 장기 캐시하지 않는다. 화면 재진입 �
 | 순서 | 작업 | 상태 | 메모 |
 |---:|---|---|---|
 | 1 | PRD 기준 수용 조건 확정 | 완료 | 무료, 규칙 기반, 하루 단위, 끼니 선택, 기존 기록 API 재사용, 포함 태그 + 프로필 검토 기반 알러젠 모델로 정합화 |
-| 2 | 백엔드 마이그레이션 추가 | 완료 | V22 제한/알러젠 스키마, V26 알러젠 seed 추가 |
+| 2 | 백엔드 마이그레이션 추가 | 완료 | V22 제한/알러젠 스키마, V26 알러젠 seed, V27 Strict 프로필 검토, V29 제한 조건 중복 인덱스, V30 P1 seed 보강 추가 |
 | 3 | 제한 조건 엔티티, DTO, Repository, Service, Controller 구현 | 완료 | `DietRestrictionUseCases`, `DietRestrictionController` 구현 |
 | 4 | 알러지 태그 엔티티와 Repository 구현 | 완료 | `FoodAllergenTag`, `FoodAllergenTagRepository` 구현 |
-| 5 | 허용 가능한 출처 기준에 맞춰 최소 알러젠 시드 구성 | 부분 완료 | 단일재료 중심 V26 완료. 브랜드/라벨/복합식품 커버리지는 남음 |
+| 5 | 허용 가능한 출처 기준에 맞춰 최소 알러젠 시드 구성 | 부분 완료 | 단일재료 중심 V26과 P1 allowlist 보강 V30 완료. 브랜드/라벨/복합식품 커버리지는 남음 |
 | 6 | 추천 요청/응답 DTO 구현 | 완료 | `DailyDietRecommendationRequest/Response`, `RecommendedMeal`, `RecommendedFoodEntry` 구현 |
 | 7 | 규칙 기반 추천 엔진 구현 | 완료 | 날짜 기반 deterministic rotation 포함 |
 | 8 | 하루 추천 Controller 구현 | 완료 | `POST /api/v1/diet/recommendations/daily` |

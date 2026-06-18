@@ -2,9 +2,9 @@
 
 작성일: 2026-06-04
 
-개정일: 2026-06-16
+개정일: 2026-06-17
 
-상태: 1단계 완료, 2단계 파이프라인 완료 및 local 검증 충분, 3단계 완료, 4단계 완료, 5단계 완료
+상태: 1단계 완료, 2단계 파이프라인 완료 및 local 검증 충분, 3단계 완료, 4단계 완료, 5단계 완료, 6단계는 staging 전량 적재 검증 대기 및 운영 전량 적재 보류
 
 대상: 백엔드, 데이터 운영, 추천 엔진, iOS 검색/기록 UX
 
@@ -67,8 +67,25 @@
 
 1. 기존 가공식품/음식 표준데이터와 식품명/제조사/영양값 기준 중복률 확인
 2. `FoodNtrCpntDbInfo02`가 더 안정적으로 제공하는 필드 확인
-3. 동일 식품은 source priority와 최신성 기준으로 병합
+3. 동일 식품 후보는 source priority와 최신성 기준으로 대표 후보를 제안하되, 자동 병합하지 않고 운영자가 수동 검수한다.
 4. 기존 2종에 없는 식품 또는 제공량/식품코드 보강이 가능한 항목만 추가/갱신
+
+source priority는 2026-06-18 기준 다음 순서로 확정한다.
+
+1. `BRAND_OFFICIAL`
+2. `MFDS_STANDARD_DISH`
+3. `MFDS_STANDARD_PROCESSED`
+4. `MFDS_FOOD_NUTRIENT_DB`
+5. `SEED`
+6. `USER_CUSTOM`
+
+수동 병합 기준:
+
+- 자동 병합은 v1에서 금지한다. dedup 리포트는 대표 후보(`suggestedCanonicalId`)와 entry별 `sourcePriorityRank`만 제안한다.
+- 브랜드명이 다르면 같은 메뉴명이어도 병합하지 않는다.
+- 같은 브랜드/메뉴 또는 동일 제품이라고 판단하려면 원문명, 제조사/브랜드, 제공량, 열량, 단백질, 나트륨, 당류, 포화지방을 함께 비교한다.
+- 대표 후보는 source priority와 최신 검수일을 기준으로 제안할 뿐, 운영자가 원문 source URL 또는 공공데이터 식별자를 확인한 뒤 확정한다.
+- 병합 실행은 v1에서 삭제가 아니라 `SEARCH_ONLY` 하향, 표시명 교정, alias 보강, 후속 migration/API 설계 중 하나로 처리한다.
 
 ### 3.3 브랜드 공식 메뉴의 위치
 
@@ -210,12 +227,22 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 - `last_verified_at`
 - `recommendation_status`
 - `recommendation_reason`
+- `allergen_tags`
+- `allergen_profile_verified`
+
+알러젠 컬럼 운영 기준:
+
+- `allergen_tags`는 브랜드 공식 라벨/알러젠 표에서 확인한 포함 알러젠을 입력한다. 한국어 라벨(`우유`, `대두`, `밀`, `난류`, `쇠고기` 등)과 내부 enum 코드(`MILK`, `SOY`, `WHEAT`)를 허용한다. 여러 값은 쉼표, `|`, `/` 중 하나로 구분한다.
+- `allergen_profile_verified`는 해당 메뉴의 공식 알러젠 표를 완결된 프로필로 검토했을 때만 `true`로 입력한다. 값은 `true` 또는 `false`만 허용한다.
+- v1은 포함 태그만 저장하므로 `allergen_profile_verified=true`에는 포함 알러젠이 1개 이상 필요하다. 공식 표에 알러젠이 없다고 표시된 메뉴의 "없음 주장"은 별도 테이블이 생기기 전까지 표현하지 않는다.
+- 브랜드 CSV가 알러젠 검토값을 포함하면 동일 `BRAND_OFFICIAL` 메뉴의 기존 알러젠 태그를 CSV 내용으로 교체한다. 포함 태그는 `confidence_level=LABEL_DERIVED`, `source=BRAND_OFFICIAL`로 저장한다.
+- 알러젠 정보가 아직 검수되지 않은 메뉴는 두 컬럼을 비워 두고, 추천 후보 승격은 별도 큐레이션 완료 후 진행한다.
 
 ---
 
 ## 7. 추천 적합성 게이트
 
-추천 후보는 `food_catalog` 전체가 아니라 추천 적합성 게이트를 통과한 일부 항목만 사용한다. 다만 Phase 4의 런타임 범위는 `recommendation_status` 계약과 추천 응답 노출까지로 제한한다. 나트륨/당류/포화지방의 자동 판정 기준값 산정은 데이터 운영 작업으로 분리해, CSV/관리자 검수 정책에서 먼저 검증한 뒤 후속 자동화 여부를 결정한다.
+추천 후보는 `food_catalog` 전체가 아니라 추천 적합성 게이트를 통과한 일부 항목만 사용한다. 다만 Phase 4의 런타임 범위는 `recommendation_status` 계약과 추천 응답 노출까지로 제한한다. 나트륨/당류/포화지방의 판정 기준값은 데이터 운영 작업으로 분리하며, 브랜드 공식 메뉴 CSV 입력에서 기준 초과 항목을 일반 `RECOMMENDABLE`로 넣으면 row를 거절한다.
 
 초기 판단 기준:
 
@@ -225,6 +252,24 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 | `RECOMMENDABLE_WITH_CAUTION` | 추천 가능하지만 나트륨, 당류, 포화지방 등 운영 검수 기준상 주의 표시가 필요 |
 | `SEARCH_ONLY` | 검색/기록에는 유용하지만 추천 목표와 맞지 않거나 영양/알러젠 정보가 부족 |
 | `DISABLED` | 결측/오류/검수 실패/만료 |
+
+추천 주의 기준값:
+
+| 영양소 | 1회 제공량 기준 | 부여 사유 |
+|---|---:|---|
+| 나트륨 | 600mg 이상 | `나트륨 주의` |
+| 당류 | 15g 이상 | `당류 주의` |
+| 포화지방 | 4.5g 이상 | `포화지방 주의` |
+
+`RECOMMENDABLE_WITH_CAUTION` 부여 기준:
+
+- 위 기준 중 하나라도 넘고 추천 후보로 쓸 수 있는 메뉴는 `RECOMMENDABLE_WITH_CAUTION`으로만 승격한다.
+- 여러 기준을 넘으면 `나트륨/당류/포화지방 주의`처럼 고정 순서로 사유를 합친다.
+- 기준을 넘는 항목을 `RECOMMENDABLE`로 입력하면 CSV row를 거절한다.
+- 기준을 넘더라도 메뉴 자체가 추천 목적과 맞지 않거나 세트/대용량/영양 결측이 크면 `SEARCH_ONLY`를 유지한다.
+- 이 기준은 개인별 의학적 권고가 아니라 카탈로그 추천 후보 운영 기준이다.
+
+참고 근거: [WHO Sodium reduction](https://www.who.int/news-room/fact-sheets/detail/sodium-reduction), [WHO Sugars intake guideline](https://www.who.int/news/item/04-03-2015-who-calls-on-countries-to-reduce-sugars-intake-among-adults-and-children), [WHO fats/carbohydrates guideline update](https://www.who.int/news/item/17-07-2023-who-updates-guidelines-on-fats-and-carbohydrates). 포화지방 4.5g 기준은 국내 브랜드 공식 영양표의 포화지방 일일 기준치 15g/day에서 30%를 적용한 운영 기준이다.
 
 추천 런타임 처리:
 
@@ -299,17 +344,17 @@ seed allowlist 최소 기준:
 
 ## 10. 구현 순서
 
-### 현재 작업 목록(2026-06-15)
+### 현재 작업 목록(2026-06-17)
 
 | 단계 | 상태 | 완료 내용 | 다음 액션 |
 |---|---|---|---|
-| 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
+| 0단계 데이터 프로파일링 | 1차 완료 | 공공데이터 3종 샘플 비교, 필드 매핑, source priority 초안 정리 후 2026-06-18 운영 기준 확정 | 전체 crawl 프로파일러는 importer 단계에서 진행 |
 | 1단계 스키마 보강 | 완료 | V23 마이그레이션, `FoodCatalog` 메타데이터, source/recommendation enum, 응답 DTO, repository 반영 | 운영 DB 적용 전 Flyway 실행 환경 확인 |
 | 4단계 추천 게이트 적용 | **완료** | 추천 후보 조회 필터 + `RecommendedFoodEntry.caution` 필드로 주의 사유 응답 노출 | — |
 | 2단계 공공데이터 배치 적재 | 파이프라인 완료, local 검증 충분 | row importer, page fetcher, 배치 runner, 재시작 체크포인트, rate limit 훅, 중복 후보 리포터, 관리자 API 구현. local DB에서 smoke/제한 배치와 대량 적재 중 길이 초과 장애 케이스까지 확인 | 전량 적재는 local 필수 작업이 아니라 staging/운영 runbook으로 전환 |
 | 3단계 브랜드 CSV 적재 | **완료** | `BrandMenuCsvImporter`, 관리자 CSV 업로드 API, 템플릿 CSV | — |
 | 5단계 검색/기록 경로 정리 | **완료** | iOS 외부 API 경로 전면 제거(`ExternalFoodResult`, `ImportFoodRequest`, `FoodDataSource` 삭제, `DietFoodSearching` 프로토콜 단순화), 내부 카탈로그 단일 경로 고정. `ExternalFoodController`는 관리자 도구 전용으로 유지 | — |
-| 6단계 테스트와 운영 검증 | 진행 중 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터, V25 seed 큐레이션 보정 테스트, 실제 API smoke/제한 배치 완료 | source별 전량 적재 완료 후 row count, skip 비율, `SEARCH_ONLY` 기본값, dedup 리포트 검증 |
+| 6단계 테스트와 운영 검증 | local 검증 완료, staging/운영 대기 | V23 필드, 커스텀 기본값, 추천 상태, 배치 runner, 중복 리포터, V25 seed 큐레이션 보정 테스트, 실제 API smoke/제한 배치, `processed-foods` 대량 장애 케이스와 importer 길이 보정 확인 | staging/운영 전량 적재 실행 여부 결정, rate limit, row count, skip 비율, `SEARCH_ONLY` 기본값, dedup 리포트 검증 |
 
 ### 0단계: 데이터 프로파일링
 
@@ -322,7 +367,7 @@ seed allowlist 최소 기준:
 
 - 데이터 비교 리포트
 - 필드 매핑표
-- source priority 초안
+- source priority 초안(2026-06-18 운영 기준으로 확정)
 
 진행 메모(2026-06-09):
 
@@ -447,6 +492,7 @@ local 검증 완료 판정:
 - `food_code`는 `brandName:menuName` 소문자 형식으로 생성한다. `source + food_code` 유니크 인덱스를 활용해 중복 없이 upsert한다.
 - `recommendation_status` 컬럼으로 메뉴 단위 추천 여부를 제어한다. 알 수 없는 값은 `SEARCH_ONLY`로 폴백한다.
 - `recommendation_status = RECOMMENDABLE_WITH_CAUTION`은 `recommendation_reason`을 필수로 요구한다. 다른 상태에서는 추천 사유를 저장하지 않아 추천 큐레이션 값 객체의 불변 조건과 맞춘다.
+- `allergen_tags`와 `allergen_profile_verified` 컬럼을 추가했다. 브랜드 공식 라벨에서 확인한 포함 알러젠은 `LABEL_DERIVED`/`BRAND_OFFICIAL` 태그로 저장하고, 완결 프로필 검토가 끝난 행만 `allergen_profile_verified=true`로 저장한다.
 - v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재로 처리한다. 개별 카탈로그 큐레이션 수정 API는 원본 CSV와 DB 상태 불일치 리스크가 있으므로 후속 운영 필요가 확인될 때 검토한다.
 - `FoodCatalogAdminController`에 `POST /api/v1/admin/diet/catalog/import/brand-csv` 엔드포인트를 추가해 `multipart/form-data` CSV 업로드를 받는다.
 - `docs/references/brand_menu_csv_template.csv`에 헤더·예시 행 포함 CSV 템플릿을 추가했다.
@@ -506,21 +552,33 @@ local 검증 완료 판정:
 
 ---
 
-## 12. 오픈 이슈
+## 12. 이후 작업
 
-- staging/운영 공공데이터 전량 적재 실행 여부 결정: local에서는 smoke/제한 배치/대표 장애 케이스 검증으로 충분하므로 전량 적재를 중단한다. 실제 전량 적재가 필요하면 staging 또는 운영 DB에서 `processed-foods` → `dish-foods` → `nutrient-db` 순서로 진행하고, 3개 source 모두 `exhausted=true`여야 완료다.
+| 우선순위 | 작업 | 산출물/완료 기준 |
+|---:|---|---|
+| 완료 | 브랜드 공식 메뉴 알러젠 데이터 입력 | 버거킹·맥도날드·롯데리아 공식 알러젠/영양 표를 `docs/references/brand_menu_allergen_verified_2026-06-17.csv`(376행)로 검수 완료. 실제 CSV 검증 결과 3개 브랜드, `allergen_profile_verified=true` 331행, 알러젠 공란 45행, `profile_true_without_tags=0`. `carbs`·`fat`은 3사 공식 공개 범위 밖이라 전행 공란 유지. 검수 리포트: `docs/references/BRAND_ALLERGEN_CSV_VERIFICATION_2026-06-17.md`. |
+| 완료 | 출시 추천 후보 큐레이션 보강 | seed allowlist 42개 외에 브랜드 공식 메뉴 12개를 `RECOMMENDABLE_WITH_CAUTION`으로 승격했다(브랜드별 4개). 로컬 DB 재적재 결과 `created=0`, `updated=376`, `skipped=0`, `BRAND_OFFICIAL` 알러젠 태그 1,436행, 중복 태그 0건, 전체 추천 후보 54개. 재적재 중 발견한 알러젠 태그 교체 flush 문제는 `FoodAllergenTagRepository.replaceBySource`에서 삭제 후 `flush()`하도록 보정했고 관련 테스트 통과. |
+| P2 | 브랜드 공식 메뉴 추가 커버리지 | 서브웨이 알러젠 이미지표 OCR/수동 검수와 버거킹 무영양 플래그십 21개 재수집은 v1 필수 CSV 완료 범위에서 분리한다. |
+| P2 | staging/운영 공공데이터 적재 판단 | 2026-06-18 기준 운영 전량 적재는 즉시 실행하지 않고 staging 전량 적재와 데이터 재사용 조건 확인을 먼저 통과해야 한다. 판단 근거와 운영 기록 양식은 `docs/references/FOOD_CATALOG_DATA_REUSE_AND_STAGING_VERIFICATION_2026-06-18.md`에 정리했다. |
+| 완료 | 중복 후보 검수와 병합 정책 | dedup 리포트에 `suggestedCanonicalId`와 `sourcePriorityRank`를 추가했다. 자동 병합 없이 source priority와 수동 병합 기준을 운영 문서에 확정했다. |
+| P2 | 데이터 재사용 근거 문서화 | 1차 완료: `docs/references/FOOD_CATALOG_DATA_REUSE_AND_STAGING_VERIFICATION_2026-06-18.md`에 표준데이터 2종, `FoodNtrCpntDbInfo02`, 국민건강영양조사 음식별 식품재료량 DB, 푸드QR/OFF, 브랜드 공식 자료의 사용 판단과 보류 조건을 정리했다. 표준데이터 2종의 명시적 `이용허락범위` 캡처와 푸드QR/국민건강영양조사 직접 재사용 조건 확인은 남은 P2다. |
+| P2 | 검색 품질 개선 검토 | 내부 카탈로그만으로 검색 공백이 남으면 `normalized_name`과 `pg_trgm` 인덱스 도입 여부를 실제 검색어 로그 기준으로 결정한다. |
+| 완료 | 추천 주의 기준값 확정 | 1회 제공량 기준 나트륨 600mg, 당류 15g, 포화지방 4.5g 이상이면 `RECOMMENDABLE_WITH_CAUTION` 사유가 필요하도록 확정했다. 브랜드 CSV에서 기준 초과 항목을 `RECOMMENDABLE`로 입력하면 row를 거절한다. |
+
+## 13. 오픈 이슈
+
+- staging/운영 공공데이터 전량 적재 실행 여부 결정: local에서는 smoke/제한 배치/대표 장애 케이스 검증으로 충분하므로 전량 적재를 중단한다. 운영 전량 적재는 즉시 실행하지 않고, staging에서 `processed-foods` → `dish-foods` → `nutrient-db` 순서로 3개 source 모두 `exhausted=true`를 확인한 뒤 row count, `attemptedCount`, skip 비율, `SEARCH_ONLY` 기본값, dedup 리포트, 데이터 재사용 조건을 운영 기록으로 남긴 경우에만 진행한다.
 - 운영 rate limit 값 확정: local 대량 검증에서는 기본 0ms로 일부 대량 적재가 가능했다. staging/운영에서 429/timeout이 발생하면 `app.food-api.import-page-delay-millis`를 설정한다.
 - `FoodNtrCpntDbInfo02`와 가공식품/음식 표준데이터의 실제 중복률 확인: 전량 적재 후 dedup 리포트 실행
-- 표준데이터 2종의 라이선스/재사용 조건 근거 문서화
-- 브랜드 공식 영양정보의 약관/재사용 조건 확인
+- 표준데이터 2종의 명시적 `이용허락범위` 캡처 또는 제공기관 확인
+- 브랜드 공식 영양정보의 약관/재사용 조건 확인. 현재는 사실값 수동 검수, source URL, 검수일 보존, 자동 크롤링 금지 원칙으로 제한한다.
 - 세트 메뉴를 단일 항목으로 둘지 구성품 기반으로 분리할지 v2에서 결정
-- 추천 적합성 게이트의 초기 나트륨/당류/포화지방 기준값 확정(Phase 4 런타임과 분리된 데이터 운영 작업)
 - 사용자 커스텀 식품을 추천 후보로 승격할 수 있는 검수 기준 정의
 - 앱 내 출처 고지 UI 위치 결정
 
 ---
 
-## 13. 막다른 길
+## 14. 막다른 길
 
 | 소스 | 사유 |
 |---|---|

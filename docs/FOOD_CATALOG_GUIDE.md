@@ -4,7 +4,7 @@
 
 **개정일**: 2026-06-10
 
-**상태**: MVP 구현 완료 / Phase 1 스키마 + Phase 2 배치 파이프라인·중복 리포터·관리자 API + Phase 3 브랜드 CSV + Phase 4 추천 큐레이션 응답 구현
+**상태**: MVP 구현 완료 / Phase 1 스키마 + Phase 2 배치 파이프라인·중복 리포터·관리자 API + Phase 3 브랜드 CSV + Phase 4 추천 큐레이션 응답 구현 / staging 전량 적재 판단 근거 정리
 
 **작업 브랜치**: `feat/allegen-recommendation`
 
@@ -14,7 +14,7 @@
 
 HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용자 커스텀 식품의 조합으로 운영됩니다. 이 문서는 2026-05-04에 구현된 **사용 횟수 추적** 및 **사용자 직접 등록** 기능을 설명합니다.
 
-2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 V23 스키마 보강과 추천 후보 필터(Phase 1)에 이어, 공공데이터 배치 적재 파이프라인, 동일 추정 중복 후보 리포터, 관리자 실행 API(Phase 2)가 완료되었습니다.
+2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 V23 스키마 보강과 추천 후보 필터(Phase 1)에 이어, 공공데이터 배치 적재 파이프라인, 동일 추정 중복 후보 리포터, 관리자 실행 API(Phase 2)가 완료되었습니다. 2026-06-17에는 버거킹·맥도날드·롯데리아 공식 메뉴 CSV 376행을 local DB에 적재하고, 브랜드별 4개씩 총 12개를 `RECOMMENDABLE_WITH_CAUTION` 출시 후보로 승격했습니다.
 
 앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
 
@@ -60,7 +60,30 @@ HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용
 
 현재 추천 후보 조회는 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 상태만 포함합니다. `SEARCH_ONLY`, `DISABLED` 항목은 검색/기록 정책과 별개로 추천 후보에서는 제외됩니다.
 
-나트륨·당류·포화지방 기준값으로 추천 상태를 자동 판정하는 작업은 런타임 추천 로직과 분리된 데이터 운영 작업입니다. v1에서는 CSV/관리자 검수로 `recommendation_status`를 명시하고, 기준값은 실제 샘플과 운영 리포트를 본 뒤 후속 자동화 여부를 결정합니다.
+나트륨·당류·포화지방 기준값으로 추천 상태를 판정하는 작업은 런타임 추천 로직과 분리된 데이터 운영 작업입니다. v1에서는 CSV/관리자 검수로 `recommendation_status`를 명시하되, 브랜드 공식 메뉴 CSV 입력에서 아래 기준을 넘는 항목을 일반 `RECOMMENDABLE`로 넣으면 row를 거절합니다.
+
+추천 주의 기준값:
+
+| 영양소 | 1회 제공량 기준 | `RECOMMENDABLE_WITH_CAUTION` 사유 |
+|---|---:|---|
+| 나트륨 | 600mg 이상 | `나트륨 주의` |
+| 당류 | 15g 이상 | `당류 주의` |
+| 포화지방 | 4.5g 이상 | `포화지방 주의` |
+
+부여 기준:
+
+1. 위 기준 중 하나라도 넘고 추천 후보로 쓸 수 있는 메뉴는 `RECOMMENDABLE_WITH_CAUTION`으로만 승격합니다.
+2. 여러 기준을 넘으면 `나트륨/당류/포화지방 주의`처럼 고정 순서로 사유를 합칩니다.
+3. 기준을 넘는 항목을 `RECOMMENDABLE`로 입력하면 CSV row를 거절합니다.
+4. 기준을 넘더라도 메뉴 자체가 추천 목적과 맞지 않거나 세트/대용량/영양 결측이 크면 `SEARCH_ONLY`를 유지합니다.
+5. 이 기준은 개인별 의학적 권고가 아니라 카탈로그 추천 후보 운영 기준입니다.
+
+참고 근거:
+
+- [WHO Sodium reduction](https://www.who.int/news-room/fact-sheets/detail/sodium-reduction): 성인 나트륨 섭취 권고 상한 2000mg/day 미만
+- [WHO Sugars intake guideline](https://www.who.int/news/item/04-03-2015-who-calls-on-countries-to-reduce-sugars-intake-among-adults-and-children): free sugars를 총 에너지의 10% 미만으로 제한, 5% 미만이면 추가 이점
+- [WHO fats/carbohydrates guideline update](https://www.who.int/news/item/17-07-2023-who-updates-guidelines-on-fats-and-carbohydrates): 포화지방은 총 에너지의 10% 이하 권고
+- 국내 브랜드 공식 영양표의 포화지방 일일 기준치 표기는 15g/day 기준으로 해석됩니다.
 
 추천 다양성은 큐레이션 상태가 아니라 추천 엔진의 선택 전략에서 다룹니다. 같은 사용자/날짜/입력에서는 재현 가능한 결과를 주되, 날짜가 바뀌면 후보 우선순위가 회전하도록 deterministic rotation을 적용합니다. 최근 추천/최근 기록 기반 중복 억제는 v2 품질 개선으로 분리합니다.
 
@@ -225,7 +248,26 @@ app:
 - `nameKo`(없으면 `name`) 기준
 - 소문자 변환 후 `[공백, -, _, /, (), （）]` 제거
 
-자동 병합은 하지 않습니다. 그룹 정보(`normalizedKey`, 항목 목록)만 반환하며, 병합 여부는 운영자가 직접 판단합니다.
+자동 병합은 하지 않습니다. 그룹 정보(`normalizedKey`, 항목 목록), source priority 기준 대표 후보(`suggestedCanonicalId`), entry별 `sourcePriorityRank`만 반환하며, 병합 여부는 운영자가 직접 판단합니다.
+
+source priority:
+
+| 순위 | source | 판단 |
+|---:|---|---|
+| 1 | `BRAND_OFFICIAL` | 브랜드 공식 자료와 수동 검수일이 있어 같은 브랜드 메뉴의 대표 후보로 우선 |
+| 2 | `MFDS_STANDARD_DISH` | 외식/일반 음식 커버리지와 음식명 맥락이 좋음 |
+| 3 | `MFDS_STANDARD_PROCESSED` | 제조사/품목 식별에 강한 가공식품 기본 소스 |
+| 4 | `MFDS_FOOD_NUTRIENT_DB` | 기존 2종의 보강/비교 소스 |
+| 5 | `SEED` | 초기 추천 후보 유지용. 공공/공식 소스가 있으면 대표성 낮음 |
+| 6 | `USER_CUSTOM` | 사용자 기록용. 비커스텀 dedup 리포트에는 기본 포함하지 않음 |
+
+수동 병합 기준:
+
+1. 같은 `normalizedKey`라도 자동 병합하지 않습니다.
+2. 브랜드명이 다르면 같은 메뉴명이어도 병합하지 않습니다.
+3. 같은 브랜드/메뉴 또는 동일 제품이라고 판단하려면 원문명, 제조사/브랜드, 제공량, 열량, 단백질, 나트륨, 당류, 포화지방을 함께 비교합니다.
+4. 대표 후보는 source priority와 최신 검수일을 기준으로 제안할 뿐, 운영자가 원문 source URL 또는 공공데이터 식별자를 확인한 뒤 확정합니다.
+5. 병합 실행은 v1에서 삭제가 아니라 `SEARCH_ONLY` 하향, 표시명 교정, alias 보강, 후속 migration/API 설계 중 하나로 처리합니다.
 
 #### 관리자 API 엔드포인트
 
@@ -241,9 +283,11 @@ app:
 | `POST` | `/import/brand-csv` | 브랜드 공식 메뉴 CSV 수동 검수 적재 |
 | `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트 |
 
-import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, created/updated/skipped 수, exhausted 여부)를 포함합니다.
+import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, fetchedPageCount, created/updated/skipped 수, `attemptedCount`, `skippedRatio`, exhausted 여부)를 포함합니다.
 
 #### 공공데이터 전량 적재 운영 순서
+
+2026-06-18 기준 운영 전량 적재는 즉시 실행하지 않고, staging 전량 적재와 데이터 재사용 조건 확인을 먼저 통과해야 합니다. 결정 근거와 운영 기록 양식은 `docs/references/FOOD_CATALOG_DATA_REUSE_AND_STAGING_VERIFICATION_2026-06-18.md`를 기준으로 합니다.
 
 공공데이터 전량 적재는 source별 체크포인트를 사용하는 반복 실행 작업입니다. 한 번의 관리자 API 호출이 전체 데이터 적재를 보장하지 않으므로, 각 source의 응답 summary에서 `exhausted=true`가 나올 때까지 같은 source를 반복 실행합니다. 이 절차는 staging/운영 DB 기준 runbook이며, local DB에서는 smoke, 제한 배치, 대표 장애 케이스 검증까지만 수행해도 충분합니다.
 
@@ -258,7 +302,7 @@ import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기�
 | 6 | 식품영양성분DB 전량 적재 | 같은 `pageSize`로 `/import/nutrient-db` 반복 실행, `exhausted=true`까지 |
 | 7 | 적재 검증 | source별 row count, 체크포인트, skipped 비율, 대표 검색어 조회 확인 |
 | 8 | 중복 후보 점검 | `/dedup/report` 실행 후 운영 검수 목록 생성. 자동 병합 금지 |
-| 9 | 후속 큐레이션 | 브랜드 CSV 보강과 추천 후보 승격은 별도 작업으로 분리 |
+| 9 | 후속 큐레이션 | local 기준 브랜드 CSV 보강과 추천 후보 12개 승격 완료. staging/운영에서는 동일 CSV 재적재 후 source/status count와 caution 노출을 검증 |
 
 주의: 체크포인트는 source별 마지막 완료 페이지 번호만 저장하고 `pageSize`는 저장하지 않습니다. 같은 source를 이어서 적재하는 동안 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있습니다. smoke 후 다른 `pageSize`로 전환해야 한다면 해당 source의 smoke row와 체크포인트를 초기화한 뒤 다시 시작합니다.
 
@@ -275,6 +319,7 @@ local에서 추가 적재를 이어 실행해야 한다면 이미 smoke/제한 �
 
 - `processed-foods`, `dish-foods`, `nutrient-db` 마지막 실행 응답이 모두 `exhausted=true`
 - `food_catalog_import_checkpoints`에 source별 마지막 완료 페이지 기록 존재
+- 마지막 실행 응답의 `attemptedCount`, `skippedCount`, `skippedRatio`를 source별 운영 기록으로 보존
 - 신규 공공데이터 항목의 `recommendation_status` 기본값이 `SEARCH_ONLY`
 - 대표 검색어가 내부 `food_catalog`에서 조회됨
 - dedup 리포트를 실행했고 자동 병합 없이 검수 목록으로 분리함
@@ -289,10 +334,11 @@ dedup 리포트 응답 예시:
     {
       "normalizedKey": "닭가슴살",
       "count": 3,
+      "suggestedCanonicalId": 42,
       "entries": [
-        { "id": 1, "name": "닭가슴살", "source": "SEED", "caloriesPer100g": 165.0, ... },
-        { "id": 42, "name": "닭 가슴살", "source": "MFDS_FOOD_NUTRIENT_DB", ... },
-        { "id": 87, "name": "닭가슴살(구운)", "source": "MFDS_STANDARD_PROCESSED", ... }
+        { "id": 1, "name": "닭가슴살", "source": "SEED", "sourcePriorityRank": 5, "caloriesPer100g": 165.0, ... },
+        { "id": 42, "name": "닭 가슴살", "source": "MFDS_FOOD_NUTRIENT_DB", "sourcePriorityRank": 4, ... },
+        { "id": 87, "name": "닭가슴살(구운)", "source": "MFDS_STANDARD_PROCESSED", "sourcePriorityRank": 3, ... }
       ]
     }
   ]

@@ -39,3 +39,19 @@ Terms used in this codebase. When naming modules, tests, issues, or PR descripti
 **iOS update triggers:** TestFlight 외부 테스터 모집/완료, App Store 심사 리젝 대응, smoke test 완료 인원 확정, 사용자가 체감하는 AI 음식 분석 정확도 검증 결과 추가, 출시 버전별 주요 품질 수치 변경.
 
 **Rule:** iOS 작업이 테스터·사용자·심사·AI 검증 수치를 바꾸면 릴리즈 노트나 실행 계획만 갱신하지 말고 정량 지표 문서도 함께 갱신한다. 운영 데이터가 없으면 추정치를 확정 수치처럼 쓰지 않는다.
+
+
+---
+
+## 기능 개발 워크플로우
+
+iOS 작업 시작 전 반드시:
+
+1. `gh issue create --repo KimGiii/Gainsy`로 이슈 생성.
+2. 이슈에 대응하는 브랜치가 이미 있는지 확인: `git branch -a | grep issue-<번호>`. 있으면 체크아웃, 없으면 새로 생성.
+3. 작업 성격에 따라 브랜치 접두어 구분:
+   - 기능 개발 → `feat/issue-<번호>-<짧은-설명>`
+   - 검수·테스트 → `qa/issue-<번호>-<짧은-설명>`
+   - 오류 수정 → `fix/issue-<번호>-<짧은-설명>`
+4. 커밋 메시지 또는 PR 본문에 `Closes #<번호>` 기재.
+5. `dev`에 직접 커밋하지 않는다.

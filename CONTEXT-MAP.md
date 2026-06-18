@@ -27,3 +27,16 @@ API mapping, Flyway table, 운영 장애, 심사 리젝, TestFlight/운영 사�
 - Use the glossary's canonical terms. If a term is missing but clear from code or product docs, add it to the relevant `CONTEXT.md`.
 - If an ADR is missing for a real architecture decision, create a new ADR instead of leaving the decision only in chat.
 - If a change affects measurable project progress, update `docs/product-specs/GAINSY_QUANTIFIED_PROGRESS.md` with the metric value, basis, and source.
+
+## Feature Development Workflow
+
+Before starting any feature development:
+
+1. Create a GitHub Issue (`gh issue create --repo KimGiii/Gainsy`).
+2. Check if a branch for the issue already exists: `git branch -a | grep issue-<number>`. Check out existing branch if found; create a new one if not.
+3. Branch naming by work type:
+   - Feature development → `feat/issue-<number>-<short-description>`
+   - QA / testing → `qa/issue-<number>-<short-description>`
+   - Bug fix → `fix/issue-<number>-<short-description>`
+4. Reference the issue in commit messages (`Closes #<number>`) and the PR description.
+5. Never commit directly to `dev` without a corresponding issue and branch.

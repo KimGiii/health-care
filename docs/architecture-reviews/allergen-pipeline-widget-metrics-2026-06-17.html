@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Review — 2026-06-17 오늘 작업</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --c-bg: #0f1117;
+    --c-surface: #1a1d27;
+    --c-border: #2a2d3e;
+    --c-text: #e2e8f0;
+    --c-muted: #64748b;
+    --c-accent: #818cf8;
+    --c-accent-dim: #312e81;
+    --c-warn: #fb923c;
+    --c-warn-dim: #431407;
+    --c-green: #34d399;
+    --c-green-dim: #064e3b;
+    --c-red: #f87171;
+    --c-red-dim: #450a0a;
+    --c-blue: #60a5fa;
+  }
+  body { background: var(--c-bg); color: var(--c-text); font-family: 'Inter', system-ui, sans-serif; }
+  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; }
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge-strong { background: #14532d; color: #86efac; }
+  .badge-worth { background: #1e3a5f; color: #93c5fd; }
+  .badge-spec { background: #3b2f0a; color: #fcd34d; }
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .ba-box { border-radius: 8px; padding: 16px; font-size: 13px; font-family: monospace; }
+  .ba-before { background: var(--c-red-dim); border: 1px solid #7f1d1d; }
+  .ba-after { background: var(--c-green-dim); border: 1px solid #064e3b; }
+  .ba-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; opacity: 0.7; }
+  .file-chip { display: inline-block; background: #1e1e2e; border: 1px solid var(--c-border); border-radius: 4px; padding: 2px 8px; font-family: monospace; font-size: 12px; color: var(--c-accent); margin: 2px; }
+  .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--c-muted); margin-bottom: 8px; }
+  .top-rec { background: linear-gradient(135deg, #1e1b4b 0%, #1a1d27 60%); border: 1px solid var(--c-accent); border-radius: 12px; }
+  .divider { border-color: var(--c-border); }
+  /* mass diagram */
+  .mass-bar { border-radius: 4px; display: flex; align-items: center; padding: 6px 10px; font-size: 12px; font-weight: 600; margin: 3px 0; transition: width 0.3s; }
+  .pipe-node { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 8px 12px; font-size: 12px; text-align: center; }
+  .pipe-arrow { text-align: center; color: var(--c-muted); font-size: 18px; line-height: 1; }
+  /* mermaid override */
+  .mermaid svg { background: transparent !important; }
+</style>
+</head>
+<body class="min-h-screen p-6 md:p-10">
+
+<!-- Header -->
+<div class="mb-10">
+  <div class="text-xs text-gray-500 mb-2 uppercase tracking-widest">Architecture Review</div>
+  <h1 class="text-3xl font-bold text-white mb-1">오늘 작업 아키텍처 리뷰</h1>
+  <p class="text-gray-400 text-sm">2026-06-17 · feat/allegen-recommendation 브랜치 · 커밋 1개 + 미커밋 변경 52파일 (+1,548줄)</p>
+
+  <!-- 오늘 작업 요약 칩 -->
+  <div class="flex flex-wrap gap-2 mt-4">
+    <span class="badge" style="background:#1e3a5f;color:#93c5fd;">Backend: 브랜드 알러젠 파이프라인</span>
+    <span class="badge" style="background:#14532d;color:#86efac;">iOS: 위젯 다중 메트릭 확장</span>
+    <span class="badge" style="background:#3b2f0a;color:#fcd34d;">iOS: HealthCareWidgets 새 타겟</span>
+    <span class="badge" style="background:#2d1b69;color:#c4b5fd;">iOS: GoalWidgetView 2열 레이아웃</span>
+  </div>
+</div>
+
+<!-- Candidate 1 -->
+<div class="card p-6 mb-6">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <div class="section-label">Candidate 1</div>
+      <h2 class="text-xl font-bold text-white">BrandMenuCsvImporter — 알러젠 교체 로직의 깊이 부족</h2>
+    </div>
+    <span class="badge badge-strong">Strong</span>
+  </div>
+
+  <div class="mb-4">
+    <div class="section-label">Files</div>
+    <span class="file-chip">BrandMenuCsvImporter.java</span>
+    <span class="file-chip">FoodAllergenTagRepository.java</span>
+    <span class="file-chip">AllergenDataSource.java</span>
+    <span class="file-chip">V31__brand_official_allergen_source.sql</span>
+  </div>
+
+  <hr class="divider my-4">
+
+  <div class="grid md:grid-cols-2 gap-6 mb-4">
+    <div>
+      <div class="section-label">Problem</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <code class="text-orange-300">BrandMenuCsvImporter</code>가 CSV 파싱, 한글 라벨→AllergenTag 매핑, DB 교체(<code>deleteAllByFoodCatalogIdAndSource</code> → <code>saveAll</code>), 신뢰도 판정, 검증을 모두 한 클래스 안에서 처리한다.
+        특히 <strong>삭제 후 재삽입 사이클</strong>이 임포터 안에 하드코딩돼 있어, 같은 "브랜드 공식 알러젠 교체" 로직이 미래에 다른 임포터에서 필요할 때 복붙이 불가피하다.
+      </p>
+      <p class="text-sm text-orange-300 mt-2">
+        🔍 삭제 테스트: <code>replaceBrandOfficialAllergenTags()</code>를 삭제하면 복잡성이 CSV 임포터 하나에서 사라지는 게 아니라 미래 임포터들로 분산된다. → 레버리지가 있다.
+      </p>
+    </div>
+    <div>
+      <div class="section-label">Solution</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <code>FoodAllergenTagRepository</code>에 <code>replaceBySource(foodCatalogId, source, tags)</code> 메서드를 추가해 "특정 소스의 알러젠 태그 전량 교체" 책임을 리포지터리 인터페이스 뒤로 숨긴다.
+        임포터는 <em>어떤 태그가 들어가야 하는지</em>만 알면 되고, <em>어떻게 저장되는지</em>는 모른다.
+      </p>
+      <p class="text-sm text-green-300 mt-2">
+        ✅ Locality 향상: 교체 로직 버그가 하나의 리포지터리 메서드에 집중됨. KHANES·FOODQR 임포터가 추가돼도 동일 메서드 재사용.
+      </p>
+    </div>
+  </div>
+
+  <!-- Before / After diagram -->
+  <div class="before-after">
+    <div class="ba-box ba-before">
+      <div class="ba-label">Before — 얕음</div>
+      <!-- Mass diagram: BrandMenuCsvImporter가 모든 책임 -->
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div class="mass-bar" style="background:#7f1d1d;width:100%;">BrandMenuCsvImporter</div>
+        <div style="padding-left:16px;display:flex;flex-direction:column;gap:2px;font-size:11px;color:#fca5a5;">
+          <div>├ CSV 파싱 &amp; 행 검증</div>
+          <div>├ 한글 알러젠 라벨 매핑</div>
+          <div>├ FoodCatalogIngestService.ingest()</div>
+          <div style="color:#f87171;font-weight:700;">├ deleteAllByFoodCatalogIdAndSource() ← 직접 호출</div>
+          <div style="color:#f87171;font-weight:700;">├ saveAll(새 태그들) ← 직접 조합</div>
+          <div>└ 완결 플래그 저장</div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#6b7280;">FoodAllergenTagRepository: delete + saveAll 노출</div>
+      </div>
+    </div>
+    <div class="ba-box ba-after">
+      <div class="ba-label">After — 깊어짐</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div class="mass-bar" style="background:#14532d;width:80%;">BrandMenuCsvImporter</div>
+        <div style="padding-left:16px;display:flex;flex-direction:column;gap:2px;font-size:11px;color:#6ee7b7;">
+          <div>├ CSV 파싱 &amp; 행 검증</div>
+          <div>├ 한글 알러젠 라벨 매핑</div>
+          <div>├ FoodCatalogIngestService.ingest()</div>
+          <div style="color:#34d399;font-weight:700;">└ repository.replaceBySource(id, BRAND_OFFICIAL, tags)</div>
+        </div>
+        <div style="margin-top:8px;" class="mass-bar" style="background:#064e3b;width:100%;">FoodAllergenTagRepository</div>
+        <div style="padding-left:16px;font-size:11px;color:#6ee7b7;">
+          <div>└ replaceBySource() — delete+insert 트랜잭션 캡슐화</div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:#6b7280;">미래 KHANES 임포터도 동일 메서드 재사용 가능</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 p-3 rounded-lg" style="background:#1a1d27;border:1px solid #2a2d3e;">
+    <div class="section-label">Tests 개선</div>
+    <p class="text-xs text-gray-400">현재: <code>BrandMenuCsvImporterTest</code>가 실제 DB 없이는 알러젠 교체를 검증하기 어려움. 리포지터리에 <code>replaceBySource()</code> 세움 → 임포터 테스트에서 mock 1개로 교체 동작을 단언 가능. 리포지터리는 슬라이스 테스트(<code>@DataJpaTest</code>)로 독립 검증.</p>
+  </div>
+</div>
+
+<!-- Candidate 2 -->
+<div class="card p-6 mb-6">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <div class="section-label">Candidate 2</div>
+      <h2 class="text-xl font-bold text-white">AllergenDataSource + DB CHECK 제약 — 숨겨진 결합</h2>
+    </div>
+    <span class="badge badge-worth">Worth Exploring</span>
+  </div>
+
+  <div class="mb-4">
+    <div class="section-label">Files</div>
+    <span class="file-chip">AllergenDataSource.java</span>
+    <span class="file-chip">V31__brand_official_allergen_source.sql</span>
+    <span class="file-chip">V29__allergen_tags.sql (추정)</span>
+  </div>
+
+  <hr class="divider my-4">
+
+  <div class="grid md:grid-cols-2 gap-6 mb-4">
+    <div>
+      <div class="section-label">Problem</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <code>AllergenDataSource</code> enum에 새 값(<code>BRAND_OFFICIAL</code>)을 추가할 때 <em>반드시</em> Flyway 마이그레이션도 함께 수정해야 한다는 제약이 코드 어디에도 명시돼 있지 않다.
+        오늘 V31이 정확히 이 작업을 했지만, 다음 개발자가 enum만 추가하고 마이그레이션을 빠뜨리면 런타임 <code>DataIntegrityViolationException</code>이 발생한다.
+      </p>
+      <p class="text-sm text-orange-300 mt-2">
+        DB CHECK 제약이 Java 타입 시스템 밖에 있어서 컴파일 타임에 잡히지 않는다.
+      </p>
+    </div>
+    <div>
+      <div class="section-label">Solution</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <strong>옵션 A (단순):</strong> 마이그레이션 파일에 주석으로 "이 CHECK는 <code>AllergenDataSource</code> enum과 동기화돼야 함" 경고 추가.
+        <br><br>
+        <strong>옵션 B (심층):</strong> CHECK 제약을 제거하고 JPA <code>@Enumerated(EnumType.STRING)</code>만 신뢰. enum이 유일한 진실 소스가 된다. DB 측 검증을 포기하는 트레이드오프.
+        <br><br>
+        <strong>옵션 C (강건):</strong> 통합 테스트에서 enum 값 목록과 DB CHECK 제약 값 목록을 비교해 불일치를 컴파일 대신 테스트 시점에 잡는다.
+      </p>
+    </div>
+  </div>
+
+  <div class="before-after">
+    <div class="ba-box ba-before">
+      <div class="ba-label">현재 — 암묵적 결합</div>
+      <div style="font-size:12px;color:#fca5a5;line-height:1.8;">
+        AllergenDataSource.java<br>
+        &nbsp;&nbsp;+ BRAND_OFFICIAL ← 코드 추가<br>
+        <span style="color:#6b7280;">↕ 동기화 강제 없음</span><br>
+        V31__brand_official_allergen_source.sql<br>
+        &nbsp;&nbsp;+ CHECK(..., 'BRAND_OFFICIAL') ← 수동 추가<br>
+        <br>
+        <span style="color:#f87171;">⚠ 둘 중 하나만 수정하면 런타임 오류</span>
+      </div>
+    </div>
+    <div class="ba-box ba-after">
+      <div class="ba-label">옵션 C — 테스트 시점 검증</div>
+      <div style="font-size:12px;color:#6ee7b7;line-height:1.8;">
+        AllergenDataSourceSyncTest.java<br>
+        &nbsp;&nbsp;// DB CHECK 값 목록 조회<br>
+        &nbsp;&nbsp;// AllergenDataSource.values() 비교<br>
+        &nbsp;&nbsp;assertThat(dbValues).containsExactlyInAnyOrder(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;javaEnumNames<br>
+        &nbsp;&nbsp;);<br>
+        <br>
+        <span style="color:#34d399;">✅ CI가 불일치를 빌드 실패로 잡음</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Candidate 3 -->
+<div class="card p-6 mb-6">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <div class="section-label">Candidate 3</div>
+      <h2 class="text-xl font-bold text-white">GoalWidgetSnapshot — 하위호환성 decoder가 모델 안에 있음</h2>
+    </div>
+    <span class="badge badge-worth">Worth Exploring</span>
+  </div>
+
+  <div class="mb-4">
+    <div class="section-label">Files</div>
+    <span class="file-chip">WidgetSnapshot.swift</span>
+    <span class="file-chip">GoalWidget.swift</span>
+  </div>
+
+  <hr class="divider my-4">
+
+  <div class="grid md:grid-cols-2 gap-6 mb-4">
+    <div>
+      <div class="section-label">Problem</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <code>GoalWidgetSnapshot.init(from decoder:)</code>가 구 필드 <code>recentWeights</code>를 신규 <code>metricPoints</code>로 변환하는 마이그레이션 로직을 포함한다. 이 로직이 모델 init 안에 있어서:
+      </p>
+      <ul class="text-sm text-gray-400 mt-2 list-disc list-inside space-y-1">
+        <li>단독으로 단위 테스트하기 어렵다</li>
+        <li>"구 포맷 언제까지 지원?"이라는 정책이 코드에 안 보인다</li>
+        <li>세 번째 포맷 변경 시 init 이 더 복잡해진다</li>
+      </ul>
+    </div>
+    <div>
+      <div class="section-label">Solution</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        하위호환성 변환을 <code>static func migrate(from legacy: LegacyGoalSnapshot)</code>처럼 명시적 정적 메서드로 분리한다. <code>init(from decoder:)</code>는 현재 포맷만 디코딩하고, 구 포맷 감지 로직은 별도 함수에 둔다.
+      </p>
+      <p class="text-sm text-green-300 mt-2">
+        ✅ 마이그레이션 함수를 독립적으로 테스트 가능. 구 포맷 지원 종료 시 함수 하나만 삭제.
+      </p>
+    </div>
+  </div>
+
+  <div class="before-after">
+    <div class="ba-box ba-before">
+      <div class="ba-label">Before — init에 마이그레이션 혼재</div>
+      <div style="font-size:12px;color:#fca5a5;line-height:1.8;">
+        GoalWidgetSnapshot {<br>
+        &nbsp;&nbsp;init(from decoder:) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;// 1. 현재 포맷 시도<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;// 2. 실패 시 recentWeights 읽기<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;// 3. MetricPoint로 변환<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;// 마이그레이션 + 파싱 혼재 ⚠<br>
+        &nbsp;&nbsp;}<br>
+        }
+      </div>
+    </div>
+    <div class="ba-box ba-after">
+      <div class="ba-label">After — 관심사 분리</div>
+      <div style="font-size:12px;color:#6ee7b7;line-height:1.8;">
+        GoalWidgetSnapshot {<br>
+        &nbsp;&nbsp;init(from decoder:) { /* 현재 포맷만 */ }<br>
+        &nbsp;&nbsp;<br>
+        &nbsp;&nbsp;static func migrate(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;legacy: LegacyFormat<br>
+        &nbsp;&nbsp;) -> GoalWidgetSnapshot { /* 변환만 */ }<br>
+        }<br>
+        // 호출부: 디코딩 실패 시 migrate() 호출
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Candidate 4 -->
+<div class="card p-6 mb-6">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <div class="section-label">Candidate 4</div>
+      <h2 class="text-xl font-bold text-white">HealthCareWidgets 새 타겟 — 목적이 불분명한 레이어</h2>
+    </div>
+    <span class="badge badge-spec">Speculative</span>
+  </div>
+
+  <div class="mb-4">
+    <div class="section-label">Files</div>
+    <span class="file-chip">HealthCareWidgets/HealthCareWidgets.swift</span>
+    <span class="file-chip">HealthCareWidgets/HealthCareWidgetsBundle.swift</span>
+    <span class="file-chip">ios/project.yml</span>
+  </div>
+
+  <hr class="divider my-4">
+
+  <div class="grid md:grid-cols-2 gap-6 mb-4">
+    <div>
+      <div class="section-label">Problem</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        기존 <code>HealthCareWidget</code> 타겟(칼로리·목표·스트릭 위젯 포함)이 있는데, 오늘 <code>HealthCareWidgets</code>라는 새 타겟이 추가됐다. 현재는 Xcode boilerplate stub만 존재한다.
+      </p>
+      <ul class="text-sm text-gray-400 mt-2 list-disc list-inside space-y-1">
+        <li>두 타겟이 같은 App Group을 쓸지 별도 App Group을 쓸지 불분명</li>
+        <li>기존 위젯들을 이 타겟으로 이전할 계획인지, 별도 위젯을 추가할 계획인지 불분명</li>
+        <li>stub을 배포하면 위젯 갤러리에 빈 위젯이 노출될 위험</li>
+      </ul>
+    </div>
+    <div>
+      <div class="section-label">Solution</div>
+      <p class="text-sm text-gray-300 leading-relaxed">
+        <strong>두 가지 명확화 질문:</strong>
+        <br><br>
+        <strong>A.</strong> 기존 3개 위젯을 이 새 타겟으로 통합할 계획이라면, 마이그레이션 계획을 ADR로 기록하고 stub을 배포 전에 제거하거나 <code>#if DEBUG</code>로 감싼다.
+        <br><br>
+        <strong>B.</strong> 완전히 새 종류의 위젯(예: Live Activity, Control Widget)을 위한 타겟이라면 타겟 이름을 의도를 드러내도록 변경한다.
+      </p>
+    </div>
+  </div>
+
+  <!-- Mermaid diagram -->
+  <div class="grid md:grid-cols-2 gap-4 mt-4">
+    <div class="ba-box ba-before">
+      <div class="ba-label">현재 상태 — 두 타겟, 목적 불분명</div>
+      <div class="mermaid" style="font-size:12px;">
+graph TD
+  A[HealthCare App] --> B[HealthCareWidget Target]
+  A --> C[HealthCareWidgets Target]
+  B --> B1[CalorieWidget]
+  B --> B2[GoalWidget]
+  B --> B3[StreakWidget]
+  C --> C1[stub placeholder]
+  style C fill:#7f1d1d,stroke:#991b1b,color:#fca5a5
+  style C1 fill:#450a0a,stroke:#7f1d1d,color:#fca5a5
+      </div>
+    </div>
+    <div class="ba-box ba-after">
+      <div class="ba-label">명확화 후 — 통합 시나리오</div>
+      <div class="mermaid" style="font-size:12px;">
+graph TD
+  A[HealthCare App] --> B[HealthCareWidget Target]
+  B --> B1[CalorieWidget]
+  B --> B2[GoalWidget]
+  B --> B3[StreakWidget]
+  B --> B4[NewWidget planned]
+  style B fill:#14532d,stroke:#166534,color:#86efac
+  style B4 fill:#064e3b,stroke:#166534,color:#6ee7b7
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top Recommendation -->
+<div class="top-rec p-6 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="text-2xl">🎯</span>
+    <div>
+      <div class="section-label" style="color:#a5b4fc;">Top Recommendation</div>
+      <h2 class="text-xl font-bold text-white">Candidate 1부터 시작하세요</h2>
+    </div>
+    <span class="badge badge-strong ml-auto">Strong</span>
+  </div>
+
+  <p class="text-sm text-gray-300 leading-relaxed mb-4">
+    <code>FoodAllergenTagRepository.replaceBySource()</code> 추가가 가장 즉각적인 레버리지를 제공합니다.
+    오늘 추가된 <code>BrandMenuCsvImporter</code>의 알러젠 교체 로직은 조만간 MFDS나 KHANES 임포터에서도 동일하게 필요해질 텐데, 지금 리포지터리 뒤로 숨겨두면 미래 임포터들이 교체 방식을 다시 발명하지 않아도 됩니다.
+  </p>
+
+  <div class="grid md:grid-cols-3 gap-4">
+    <div class="p-3 rounded-lg" style="background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);">
+      <div class="text-xs text-indigo-300 font-bold mb-1">즉시 효과</div>
+      <p class="text-xs text-gray-400">임포터 테스트에서 delete+saveAll mock 없이 <code>replaceBySource</code> 호출 확인으로 단순화</p>
+    </div>
+    <div class="p-3 rounded-lg" style="background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);">
+      <div class="text-xs text-indigo-300 font-bold mb-1">Locality</div>
+      <p class="text-xs text-gray-400">알러젠 교체의 트랜잭션 보장이 리포지터리 한 곳에 집중됨</p>
+    </div>
+    <div class="p-3 rounded-lg" style="background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);">
+      <div class="text-xs text-indigo-300 font-bold mb-1">노력 대비 효과</div>
+      <p class="text-xs text-gray-400">리포지터리 메서드 1개 추가 + 임포터 내부 3줄 교체. 30분 이내.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="text-center text-xs text-gray-600 mt-8 pb-6">
+  Generated by /improve-codebase-architecture · 2026-06-17 · feat/allegen-recommendation
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  themeVariables: {
+    background: '#1a1d27',
+    primaryColor: '#312e81',
+    primaryTextColor: '#e2e8f0',
+    lineColor: '#4b5563',
+    edgeLabelBackground: '#1a1d27'
+  }
+});
+</script>
+</body>
+</html>
