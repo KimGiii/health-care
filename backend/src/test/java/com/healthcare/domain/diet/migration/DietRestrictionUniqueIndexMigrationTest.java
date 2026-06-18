@@ -40,6 +40,25 @@ class DietRestrictionUniqueIndexMigrationTest {
         assertThat(sql).contains("WHERE deleted_at IS NULL");
     }
 
+    @Test
+    @DisplayName("인덱스 생성 전에 활성 중복 행을 soft-delete 로 정리한다")
+    void v29_softDeletesActiveDuplicates_beforeCreatingUniqueIndexes() throws Exception {
+        String sql = readMigration();
+
+        // 정리 단계가 인덱스 생성보다 먼저 위치해야 한다.
+        int firstCleanup = sql.indexOf("SET deleted_at = NOW()");
+        int firstIndex = sql.indexOf("CREATE UNIQUE INDEX");
+        assertThat(firstCleanup).isGreaterThanOrEqualTo(0);
+        assertThat(firstIndex).isGreaterThan(firstCleanup);
+
+        // target type 4종 각각에 대해 최신(id 최대) 1건만 남기는 정리 쿼리가 있어야 한다.
+        assertThat(sql).contains("PARTITION BY user_id, restriction_type, food_catalog_id ORDER BY id DESC");
+        assertThat(sql).contains("PARTITION BY user_id, restriction_type, category ORDER BY id DESC");
+        assertThat(sql).contains("PARTITION BY user_id, restriction_type, keyword ORDER BY id DESC");
+        assertThat(sql).contains("PARTITION BY user_id, restriction_type, allergen_tag ORDER BY id DESC");
+        assertThat(sql).contains("rn > 1");
+    }
+
     private String readMigration() throws Exception {
         URL resource = getClass().getClassLoader()
                 .getResource("db/migration/V29__diet_restrictions_active_unique_indexes.sql");
