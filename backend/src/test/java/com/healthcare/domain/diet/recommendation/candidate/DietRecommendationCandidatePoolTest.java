@@ -355,6 +355,26 @@ class DietRecommendationCandidatePoolTest {
     }
 
     @Test
+    @DisplayName("canonical 그룹 비대표 식품(canonicalGroupId != null)은 후보에서 제외된다")
+    void load_nonCanonicalFood_excluded() {
+        FoodCatalog representative = food(1L, "흰쌀밥", FoodCategory.GRAIN, 130.0);
+        FoodCatalog nonRepresentative = FoodCatalog.builder()
+                .id(2L).name("쌀밥(비대표)").category(FoodCategory.GRAIN)
+                .caloriesPer100g(132.0).proteinPer100g(2.5)
+                .carbsPer100g(29.0).fatPer100g(0.3)
+                .isCustom(false).usageCount(0L)
+                .canonicalGroupId(1L) // 그룹 비대표 → 제외 대상
+                .build();
+        givenCatalogCandidates(List.of(representative, nonRepresentative));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(resultFoodIds(result)).contains(representative.getId());
+        assertThat(resultFoodIds(result)).doesNotContain(nonRepresentative.getId());
+    }
+
+    @Test
     @DisplayName("후보 풀은 엔진에 필요한 알러젠 신뢰도와 caution을 후보 값으로 변환한다")
     void load_mapsCatalogsToEngineCandidates() {
         FoodCatalog cautionFood = FoodCatalog.builder()

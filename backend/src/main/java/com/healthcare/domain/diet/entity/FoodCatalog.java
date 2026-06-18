@@ -110,6 +110,9 @@ public class FoodCatalog {
     @Builder.Default
     private Long usageCount = 0L;
 
+    @Column(name = "canonical_group_id")
+    private Long canonicalGroupId;
+
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
 

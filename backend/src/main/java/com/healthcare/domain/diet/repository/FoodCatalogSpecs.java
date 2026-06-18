@@ -34,4 +34,12 @@ public final class FoodCatalogSpecs {
     public static Specification<FoodCatalog> categoryNotIn(Collection<FoodCategory> categories) {
         return (root, query, cb) -> root.get("category").in(categories).not();
     }
+
+    /**
+     * canonical 그룹 대표 후보만 포함한다.
+     * canonical_group_id IS NULL = 독립 식품이거나 그룹 대표 → 추천 후보에 포함.
+     */
+    public static Specification<FoodCatalog> isCanonicalCandidate() {
+        return (root, query, cb) -> cb.isNull(root.get("canonicalGroupId"));
+    }
 }

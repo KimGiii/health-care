@@ -20,6 +20,7 @@ import java.util.Collection;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -85,5 +86,20 @@ class FoodCatalogSpecsTest {
         verify(statusPath).in(captor.capture());
 
         assertThat(captor.getValue()).doesNotContain(RecommendationStatus.DISABLED);
+    }
+
+    @Test
+    @DisplayName("isCanonicalCandidate: canonical_group_id IS NULL 조건을 생성한다")
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void isCanonicalCandidate_generatesIsNullPredicateOnCanonicalGroupId() {
+        Path canonicalGroupIdPath = mock(Path.class);
+        given(root.get("canonicalGroupId")).willReturn(canonicalGroupIdPath);
+        given(cb.isNull(canonicalGroupIdPath)).willReturn(predicate);
+
+        Specification<FoodCatalog> spec = FoodCatalogSpecs.isCanonicalCandidate();
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        verify(cb).isNull(canonicalGroupIdPath);
+        assertThat(result).isEqualTo(predicate);
     }
 }

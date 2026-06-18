@@ -57,10 +57,11 @@ public class DietRecommendationCandidatePool {
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsed);
         Map<Long, List<FoodServingOption>> optionsByFoodId = loadServingOptions(catalogCandidates);
 
-        // DB Spec이 foodIds·categories를 먼저 제거하고, 아래 두 줄은 Mock 환경 안전망이다.
+        // DB Spec이 foodIds·categories·canonical을 먼저 제거하고, 아래는 Mock 환경 안전망이다.
         // keywords·allergen·freshness는 DB Spec 대응이 없어 인메모리만 적용한다.
         List<DietRecommendationCandidate> candidates = catalogCandidates.stream()
                 .filter(food -> food.getCaloriesPer100g() != null)
+                .filter(food -> food.getCanonicalGroupId() == null)
                 .filter(food -> !parsed.foodIds().contains(food.getId()))
                 .filter(food -> !parsed.categories().contains(food.getCategory()))
                 .filter(food -> dataFreshnessPolicy.isCurrent(food))
@@ -88,7 +89,8 @@ public class DietRecommendationCandidatePool {
 
     private List<FoodCatalog> loadCatalogCandidates(CandidateRestrictions restrictions) {
         Specification<FoodCatalog> spec = FoodCatalogSpecs.hasCalories()
-                .and(FoodCatalogSpecs.hasRecommendationCandidateStatus());
+                .and(FoodCatalogSpecs.hasRecommendationCandidateStatus())
+                .and(FoodCatalogSpecs.isCanonicalCandidate());
         if (!restrictions.foodIds().isEmpty()) {
             spec = spec.and(FoodCatalogSpecs.idNotIn(restrictions.foodIds()));
         }
