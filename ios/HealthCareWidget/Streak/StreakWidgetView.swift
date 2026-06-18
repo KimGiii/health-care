@@ -147,6 +147,7 @@ private struct StreakAccessoryRectangularView: View {
 // MARK: - Preview
 
 #if DEBUG
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Streak Small", as: .systemSmall) {
     StreakWidget()
 } timeline: {
@@ -154,12 +155,14 @@ private struct StreakAccessoryRectangularView: View {
     StreakEntry(date: Date(), snapshot: .empty)
 }
 
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Streak Circular", as: .accessoryCircular) {
     StreakWidget()
 } timeline: {
     StreakEntry.placeholder
 }
 
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Streak Rectangular", as: .accessoryRectangular) {
     StreakWidget()
 } timeline: {

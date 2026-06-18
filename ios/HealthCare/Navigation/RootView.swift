@@ -3,7 +3,8 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var authState: AuthState
-    @State private var showSplash = true
+    // UI 테스트에서는 2초 스플래시 오버레이가 탭 입력을 흡수하므로 처음부터 숨긴다.
+    @State private var showSplash = !ProcessInfo.processInfo.arguments.contains("UI_TEST_RESET_STATE")
     @State private var showTrackingPermission = false
 
     var body: some View {

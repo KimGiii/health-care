@@ -204,6 +204,7 @@ private struct MacroBar: View {
 // MARK: - Preview
 
 #if DEBUG
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Small", as: .systemSmall) {
     CalorieWidget()
 } timeline: {
@@ -211,6 +212,7 @@ private struct MacroBar: View {
     CalorieEntry(date: Date(), snapshot: .empty)
 }
 
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Medium", as: .systemMedium) {
     CalorieWidget()
 } timeline: {

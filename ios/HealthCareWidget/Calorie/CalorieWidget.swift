@@ -15,11 +15,10 @@ struct CalorieWidget: Widget {
             provider: CalorieProvider()
         ) { entry in
             CalorieWidgetView(entry: entry)
-                .containerBackground(.background, for: .widget)
+                .widgetContainerBackgroundIfAvailable()
         }
         .configurationDisplayName("오늘의 칼로리")
         .description("오늘 섭취 칼로리와 영양 균형을 한눈에 확인하세요.")
         .supportedFamilies([.systemSmall, .systemMedium])
-        .contentMarginsDisabled()
     }
 }

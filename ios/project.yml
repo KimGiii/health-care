@@ -85,6 +85,8 @@ targets:
       properties:
         com.apple.developer.applesignin:
           - Default
+        com.apple.security.application-groups:
+          - group.com.kingloo.gainsy.widgets
         aps-environment: development
     settings:
       base:
@@ -100,10 +102,55 @@ targets:
         product: GoogleMobileAds
       - package: GoogleSignIn
         product: GoogleSignIn
+      - target: HealthCareWidgetExtension
+        embed: true
+        codeSign: true
     scheme:
       testTargets:
         - HealthCareTests
         - HealthCareUITests
+
+  HealthCareWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: HealthCareWidget
+        excludes:
+          - "**/*.md"
+      - path: HealthCare/Core/Widget
+        excludes:
+          - "**/*.md"
+          - "GoalWidgetSnapshotPublisher.swift"
+    info:
+      path: HealthCareWidget/Info.plist
+      properties:
+        CFBundleDisplayName: HealthCareWidget
+        CFBundleIdentifier: com.kingloo.gainsy.ios.HealthCareWidget
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: HealthCareWidgetExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.kingloo.gainsy.widgets
+    settings:
+      base:
+        APPLICATION_EXTENSION_API_ONLY: YES
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+        INFOPLIST_FILE: HealthCareWidget/Info.plist
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"
+          - "@executable_path/../../Frameworks"
+        PRODUCT_BUNDLE_IDENTIFIER: com.kingloo.gainsy.ios.HealthCareWidget
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        SKIP_INSTALL: YES
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
 
   HealthCareTests:
     type: bundle.unit-test

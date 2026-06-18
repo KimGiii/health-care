@@ -304,38 +304,13 @@ final class HomeViewModel: ObservableObject {
         WidgetReloadCenter.reloadCalorie()
     }
 
-    /// 활성 목표 + 최근 7일 체중을 위젯 스냅샷으로 변환해 App Group에 저장.
+    /// 활성 목표 + 목표 타입별 최근 지표를 위젯 스냅샷으로 변환해 App Group에 저장.
     func publishGoalWidgetSnapshot() {
-        guard let store = WidgetDataStore() else { return }
-
-        let activeGoalSnapshot: GoalWidgetSnapshot.ActiveGoal? = activeGoal.map { goal in
-            GoalWidgetSnapshot.ActiveGoal(
-                goalId: goal.goalId,
-                title: goal.goalType.displayName,
-                systemImage: goal.goalType.icon,
-                targetText: goal.targetText,
-                progress: goal.progressRatio,
-                daysRemaining: goal.daysRemaining
-            )
-        }
-
-        // 체중 기록만 추출. parsedDate가 nil이면 제외. 시간 오름차순 정렬.
-        // 30일 창에서 가져왔지만 차트는 가장 최근 7개만 — 너무 많으면 시각적으로 노이즈.
-        let weightPoints: [GoalWidgetSnapshot.WeightPoint] = recentMeasurements
-            .compactMap { m -> GoalWidgetSnapshot.WeightPoint? in
-                guard let date = m.parsedDate, let kg = m.weightKg else { return nil }
-                return GoalWidgetSnapshot.WeightPoint(date: date, weightKg: kg)
-            }
-            .sorted { $0.date < $1.date }
-            .suffix(7)
-            .map { $0 }
-
-        let snapshot = GoalWidgetSnapshot(
-            goal: activeGoalSnapshot,
-            recentWeights: weightPoints
+        AppGoalWidgetSnapshotPublisher().publish(
+            goal: activeGoal,
+            recentMeasurements: recentMeasurements,
+            recentSessions: recentSessions
         )
-        store.saveGoal(snapshot)
-        WidgetReloadCenter.reloadGoal()
     }
 
     /// 연속 기록 일수 + 오늘 식단/운동 체크 상태를 위젯에 저장.

@@ -67,6 +67,7 @@ struct BodyMeasurementView: View {
                     .clipShape(Circle())
                     .shadow(color: Color.brandPrimary.opacity(0.45), radius: 12, x: 0, y: 6)
             }
+            .accessibilityLabel(Text("body.add.title"))
             .padding(.trailing, Spacing.xxl) // design-lint:ignore — micro/hero spacing
             .padding(.bottom, Spacing.xxl) // design-lint:ignore — micro/hero spacing
         }
