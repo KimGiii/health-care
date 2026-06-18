@@ -124,6 +124,16 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ---
 
+## 알러젠 프로필 (Allergen Profile)
+
+**Definition:** 식품 단위로 알러젠 검토 이력과 유효 기간을 관리하는 별도 레코드. `food_allergen_tags`의 포함 태그 행과 독립적으로 존재하며, 포함 태그가 0개인 "알러젠 없음 확인" 상태도 표현할 수 있다. 검토 표준 버전, 근거 source, source reference, 검토일, 만료·무효 사유를 보존한다. 알러지 등록 사용자의 추천 게이트(`FoodAllergenProfileGate`)는 이 레코드의 `isVerifiedAt()` 통과 여부만 판단한다.
+
+**Avoid:** "알러젠 태그 검증", "allergen_profile_verified 플래그" (태그 행과 분리된 독립 레코드임을 강조)
+
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/allergen/entity/FoodAllergenProfile.java`, `backend/src/main/java/com/healthcare/domain/diet/allergen/FoodAllergenProfileGate.java`
+
+---
+
 ## 검증된 추천 후보 (Verified Recommendation Candidate)
 
 **Definition:** 알러지 사용자의 완결 알러젠 프로필, 목표별 필수 영양 데이터, 현실적인 제공량 옵션, 유효한 데이터 버전, canonical 대표 조건을 모두 통과해 제약 최적화에 투입할 수 있는 식품 후보. `RECOMMENDABLE` 상태만으로는 이 자격을 충족하지 않는다.

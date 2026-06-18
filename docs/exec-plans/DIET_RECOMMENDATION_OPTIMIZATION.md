@@ -1,7 +1,7 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
 작성일: 2026-06-18
-상태: Phase 1 정책·benchmark 완료, Phase 2 데이터 계약 착수 전
+상태: Phase 1 완료, Phase 2 진행 중 (알러젠 프로필 분리·영양 완전성 계약 완료)
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
@@ -294,11 +294,19 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 
 ### Phase 2. 데이터 계약
 
-- 알러젠 프로필 검토 모델 분리
-- 영양 완전성·source 신뢰도·버전 만료 정책
-- 제공량 옵션 모델과 iOS 프리셋 UX
-- canonical 식품 그룹과 대표 후보 조회
-- 검증 우선순위 리포트
+- [x] 알러젠 프로필 검토 모델 분리
+  - `FoodAllergenProfile` JPA 엔티티 + `isVerifiedAt()` 도메인 메서드
+  - `FoodAllergenProfileRepository` (findByFoodCatalogIdIn)
+  - V33 Flyway 마이그레이션: `food_allergen_profiles` 테이블 + 기존 태그 백필
+  - `FoodAllergenProfileGate`: 알러지 등록 사용자는 별도 검토 레코드 필수 통과
+- [x] 영양 완전성 정책 (§5.2)
+  - `DietRecommendationCandidate.macroDataComplete`: `from(FoodCatalog)` 시점에 4대 영양소 null 여부 자동 계산
+  - `NutrientCompletenessPolicy`: 모든 목표 유형에 동일 정책 적용
+  - `DietRecommendationCandidatePool`: 영양 완전성 요약 메서드 추가
+- [ ] source 신뢰도·버전 만료 정책
+- [ ] 제공량 옵션 모델 (`food_serving_options`)과 iOS 프리셋 UX
+- [ ] canonical 식품 그룹과 대표 후보 조회
+- [ ] 검증 우선순위 리포트 (운영자 조회)
 
 완료 기준: 목표별로 추천 가능한 후보 수와 부족한 역할을 운영자가 조회할 수 있다.
 
