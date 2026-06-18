@@ -17,7 +17,7 @@ struct DietRecommendationView: View {
                     emptyState
                 }
             }
-            .padding(20)
+            .padding(Spacing.xl)
         }
         .background(Color.backgroundPage)
         .navigationTitle(Text("recommend.title"))
@@ -49,9 +49,9 @@ struct DietRecommendationView: View {
             strictModeToggle
             recommendButton
         }
-        .padding(16)
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .elevation(.low)
     }
 
@@ -76,7 +76,7 @@ struct DietRecommendationView: View {
             Text("recommend.meals")
                 .font(.subheadline).fontWeight(.medium)
                 .foregroundStyle(Color.textPrimary)
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(viewModel.orderedMeals, id: \.self) { meal in
                     let selected = viewModel.selectedMeals.contains(meal)
                     Button {
@@ -84,15 +84,15 @@ struct DietRecommendationView: View {
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: meal.sfSymbol)
-                                .font(.system(size: 16))
+                                .font(.system(size: 16)) // design-lint:ignore
                             Text(meal.displayName)
                                 .font(.caption2).fontWeight(.medium)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.sm)
                         .background(selected ? Color.brandPrimary : Color.surfaceSecondary)
                         .foregroundStyle(selected ? Color.white : Color.textSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                     }
                 }
             }
@@ -120,10 +120,10 @@ struct DietRecommendationView: View {
             Text("recommend.cta")
                 .font(.subheadline).fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.md)
                 .background(viewModel.canRecommend ? Color.brandPrimary : Color.surfaceSecondary)
                 .foregroundStyle(viewModel.canRecommend ? Color.white : Color.textSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         }
         .disabled(!viewModel.canRecommend || viewModel.isLoading)
     }
@@ -139,7 +139,7 @@ struct DietRecommendationView: View {
                 .foregroundStyle(Color.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, Spacing.xxxl)
     }
 
     // MARK: - Empty State
@@ -147,7 +147,7 @@ struct DietRecommendationView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "fork.knife.circle")
-                .font(.system(size: 44))
+                .font(.system(size: 44)) // design-lint:ignore
                 .foregroundStyle(Color.brandAccent)
             Text("recommend.empty")
                 .font(.subheadline)
@@ -155,7 +155,7 @@ struct DietRecommendationView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, Spacing.xxxl)
     }
 
     // MARK: - Result
@@ -196,9 +196,9 @@ struct DietRecommendationView: View {
                 nutrientPill(label: String(localized: "nutrition.fat"), value: String(format: "%.0f", t.fatG), unit: "g", color: .brandEmber)
             }
         }
-        .padding(16)
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .elevation(.low)
     }
 
@@ -238,9 +238,9 @@ struct DietRecommendationView: View {
                 foodRow(item)
             }
         }
-        .padding(16)
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .elevation(.low)
     }
 
@@ -260,14 +260,14 @@ struct DietRecommendationView: View {
                         .tint(Color.white)
                 } else {
                     Image(systemName: isSaved ? "checkmark.circle.fill" : "plus.circle.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.captionBold)
                 }
                 Text(saveMealButtonTitle(isSaving: isSaving, isSaved: isSaved))
                     .lineLimit(1)
             }
             .font(.caption2).fontWeight(.semibold)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 10) // design-lint:ignore
+            .padding(.vertical, Spacing.sm)
             .background(usesDisabledStyle ? Color.surfaceSecondary : Color.brandPrimary)
             .foregroundStyle(usesDisabledStyle ? Color.textSecondary : Color.white)
             .clipShape(Capsule())
@@ -286,7 +286,7 @@ struct DietRecommendationView: View {
         HStack(spacing: 10) {
             if item.needsCaution {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(Color.brandWarning)
             }
             VStack(alignment: .leading, spacing: 2) {
@@ -313,9 +313,9 @@ struct DietRecommendationView: View {
                     .foregroundStyle(Color.brandSunrise)
             }
         }
-        .padding(10)
+        .padding(10) // design-lint:ignore
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     }
 
     private func totalsCard(_ result: DailyDietRecommendationResponse) -> some View {
@@ -336,30 +336,30 @@ struct DietRecommendationView: View {
                     .foregroundStyle(Color.textSecondary)
             }
         }
-        .padding(16)
+        .padding(Spacing.lg)
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .elevation(.low)
     }
 
     private func failureReasonBanner(_ reason: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(Color.brandWarning)
                 .font(.subheadline)
-                .padding(.top, 1)
+                .padding(.top, 1) // design-lint:ignore
             Text(reason)
                 .font(.subheadline)
                 .foregroundStyle(Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
+        .padding(14) // design-lint:ignore
         .background(Color.brandWarning.opacity(0.1))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: Radius.md)
                 .stroke(Color.brandWarning.opacity(0.4), lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
     private func alternativesSection(_ alts: [[RecommendedMeal]]) -> some View {
@@ -384,7 +384,7 @@ struct DietRecommendationView: View {
                     alternativeMealRow(meal)
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, Spacing.sm)
         } label: {
             HStack {
                 Text(String(format: String(localized: "recommend.alternative.n"), index))
@@ -397,9 +397,9 @@ struct DietRecommendationView: View {
                     .foregroundStyle(Color.textSecondary)
             }
         }
-        .padding(14)
+        .padding(14) // design-lint:ignore
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14)) // design-lint:ignore
         .elevation(.low)
     }
 
@@ -424,7 +424,7 @@ struct DietRecommendationView: View {
                 HStack(spacing: 6) {
                     if item.needsCaution {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 10))
+                            .font(.system(size: 10)) // design-lint:ignore
                             .foregroundStyle(Color.brandWarning)
                     }
                     Text(item.displayName)
@@ -435,12 +435,12 @@ struct DietRecommendationView: View {
                         .font(.caption2)
                         .foregroundStyle(Color.textSecondary)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xs)
             }
         }
-        .padding(10)
+        .padding(10) // design-lint:ignore
         .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     }
 
     private var refreshButton: some View {
@@ -452,18 +452,18 @@ struct DietRecommendationView: View {
                     ProgressView().controlSize(.small).tint(Color.brandAccent)
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.labelSmall)
                 }
                 Text("recommend.refresh.cta")
                     .font(.subheadline).fontWeight(.medium)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.md)
             .background(Color.surfaceCard)
             .foregroundStyle(Color.brandAccent)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: Radius.md)
                     .stroke(Color.brandAccent.opacity(0.4), lineWidth: 1)
             )
             .elevation(.low)
@@ -472,18 +472,18 @@ struct DietRecommendationView: View {
     }
 
     private func disclaimerCard(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: "info.circle")
                 .foregroundStyle(Color.textTertiary)
                 .font(.caption)
-                .padding(.top, 1)
+                .padding(.top, 1) // design-lint:ignore
             Text(text)
                 .font(.caption)
                 .foregroundStyle(Color.textTertiary)
         }
-        .padding(12)
+        .padding(Spacing.md)
         .background(Color.surfaceSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: 10)) // design-lint:ignore
     }
 }
 
@@ -503,7 +503,7 @@ struct RecommendationFeedbackSheet: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.textSecondary)
             }
-            .padding(.top, 8)
+            .padding(.top, Spacing.sm)
 
             VStack(spacing: 10) {
                 ForEach(RecommendationFeedbackReason.allCases) { reason in
@@ -520,17 +520,17 @@ struct RecommendationFeedbackSheet: View {
                                 .font(.caption)
                                 .foregroundStyle(Color.textTertiary)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, 14) // design-lint:ignore
                         .background(Color.surfaceCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
                     }
                     .buttonStyle(.plain)
                 }
             }
             Spacer()
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Spacing.xl)
         .background(Color.backgroundPage)
     }
 }

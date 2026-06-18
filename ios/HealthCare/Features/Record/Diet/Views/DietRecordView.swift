@@ -155,7 +155,7 @@ struct DietRecordView: View {
                         .fill(Color.brandPrimary.opacity(0.12))
                         .frame(width: 44, height: 44)
                     Image(systemName: "sparkles")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.headingMedium)
                         .foregroundColor(Color.brandPrimary)
                 }
                 VStack(alignment: .leading, spacing: 4) {
