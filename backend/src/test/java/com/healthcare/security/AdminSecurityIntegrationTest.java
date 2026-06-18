@@ -68,7 +68,9 @@ class AdminSecurityIntegrationTest {
                         .header(AdminOperationGuard.HEADER_NAME, ADMIN_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.source").value("MFDS_STANDARD_PROCESSED"))
-                .andExpect(jsonPath("$.data.fetchedPageCount").value(1));
+                .andExpect(jsonPath("$.data.fetchedPageCount").value(1))
+                .andExpect(jsonPath("$.data.attemptedCount").value(3))
+                .andExpect(jsonPath("$.data.skippedRatio").value(0.0));
     }
 
     @Test

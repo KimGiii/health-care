@@ -146,6 +146,35 @@ class FoodCatalogDuplicateCandidateReporterTest {
         assertThat(report.groups().get(0).normalizedKey()).isEqualTo("버거킹:통새우와퍼");
     }
 
+    @Test
+    @DisplayName("중복 그룹은 source priority 기준 대표 후보를 제안한다")
+    void report_duplicateGroup_suggestsCanonicalBySourcePriority() {
+        FoodCatalog seed = catalog("와퍼주니어", "버거킹", FoodCatalogSource.SEED);
+        FoodCatalog publicData = catalog("와퍼 주니어", "버거킹", FoodCatalogSource.MFDS_STANDARD_DISH);
+        FoodCatalog brandOfficial = catalog("와퍼주니어", "버거킹", FoodCatalogSource.BRAND_OFFICIAL);
+
+        FoodCatalogDuplicateCandidateReport report = reporter.report(List.of(seed, publicData, brandOfficial));
+
+        assertThat(report.groups()).hasSize(1);
+        assertThat(report.groups().get(0).suggestedCanonical()).isEqualTo(brandOfficial);
+    }
+
+    @Test
+    @DisplayName("리포트 응답은 대표 후보와 source priority rank를 노출한다")
+    void reportResponse_exposesCanonicalAndSourcePriorityRank() {
+        FoodCatalog seed = catalogWithId(1L, "와퍼주니어", "버거킹", FoodCatalogSource.SEED);
+        FoodCatalog brandOfficial = catalogWithId(2L, "와퍼주니어", "버거킹", FoodCatalogSource.BRAND_OFFICIAL);
+        FoodCatalogDuplicateCandidateReport report = reporter.report(List.of(seed, brandOfficial));
+
+        FoodCatalogDuplicateReportResponse response = FoodCatalogDuplicateReportResponse.from(report);
+
+        FoodCatalogDuplicateGroupResponse group = response.groups().get(0);
+        assertThat(group.suggestedCanonicalId()).isEqualTo(2L);
+        assertThat(group.entries())
+                .extracting(FoodCatalogDuplicateGroupResponse.Entry::sourcePriorityRank)
+                .containsExactlyInAnyOrder(5, 1);
+    }
+
     // ---- 헬퍼 ----
 
     private FoodCatalog catalog(String nameKo, String brandName, FoodCatalogSource source) {
@@ -171,6 +200,20 @@ class FoodCatalogDuplicateCandidateReporterTest {
                 .category(FoodCategory.PROTEIN_SOURCE)
                 .caloriesPer100g(165.0)
                 .source(source)
+                .isCustom(false)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
+                .build();
+    }
+
+    private FoodCatalog catalogWithId(Long id, String nameKo, String brandName, FoodCatalogSource source) {
+        return FoodCatalog.builder()
+                .id(id)
+                .name(nameKo)
+                .nameKo(nameKo)
+                .category(FoodCategory.PROTEIN_SOURCE)
+                .caloriesPer100g(165.0)
+                .source(source)
+                .brandName(brandName)
                 .isCustom(false)
                 .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
                 .build();

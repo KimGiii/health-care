@@ -89,6 +89,23 @@ class FoodCatalogImportBatchRunnerTest {
         assertThat(checkpoints.nextPage(FoodCatalogSource.MFDS_STANDARD_PROCESSED)).isEqualTo(3);
     }
 
+    @Test
+    @DisplayName("운영 검증용으로 시도 수와 skip 비율을 summary에 노출한다")
+    void importPages_exposesAttemptedCountAndSkippedRatio() {
+        InMemoryCheckpointStore checkpoints = new InMemoryCheckpointStore();
+
+        FoodCatalogImportPageFetcher<StandardFoodImportRow> fetcher = (pageNo, pageSize) ->
+                new FoodCatalogImportPage<>(List.of(row("P001"), row("P002"), row("P003"), row("P004")), false);
+        FoodCatalogPageImporter<StandardFoodImportRow> importer = rows -> new FoodCatalogImportResult(1, 2, 1);
+        FoodCatalogImportBatchRunner runner = new FoodCatalogImportBatchRunner(checkpoints);
+
+        FoodCatalogBatchImportSummary summary = runner.importPages(
+                FoodCatalogSource.MFDS_STANDARD_PROCESSED, 100, 1, fetcher, importer);
+
+        assertThat(summary.attemptedCount()).isEqualTo(4);
+        assertThat(summary.skippedRatio()).isEqualTo(0.25);
+    }
+
     private StandardFoodImportRow row(String foodCode) {
         return StandardFoodImportRow.builder()
                 .foodCode(foodCode)

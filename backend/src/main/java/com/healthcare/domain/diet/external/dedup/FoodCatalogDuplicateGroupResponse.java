@@ -9,6 +9,7 @@ import java.util.List;
 public record FoodCatalogDuplicateGroupResponse(
         String normalizedKey,
         int count,
+        Long suggestedCanonicalId,
         List<Entry> entries
 ) {
     public record Entry(
@@ -19,6 +20,7 @@ public record FoodCatalogDuplicateGroupResponse(
             String brandName,
             String maker,
             Double caloriesPer100g,
+            int sourcePriorityRank,
             RecommendationStatus recommendationStatus
     ) {
         static Entry from(FoodCatalog catalog) {
@@ -30,6 +32,7 @@ public record FoodCatalogDuplicateGroupResponse(
                     catalog.getBrandName(),
                     catalog.getMaker(),
                     catalog.getCaloriesPer100g(),
+                    FoodCatalogDuplicateGroup.sourcePriorityRank(catalog.getSource()),
                     catalog.getRecommendationStatus()
             );
         }
@@ -39,6 +42,10 @@ public record FoodCatalogDuplicateGroupResponse(
         List<Entry> entries = group.entries().stream()
                 .map(Entry::from)
                 .toList();
-        return new FoodCatalogDuplicateGroupResponse(group.normalizedKey(), entries.size(), entries);
+        return new FoodCatalogDuplicateGroupResponse(
+                group.normalizedKey(),
+                entries.size(),
+                group.suggestedCanonical().getId(),
+                entries);
     }
 }
