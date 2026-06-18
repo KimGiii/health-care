@@ -51,6 +51,8 @@ public class DietRecommendationCandidatePool {
         Map<Long, List<FoodAllergenTag>> tagsByFoodId = loadTags(catalogCandidates);
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsed);
 
+        // DB Spec이 foodIds·categories를 먼저 제거하고, 아래 두 줄은 Mock 환경 안전망이다.
+        // keywords·allergen은 DB Spec 대응이 없어 인메모리만 적용한다.
         List<DietRecommendationCandidate> candidates = catalogCandidates.stream()
                 .filter(food -> food.getCaloriesPer100g() != null)
                 .filter(food -> !parsed.foodIds().contains(food.getId()))
