@@ -168,6 +168,39 @@ class DietRecommendationCandidatePoolTest {
     }
 
     @Test
+    @DisplayName("strict 모드에서 고신뢰 verified 태그가 없는 식품은 제외된다")
+    void load_strictMode_excludesFoodWithoutHighConfidenceVerifiedTag() {
+        FoodCatalog plainRice = food(1L, "백미밥", FoodCategory.GRAIN, 130.0);
+        givenCatalogCandidates(List.of(plainRice));
+        // WHEAT 태그가 있지만 allergenProfileVerified=false → strict gate 미통과
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenTag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.UNKNOWN)));
+        given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenProfile(1L)));
+
+        DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), true).foods();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("non-strict 모드에서는 profile 검증만으로 통과한다")
+    void load_nonStrictMode_passesWithProfileAloneWithoutHighConfidenceTag() {
+        FoodCatalog plainRice = food(1L, "백미밥", FoodCategory.GRAIN, 130.0);
+        givenCatalogCandidates(List.of(plainRice));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenTag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.UNKNOWN)));
+        given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenProfile(1L)));
+
+        DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), false).foods();
+
+        assertThat(resultFoodIds(result)).contains(plainRice.getId());
+    }
+
+    @Test
     @DisplayName("영양 정보가 없는 식품(calories null)은 안전망에서 제외된다")
     void load_noNutritionInfo_excludedBySafetyGate() {
         FoodCatalog noCalFood = FoodCatalog.builder()

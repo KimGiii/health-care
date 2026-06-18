@@ -45,7 +45,7 @@ public class DietRecommendationCandidatePool {
             List<DietRestriction> restrictions,
             boolean strictAllergyMode
     ) {
-        CandidateRestrictions parsedRestrictions = CandidateRestrictions.from(restrictions);
+        CandidateRestrictions parsedRestrictions = CandidateRestrictions.from(restrictions, strictAllergyMode);
         List<FoodCatalog> catalogCandidates = loadCatalogCandidates(parsedRestrictions);
         Map<Long, List<FoodAllergenTag>> tagsByFoodId = loadTags(catalogCandidates);
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsedRestrictions);
@@ -121,6 +121,12 @@ public class DietRecommendationCandidatePool {
                         restrictions.allergenTags(),
                         tagsByFoodId
                 ))
+                .filter(food -> allergenGate.passesGate(
+                        food.getId(),
+                        restrictions.allergenTags(),
+                        tagsByFoodId,
+                        restrictions.strictAllergyMode()
+                ))
                 .filter(food -> allergenProfileGate.passesGate(
                         food.getId(),
                         restrictions.allergenTags(),
@@ -162,9 +168,10 @@ public class DietRecommendationCandidatePool {
             Set<Long> foodIds,
             Set<FoodCategory> categories,
             List<String> keywords,
-            Set<AllergenTag> allergenTags
+            Set<AllergenTag> allergenTags,
+            boolean strictAllergyMode
     ) {
-        static CandidateRestrictions from(List<DietRestriction> restrictions) {
+        static CandidateRestrictions from(List<DietRestriction> restrictions, boolean strictAllergyMode) {
             return new CandidateRestrictions(
                     restrictions.stream()
                             .filter(restriction -> restriction.getTargetType() == TargetType.FOOD)
@@ -186,7 +193,8 @@ public class DietRecommendationCandidatePool {
                             .filter(restriction -> restriction.getTargetType() == TargetType.ALLERGEN_TAG)
                             .map(DietRestriction::getAllergenTag)
                             .filter(Objects::nonNull)
-                            .collect(Collectors.toUnmodifiableSet())
+                            .collect(Collectors.toUnmodifiableSet()),
+                    strictAllergyMode
             );
         }
     }
