@@ -38,6 +38,8 @@ class FoodCatalogAdminOperationsTest {
     private MfdsFoodNutrientDbImporter foodNutrientDbImporter;
     private FoodCatalogDuplicateReportService duplicateReportService;
     private BrandMenuCsvImporter brandMenuCsvImporter;
+    private FoodCatalogNameRenormalizationService nameRenormalizationService;
+    private FoodCatalogNameOverrideService nameOverrideService;
     private FoodCatalogAdminOperations operations;
 
     @BeforeEach
@@ -52,6 +54,8 @@ class FoodCatalogAdminOperationsTest {
         foodNutrientDbImporter = mock(MfdsFoodNutrientDbImporter.class);
         duplicateReportService = mock(FoodCatalogDuplicateReportService.class);
         brandMenuCsvImporter = mock(BrandMenuCsvImporter.class);
+        nameRenormalizationService = mock(FoodCatalogNameRenormalizationService.class);
+        nameOverrideService = mock(FoodCatalogNameOverrideService.class);
         operations = new FoodCatalogAdminOperations(
                 adminOperationGuard,
                 batchRunner,
@@ -62,7 +66,9 @@ class FoodCatalogAdminOperationsTest {
                 foodNutrientDbPageFetcher,
                 foodNutrientDbImporter,
                 duplicateReportService,
-                brandMenuCsvImporter
+                brandMenuCsvImporter,
+                nameRenormalizationService,
+                nameOverrideService
         );
     }
 
@@ -177,5 +183,20 @@ class FoodCatalogAdminOperationsTest {
         assertThatThrownBy(() -> operations.importProcessedFoods("admin-token", 100, 0))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("maxPages");
+    }
+
+    @Test
+    @DisplayName("표시명 재정규화 — admin token 검증 후 재정규화 서비스를 실행한다")
+    void renormalizeNames_validatesTokenAndDelegates() {
+        FoodCatalogNameRenormalizationService.RenormalizationResult expected =
+                new FoodCatalogNameRenormalizationService.RenormalizationResult(1820, 4);
+        given(nameRenormalizationService.renormalizeAll()).willReturn(expected);
+
+        FoodCatalogNameRenormalizationService.RenormalizationResult result =
+                operations.renormalizeNames("admin-token");
+
+        verify(adminOperationGuard).assertAllowed("admin-token");
+        verify(nameRenormalizationService).renormalizeAll();
+        org.assertj.core.api.Assertions.assertThat(result).isEqualTo(expected);
     }
 }

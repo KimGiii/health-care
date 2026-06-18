@@ -68,12 +68,15 @@ public class MfdsFoodNutrientDbImporter implements FoodCatalogPageImporter<MfdsF
             return Optional.empty();
         }
 
+        FoodDisplayNameNormalizer.NormalizedName displayName = FoodDisplayNameNormalizer.normalize(foodName);
         return Optional.of(FoodCatalog.builder()
                 .foodCode(foodCode)
                 .source(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB)
                 .sourceDetail(SOURCE_DETAIL)
-                .name(foodName)
-                .nameKo(foodName)
+                .name(FoodCatalogImportText.normalizeToMaxLength(displayName.displayName(), NAME_MAX_LENGTH))
+                .nameKo(FoodCatalogImportText.normalizeToMaxLength(displayName.displayName(), NAME_MAX_LENGTH))
+                .searchAlias(FoodCatalogImportText.normalizeToMaxLength(
+                        displayName.searchAlias(), FoodCatalogImportText.SEARCH_ALIAS_MAX_LENGTH))
                 .brandName(FoodCatalogImportText.normalizeToMaxLength(
                         row.getSellerManufacturerName(), ORGANIZATION_NAME_MAX_LENGTH))
                 .maker(FoodCatalogImportText.firstNonBlankToMaxLength(

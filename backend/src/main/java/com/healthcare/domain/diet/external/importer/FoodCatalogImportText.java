@@ -4,6 +4,7 @@ final class FoodCatalogImportText {
 
     static final int FOOD_CODE_MAX_LENGTH = 60;
     static final int NAME_MAX_LENGTH = 150;
+    static final int SEARCH_ALIAS_MAX_LENGTH = 400;
     static final int ORGANIZATION_NAME_MAX_LENGTH = 150;
     static final int SERVING_REFERENCE_MAX_LENGTH = 80;
     static final int DATA_VERSION_MAX_LENGTH = 80;

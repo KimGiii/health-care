@@ -33,6 +33,8 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
                         LIKE LOWER(CONCAT('%', FUNCTION('replace', CAST(:query AS string), ' ', ''), '%'))
                     OR LOWER(FUNCTION('replace', COALESCE(f.nameKo, ''), ' ', ''))
                         LIKE LOWER(CONCAT('%', FUNCTION('replace', CAST(:query AS string), ' ', ''), '%'))
+                    OR LOWER(FUNCTION('replace', COALESCE(f.searchAlias, ''), ' ', ''))
+                        LIKE LOWER(CONCAT('%', FUNCTION('replace', CAST(:query AS string), ' ', ''), '%'))
                   )
             ORDER BY
               CASE
@@ -56,6 +58,23 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
 
     /** 외부/배치 적재 시 source + foodCode 기준으로 기존 카탈로그 항목을 찾는다. */
     Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode);
+
+    /** 표시명 수동 오버라이드용: 동일한 원본명(name)을 가진 모든 행을 조회한다(soft-delete 제외). */
+    List<FoodCatalog> findByName(String name);
+
+    /**
+     * 표시명 재정규화 백필용: 원본 어순({@code 대분류_세분류})이 남아 있는 행을 id 커서 기준으로 조회한다.
+     * id 오름차순 + afterId 커서로 매 배치가 전진하므로 재처리/무한루프가 없다.
+     */
+    @Query(value = """
+            SELECT * FROM food_catalog
+            WHERE id > :afterId
+              AND name LIKE '%\\_%' ESCAPE '\\'
+              AND deleted_at IS NULL
+            ORDER BY id
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<FoodCatalog> findUnderscoreNamesAfterId(@Param("afterId") long afterId, @Param("limit") int limit);
 
     /** 중복 후보 리포트용: 사용자 커스텀 식품을 제외한 전체 카탈로그를 반환한다. */
     List<FoodCatalog> findByIsCustomFalse();

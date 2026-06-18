@@ -25,6 +25,13 @@ public class FoodCatalog {
     @Column(name = "name_ko", length = 150)
     private String nameKo;
 
+    /**
+     * 검색 보조 문자열. MFDS 원본 어순({@code 경단_깨})과 정규화 표시명({@code 깨경단})을 함께 담아
+     * 사용자가 어느 어순으로 검색해도 매칭되게 한다. 정규화 대상이 아니면 null이다.
+     */
+    @Column(name = "search_alias", length = 400)
+    private String searchAlias;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private FoodCategory category;
@@ -138,9 +145,20 @@ public class FoodCatalog {
         this.usageCount = Math.max((this.usageCount == null ? 0L : this.usageCount) - 1, 0L);
     }
 
+    /**
+     * 표시명 정규화 결과를 적용한다. MFDS 원본명을 보유한 행의 백필에 사용한다.
+     * name/nameKo가 동일한 원본 어순이므로 둘 다 표시명으로 갱신한다.
+     */
+    public void applyDisplayNormalization(String displayName, String searchAlias) {
+        this.name = displayName;
+        this.nameKo = displayName;
+        this.searchAlias = searchAlias;
+    }
+
     public void updateSourceFactsFromImportedCatalog(FoodCatalog imported) {
         this.name = imported.name;
         this.nameKo = imported.nameKo;
+        this.searchAlias = imported.searchAlias;
         this.category = imported.category;
         this.caloriesPer100g = imported.caloriesPer100g;
         this.proteinPer100g = imported.proteinPer100g;

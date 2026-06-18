@@ -44,6 +44,8 @@ public class FoodCatalogAdminOperations {
     private final MfdsFoodNutrientDbImporter foodNutrientDbImporter;
     private final FoodCatalogDuplicateReportService duplicateReportService;
     private final BrandMenuCsvImporter brandMenuCsvImporter;
+    private final FoodCatalogNameRenormalizationService nameRenormalizationService;
+    private final FoodCatalogNameOverrideService nameOverrideService;
 
     public FoodCatalogBatchImportSummary importProcessedFoods(String adminToken, int pageSize, int maxPages) {
         assertBatchOperationAllowed(adminToken, "processed-foods", pageSize, maxPages);
@@ -95,6 +97,42 @@ public class FoodCatalogAdminOperations {
                 report.totalCandidates()
         );
         return report;
+    }
+
+    /**
+     * 이미 적재된 MFDS 원본명 행의 표시명을 정규화 휴리스틱으로 백필한다.
+     * importer가 앞으로의 적재를 처리하므로 기존 DB 1회 보정용이다(재실행 안전).
+     */
+    public FoodCatalogNameRenormalizationService.RenormalizationResult renormalizeNames(String adminToken) {
+        adminOperationGuard.assertAllowed(adminToken);
+        log.info("관리자 카탈로그 작업 시작: operation=renormalize-names");
+        FoodCatalogNameRenormalizationService.RenormalizationResult result =
+                nameRenormalizationService.renormalizeAll();
+        log.info(
+                "관리자 카탈로그 작업 완료: operation=renormalize-names, processed={}, batches={}",
+                result.processedCount(),
+                result.batchCount()
+        );
+        return result;
+    }
+
+    /**
+     * 검수 CSV의 수동 교정 표시명({@code corrected_display})을 적재된 행에 적용한다.
+     * 휴리스틱으로 해결되지 않는 예외를 사람이 검수한 값으로 우선 반영한다(재실행 안전).
+     */
+    public FoodCatalogNameOverrideService.OverrideResult applyNameOverrides(String adminToken, InputStream csvStream)
+            throws IOException {
+        adminOperationGuard.assertAllowed(adminToken);
+        log.info("관리자 카탈로그 작업 시작: operation=name-overrides");
+        FoodCatalogNameOverrideService.OverrideResult result = nameOverrideService.applyFromCsv(csvStream);
+        log.info(
+                "관리자 카탈로그 작업 완료: operation=name-overrides, entries={}, matchedNames={}, unmatchedNames={}, updatedRows={}",
+                result.entryCount(),
+                result.matchedNameCount(),
+                result.unmatchedNameCount(),
+                result.updatedRowCount()
+        );
+        return result;
     }
 
     private void assertBatchOperationAllowed(String adminToken, String operation, int pageSize, int maxPages) {

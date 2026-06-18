@@ -87,12 +87,15 @@ abstract class StandardFoodCatalogImporter implements FoodCatalogPageImporter<St
             return Optional.empty();
         }
 
+        FoodDisplayNameNormalizer.NormalizedName displayName = FoodDisplayNameNormalizer.normalize(foodName);
         return Optional.of(FoodCatalog.builder()
                 .foodCode(foodCode)
                 .source(source)
                 .sourceDetail(sourceDetail)
-                .name(foodName)
-                .nameKo(foodName)
+                .name(FoodCatalogImportText.normalizeToMaxLength(displayName.displayName(), NAME_MAX_LENGTH))
+                .nameKo(FoodCatalogImportText.normalizeToMaxLength(displayName.displayName(), NAME_MAX_LENGTH))
+                .searchAlias(FoodCatalogImportText.normalizeToMaxLength(
+                        displayName.searchAlias(), FoodCatalogImportText.SEARCH_ALIAS_MAX_LENGTH))
                 .brandName(FoodCatalogImportText.normalizeToMaxLength(brandName(row), ORGANIZATION_NAME_MAX_LENGTH))
                 .maker(FoodCatalogImportText.normalizeToMaxLength(maker(row), ORGANIZATION_NAME_MAX_LENGTH))
                 .category(mapCategory(row.getCategoryName()))
