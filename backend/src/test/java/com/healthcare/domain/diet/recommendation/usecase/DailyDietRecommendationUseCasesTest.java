@@ -198,7 +198,8 @@ class DailyDietRecommendationUseCasesTest {
                 0L,
                 id,
                 AllergenConfidenceLevel.UNKNOWN,
-                null
+                null,
+                true
         );
     }
 

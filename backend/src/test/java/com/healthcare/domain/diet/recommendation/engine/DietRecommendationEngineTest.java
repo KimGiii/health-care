@@ -249,7 +249,8 @@ class DietRecommendationEngineTest {
                 11 - id,
                 id,
                 AllergenConfidenceLevel.UNKNOWN,
-                caution
+                caution,
+                true
         );
     }
 

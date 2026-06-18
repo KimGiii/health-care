@@ -35,7 +35,6 @@ final class RecommendationBenchmarkFixtures {
                         candidates(100, 250, 20, 20, 10, AllergenConfidenceLevel.UNKNOWN),
                         NO_INTAKE,
                         true,
-                        true,
                         Set.of(100.0)
                 ),
                 scenario(
@@ -45,7 +44,6 @@ final class RecommendationBenchmarkFixtures {
                         candidates(200, 250, 20, 20, 10, AllergenConfidenceLevel.DIRECT_VERIFIED),
                         new NutritionVector(600, 40, 70, 20),
                         false,
-                        true,
                         Set.of(100.0)
                 ),
                 scenario(
@@ -55,7 +53,6 @@ final class RecommendationBenchmarkFixtures {
                         candidates(300, 250, 5, 20, 10, AllergenConfidenceLevel.DIRECT_VERIFIED),
                         NO_INTAKE,
                         false,
-                        true,
                         Set.of(100.0)
                 ),
                 scenario(
@@ -65,7 +62,6 @@ final class RecommendationBenchmarkFixtures {
                         candidates(400, 250, 10, 5, 10, AllergenConfidenceLevel.DIRECT_VERIFIED),
                         NO_INTAKE,
                         false,
-                        true,
                         Set.of(100.0)
                 ),
                 scenario(
@@ -75,7 +71,6 @@ final class RecommendationBenchmarkFixtures {
                         candidates(500, 200, 10, 25, 6.5, AllergenConfidenceLevel.DIRECT_VERIFIED),
                         NO_INTAKE,
                         false,
-                        true,
                         Set.of(100.0, 125.0)
                 ),
                 scenario(
@@ -84,7 +79,6 @@ final class RecommendationBenchmarkFixtures {
                         new NutritionTargets(2000, 100, 250, 65),
                         candidates(600, 200, 0, 0, 0, AllergenConfidenceLevel.DIRECT_VERIFIED),
                         NO_INTAKE,
-                        false,
                         false,
                         Set.of(100.0, 125.0)
                 )
@@ -98,7 +92,6 @@ final class RecommendationBenchmarkFixtures {
             List<DietRecommendationCandidate> candidates,
             NutritionVector confirmedIntake,
             boolean allergyRestricted,
-            boolean nutrientDataComplete,
             Set<Double> allowedServingG
     ) {
         return new RecommendationBenchmarkScenario(
@@ -110,7 +103,6 @@ final class RecommendationBenchmarkFixtures {
                 candidates,
                 confirmedIntake,
                 allergyRestricted,
-                nutrientDataComplete,
                 allowedServingG
         );
     }

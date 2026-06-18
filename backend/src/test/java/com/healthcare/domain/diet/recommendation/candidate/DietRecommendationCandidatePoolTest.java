@@ -4,7 +4,10 @@ import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenDataSource;
 import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.FoodAllergenProfileGate;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenProfile;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileRepository;
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
@@ -30,6 +33,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collection;
 import java.util.List;
+import java.time.OffsetDateTime;
 
 import static com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE;
 import static com.healthcare.domain.diet.entity.RecommendationStatus.RECOMMENDABLE_WITH_CAUTION;
@@ -49,6 +53,9 @@ class DietRecommendationCandidatePoolTest {
     @Mock
     private FoodAllergenTagRepository foodAllergenTagRepository;
 
+    @Mock
+    private FoodAllergenProfileRepository foodAllergenProfileRepository;
+
     private DietRecommendationCandidatePool candidatePool;
 
     @BeforeEach
@@ -56,7 +63,9 @@ class DietRecommendationCandidatePoolTest {
         candidatePool = new DietRecommendationCandidatePool(
                 foodCatalogRepository,
                 foodAllergenTagRepository,
-                new AllergenConfidenceGate()
+                foodAllergenProfileRepository,
+                new AllergenConfidenceGate(),
+                new FoodAllergenProfileGate()
         );
     }
 
@@ -128,6 +137,8 @@ class DietRecommendationCandidatePoolTest {
         givenCatalogCandidates(List.of(milk, chicken));
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
                 .willReturn(List.of(allergenTag(1L, AllergenTag.MILK, AllergenConfidenceLevel.DIRECT_VERIFIED)));
+        given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenProfile(2L)));
 
         DietRestriction restriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
         List<DietRecommendationCandidate> result = candidatePool.load(List.of(restriction), false).foods();
@@ -137,19 +148,23 @@ class DietRecommendationCandidatePoolTest {
     }
 
     @Test
-    @DisplayName("Strict 모드에서 알러젠 태그 없는 식품은 UNKNOWN 취급으로 제외된다")
-    void load_strictMode_excludesUnknownAllergenFoods() {
+    @DisplayName("알러지 제한이 있으면 strict 요청값과 무관하게 별도 프로필 검증 후보만 통과한다")
+    void load_allergyRestriction_requiresSeparateVerifiedProfile() {
         FoodCatalog riceNoodle = food(1L, "쌀국수", FoodCategory.GRAIN, 100.0);
         FoodCatalog plainRice = food(2L, "백미밥", FoodCategory.GRAIN, 130.0);
         givenCatalogCandidates(List.of(riceNoodle, plainRice));
-        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
-                .willReturn(List.of(allergenTag(2L, AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED, true)));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+        given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenProfile(2L)));
 
         DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
-        List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), true).foods();
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), false).foods();
 
         assertThat(resultFoodIds(result)).doesNotContain(riceNoodle.getId());
         assertThat(resultFoodIds(result)).contains(plainRice.getId());
+        assertThat(result).singleElement()
+                .extracting(DietRecommendationCandidate::allergenConfidenceLevel)
+                .isEqualTo(AllergenConfidenceLevel.LABEL_DERIVED);
     }
 
     @Test
@@ -167,6 +182,44 @@ class DietRecommendationCandidatePoolTest {
 
         assertThat(resultFoodIds(result)).doesNotContain(noCalFood.getId());
         assertThat(resultFoodIds(result)).contains(normalFood.getId());
+    }
+
+    @Test
+    @DisplayName("4종 매크로가 모두 있는 식품은 macroDataComplete=true로 변환된다")
+    void load_allMacrosPresent_macroDataCompleteIsTrue() {
+        FoodCatalog complete = FoodCatalog.builder()
+                .id(1L).name("닭가슴살").category(FoodCategory.PROTEIN_SOURCE)
+                .caloriesPer100g(165.0).proteinPer100g(31.0)
+                .carbsPer100g(0.0).fatPer100g(3.6)
+                .isCustom(false).usageCount(10L)
+                .build();
+        givenCatalogCandidates(List.of(complete));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(result).singleElement()
+                .extracting(DietRecommendationCandidate::macroDataComplete)
+                .isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("매크로 중 하나라도 null인 식품은 macroDataComplete=false로 변환된다")
+    void load_anyMacroNull_macroDataCompleteIsFalse() {
+        FoodCatalog incomplete = FoodCatalog.builder()
+                .id(1L).name("미검증식품").category(FoodCategory.OTHER)
+                .caloriesPer100g(200.0).proteinPer100g(null)
+                .carbsPer100g(null).fatPer100g(null)
+                .isCustom(false).usageCount(0L)
+                .build();
+        givenCatalogCandidates(List.of(incomplete));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(result).singleElement()
+                .extracting(DietRecommendationCandidate::macroDataComplete)
+                .isEqualTo(false);
     }
 
     @Test
@@ -294,6 +347,17 @@ class DietRecommendationCandidatePoolTest {
                 .confidenceLevel(level)
                 .source(AllergenDataSource.MFDS_CLASS)
                 .allergenProfileVerified(allergenProfileVerified)
+                .build();
+    }
+
+    private FoodAllergenProfile allergenProfile(Long foodCatalogId) {
+        return FoodAllergenProfile.builder()
+                .foodCatalogId(foodCatalogId)
+                .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
+                .source(AllergenDataSource.BRAND_OFFICIAL)
+                .standardVersion("KR-22-2026")
+                .reviewedAt(OffsetDateTime.now().minusDays(1))
+                .validUntil(OffsetDateTime.now().plusDays(1))
                 .build();
     }
 }

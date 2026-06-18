@@ -2,7 +2,10 @@ package com.healthcare.domain.diet.recommendation.candidate;
 
 import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.FoodAllergenProfileGate;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenProfile;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileRepository;
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
@@ -34,7 +37,9 @@ public class DietRecommendationCandidatePool {
 
     private final FoodCatalogRepository foodCatalogRepository;
     private final FoodAllergenTagRepository foodAllergenTagRepository;
+    private final FoodAllergenProfileRepository foodAllergenProfileRepository;
     private final AllergenConfidenceGate allergenGate;
+    private final FoodAllergenProfileGate allergenProfileGate;
 
     public DietRecommendationCandidates load(
             List<DietRestriction> restrictions,
@@ -43,13 +48,18 @@ public class DietRecommendationCandidatePool {
         CandidateRestrictions parsedRestrictions = CandidateRestrictions.from(restrictions);
         List<FoodCatalog> catalogCandidates = loadCatalogCandidates(parsedRestrictions);
         Map<Long, List<FoodAllergenTag>> tagsByFoodId = loadTags(catalogCandidates);
+        Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsedRestrictions);
         List<FoodCatalog> filtered = applyRuntimeGate(
                 catalogCandidates,
                 parsedRestrictions,
                 tagsByFoodId,
-                strictAllergyMode
+                profilesByFoodId
         );
-        return new DietRecommendationCandidates(toRecommendationCandidates(filtered, tagsByFoodId));
+        return new DietRecommendationCandidates(toRecommendationCandidates(
+                filtered,
+                tagsByFoodId,
+                profilesByFoodId
+        ));
     }
 
     private List<FoodCatalog> loadCatalogCandidates(CandidateRestrictions restrictions) {
@@ -77,11 +87,29 @@ public class DietRecommendationCandidatePool {
                 .collect(Collectors.groupingBy(FoodAllergenTag::getFoodCatalogId));
     }
 
+    private Map<Long, FoodAllergenProfile> loadProfiles(
+            List<FoodCatalog> catalogCandidates,
+            CandidateRestrictions restrictions
+    ) {
+        if (restrictions.allergenTags().isEmpty()) {
+            return Map.of();
+        }
+        List<Long> foodIds = catalogCandidates.stream()
+                .map(FoodCatalog::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (foodIds.isEmpty()) {
+            return Map.of();
+        }
+        return foodAllergenProfileRepository.findByFoodCatalogIdIn(foodIds).stream()
+                .collect(Collectors.toMap(FoodAllergenProfile::getFoodCatalogId, profile -> profile));
+    }
+
     private List<FoodCatalog> applyRuntimeGate(
             List<FoodCatalog> candidates,
             CandidateRestrictions restrictions,
             Map<Long, List<FoodAllergenTag>> tagsByFoodId,
-            boolean strictAllergyMode
+            Map<Long, FoodAllergenProfile> profilesByFoodId
     ) {
         return candidates.stream()
                 .filter(food -> food.getCaloriesPer100g() != null)
@@ -93,11 +121,10 @@ public class DietRecommendationCandidatePool {
                         restrictions.allergenTags(),
                         tagsByFoodId
                 ))
-                .filter(food -> allergenGate.passesGate(
+                .filter(food -> allergenProfileGate.passesGate(
                         food.getId(),
                         restrictions.allergenTags(),
-                        tagsByFoodId,
-                        strictAllergyMode
+                        profilesByFoodId
                 ))
                 .toList();
     }
@@ -118,12 +145,15 @@ public class DietRecommendationCandidatePool {
 
     private List<DietRecommendationCandidate> toRecommendationCandidates(
             List<FoodCatalog> foods,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId
+            Map<Long, List<FoodAllergenTag>> tagsByFoodId,
+            Map<Long, FoodAllergenProfile> profilesByFoodId
     ) {
         return foods.stream()
                 .map(food -> DietRecommendationCandidate.from(
                         food,
-                        allergenGate.resolveConfidence(food.getId(), tagsByFoodId)
+                        profilesByFoodId.containsKey(food.getId())
+                                ? profilesByFoodId.get(food.getId()).getConfidenceLevel()
+                                : allergenGate.resolveConfidence(food.getId(), tagsByFoodId)
                 ))
                 .toList();
     }

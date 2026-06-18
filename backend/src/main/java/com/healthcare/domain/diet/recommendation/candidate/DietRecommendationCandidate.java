@@ -22,7 +22,8 @@ public record DietRecommendationCandidate(
         long usageCount,
         long stableKey,
         AllergenConfidenceLevel allergenConfidenceLevel,
-        String caution
+        String caution,
+        boolean macroDataComplete
 ) {
     public DietRecommendationCandidate {
         allergenConfidenceLevel = allergenConfidenceLevel == null
@@ -46,7 +47,11 @@ public record DietRecommendationCandidate(
                 food.getUsageCount() != null ? food.getUsageCount() : 0L,
                 stableFoodKey(food),
                 allergenConfidenceLevel,
-                food.curation().cautionForResponse()
+                food.curation().cautionForResponse(),
+                food.getCaloriesPer100g() != null
+                        && food.getProteinPer100g() != null
+                        && food.getCarbsPer100g() != null
+                        && food.getFatPer100g() != null
         );
     }
 
