@@ -33,7 +33,8 @@ final class DietRecommendationViewModel: ObservableObject {
             let request = DailyDietRecommendationRequest(
                 date: dateFormatter.string(from: selectedDate),
                 mealTypes: selectedMeals.sorted { $0.rawValue < $1.rawValue }.map(\.rawValue),
-                strictAllergyMode: strictAllergyMode
+                strictAllergyMode: strictAllergyMode,
+                alternativeCount: 2
             )
             let body = try JSONEncoder().encode(request)
             result = try await apiClient.request(.getDailyRecommendation(body: body))

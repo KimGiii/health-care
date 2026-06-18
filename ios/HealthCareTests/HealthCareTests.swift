@@ -322,6 +322,12 @@ final class HealthCareTests: XCTestCase {
                 "carbTargetG": 230,
                 "fatTargetG": 67
               },
+              "remainingTargets": {
+                "calorieTarget": 2000,
+                "proteinTargetG": 150,
+                "carbTargetG": 230,
+                "fatTargetG": 67
+              },
               "appliedRestrictions": [],
               "meals": [],
               "totalNutrients": {
@@ -330,8 +336,10 @@ final class HealthCareTests: XCTestCase {
                 "totalCarbsG": 0,
                 "totalFatG": 0
               },
+              "failureReason": null,
               "strictAllergyMode": false,
-              "disclaimer": "이 추천은 참고용입니다."
+              "disclaimer": "이 추천은 참고용입니다.",
+              "alternatives": []
             }
             """)
         }

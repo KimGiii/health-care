@@ -123,16 +123,22 @@ struct DailyDietRecommendationRequest: Encodable {
     let date: String           // "yyyy-MM-dd"
     let mealTypes: [String]
     let strictAllergyMode: Bool
+    let alternativeCount: Int
 }
 
 struct DailyDietRecommendationResponse: Codable {
     let date: String
     let targets: NutritionTargets
+    let remainingTargets: NutritionTargets
     let appliedRestrictions: [DietRestriction]
     let meals: [RecommendedMeal]
     let totalNutrients: NutrientSummary
+    let failureReason: String?
     let strictAllergyMode: Bool
     let disclaimer: String
+    let alternatives: [[RecommendedMeal]]
+
+    var succeeded: Bool { failureReason == nil }
 
     struct NutrientSummary: Codable {
         let totalCalories: Double

@@ -444,6 +444,12 @@ final class DietRecommendationViewModelTests: XCTestCase {
                   "carbTargetG": 230,
                   "fatTargetG": 67
                 },
+                "remainingTargets": {
+                  "calorieTarget": 1350,
+                  "proteinTargetG": 108,
+                  "carbTargetG": 158,
+                  "fatTargetG": 49
+                },
                 "appliedRestrictions": [
                   {
                     "id": 1,
@@ -487,8 +493,10 @@ final class DietRecommendationViewModelTests: XCTestCase {
                   "totalCarbsG": 72,
                   "totalFatG": 18
                 },
+                "failureReason": null,
                 "strictAllergyMode": false,
-                "disclaimer": "\(disclaimer)"
+                "disclaimer": "\(disclaimer)",
+                "alternatives": []
               },
               "message": null
             }
@@ -581,6 +589,12 @@ final class DietRecommendationViewModelTests: XCTestCase {
               "carbTargetG": 230,
               "fatTargetG": 67
             },
+            "remainingTargets": {
+              "calorieTarget": 2000,
+              "proteinTargetG": 150,
+              "carbTargetG": 230,
+              "fatTargetG": 67
+            },
             "appliedRestrictions": [],
             "meals": [],
             "totalNutrients": {
@@ -589,8 +603,10 @@ final class DietRecommendationViewModelTests: XCTestCase {
               "totalCarbsG": 0,
               "totalFatG": 0
             },
+            "failureReason": null,
             "strictAllergyMode": \(strictAllergyMode),
-            "disclaimer": "\(disclaimer)"
+            "disclaimer": "\(disclaimer)",
+            "alternatives": []
           },
           "message": null
         }

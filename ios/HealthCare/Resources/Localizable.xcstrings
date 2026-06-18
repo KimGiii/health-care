@@ -12385,6 +12385,38 @@
         }
       }
     },
+    "recommend.alternatives.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative Plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대안 식단"
+          }
+        }
+      }
+    },
+    "recommend.alternative.n" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative %d"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대안 %d"
+          }
+        }
+      }
+    },
     "RECORD" : {
       "comment" : "A title of the record screen.",
       "extractionState" : "stale",

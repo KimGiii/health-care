@@ -157,10 +157,18 @@ struct DietRecommendationView: View {
     @ViewBuilder
     private func resultSection(_ result: DailyDietRecommendationResponse) -> some View {
         targetsCard(result.targets)
-        ForEach(result.meals) { meal in
-            mealCard(meal)
+        if let reason = result.failureReason {
+            failureReasonBanner(reason)
         }
-        totalsCard(result)
+        if !result.meals.isEmpty {
+            ForEach(result.meals) { meal in
+                mealCard(meal)
+            }
+            totalsCard(result)
+        }
+        if !result.alternatives.isEmpty {
+            alternativesSection(result.alternatives)
+        }
         disclaimerCard(result.disclaimer)
     }
 
@@ -323,6 +331,107 @@ struct DietRecommendationView: View {
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .elevation(.low)
+    }
+
+    private func failureReasonBanner(_ reason: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(Color.brandWarning)
+                .font(.subheadline)
+                .padding(.top, 1)
+            Text(reason)
+                .font(.subheadline)
+                .foregroundStyle(Color.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .background(Color.brandWarning.opacity(0.1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.brandWarning.opacity(0.4), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func alternativesSection(_ alts: [[RecommendedMeal]]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundStyle(Color.brandAccent)
+                Text("recommend.alternatives.title")
+                    .font(.subheadline).fontWeight(.semibold)
+                    .foregroundStyle(Color.textPrimary)
+            }
+            ForEach(Array(alts.enumerated()), id: \.offset) { index, altMeals in
+                alternativeCard(index: index + 1, meals: altMeals)
+            }
+        }
+    }
+
+    private func alternativeCard(index: Int, meals: [RecommendedMeal]) -> some View {
+        DisclosureGroup {
+            VStack(spacing: 10) {
+                ForEach(meals) { meal in
+                    alternativeMealRow(meal)
+                }
+            }
+            .padding(.top, 8)
+        } label: {
+            HStack {
+                Text(String(format: String(localized: "recommend.alternative.n"), index))
+                    .font(.subheadline).fontWeight(.medium)
+                    .foregroundStyle(Color.textPrimary)
+                Spacer()
+                Text(String(format: "%.0f kcal",
+                            meals.flatMap(\.items).reduce(0) { $0 + $1.calories }))
+                    .font(.caption).fontWeight(.medium)
+                    .foregroundStyle(Color.textSecondary)
+            }
+        }
+        .padding(14)
+        .background(Color.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .elevation(.low)
+    }
+
+    private func alternativeMealRow(_ meal: RecommendedMeal) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label {
+                    Text(meal.mealType.displayName)
+                        .font(.caption).fontWeight(.semibold)
+                        .foregroundStyle(Color.textPrimary)
+                } icon: {
+                    Image(systemName: meal.mealType.sfSymbol)
+                        .font(.caption2)
+                        .foregroundStyle(Color.brandPrimary)
+                }
+                Spacer()
+                Text(String(format: "%.0f kcal", meal.totalCalories))
+                    .font(.caption2)
+                    .foregroundStyle(Color.textSecondary)
+            }
+            ForEach(meal.items) { item in
+                HStack(spacing: 6) {
+                    if item.needsCaution {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.brandWarning)
+                    }
+                    Text(item.displayName)
+                        .font(.caption)
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
+                    Text(String(format: "%.0fg · %.0f kcal", item.servingG, item.calories))
+                        .font(.caption2)
+                        .foregroundStyle(Color.textSecondary)
+                }
+                .padding(.horizontal, 4)
+            }
+        }
+        .padding(10)
+        .background(Color.backgroundPage)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func disclaimerCard(_ text: String) -> some View {
