@@ -5,6 +5,8 @@ import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.goals.entity.Goal;
 import org.junit.jupiter.api.DisplayName;
+
+import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -43,7 +45,9 @@ class NutrientCompletenessPolicyTest {
                 0L, 1L,
                 AllergenConfidenceLevel.DIRECT_VERIFIED,
                 null,
-                macroDataComplete
+                macroDataComplete,
+                List.of(),
+                false
         );
     }
 }

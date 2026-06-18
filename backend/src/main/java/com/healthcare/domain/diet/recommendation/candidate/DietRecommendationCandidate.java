@@ -3,7 +3,10 @@ package com.healthcare.domain.diet.recommendation.candidate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodServingOption;
+import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,18 +26,27 @@ public record DietRecommendationCandidate(
         long stableKey,
         AllergenConfidenceLevel allergenConfidenceLevel,
         String caution,
-        boolean macroDataComplete
+        boolean macroDataComplete,
+        List<ServingOptionSnapshot> servingOptions,
+        boolean hasVerifiedServingOptions
 ) {
     public DietRecommendationCandidate {
         allergenConfidenceLevel = allergenConfidenceLevel == null
                 ? AllergenConfidenceLevel.UNKNOWN
                 : allergenConfidenceLevel;
+        servingOptions = servingOptions == null ? List.of() : List.copyOf(servingOptions);
     }
 
     public static DietRecommendationCandidate from(
             FoodCatalog food,
-            AllergenConfidenceLevel allergenConfidenceLevel
+            AllergenConfidenceLevel allergenConfidenceLevel,
+            List<FoodServingOption> options
     ) {
+        List<ServingOptionSnapshot> snapshots = options.stream()
+                .sorted(java.util.Comparator.comparingInt(FoodServingOption::getSortOrder))
+                .map(ServingOptionSnapshot::from)
+                .toList();
+        boolean hasVerified = options.stream().anyMatch(FoodServingOption::isVerified);
         return new DietRecommendationCandidate(
                 food.getId(),
                 food.getName(),
@@ -51,7 +63,9 @@ public record DietRecommendationCandidate(
                 food.getCaloriesPer100g() != null
                         && food.getProteinPer100g() != null
                         && food.getCarbsPer100g() != null
-                        && food.getFatPer100g() != null
+                        && food.getFatPer100g() != null,
+                snapshots,
+                hasVerified
         );
     }
 

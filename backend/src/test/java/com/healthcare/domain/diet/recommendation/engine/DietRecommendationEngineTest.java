@@ -250,7 +250,9 @@ class DietRecommendationEngineTest {
                 id,
                 AllergenConfidenceLevel.UNKNOWN,
                 caution,
-                true
+                true,
+                List.of(),
+                false
         );
     }
 

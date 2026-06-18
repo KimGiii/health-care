@@ -11,9 +11,11 @@ import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.FoodServingOption;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.policy.DataFreshnessPolicy;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import com.healthcare.domain.diet.repository.FoodServingOptionRepository;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.RestrictionType;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
@@ -57,6 +59,9 @@ class DietRecommendationCandidatePoolTest {
     @Mock
     private FoodAllergenProfileRepository foodAllergenProfileRepository;
 
+    @Mock
+    private FoodServingOptionRepository foodServingOptionRepository;
+
     private DietRecommendationCandidatePool candidatePool;
 
     @BeforeEach
@@ -65,6 +70,7 @@ class DietRecommendationCandidatePoolTest {
                 foodCatalogRepository,
                 foodAllergenTagRepository,
                 foodAllergenProfileRepository,
+                foodServingOptionRepository,
                 new AllergenSafetyGate(),
                 new DataFreshnessPolicy()
         );
@@ -307,6 +313,45 @@ class DietRecommendationCandidatePoolTest {
         assertThat(result).singleElement()
                 .extracting(DietRecommendationCandidate::macroDataComplete)
                 .isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("제공량 옵션이 있는 식품은 hasVerifiedServingOptions=true가 되고 옵션이 포함된다")
+    void load_withVerifiedServingOption_hasVerifiedServingOptionsTrue() {
+        FoodCatalog chicken = food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
+        givenCatalogCandidates(List.of(chicken));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+        FoodServingOption verifiedOption = FoodServingOption.builder()
+                .id(1L).foodCatalogId(1L)
+                .label("1회 제공량").equivalentG(150.0).sortOrder(0)
+                .servingType(FoodServingOption.ServingType.OFFICIAL_SERVING)
+                .verifiedAt(java.time.OffsetDateTime.now().minusDays(1))
+                .build();
+        given(foodServingOptionRepository.findByFoodCatalogIdIn(any())).willReturn(List.of(verifiedOption));
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(result).singleElement().satisfies(candidate -> {
+            assertThat(candidate.hasVerifiedServingOptions()).isTrue();
+            assertThat(candidate.servingOptions()).hasSize(1);
+            assertThat(candidate.servingOptions().get(0).equivalentG()).isEqualTo(150.0);
+        });
+    }
+
+    @Test
+    @DisplayName("제공량 옵션이 없는 식품은 hasVerifiedServingOptions=false이고 빈 리스트다")
+    void load_withoutServingOption_hasVerifiedServingOptionsFalse() {
+        FoodCatalog chicken = food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0);
+        givenCatalogCandidates(List.of(chicken));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+        given(foodServingOptionRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(result).singleElement().satisfies(candidate -> {
+            assertThat(candidate.hasVerifiedServingOptions()).isFalse();
+            assertThat(candidate.servingOptions()).isEmpty();
+        });
     }
 
     @Test

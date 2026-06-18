@@ -144,7 +144,9 @@ final class RecommendationBenchmarkFixtures {
                             id,
                             confidence,
                             null,
-                            macroDataComplete
+                            macroDataComplete,
+                            List.of(),
+                            false
                     );
                 })
                 .toList();

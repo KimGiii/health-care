@@ -8,6 +8,7 @@ import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import com.healthcare.domain.diet.repository.FoodServingOptionRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,9 @@ class FoodCatalogServiceTest {
 
     @Mock
     private FoodCatalogRepository foodCatalogRepository;
+
+    @Mock
+    private FoodServingOptionRepository foodServingOptionRepository;
 
     @InjectMocks
     private FoodCatalogService foodCatalogService;

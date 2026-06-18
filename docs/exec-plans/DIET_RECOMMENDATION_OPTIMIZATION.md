@@ -306,7 +306,14 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 - [x] source 신뢰도·버전 만료 정책
   - `DataFreshnessPolicy`: source별 최대 허용 연령 (MFDS 2년, BRAND_OFFICIAL 1년, SEED·USER_CUSTOM 무제한)
   - `DietRecommendationCandidatePool`: `dataFreshnessPolicy.isCurrent(food)` 인메모리 필터 추가
-- [ ] 제공량 옵션 모델 (`food_serving_options`)과 iOS 프리셋 UX
+- [x] 제공량 옵션 모델 (`food_serving_options`)과 iOS 프리셋 UX
+  - V34 Flyway 마이그레이션: `food_serving_options` 테이블 (label, equivalent_g, sort_order, serving_type, verified_at)
+  - `FoodServingOption` JPA 엔티티 + `ServingOptionSnapshot` 공유 record
+  - `FoodServingOptionRepository`: findByFoodCatalogIdIn / findByFoodCatalogIdOrderBySortOrderAsc
+  - `DietRecommendationCandidate`: `servingOptions`, `hasVerifiedServingOptions` 필드 추가
+  - `DietRecommendationCandidatePool`: serving options 벌크 로드 → 후보에 전달
+  - `FoodCatalogService`: 검색 결과에 serving options 벌크 로드 (iOS 프리셋 UX용)
+  - `FoodCatalogResponse`: `servingOptions: List<ServingOptionSnapshot>` 필드 추가
 - [ ] canonical 식품 그룹과 대표 후보 조회
 - [ ] 검증 우선순위 리포트 (운영자 조회)
 

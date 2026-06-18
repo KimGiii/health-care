@@ -10,9 +10,11 @@ import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileReposit
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodServingOption;
 import com.healthcare.domain.diet.policy.DataFreshnessPolicy;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogSpecs;
+import com.healthcare.domain.diet.repository.FoodServingOptionRepository;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class DietRecommendationCandidatePool {
     private final FoodCatalogRepository foodCatalogRepository;
     private final FoodAllergenTagRepository foodAllergenTagRepository;
     private final FoodAllergenProfileRepository foodAllergenProfileRepository;
+    private final FoodServingOptionRepository foodServingOptionRepository;
     private final AllergenSafetyGate allergenSafetyGate;
     private final DataFreshnessPolicy dataFreshnessPolicy;
 
@@ -52,6 +55,7 @@ public class DietRecommendationCandidatePool {
         List<FoodCatalog> catalogCandidates = loadCatalogCandidates(parsed);
         Map<Long, List<FoodAllergenTag>> tagsByFoodId = loadTags(catalogCandidates);
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsed);
+        Map<Long, List<FoodServingOption>> optionsByFoodId = loadServingOptions(catalogCandidates);
 
         // DB Spec이 foodIds·categories를 먼저 제거하고, 아래 두 줄은 Mock 환경 안전망이다.
         // keywords·allergen·freshness는 DB Spec 대응이 없어 인메모리만 적용한다.
@@ -71,7 +75,10 @@ public class DietRecommendationCandidatePool {
                     );
                     SafetyDecision decision = allergenSafetyGate.decide(ctx);
                     return decision.passes()
-                            ? Stream.of(DietRecommendationCandidate.from(food, decision.confidence()))
+                            ? Stream.of(DietRecommendationCandidate.from(
+                                    food,
+                                    decision.confidence(),
+                                    optionsByFoodId.getOrDefault(food.getId(), List.of())))
                             : Stream.empty();
                 })
                 .toList();
@@ -120,6 +127,19 @@ public class DietRecommendationCandidatePool {
         }
         return foodAllergenProfileRepository.findByFoodCatalogIdIn(foodIds).stream()
                 .collect(Collectors.toMap(FoodAllergenProfile::getFoodCatalogId, profile -> profile));
+    }
+
+    private Map<Long, List<FoodServingOption>> loadServingOptions(List<FoodCatalog> catalogCandidates) {
+        List<Long> foodIds = catalogCandidates.stream()
+                .map(FoodCatalog::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (foodIds.isEmpty()) {
+            return Map.of();
+        }
+        return foodServingOptionRepository.findByFoodCatalogIdIn(foodIds)
+                .stream()
+                .collect(Collectors.groupingBy(FoodServingOption::getFoodCatalogId));
     }
 
     private boolean matchesKeyword(FoodCatalog food, List<String> keywords) {

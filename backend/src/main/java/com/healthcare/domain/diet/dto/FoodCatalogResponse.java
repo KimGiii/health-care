@@ -3,11 +3,14 @@ package com.healthcare.domain.diet.dto;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.FoodServingOption;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
+import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -41,8 +44,18 @@ public class FoodCatalogResponse {
     private final boolean custom;
     private final long usageCount;
     private final Long createdByUserId;
+    /** iOS 프리셋 UX용 제공량 옵션 목록. sort_order 오름차순. 없으면 빈 리스트. */
+    private final List<ServingOptionSnapshot> servingOptions;
 
     public static FoodCatalogResponse from(FoodCatalog food) {
+        return from(food, List.of());
+    }
+
+    public static FoodCatalogResponse from(FoodCatalog food, List<FoodServingOption> options) {
+        List<ServingOptionSnapshot> snapshots = options.stream()
+                .sorted(java.util.Comparator.comparingInt(FoodServingOption::getSortOrder))
+                .map(ServingOptionSnapshot::from)
+                .toList();
         return FoodCatalogResponse.builder()
                 .id(food.getId())
                 .name(food.getName())
@@ -72,6 +85,7 @@ public class FoodCatalogResponse {
                 .custom(food.getIsCustom())
                 .usageCount(food.getUsageCount() != null ? food.getUsageCount() : 0L)
                 .createdByUserId(food.getCreatedByUserId())
+                .servingOptions(snapshots)
                 .build();
     }
 }
