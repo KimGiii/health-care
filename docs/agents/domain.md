@@ -5,6 +5,7 @@ How the engineering skills should consume this repo's domain documentation when 
 ## Before exploring, read these
 
 - **`CONTEXT-MAP.md`** at the repo root — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
+- **`docs/agents/project-memory.md`** — cross-session product decisions and the current implementation direction.
 - **`backend/CONTEXT.md`** — backend domain language.
 - **`ios/CONTEXT.md`** — iOS domain language.
 - **`docs/adr/README.md`** and ADR files in **`docs/adr/`** — system-wide architectural decisions.

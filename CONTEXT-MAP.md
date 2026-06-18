@@ -15,6 +15,19 @@ System-wide ADRs live in `docs/adr/README.md` and sibling ADR files under `docs/
 
 Read shared ADRs when a change crosses backend/iOS boundaries, affects product behavior, changes data contracts, or touches infrastructure.
 
+## Project Memory
+
+여러 세션에서 유지해야 하는 확정 제품 결정과 현재 우선순위는 `docs/agents/project-memory.md`에 기록합니다. 상세 정책은 PRD·ADR·실행 계획이 우선하며, 메모리는 이 기준 문서의 링크와 결정 요약을 유지합니다.
+
+식단 추천 작업은 다음 순서로 읽습니다.
+
+1. `docs/agents/project-memory.md`
+2. `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
+3. `docs/adr/0002-goal-aware-nutrition-optimization.md`
+4. `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+5. `docs/exec-plans/FOOD_CATALOG_ENRICHMENT.md`
+6. `backend/CONTEXT.md`, `ios/CONTEXT.md`
+
 ## Shared Metrics
 
 Gainsy의 구현 규모, 운영 경험, 품질 개선, 테스터/사용자 수, AI 음식 분석 정확도처럼 숫자로 표현하는 지표는 `docs/product-specs/GAINSY_QUANTIFIED_PROGRESS.md`를 기준 문서로 유지합니다.

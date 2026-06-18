@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded in part by [ADR-0002](0002-goal-aware-nutrition-optimization.md)
+
+포함 태그의 의미와 프로필 완결성 모델은 유지한다. 기본 베스트에포트 모드가 미검토 후보를 통과시키는 결정은 ADR-0002가 대체한다.
 
 ## Context
 

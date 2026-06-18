@@ -1,10 +1,15 @@
 # Architecture Design Document
 ## Personal Health Tracking App — Korean Market
 
-**Version:** 1.0
-**Date:** April 9, 2026
+**Version:** 1.1
+**Date:** June 18, 2026
 **Author:** System Architect
-**Status:** Draft for Engineering Review
+**Status:** Reflects current implementation and documented deployment direction (post-MVP)
+
+> v1.1 변경 요약: 패키지 구조를 실제 구현(`domain/*` 단일 계층, `infrastructure/` 폐지)에 맞춰
+> 전면 갱신. 신규 도메인·기능 반영 — 소셜 로그인(Apple/Google OIDC), AI 식단/운동 추정,
+> 식단 사진 분석, 알레르기·식이제한 필터, 일일 식단 추천 엔진, 공공 식품(MFDS) 카탈로그
+> 임포터, 인사이트/주간 요약, 레이트 리밋·프리미엄 게이팅, Prometheus/Grafana 관측.
 
 ---
 
@@ -43,35 +48,39 @@
 │                        (EC2 / Docker container)                            │
 │                                                                            │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────┐  ┌──────────────────┐  │
-│  │  Security  │  │  Exercise  │  │    Diet     │  │  Measurement     │  │
-│  │  (JWT)     │  │  Domain    │  │  Domain     │  │  Domain          │  │
+│  │  Security  │  │  Auth /    │  │  Exercise   │  │  Diet            │  │
+│  │  (JWT +    │  │  OAuth     │  │  (+AI est.) │  │  (catalog, AI,   │  │
+│  │   OIDC)    │  │ (Apple/Goog)│  │             │  │  allergen, rec.) │  │
 │  └────────────┘  └────────────┘  └─────────────┘  └──────────────────┘  │
 │                                                                            │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────┐  ┌──────────────────┐  │
-│  │  Goal      │  │    S3      │  │    FCM      │  │  Nutrition       │  │
-│  │  Domain    │  │  Infra     │  │  Infra      │  │  Infra           │  │
+│  │ BodyMeasure│  │  Goals     │  │  Insights   │  │  Nutrition       │  │
+│  │ +ProgPhoto │  │ (+sched.)  │  │ (weekly,    │  │  (targets,       │  │
+│  │            │  │            │  │  change)    │  │   calculator)    │  │
 │  └────────────┘  └────────────┘  └─────────────┘  └──────────────────┘  │
-└──────┬────────────────┬─────────────────┬──────────────────┬─────────────┘
-       │                │                 │                  │
-       ▼                ▼                 ▼                  ▼
-┌────────────┐  ┌──────────────┐  ┌───────────┐  ┌──────────────────────┐
-│ PostgreSQL  │  │    Redis     │  │  AWS S3   │  │  External Food APIs  │
-│ (RDS)      │  │ (ElastiCache)│  │           │  │                      │
-│            │  │              │  │  Progress │  │  ┌──────────────────┐│
-│  - users   │  │  - food      │  │  Photos   │  │  │ USDA FoodData    ││
-│  - exercise│  │    search    │  │           │  │  │ Central          ││
-│  - diet    │  │  - daily     │  │           │  │  └──────────────────┘│
-│  - measure │  │    macro     │  │           │  │  ┌──────────────────┐│
-│  - goals   │  │    totals    │  │           │  │  │ Open Food Facts  ││
-│  - food    │  │  - user      │  │           │  │  │ (Korean barcodes)││
-│    catalog │  │    profile   │  │           │  │  └──────────────────┘│
-└────────────┘  └──────────────┘  └───────────┘  └──────────────────────┘
-                                                           │
-                                              ┌────────────▼──────────────┐
-                                              │  FCM (Firebase Cloud      │
-                                              │  Messaging)               │
-                                              │  Push → Mobile Clients    │
-                                              └───────────────────────────┘
+│                                                                            │
+│  common: RateLimitingFilter · Premium/Admin guards · NotificationCenter   │
+└──────┬───────────┬───────────┬───────────┬──────────────┬────────────────┘
+       │           │           │           │              │
+       ▼           ▼           ▼           ▼              ▼
+┌──────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌────────────────────┐
+│PostgreSQL│ │  Redis   │ │ AWS S3  │ │ External │ │  AI Providers      │
+│ (RDS)    │ │(ElastiC.)│ │         │ │ Food API │ │                    │
+│          │ │          │ │ Progress│ │          │ │ ┌────────────────┐ │
+│ users    │ │ external │ │ + meal  │ │ ┌──────┐ │ │ │ OpenAI         │ │
+│ exercise │ │  food    │ │ photos  │ │ │ MFDS │ │ │ │ (meal photo,   │ │
+│ diet     │ │  search  │ │         │ │ │식약처│ │ │ │  nutrition/    │ │
+│ food_    │ │ user     │ │         │ │ │ 공공  │ │ │ │  exercise est.)│ │
+│  catalog │ │  profile │ │         │ │ │ 식품  │ │ │ └────────────────┘ │
+│ allergen │ │          │ │         │ │ │ API  │ │ │ (fallback when    │
+│ recommend│ │          │ │         │ │ └──────┘ │ │  not configured)   │
+└──────────┘ └──────────┘ └─────────┘ └──────────┘ └────────────────────┘
+       │                                                      │
+       │                                         ┌────────────▼──────────────┐
+       │                                         │  FCM (Firebase Cloud      │
+       └─── OAuth JWKS (Apple/Google) ◄──────────┤  Messaging)               │
+                                                 │  Push → Mobile Clients    │
+                                                 └───────────────────────────┘
 ```
 
 ### 1.2 Data Flow Narrative — "Log Exercise Session" Request
@@ -119,7 +128,7 @@ The research report (section 4.1) provides explicit justification: PostgreSQL is
 
 ### 2.5 Redis (Caching Layer)
 
-Redis is used for three explicit cache targets: food search results (TTL 30 days, aligns with the 30-day food catalog TTL from research section 4.2), daily macro totals per user per date (TTL until end of calendar day, evicted on any meal write), and user profile data (TTL 1 hour, evicted on profile update). These three caches directly address the PRD performance targets: food search cached response must be under 300ms (PRD section 7.1). Redis's sub-millisecond read latency makes cached food searches effectively instant. Spring Cache abstraction (`@Cacheable`, `@CacheEvict`) is used to keep cache management co-located with business logic. Redis is not used for session state — JWT statelessness makes this unnecessary.
+Redis is used for two explicit cache targets in the current implementation: admin/enrichment-only external food search results (`external-food-search`, TTL 30 days) and user profile data (`userProfile`, TTL 1 hour, evicted on profile/body-measurement/goal updates). Spring Cache abstraction (`@Cacheable`, `@CacheEvict`) keeps cache management co-located with business logic. Cache failures degrade to the underlying data source instead of failing the request. Redis is not used for session state — JWT statelessness makes this unnecessary.
 
 ### 2.6 AWS S3 (Progress Photo Storage)
 
@@ -129,11 +138,56 @@ The research report (section 4.4) is explicit: progress photos must never be sto
 
 Firebase Cloud Messaging provides a managed, cross-platform push notification delivery infrastructure for both Android and iOS. The PRD notification strategy (section 5) requires event-triggered, immediate notifications for PRs and milestones — FCM's server-side SDK allows these to be sent from any backend service. FCM handles platform-specific delivery details (APNs for iOS, FCM direct for Android), eliminating the need to maintain two separate notification pipelines. The Firebase Admin SDK for Java is integrated via the `firebase-admin` dependency. Device tokens are stored in the `users.fcm_token` column and refreshed when the mobile client reports a new token.
 
-### 2.8 USDA FoodData Central + Open Food Facts
+### 2.8 식품 데이터 — MFDS 공공 식품 API + 카탈로그 임포터
 
-The research report (section 4.2) explicitly recommends the layered approach: USDA FoodData Central as the primary database (600,000+ verified items, public domain, laboratory-tested nutrient values) and Open Food Facts as the secondary source for barcode scanning and Korean packaged food coverage (150,000+ Korean products, best free option). API responses are cached in the `food_catalog` table with a 30-day TTL and the source's `external_id` for cache invalidation — this reduces external API calls by 80%+ after initial warm-up (research section 4.2). The `NutritionApiOrchestrator` in the infrastructure layer handles the search priority: local cache first, then USDA, then Open Food Facts for barcode lookups.
+초기 설계(v1.0)는 USDA FoodData Central + Open Food Facts를 가정했으나, 한국 시장 커버리지와
+표시명·영양표시기준(영양소 10종) 정합성을 위해 **식약처(MFDS) 공공 식품 영양성분 API**를 1차
+소스로 채택했다. 외부 API는 실시간 프록시가 아니라 **배치 임포터**(`domain/diet/external/importer`)로
+`food_catalog` 테이블에 적재한다. 표준 식품·가공식품·외식 메뉴 등 소스별 페이지 페처
+(`*PageFetcher`)와 페이지 단위 스로틀·체크포인트(`FoodCatalogImportCheckpoint`)로 대용량 적재를
+재개 가능하게 처리하고, 표시명 정규화(`FoodDisplayNameNormalizer`)·중복 탐지
+(`dedup/FoodCatalogDuplicate*`)·검색 별칭(`food_catalog_search_alias`)으로 검색 품질을 보강한다.
+사용자 런타임 검색은 로컬 카탈로그(`FoodCatalogService`)만 사용한다. 공공 API 조회
+(`ExternalFoodSearchService`)는 관리자 보강·검수 경로로 제한하며, 사용자 검색 요청의 fallback으로
+호출하지 않는다.
 
-### 2.9 Gradle
+### 2.9 AI 추정 — OpenAI (식단 사진 / 영양·운동 추정)
+
+세 가지 AI 보조 기능이 OpenAI를 사용한다: (1) 식단 사진 분석(`domain/diet/mealphoto`) — 사진을
+S3에 업로드 후 `OpenAiMealAnalysisProvider`가 음식 항목·추정 영양을 산출하고 사용자가 확정
+(confirm)하면 식단 기록으로 전환한다. (2) 자연어 식단 영양 추정(`domain/diet/ai`). (3) 운동 칼로리
+추정(`domain/exercise/ai`). 식단 사진 분석은 `MealAnalysisProvider` 인터페이스 뒤에 두며,
+OpenAI provider bean을 구성할 수 없을 때 `FallbackMealAnalysisProvider`가 검토용 초안을 제공한다.
+실행 중 OpenAI 호출 실패를 자동 fallback하는 계약은 아니다. 자연어 식단·운동 추정은 각 도메인의
+전용 서비스를 사용한다. AI 기능은 프리미엄 게이팅 대상이다.
+
+### 2.10 소셜 로그인 — Apple / Google OIDC
+
+이메일/비밀번호 외에 Apple·Google ID 토큰 기반 소셜 로그인을 지원한다(`security/oauth`).
+`auth0:jwks-rsa`로 발급자 JWKS를 받아 ID 토큰 서명을 검증하고(`AppleIdTokenVerifier`,
+`GoogleIdTokenVerifier`, 공통 `JwksIdTokenVerifier`), 동일 이메일이면 기존 계정에 자동 연결한다.
+검증 통과 후에는 자체 JWT(access/refresh)를 발급해 이후 흐름은 기존과 동일하다. 스키마는
+`V19__add_social_auth.sql`.
+
+### 2.11 레이트 리밋 · 프리미엄/관리자 게이팅 · 동의 관리
+
+`common/filter/RateLimitingFilter`가 엔드포인트 호출량을 제한한다. 프리미엄 기능(AI 추정·사진
+분석 등)은 `PremiumAccessGuard` + `PremiumRequiredException`으로 게이팅하며 사용자 플래그는
+`V17__user_premium_flag.sql`. 관리자 전용 카탈로그/알레르기 태그 운영 API는
+`AdminOperationGuard`로 보호한다. 약관·개인정보 동의 시각은 `V20__add_user_consent_timestamps.sql`.
+
+### 2.12 알레르기 · 식이제한 · 일일 식단 추천
+
+식약처/브랜드 공식 출처 기반 알레르기 태그(`domain/diet/allergen`, `food_allergen_tags`,
+`AllergenConfidenceLevel`·confidence gate)와 사용자 식이제한(`domain/diet/restriction`)을 결합해,
+일일 식단 추천 엔진(`domain/diet/recommendation/engine`)이 후보 풀에서 제약을 만족하는 끼니를
+구성한다. 추천 큐레이션 값 객체와 주의 판정 정책은
+`RecommendationCuration`/`RecommendationCautionPolicy`로 표현하고, 저장 상태의 초기값은
+시드(`V25__seed_recommendation_curation.sql`)로 관리한다. 관련 스키마:
+`V22__allergen_restriction_schema.sql`, `V23__food_catalog_source_recommendation_fields.sql`,
+`V26`~`V31`(알레르기 태그 시드·검증·출처).
+
+### 2.13 Gradle
 
 Gradle with Kotlin DSL (`build.gradle.kts`) is used for the build system. Gradle's incremental compilation and build cache make it significantly faster than Maven for iterative development cycles. The `spring-boot` and `spring-dependency-management` plugins handle dependency version alignment. Multi-module builds are supported if the project grows to separate modules for infrastructure concerns.
 
@@ -141,209 +195,100 @@ Gradle with Kotlin DSL (`build.gradle.kts`) is used for the build system. Gradle
 
 ## 3. Full Package Structure
 
+> 실제 구현은 단일 `domain/*` 계층을 쓰며 v1.0의 `infrastructure/` 패키지는 폐지됐다.
+> S3/FCM은 `common/`과 각 도메인 서비스로, 영양 계산은 `domain/nutrition`으로 흡수됐다.
+> `measurement`는 `bodymeasurement`(체측 + 진행 사진)로, `goal`은 `goals`로 명칭이 바뀌었다.
+> 아래는 클래스 단위가 아닌 패키지·핵심 컴포넌트 수준의 현행 구조다.
+
 ```
 com.healthcare
+├── HealthCareApplication.java
+│
 ├── common/
-│   ├── config/
-│   │   ├── RedisConfig.java
-│   │   ├── S3Config.java
-│   │   ├── SecurityConfig.java
-│   │   ├── FcmConfig.java
-│   │   ├── AsyncConfig.java
-│   │   └── WebMvcConfig.java
-│   ├── exception/
-│   │   ├── GlobalExceptionHandler.java
-│   │   ├── ResourceNotFoundException.java
-│   │   ├── DuplicateResourceException.java
-│   │   ├── UnauthorizedException.java
-│   │   ├── ValidationException.java
-│   │   └── ExternalApiException.java
-│   ├── response/
-│   │   ├── ApiResponse.java            (generic wrapper: success, data, message)
-│   │   ├── PageResponse.java           (paginated wrapper: content, page, size, totalElements)
-│   │   └── ErrorResponse.java          (code, message, fieldErrors[])
-│   └── util/
-│       ├── DateUtil.java               (timezone-aware date helpers; streak day evaluation)
-│       ├── CalorieCalculator.java      (Mifflin-St Jeor, MET formula, Keytel formula)
-│       ├── BodyMetricsCalculator.java  (BMI, WHR, US Navy body fat formula)
-│       └── ExifStripper.java          (strips GPS + device metadata from photo bytes)
+│   ├── config/        RedisConfig · S3Config · SecurityConfig · AsyncConfig · WebMvcConfig
+│   ├── security/      AdminOperationGuard · PremiumAccessGuard
+│   ├── filter/        RateLimitingFilter
+│   ├── notification/  FcmConfig/FcmService/FcmProperties · NotificationCenterService ·
+│   │                  NotificationController · NotificationLog(+Repository) ·
+│   │                  WeeklyNotificationScheduler · NotificationService
+│   ├── exception/     GlobalExceptionHandler · ResourceNotFound · Duplicate · Unauthorized ·
+│   │                  Validation · BusinessRuleViolation · PremiumRequired
+│   ├── response/      ApiResponse · ErrorResponse
+│   └── web/           PageRequests
 │
-├── domain/
-│   │
-│   ├── user/
-│   │   ├── controller/
-│   │   │   └── UserController.java         (GET/PATCH /api/v1/users/me, DELETE /api/v1/users/me)
-│   │   ├── service/
-│   │   │   ├── UserService.java
-│   │   │   └── UserDeletionService.java    (soft-delete, queues hard-delete at Day 30)
-│   │   ├── repository/
-│   │   │   └── UserRepository.java
-│   │   ├── entity/
-│   │   │   └── User.java                  (id, email, passwordHash, displayName, sex, dateOfBirth,
-│   │   │                                   heightCm, weightKg, activityLevel, fcmToken,
-│   │   │                                   calorieTarget, proteinTargetG, carbTargetG, fatTargetG,
-│   │   │                                   createdAt, updatedAt, deletedAt)
-│   │   └── dto/
-│   │       ├── UserProfileResponse.java
-│   │       └── UpdateProfileRequest.java
-│   │
-│   ├── auth/
-│   │   ├── controller/
-│   │   │   └── AuthController.java         (POST /api/v1/auth/register, /login, /token/refresh, /logout)
-│   │   ├── service/
-│   │   │   └── AuthService.java            (register, login, refreshToken, logout)
-│   │   ├── repository/
-│   │   │   └── RefreshTokenRepository.java
-│   │   ├── entity/
-│   │   │   └── RefreshToken.java           (id, userId, tokenHash, expiresAt, createdAt, revokedAt)
-│   │   └── dto/
-│   │       ├── RegisterRequest.java
-│   │       ├── LoginRequest.java
-│   │       ├── TokenResponse.java          (accessToken, refreshToken, expiresIn)
-│   │       └── RefreshTokenRequest.java
-│   │
-│   ├── exercise/
-│   │   ├── controller/
-│   │   │   ├── ExerciseSessionController.java   (POST/GET /api/v1/exercise/sessions,
-│   │   │   │                                     GET/PATCH/DELETE /api/v1/exercise/sessions/{id})
-│   │   │   ├── ExerciseSummaryController.java   (GET /api/v1/exercise/summary/daily,
-│   │   │   │                                     GET /api/v1/exercise/summary/weekly)
-│   │   │   └── ExerciseCatalogController.java   (GET /api/v1/exercise/catalog)
-│   │   ├── service/
-│   │   │   ├── ExerciseSessionService.java      (create, list, update, delete, PR detection)
-│   │   │   ├── ExerciseSummaryService.java      (daily/weekly aggregation, cached)
-│   │   │   └── ExerciseCatalogService.java      (search catalog, create custom exercise)
-│   │   ├── repository/
-│   │   │   ├── ExerciseSessionRepository.java
-│   │   │   ├── ExerciseSetRepository.java
-│   │   │   └── ExerciseCatalogRepository.java
-│   │   ├── entity/
-│   │   │   ├── ExerciseSession.java    (id, userId, sessionDate, durationMinutes, notes,
-│   │   │   │                            totalVolumeKg, caloriesBurned, calorieEstimateMethod,
-│   │   │   │                            createdAt, updatedAt, deletedAt)
-│   │   │   ├── ExerciseSet.java        (id, sessionId, exerciseCatalogId, setNumber,
-│   │   │   │                            weightKg, reps, durationSeconds, distanceM,
-│   │   │   │                            restSeconds, isPersonalRecord, createdAt)
-│   │   │   └── ExerciseCatalog.java   (id, name, nameKo, muscleGroup, exerciseType,
-│   │   │                               metValue, isCustom, createdByUserId,
-│   │   │                               createdAt, updatedAt, deletedAt)
-│   │   └── dto/
-│   │       ├── CreateSessionRequest.java
-│   │       ├── SessionSummaryResponse.java
-│   │       ├── ExerciseSetRequest.java
-│   │       ├── DailySummaryResponse.java
-│   │       ├── WeeklySummaryResponse.java
-│   │       └── CatalogItemResponse.java
-│   │
-│   ├── diet/
-│   │   ├── controller/
-│   │   │   ├── MealController.java     (POST/GET /api/v1/diet/meals,
-│   │   │   │                            PATCH/DELETE /api/v1/diet/meals/{id},
-│   │   │   │                            POST/DELETE /api/v1/diet/meals/{id}/items)
-│   │   │   ├── DietSummaryController.java  (GET /api/v1/diet/summary/daily,
-│   │   │   │                                GET /api/v1/diet/summary/weekly)
-│   │   │   └── FoodSearchController.java   (GET /api/v1/diet/food/search)
-│   │   ├── service/
-│   │   │   ├── MealService.java            (create, read, update, delete meals and items)
-│   │   │   ├── DietSummaryService.java     (macro aggregation, cached daily totals)
-│   │   │   └── FoodSearchService.java      (cache-first orchestration: Redis → PostgreSQL → USDA/OFF)
-│   │   ├── repository/
-│   │   │   ├── MealRepository.java
-│   │   │   ├── MealItemRepository.java
-│   │   │   └── FoodCatalogRepository.java
-│   │   ├── entity/
-│   │   │   ├── Meal.java           (id, userId, mealDate, mealSlot [BREAKFAST/LUNCH/DINNER/SNACK],
-│   │   │   │                        notes, createdAt, updatedAt, deletedAt)
-│   │   │   ├── MealItem.java       (id, mealId, foodCatalogId, servingQty, servingUnit,
-│   │   │   │                        caloriesKcal, proteinG, carbG, fatG, fiberG,
-│   │   │   │                        sodiumMg, sugarG, createdAt, deletedAt)
-│   │   │   └── FoodCatalog.java    (id, externalId, source [USDA/OFF/USER], name, nameKo,
-│   │   │   │                        barcode, servingSizeG, caloriesKcal, proteinG, carbG,
-│   │   │   │                        fatG, fiberG, sugarG, sodiumMg, cholesterolMg,
-│   │   │   │                        vitaminAMcg, vitaminCMg, vitaminDMcg, ironMg,
-│   │   │   │                        createdByUserId, cachedAt, deletedAt)
-│   │   └── dto/
-│   │       ├── CreateMealRequest.java
-│   │       ├── MealResponse.java
-│   │       ├── AddMealItemRequest.java
-│   │       ├── MealItemResponse.java
-│   │       ├── DailyDietSummaryResponse.java   (totalCalories, proteinG, carbG, fatG, fiberG,
-│   │       │                                    waterMl, meals[])
-│   │       ├── WeeklyDietSummaryResponse.java
-│   │       └── FoodSearchResponse.java
-│   │
-│   ├── measurement/
-│   │   ├── controller/
-│   │   │   ├── BodyMeasurementController.java  (POST /api/v1/measurements,
-│   │   │   │                                    GET /api/v1/measurements/history)
-│   │   │   └── ProgressPhotoController.java    (POST/GET /api/v1/measurements/photos)
-│   │   ├── service/
-│   │   │   ├── BodyMeasurementService.java     (log, history, WHR calc, US Navy formula)
-│   │   │   └── ProgressPhotoService.java       (upload to S3, EXIF strip, signed URL generation)
-│   │   ├── repository/
-│   │   │   ├── BodyMeasurementRepository.java
-│   │   │   └── ProgressPhotoRepository.java
-│   │   ├── entity/
-│   │   │   ├── BodyMeasurement.java    (id, userId, loggedAt, weightKg, waistCm, hipCm,
-│   │   │   │                            armCm, thighCm, calfCm, neckCm, bodyFatPct,
-│   │   │   │                            bodyFatSource [MANUAL/SMART_SCALE/NAVY_FORMULA/DEXA],
-│   │   │   │                            bmi, whr, whrRisk [LOW/MODERATE/HIGH],
-│   │   │   │                            notes, createdAt, deletedAt)
-│   │   │   └── ProgressPhoto.java      (id, userId, capturedAt, photoType [FRONT/BACK/SIDE_LEFT/SIDE_RIGHT],
-│   │   │   │                            storageKey, thumbnailKey150, thumbnailKey400, thumbnailKey800,
-│   │   │   │                            originalWidthPx, originalHeightPx, exifStripped,
-│   │   │   │                            bodyWeightKg, bodyFatPct, waistCm,
-│   │   │   │                            notes, isPrivate, isBaseline, createdAt, deletedAt)
-│   │   └── dto/
-│   │       ├── LogMeasurementRequest.java
-│   │       ├── MeasurementHistoryResponse.java
-│   │       ├── UploadPhotoResponse.java
-│   │       └── PhotoComparisonResponse.java
-│   │
-│   └── goal/
-│       ├── controller/
-│       │   └── GoalController.java     (POST/GET /api/v1/goals,
-│       │                                GET/PATCH/DELETE /api/v1/goals/{id},
-│       │                                GET /api/v1/goals/{id}/progress)
-│       ├── service/
-│       │   ├── GoalService.java         (create, read, update, delete, archive)
-│       │   └── GoalProgressService.java (projected trend calculation, checkpoint evaluation)
-│       ├── repository/
-│       │   ├── GoalRepository.java
-│       │   └── GoalCheckpointRepository.java
-│       ├── entity/
-│       │   ├── Goal.java           (id, userId, goalType, targetValue, targetUnit,
-│       │   │                        targetDate, startValue, startDate, status [ACTIVE/COMPLETED/ABANDONED],
-│       │   │                        calorieTarget, proteinTargetG, carbTargetG, fatTargetG,
-│       │   │                        weeklyRateTarget, createdAt, updatedAt, deletedAt)
-│       │   └── GoalCheckpoint.java (id, goalId, checkpointDate, actualValue,
-│       │   │                        projectedValue, onTrack, notes, createdAt)
-│       └── dto/
-│           ├── CreateGoalRequest.java
-│           ├── GoalResponse.java
-│           ├── GoalProgressResponse.java   (currentValue, targetValue, percentComplete,
-│           │                                projectedCompletionDate, isOnTrack, checkpoints[])
-│           └── UpdateGoalRequest.java
+├── security/                  (인증/인가 인프라 — 도메인 아님)
+│   ├── JwtTokenProvider · JwtAuthenticationFilter · CustomUserDetailsService · SecurityConstants
+│   ├── CurrentUserId(@) · CurrentUserIdArgumentResolver
+│   ├── RestAuthenticationEntryPoint · RestAccessDeniedHandler
+│   └── oauth/         OAuthIdTokenVerifier · JwksIdTokenVerifier ·
+│                      AppleIdTokenVerifier · GoogleIdTokenVerifier · OAuthUserInfo
 │
-├── infrastructure/
-│   ├── s3/
-│   │   ├── S3StorageService.java       (upload, generateSignedUrl, delete; 15-min signed URL TTL)
-│   │   └── PhotoProcessingService.java (EXIF stripping, thumbnail generation at 3 sizes)
-│   ├── fcm/
-│   │   ├── FcmNotificationService.java (sendPrNotification, sendMilestoneNotification,
-│   │   │                                sendStreakRiskNotification, sendWeeklySummaryNotification)
-│   │   └── NotificationTemplates.java  (Korean + English message templates, PRD section 5.1)
-│   └── nutrition/
-│       ├── NutritionApiOrchestrator.java   (search priority: cache → USDA → OFF; barcode → OFF → USDA)
-│       ├── UsdaFoodDataClient.java         (REST client for api.nal.usda.gov)
-│       └── OpenFoodFactsClient.java        (REST client for world.openfoodfacts.org)
-│
-└── security/
-    ├── JwtTokenProvider.java       (generate, validate, extract claims; HS256 via jjwt)
-    ├── JwtAuthenticationFilter.java (OncePerRequestFilter; reads Bearer token, populates SecurityContext)
-    ├── CustomUserDetailsService.java (loads UserDetails from DB by email for Spring Security)
-    └── SecurityConstants.java      (token expiry durations, public endpoint paths)
+└── domain/
+    ├── user/          controller · service · repository · entity(User) · dto
+    │
+    ├── auth/          AuthController(register/login/소셜 로그인/refresh/logout) ·
+    │                  AuthService · RefreshToken(+Repository) · dto
+    │
+    ├── exercise/
+    │   ├── controller · service · repository · entity · dto   (세션/세트/카탈로그, PR 탐지)
+    │   └── ai/        AiExerciseController · AiExerciseEstimationService · dto  (AI 칼로리 추정)
+    │
+    ├── diet/                                  (가장 큰 도메인 — 식단 핵심)
+    │   ├── controller/   DietLogController · FoodCatalogController ·
+    │   │                 FoodCatalogAdminController · ExternalFoodAdminController ·
+    │   │                 FoodAllergenTagAdminController
+    │   ├── service/      FoodCatalogService
+    │   ├── usecase/      DietLogUseCases
+    │   ├── entity/       DietLog · FoodEntry · FoodCatalog(+Source) ·
+    │   │                 DietLogNutritionTotals · RecommendationCuration ·
+    │   │                 RecommendationCautionPolicy · RecommendationStatus
+    │   ├── identity/     FoodCatalogIdentity
+    │   ├── ai/           AiNutritionController · AiNutritionEstimationService · dto
+    │   ├── mealphoto/    MealPhotoAnalysisController · MealPhotoAnalysisService ·
+    │   │                 MealAnalysisProvider ← OpenAiMealAnalysisProvider /
+    │   │                 FallbackMealAnalysisProvider · S3MealPhotoStorageService ·
+    │   │                 entity(MealPhotoAnalysis·Item) · repository · dto
+    │   ├── allergen/     AllergenTag · AllergenConfidenceLevel/Gate · AllergenDataSource ·
+    │   │                 FoodAllergenTag(entity) · FoodAllergenTagAdminOperations · repository · dto
+    │   ├── restriction/  DietRestrictionController · DietRestrictionUseCases ·
+    │   │                 DietRestriction(entity) · repository · dto
+    │   ├── recommendation/  DietRecommendationController · DailyDietRecommendationUseCases ·
+    │   │                 engine/DietRecommendationEngine ·
+    │   │                 candidate/DietRecommendationCandidate(Pool/s) · dto
+    │   ├── admin/        FoodCatalogAdminOperations · FoodCatalogNameOverrideService ·
+    │   │                 FoodCatalogNameRenormalizationService
+    │   └── external/     공공 식품 API 적재
+    │       ├── client/   PublicFoodApiClient(+Impl)
+    │       ├── service/  ExternalFoodSearchService · FoodImportService
+    │       ├── config/   ExternalApiConfig · ExternalApiProperties
+    │       ├── importer/ FoodCatalogIngestService · FoodCatalogPageImporter ·
+    │       │             MfdsFoodNutrientDbImporter · StandardProcessedFoodImporter ·
+    │       │             StandardDishFoodImporter · BrandMenuCsvImporter ·
+    │       │             *PageFetcher · FoodCatalogImportCheckpoint(+Store/Repository) ·
+    │       │             FoodDisplayNameNormalizer · 페이지 스로틀/배치 러너
+    │       └── dedup/    FoodCatalogDuplicateReportService · DuplicateCandidateReporter · dto
+    │
+    ├── bodymeasurement/       (v1.0의 measurement — 체측 + 진행 사진 통합)
+    │   ├── controller/   BodyMeasurementController · ProgressPhotoController
+    │   ├── service/      BodyMeasurementService · ProgressPhotoService ·
+    │   │                 ProgressPhotoStorageService ← S3ProgressPhotoStorageService ·
+    │   │                 ProgressPhotoImageProcessor (EXIF strip · 썸네일)
+    │   └── repository · entity(BodyMeasurement · ProgressPhoto) · dto (사전서명 URL 업로드 흐름)
+    │
+    ├── goals/                 (v1.0의 goal)
+    │   ├── controller · service · repository · entity(Goal · GoalCheckpoint) · dto
+    │   └── scheduler/    GoalCheckpointScheduler
+    │
+    ├── insights/             (신규 — 주간 요약 · 변화 분석)
+    │   └── InsightsController · InsightsService · dto(WeeklySummary · ChangeAnalysis)
+    │
+    └── nutrition/            (신규 — v1.0 infrastructure/nutrition 대체)
+        └── NutritionTargetService · NutritionCalculator · dto(NutritionTargets)
 ```
+
+**iOS — WidgetKit 익스텐션** (`ios/HealthCareWidgets/`): 칼로리/목표 위젯 번들
+(`HealthCareWidgetsBundle.swift` 등). App Group으로 본 앱과 데이터를 공유하고 URL 스킴으로
+딥링크한다. 상세는 `ios/CONTEXT.md` 참고.
 
 ---
 
@@ -601,4 +546,4 @@ EC2에서 앱과 동일 인스턴스에 독립 컨테이너로 운영된다(blue
 
 ---
 
-*End of Architecture Design Document v1.0*
+*End of Architecture Design Document v1.1*

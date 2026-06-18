@@ -124,6 +124,76 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ---
 
+## 검증된 추천 후보 (Verified Recommendation Candidate)
+
+**Definition:** 알러지 사용자의 완결 알러젠 프로필, 목표별 필수 영양 데이터, 현실적인 제공량 옵션, 유효한 데이터 버전, canonical 대표 조건을 모두 통과해 제약 최적화에 투입할 수 있는 식품 후보. `RECOMMENDABLE` 상태만으로는 이 자격을 충족하지 않는다.
+
+**Avoid:** "safe food", "추천 가능 row" (의료적 안전을 보증하거나 단일 상태값으로 자격이 결정되는 것처럼 보임)
+
+**Where it is specified:** `docs/adr/0002-goal-aware-nutrition-optimization.md`, `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## 남은 영양량 (Remaining Nutrition Budget)
+
+**Definition:** 목표별 일일 영양 정책에서 추천 전에 확정된 섭취 기록을 차감한 값. 남은 끼니 전체를 공동 최적화하는 입력이며, 미검증·AI 추정 섭취 기록은 열량 상한과 단백질 하한을 보수적으로 반영한다.
+
+**Avoid:** "remaining calories" (단백질·탄수화물·지방과 불확실성까지 포함하는 개념을 열량으로 축소함)
+
+**Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## 목표별 영양 정책 (Goal-aware Nutrition Policy)
+
+**Definition:** 체중 감량, 근육량 증가, 체형 개선, 지구력 향상, 건강 유지마다 다른 영양 상·하한 hard constraint와 soft objective를 제공하는 버전된 정책. 목표 기간은 희망 일정으로 취급하고 주간 진행 추세에 따라 목표와 예상 달성일을 조정한다.
+
+**Avoid:** "target tolerance", "macro weight" (대칭 오차나 단순 점수 가중치처럼 보임)
+
+**Where it is specified:** `docs/adr/0002-goal-aware-nutrition-optimization.md`
+
+---
+
+## 식품 제공량 옵션 (Food Serving Option)
+
+**Definition:** 추천 엔진이 사용할 수 있도록 source와 검증 근거를 가진 이산 섭취량. 단위명, 환산 g, 허용 multiplier 또는 step, 최소·최대 수량을 포함한다. 식단 기록하기의 직접 g 입력과 달리 추천은 검증된 옵션만 사용한다.
+
+**Avoid:** "servingG", "portion guess" (저장된 최종 중량이나 임의 추정값과 혼동)
+
+**Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## canonical 식품 그룹 (Canonical Food Group)
+
+**Definition:** 여러 source의 동일 식품 레코드를 삭제·강제 병합하지 않고 하나의 대표 식품 아래 연결하는 비파괴 동일성 경계. 추천 중복 제거와 선호·노출·전환 집계에 사용하며, 불확실한 그룹에는 검증 결과를 전파하지 않는다.
+
+**Avoid:** "merged food", "deduped row" (원본 source row가 사라지거나 자동 병합된다고 오해할 수 있음)
+
+**Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## 식단 추천 최적화 (Diet Recommendation Optimization)
+
+**Definition:** DB hard filter와 후보 축소 후, 목표별 hard constraint를 만족하는 남은 하루 식단의 상위 해를 생성하는 모듈 경계. 다양성·최근 반복·사용자 선호는 feasible 해 안에서만 순위에 반영한다.
+
+**Avoid:** "greedy scorer", "meal generator" (현행 구현 방식이나 완결 메뉴 생성 기능과 혼동)
+
+**Where it is specified:** `docs/adr/0002-goal-aware-nutrition-optimization.md`, `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## 추천 스냅샷과 추천 이벤트 (Recommendation Snapshot and Event)
+
+**Definition:** 추천 당시 입력 정책·후보·결과를 재현하고 노출, 재추천, 기록 전환, 삭제·교체, 선택형 사유를 연결하기 위한 단기 품질 데이터. 식단 계획이나 섭취 기록 자체가 아니며 사용자 연결 원본은 기본 90일만 유지한다.
+
+**Avoid:** "diet plan", "recommendation log" (영구 계획 도메인 또는 일반 애플리케이션 로그와 혼동)
+
+**Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
 ## 식품 카탈로그 동일성 (Food Catalog Identity)
 
 **Definition:** 식품 카탈로그 항목을 소스 적재, 중복 후보 리포트, 검색 정규화에서 같은 개념으로 다루기 위한 식별 규칙. 브랜드 공식 메뉴의 `food_code`, 브랜드 인식 중복 키, 표시 이름 정규화를 한곳에서 계산한다.

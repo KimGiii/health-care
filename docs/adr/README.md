@@ -5,6 +5,7 @@
 ## Current ADRs
 
 - [0001. 식단 추천 알러젠 회피 모델과 Strict 모드](0001-diet-allergen-strict-mode.md)
+- [0002. 검증된 후보로 목표별 남은 영양량을 제약 최적화한다](0002-goal-aware-nutrition-optimization.md)
 
 ## When To Add One
 
