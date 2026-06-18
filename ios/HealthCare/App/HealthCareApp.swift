@@ -20,7 +20,14 @@ struct HealthCareApp: App {
             tokenStore.clearTokens()
         }
         if ProcessInfo.processInfo.arguments.contains("UI_TEST_AUTHENTICATED") {
-            tokenStore.save(accessToken: "ui-test-access-token", refreshToken: "ui-test-refresh-token")
+            // 만료되지 않는 구조적 JWT를 저장해 refresh 시도/세션 만료 폴백을 막는다.
+            // (가짜 비-JWT 토큰은 isTokenExpired=true → refresh 실패 → 로그아웃됨)
+            #if DEBUG
+            let accessToken = UITestNetworkStub.makeSessionToken()
+            #else
+            let accessToken = "ui-test-access-token"
+            #endif
+            tokenStore.save(accessToken: accessToken, refreshToken: "ui-test-refresh-token")
         }
         _authState = StateObject(wrappedValue: AuthState(tokenStore: tokenStore))
     }

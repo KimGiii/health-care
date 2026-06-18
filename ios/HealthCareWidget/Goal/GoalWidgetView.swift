@@ -54,13 +54,16 @@ private struct GoalSmallView: View {
     @ViewBuilder
     private func content(goal: GoalWidgetSnapshot.ActiveGoal) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) {
+            HStack(alignment: .top, spacing: 2) {
                 Image(systemName: goal.systemImage)
                     .font(.system(size: 11, weight: .semibold))
                 Text(goal.title)
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
-                Spacer(minLength: 4)
+                    .minimumScaleFactor(0.55)
+                    .allowsTightening(true)
+                    .layoutPriority(1)
+                Spacer(minLength: 2)
                 if let days = goal.daysRemaining {
                     dDayBadge(days: days)
                 }
@@ -173,49 +176,50 @@ private struct GoalMediumView: View {
     @ViewBuilder
     private var rightColumn: some View {
         VStack(alignment: .leading, spacing: 8) {
-            switch snapshot.recentWeights.count {
+            switch snapshot.metricPoints.count {
             case 0:
                 emptyState
             default:
-                weightHeader
+                metricHeader
                 sparkline
-                weightFooter
+                metricFooter
             }
         }
         .padding(.top, 14)  // 헤더와 차트를 좌측 링 중심에 맞춰 아래로 이동
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: header — 현재 체중 큰 글씨 + 변화량
+    // MARK: header — 현재 목표 지표 큰 글씨 + 변화량
 
     @ViewBuilder
-    private var weightHeader: some View {
-        if let latest = snapshot.recentWeights.last {
+    private var metricHeader: some View {
+        if let latest = snapshot.metricPoints.last {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(String(format: "%.1f", latest.weightKg))
+                Text(String(format: "%.1f", latest.value))
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.widgetBrand)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
-                Text("kg")
+                Text(snapshot.metricKind.unit)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
-                if let delta = snapshot.weightDelta, delta != 0 {
+                if let delta = snapshot.metricDelta, delta != 0 {
                     deltaPill(delta)
                 }
             }
         }
     }
 
-    private func deltaPill(_ kg: Double) -> some View {
-        let down = kg < 0
-        let sign = kg > 0 ? "+" : ""
-        let tint: Color = down ? .widgetAccent : .widgetBrand
+    private func deltaPill(_ value: Double) -> some View {
+        let down = value < 0
+        let sign = value > 0 ? "+" : ""
+        let isImproving = down == snapshot.metricKind.prefersLowerValue
+        let tint: Color = isImproving ? .widgetAccent : .widgetBrand
         return HStack(spacing: 2) {
             Image(systemName: down ? "arrow.down" : "arrow.up")
                 .font(.system(size: 9, weight: .bold))
-            Text("\(sign)\(String(format: "%.1f", kg))")
+            Text("\(sign)\(String(format: "%.1f", value))")
                 .font(.system(size: 10, weight: .bold, design: .rounded))
         }
         .foregroundStyle(tint)
@@ -228,8 +232,8 @@ private struct GoalMediumView: View {
 
     @ViewBuilder
     private var sparkline: some View {
-        if snapshot.recentWeights.count >= 2 {
-            WeightSparkline(points: snapshot.recentWeights)
+        if snapshot.metricPoints.count >= 2 {
+            MetricSparkline(points: snapshot.metricPoints)
                 .frame(height: 36)
         } else {
             // 1개일 때는 빈 자리만 — 헤더 큰 숫자로 정보 전달 충분.
@@ -240,20 +244,20 @@ private struct GoalMediumView: View {
     // MARK: footer — 기간 라벨
 
     @ViewBuilder
-    private var weightFooter: some View {
+    private var metricFooter: some View {
         HStack {
-            if let first = snapshot.recentWeights.first {
+            if let first = snapshot.metricPoints.first {
                 Text(shortDate(first.date))
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(snapshot.recentWeights.count == 1 ? "1회 측정" : "\(snapshot.recentWeights.count)회 측정")
+            Text(snapshot.metricKind.label)
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
-            if snapshot.recentWeights.count >= 2,
-               let last = snapshot.recentWeights.last {
+            if snapshot.metricPoints.count >= 2,
+               let last = snapshot.metricPoints.last {
                 Text(shortDate(last.date))
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
@@ -271,10 +275,10 @@ private struct GoalMediumView: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: "scalemass")
+            Image(systemName: snapshot.goal?.systemImage ?? "chart.line.uptrend.xyaxis")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Color.widgetAccent)
-            Text("체중 기록을 시작하세요")
+            Text(snapshot.metricKind.emptyText)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
@@ -282,10 +286,6 @@ private struct GoalMediumView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    private func formatDelta(_ kg: Double) -> String {
-        let sign = kg > 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.1f", kg)) kg"
-    }
 }
 
 // MARK: - D-day Badge (Small/Medium 공통)
@@ -325,19 +325,19 @@ private struct GoalRing: View {
 
 // MARK: - Chart
 
-private struct WeightSparkline: View {
-    let points: [GoalWidgetSnapshot.WeightPoint]
+private struct MetricSparkline: View {
+    let points: [GoalWidgetSnapshot.MetricPoint]
 
     var body: some View {
         // 변화량 강조 — y 범위를 데이터 폭에 딱 맞게 잡되, 최소 폭을 보장해
-        // 0.1kg 변화에 차트가 과장되지 않도록 함.
-        let weights = points.map(\.weightKg)
-        let dataMin = weights.min() ?? 0
-        let dataMax = weights.max() ?? 1
-        let span = max(dataMax - dataMin, 1.0) // 최소 1kg 폭
+        // 작은 변화에 차트가 과장되지 않도록 함.
+        let values = points.map(\.value)
+        let dataMin = values.min() ?? 0
+        let dataMax = values.max() ?? 1
+        let span = max(dataMax - dataMin, 1.0)
         let padding = span * 0.25
-        let minW = dataMin - padding
-        let maxW = dataMax + padding
+        let minValue = dataMin - padding
+        let maxValue = dataMax + padding
 
         let last = points.last
 
@@ -345,7 +345,7 @@ private struct WeightSparkline: View {
             ForEach(points, id: \.date) { point in
                 LineMark(
                     x: .value("Date", point.date),
-                    y: .value("Weight", point.weightKg)
+                    y: .value("Value", point.value)
                 )
                 .interpolationMethod(.monotone)
                 .foregroundStyle(Color.widgetChart)
@@ -353,8 +353,8 @@ private struct WeightSparkline: View {
 
                 AreaMark(
                     x: .value("Date", point.date),
-                    yStart: .value("Min", minW),
-                    yEnd: .value("Weight", point.weightKg)
+                    yStart: .value("Min", minValue),
+                    yEnd: .value("Value", point.value)
                 )
                 .interpolationMethod(.monotone)
                 .foregroundStyle(
@@ -368,7 +368,7 @@ private struct WeightSparkline: View {
                 // 각 측정점에 작은 점 — 사용자가 며칠 잰지 한눈에 인식.
                 PointMark(
                     x: .value("Date", point.date),
-                    y: .value("Weight", point.weightKg)
+                    y: .value("Value", point.value)
                 )
                 .symbol { Circle().fill(Color.widgetChart).frame(width: 3, height: 3) }
             }
@@ -377,7 +377,7 @@ private struct WeightSparkline: View {
             if let last {
                 PointMark(
                     x: .value("Date", last.date),
-                    y: .value("Weight", last.weightKg)
+                    y: .value("Value", last.value)
                 )
                 .symbol {
                     ZStack {
@@ -388,7 +388,7 @@ private struct WeightSparkline: View {
                 }
             }
         }
-        .chartYScale(domain: minW...maxW)
+        .chartYScale(domain: minValue...maxValue)
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
         .chartPlotStyle { plot in
@@ -400,6 +400,7 @@ private struct WeightSparkline: View {
 // MARK: - Preview
 
 #if DEBUG
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Goal Small", as: .systemSmall) {
     GoalWidget()
 } timeline: {
@@ -407,6 +408,7 @@ private struct WeightSparkline: View {
     GoalEntry(date: Date(), snapshot: .empty)
 }
 
+@available(iOSApplicationExtension 17.0, *)
 #Preview("Goal Medium", as: .systemMedium) {
     GoalWidget()
 } timeline: {

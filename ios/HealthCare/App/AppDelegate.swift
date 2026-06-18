@@ -11,13 +11,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // UI 테스트에서는 알림 권한 시스템 다이얼로그/광고 SDK가 화면을 가려 탭·조회를
+        // 방해하므로 푸시·광고 초기화를 건너뛴다. (모든 UITest 런치는 UI_TEST_RESET_STATE 포함)
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("UI_TEST_RESET_STATE")
+
         if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
             FirebaseApp.configure()
         } else {
             print("[Firebase] GoogleService-Info.plist not found — skipping configure in dev")
         }
-        configurePushNotifications(application)
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        if !isUITesting {
+            configurePushNotifications(application)
+            GADMobileAds.sharedInstance().start(completionHandler: nil)
+        }
 
         // Cold start: 앱 종료 상태에서 푸시 탭 → launch 시점에 payload 도착.
         // MainTabView가 아직 onReceive 등록 전이므로 PushRouter에 저장해 consume 대기.

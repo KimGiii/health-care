@@ -6,6 +6,41 @@ extension Notification.Name {
     static let bodyMeasurementDidChange = Notification.Name("com.healthcare.bodyMeasurementDidChange")
 }
 
+protocol BodyMeasurementManaging: Sendable {
+    func loadMeasurementList(page: Int, size: Int) async throws -> MeasurementListResponse
+    func loadLatestMeasurement() async throws -> MeasurementResponse
+    func loadBodyMeasurementGoals() async throws -> GoalListResponse
+    func loadMeasurementRange(from: String, to: String) async throws -> [MeasurementResponse]
+    func loadBaselineMeasurement(onOrBefore date: String) async throws -> MeasurementResponse
+    func deleteMeasurement(id: Int) async throws
+}
+
+extension APIClient: BodyMeasurementManaging {
+    func loadMeasurementList(page: Int, size: Int) async throws -> MeasurementListResponse {
+        try await request(.getBodyMeasurements(page: page, size: size))
+    }
+
+    func loadLatestMeasurement() async throws -> MeasurementResponse {
+        try await request(.getLatestBodyMeasurement)
+    }
+
+    func loadBodyMeasurementGoals() async throws -> GoalListResponse {
+        try await request(.getGoals)
+    }
+
+    func loadMeasurementRange(from: String, to: String) async throws -> [MeasurementResponse] {
+        try await request(.getBodyMeasurementsRange(from: from, to: to))
+    }
+
+    func loadBaselineMeasurement(onOrBefore date: String) async throws -> MeasurementResponse {
+        try await request(.getBodyMeasurementAtOrBefore(date: date))
+    }
+
+    func deleteMeasurement(id: Int) async throws {
+        try await requestVoid(.deleteBodyMeasurement(id: id))
+    }
+}
+
 @MainActor
 final class BodyMeasurementViewModel: ObservableObject {
     @Published var measurements: [MeasurementResponse] = []
@@ -19,11 +54,17 @@ final class BodyMeasurementViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showAddSheet = false
 
-    func load(apiClient: APIClient) async {
+    private let widgetPublisher: any GoalWidgetSnapshotPublishing
+
+    init(widgetPublisher: any GoalWidgetSnapshotPublishing = AppGoalWidgetSnapshotPublisher()) {
+        self.widgetPublisher = widgetPublisher
+    }
+
+    func load(apiClient: any BodyMeasurementManaging) async {
         isLoading = true
         defer { isLoading = false }
         do {
-            async let listResponse: MeasurementListResponse = apiClient.request(.getBodyMeasurements(page: 0, size: 50))
+            async let listResponse = apiClient.loadMeasurementList(page: 0, size: 50)
             async let latestResponse = loadLatestMeasurement(apiClient: apiClient)
 
             let list = try await listResponse
@@ -31,21 +72,22 @@ final class BodyMeasurementViewModel: ObservableObject {
             latestMeasurement = await latestResponse
             await loadActiveGoal(apiClient: apiClient)
             await loadTrendData(apiClient: apiClient)
+            widgetPublisher.publish(recentMeasurements: measurements)
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    private func loadLatestMeasurement(apiClient: APIClient) async -> MeasurementResponse? {
-        try? await apiClient.request(.getLatestBodyMeasurement)
+    private func loadLatestMeasurement(apiClient: any BodyMeasurementManaging) async -> MeasurementResponse? {
+        try? await apiClient.loadLatestMeasurement()
     }
 
-    private func loadActiveGoal(apiClient: APIClient) async {
-        let response: GoalListResponse? = try? await apiClient.request(.getGoals)
+    private func loadActiveGoal(apiClient: any BodyMeasurementManaging) async {
+        let response = try? await apiClient.loadBodyMeasurementGoals()
         activeGoal = response?.content.first { $0.status == .ACTIVE }
     }
 
-    func loadTrendData(apiClient: APIClient) async {
+    func loadTrendData(apiClient: any BodyMeasurementManaging) async {
         guard latestMeasurement != nil || !measurements.isEmpty else {
             trendPoints = []
             return
@@ -60,12 +102,8 @@ final class BodyMeasurementViewModel: ObservableObject {
             let from = Self.apiDateFormatter.string(from: fromDate)
             let to = Self.apiDateFormatter.string(from: today)
 
-            let rangeResponse: [MeasurementResponse] = try await apiClient.request(
-                .getBodyMeasurementsRange(from: from, to: to)
-            )
-            let baselineMeasurement: MeasurementResponse? = try? await apiClient.request(
-                .getBodyMeasurementAtOrBefore(date: from)
-            )
+            let rangeResponse = try await apiClient.loadMeasurementRange(from: from, to: to)
+            let baselineMeasurement = try? await apiClient.loadBaselineMeasurement(onOrBefore: from)
 
             var points = rangeResponse.compactMap { measurement -> MeasurementTrendPoint? in
                 guard let date = measurement.parsedDate,
@@ -102,14 +140,15 @@ final class BodyMeasurementViewModel: ObservableObject {
         }
     }
 
-    func delete(id: Int, apiClient: APIClient) async {
+    func delete(id: Int, apiClient: any BodyMeasurementManaging) async {
         do {
-            try await apiClient.requestVoid(.deleteBodyMeasurement(id: id))
+            try await apiClient.deleteMeasurement(id: id)
             measurements.removeAll { $0.id == id }
             if latestMeasurement?.id == id {
                 latestMeasurement = measurements.first
             }
             await loadTrendData(apiClient: apiClient)
+            widgetPublisher.publish(recentMeasurements: measurements)
             NotificationCenter.default.post(name: .bodyMeasurementDidChange, object: nil)
         } catch {
             errorMessage = error.localizedDescription
@@ -118,7 +157,7 @@ final class BodyMeasurementViewModel: ObservableObject {
 
     /// AddMeasurement에서 측정을 추가한 직후 호출되는 콜백.
     /// `bodyMeasurementDidChange` 알림은 AddMeasurementViewModel이 직접 발행하므로 여기서는 발행하지 않음(중복 방지).
-    func measurementAdded(apiClient: APIClient) async {
+    func measurementAdded(apiClient: any BodyMeasurementManaging) async {
         await load(apiClient: apiClient)
     }
 
