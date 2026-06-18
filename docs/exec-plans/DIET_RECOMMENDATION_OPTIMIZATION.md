@@ -1,7 +1,7 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
 작성일: 2026-06-18
-상태: Phase 1 완료, Phase 2 진행 중 (알러젠 프로필 분리·영양 완전성 계약 완료)
+상태: Phase 1·2 완료, Phase 3 대기
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
@@ -314,8 +314,17 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `DietRecommendationCandidatePool`: serving options 벌크 로드 → 후보에 전달
   - `FoodCatalogService`: 검색 결과에 serving options 벌크 로드 (iOS 프리셋 UX용)
   - `FoodCatalogResponse`: `servingOptions: List<ServingOptionSnapshot>` 필드 추가
-- [ ] canonical 식품 그룹과 대표 후보 조회
-- [ ] 검증 우선순위 리포트 (운영자 조회)
+- [x] canonical 식품 그룹과 대표 후보 조회
+  - V35 Flyway 마이그레이션: `canonical_group_id BIGINT` 컬럼 + 부분 인덱스
+  - `FoodCatalog.canonicalGroupId` 필드 추가
+  - `FoodCatalogSpecs.isCanonicalCandidate()`: `canonical_group_id IS NULL` predicate
+  - `DietRecommendationCandidatePool`: Spec + 인메모리 dual-defense 필터 적용
+- [x] 검증 우선순위 리포트 (운영자 조회)
+  - `FoodAllergenTagRepository.findFoodIdsWithAnyAllergenTag()` 추가
+  - `CandidatePoolSummary`: 카테고리별 후보 수·macro 완전성·미태깅 수·underrepresented 카테고리 집계
+  - `CandidatePoolSummaryService`: 후보 풀 요약 집계
+  - `VerificationPriorityService`: priorityScore(usageCount × macroWeight × allergenWeight) 기반 정렬
+  - `CandidatePoolAdminController`: GET /api/v1/admin/diet/candidate-pool/summary, /verification-priorities
 
 완료 기준: 목표별로 추천 가능한 후보 수와 부족한 역할을 운영자가 조회할 수 있다.
 
