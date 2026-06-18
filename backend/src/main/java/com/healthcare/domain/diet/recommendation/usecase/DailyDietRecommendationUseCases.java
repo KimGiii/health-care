@@ -9,6 +9,7 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResp
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
@@ -44,6 +45,7 @@ public class DailyDietRecommendationUseCases {
     private final DietLogRepository dietLogRepository;
     private final DietRecommendationCandidatePool candidatePool;
     private final DietRecommendationEngine engine;
+    private final RecommendationSnapshotStore snapshotStore;
 
     public DailyDietRecommendationResponse recommend(Long userId, DailyDietRecommendationRequest request) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
@@ -73,7 +75,7 @@ public class DailyDietRecommendationUseCases {
                     request.date(), targets, remainingTargets, appliedRestrictions,
                     List.of(), new NutrientSummary(0, 0, 0, 0),
                     "오늘 칼로리 목표를 이미 달성했습니다. 추가 추천이 필요하지 않습니다.",
-                    request.strictAllergyMode(), DISCLAIMER, List.of());
+                    request.strictAllergyMode(), DISCLAIMER, List.of(), null);
         }
 
         DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
@@ -104,6 +106,10 @@ public class DailyDietRecommendationUseCases {
                                 remainingTargets, request.mealTypes(), candidates.foods()))
                 : List.of();
 
+        String mealsJson = snapshotStore.serializeMeals(meals);
+        Long snapshotId = snapshotStore.save(userId, request.date(), mealsJson, goalType,
+                request.strictAllergyMode());
+
         return new DailyDietRecommendationResponse(
                 request.date(),
                 targets,
@@ -114,7 +120,8 @@ public class DailyDietRecommendationUseCases {
                 failureReason,
                 request.strictAllergyMode(),
                 DISCLAIMER,
-                alternatives
+                alternatives,
+                snapshotId
         );
     }
 

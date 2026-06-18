@@ -16,7 +16,8 @@ public record DailyDietRecommendationResponse(
         String failureReason,
         boolean strictAllergyMode,
         String disclaimer,
-        List<List<RecommendedMeal>> alternatives
+        List<List<RecommendedMeal>> alternatives,
+        Long snapshotId
 ) {
     public boolean succeeded() {
         return failureReason == null;

@@ -88,7 +88,8 @@ class DietRecommendationControllerTest {
                 null,
                 false,
                 "이 추천은 참고용입니다.",
-                List.of()
+                List.of(),
+                1L
         );
         given(dailyDietRecommendationUseCases.recommend(eq(USER_ID), any())).willReturn(response);
 
