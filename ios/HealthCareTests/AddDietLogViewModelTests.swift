@@ -287,3 +287,498 @@ private actor MockDietFoodSearcher: DietFoodSearching {
         ]
     }
 }
+
+@MainActor
+final class DietRestrictionViewModelTests: XCTestCase {
+    override func tearDown() {
+        DietFeatureURLProtocolStub.requestHandler = nil
+        TokenStore().clearTokens()
+        super.tearDown()
+    }
+
+    func testLoad_제한조건목록을대상타입별로분류한다() async throws {
+        let viewModel = DietRestrictionViewModel()
+        let apiClient = Self.stubbedAPIClient { request in
+            XCTAssertEqual(request.httpMethod, "GET")
+            XCTAssertEqual(request.url?.path, "/api/v1/diet/restrictions")
+            return Self.jsonResponse(path: request.url?.path, body: """
+            {
+              "success": true,
+              "data": [
+                {
+                  "id": 1,
+                  "restrictionType": "ALLERGY",
+                  "targetType": "ALLERGEN_TAG",
+                  "foodCatalogId": null,
+                  "category": null,
+                  "keyword": null,
+                  "allergenTag": "MILK",
+                  "createdAt": "2026-06-17T09:00:00+09:00"
+                },
+                {
+                  "id": 2,
+                  "restrictionType": "AVOID",
+                  "targetType": "CATEGORY",
+                  "foodCatalogId": null,
+                  "category": "PROCESSED",
+                  "keyword": null,
+                  "allergenTag": null,
+                  "createdAt": "2026-06-17T09:01:00+09:00"
+                },
+                {
+                  "id": 3,
+                  "restrictionType": "AVOID",
+                  "targetType": "KEYWORD",
+                  "foodCatalogId": null,
+                  "category": null,
+                  "keyword": "튀김",
+                  "allergenTag": null,
+                  "createdAt": "2026-06-17T09:02:00+09:00"
+                }
+              ],
+              "message": null
+            }
+            """)
+        }
+
+        await viewModel.load(apiClient: apiClient)
+
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertEqual(viewModel.restrictions.count, 3)
+        XCTAssertEqual(viewModel.allergenRestrictions().map(\.allergenTag), [.MILK])
+        XCTAssertEqual(viewModel.categoryRestrictions().map(\.category), [.PROCESSED])
+        XCTAssertEqual(viewModel.keywordRestrictions().map(\.keyword), ["튀김"])
+    }
+
+    func testAddAndDelete_제한조건을추가하고삭제한다() async throws {
+        let viewModel = DietRestrictionViewModel()
+        let requestCounter = LockedDietFeatureCounter()
+        let apiClient = Self.stubbedAPIClient { request in
+            switch (request.httpMethod, request.url?.path) {
+            case ("POST", "/api/v1/diet/restrictions"):
+                XCTAssertEqual(requestCounter.increment(), 1)
+                let body = try XCTUnwrap(Self.bodyJSON(from: request))
+                XCTAssertEqual(body["restrictionType"] as? String, "ALLERGY")
+                XCTAssertEqual(body["targetType"] as? String, "ALLERGEN_TAG")
+                XCTAssertEqual(body["allergenTag"] as? String, "EGG")
+                XCTAssertNil(body["keyword"] as? String)
+
+                return Self.jsonResponse(path: request.url?.path, body: """
+                {
+                  "success": true,
+                  "data": {
+                    "id": 10,
+                    "restrictionType": "ALLERGY",
+                    "targetType": "ALLERGEN_TAG",
+                    "foodCatalogId": null,
+                    "category": null,
+                    "keyword": null,
+                    "allergenTag": "EGG",
+                    "createdAt": "2026-06-17T09:03:00+09:00"
+                  },
+                  "message": "식단 제한 조건이 등록되었습니다."
+                }
+                """)
+            case ("DELETE", "/api/v1/diet/restrictions/10"):
+                XCTAssertEqual(requestCounter.increment(), 2)
+                return Self.jsonResponse(path: request.url?.path, body: """
+                {
+                  "success": true,
+                  "message": "식단 제한 조건이 삭제되었습니다."
+                }
+                """)
+            default:
+                XCTFail("예상하지 못한 요청: \(request.httpMethod ?? "nil") \(request.url?.path ?? "nil")")
+                return Self.jsonResponse(statusCode: 404, path: request.url?.path, body: "{}")
+            }
+        }
+
+        await viewModel.addAllergenTag(.EGG, type: .ALLERGY, apiClient: apiClient)
+
+        let created = try XCTUnwrap(viewModel.restrictions.first)
+        XCTAssertEqual(created.id, 10)
+        XCTAssertEqual(created.allergenTag, .EGG)
+        XCTAssertTrue(viewModel.hasAllergenTag(.EGG))
+
+        await viewModel.delete(restriction: created, apiClient: apiClient)
+
+        XCTAssertTrue(viewModel.restrictions.isEmpty)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertEqual(requestCounter.value, 2)
+    }
+}
+
+@MainActor
+final class DietRecommendationViewModelTests: XCTestCase {
+    override func tearDown() {
+        DietFeatureURLProtocolStub.requestHandler = nil
+        TokenStore().clearTokens()
+        super.tearDown()
+    }
+
+    func testRecommend_성공응답을상태에반영하고의료안전단정문구를포함하지않는다() async throws {
+        let viewModel = DietRecommendationViewModel()
+        viewModel.selectedDate = Self.fixedDate
+        viewModel.selectedMeals = [.BREAKFAST, .LUNCH, .DINNER, .SNACK]
+        viewModel.strictAllergyMode = false
+
+        let disclaimer = "등록한 제외 조건을 기준으로 추천 식단에서 제외합니다. 실제 제품·매장 원재료는 다를 수 있어 섭취 전 확인하세요."
+        let apiClient = Self.stubbedAPIClient { request in
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.url?.path, "/api/v1/diet/recommendations/daily")
+
+            let body = try XCTUnwrap(Self.bodyJSON(from: request))
+            XCTAssertEqual(body["date"] as? String, "2026-06-17")
+            XCTAssertEqual(Set(body["mealTypes"] as? [String] ?? []), ["BREAKFAST", "LUNCH", "DINNER", "SNACK"])
+            XCTAssertEqual(body["strictAllergyMode"] as? Bool, false)
+
+            return Self.jsonResponse(path: request.url?.path, body: """
+            {
+              "success": true,
+              "data": {
+                "date": "2026-06-17",
+                "targets": {
+                  "calorieTarget": 2000,
+                  "proteinTargetG": 150,
+                  "carbTargetG": 230,
+                  "fatTargetG": 67
+                },
+                "appliedRestrictions": [
+                  {
+                    "id": 1,
+                    "restrictionType": "ALLERGY",
+                    "targetType": "ALLERGEN_TAG",
+                    "foodCatalogId": null,
+                    "category": null,
+                    "keyword": null,
+                    "allergenTag": "MILK",
+                    "createdAt": "2026-06-17T09:00:00+09:00"
+                  }
+                ],
+                "meals": [
+                  {
+                    "mealType": "LUNCH",
+                    "targetCalories": 700,
+                    "totalCalories": 650,
+                    "totalProteinG": 42,
+                    "totalCarbsG": 72,
+                    "totalFatG": 18,
+                    "items": [
+                      {
+                        "foodCatalogId": 101,
+                        "name": "brown rice",
+                        "nameKo": "현미밥",
+                        "category": "GRAIN",
+                        "servingG": 180,
+                        "calories": 270,
+                        "proteinG": 5,
+                        "carbsG": 58,
+                        "fatG": 2,
+                        "allergenConfidenceLevel": "DIRECT_VERIFIED",
+                        "caution": null
+                      }
+                    ]
+                  }
+                ],
+                "totalNutrients": {
+                  "totalCalories": 650,
+                  "totalProteinG": 42,
+                  "totalCarbsG": 72,
+                  "totalFatG": 18
+                },
+                "strictAllergyMode": false,
+                "disclaimer": "\(disclaimer)"
+              },
+              "message": null
+            }
+            """)
+        }
+
+        await viewModel.recommend(apiClient: apiClient)
+
+        let result = try XCTUnwrap(viewModel.result)
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertEqual(result.date, "2026-06-17")
+        XCTAssertEqual(result.appliedRestrictions.map(\.allergenTag), [.MILK])
+        XCTAssertEqual(result.meals.first?.mealType, .LUNCH)
+        XCTAssertEqual(result.meals.first?.items.first?.name, "brown rice")
+        XCTAssertEqual(result.meals.first?.items.first?.nameKo, "현미밥")
+        XCTAssertEqual(result.disclaimer, disclaimer)
+        Self.assertNoMedicalSafetyPromise(result.disclaimer)
+    }
+
+    func testRecommend_Strict토글을요청본문에반영한다() async throws {
+        let viewModel = DietRecommendationViewModel()
+        viewModel.selectedDate = Self.fixedDate
+        viewModel.selectedMeals = [.BREAKFAST, .DINNER]
+        viewModel.strictAllergyMode = true
+
+        let apiClient = Self.stubbedAPIClient { request in
+            let body = try XCTUnwrap(Self.bodyJSON(from: request))
+            XCTAssertEqual(body["strictAllergyMode"] as? Bool, true)
+            XCTAssertEqual(Set(body["mealTypes"] as? [String] ?? []), ["BREAKFAST", "DINNER"])
+
+            return Self.emptyRecommendationResponse(
+                path: request.url?.path,
+                strictAllergyMode: true,
+                disclaimer: "교차오염은 보장하지 못합니다. 포장 원재료를 직접 확인하세요."
+            )
+        }
+
+        await viewModel.recommend(apiClient: apiClient)
+
+        let result = try XCTUnwrap(viewModel.result)
+        XCTAssertTrue(result.strictAllergyMode)
+        Self.assertNoMedicalSafetyPromise(result.disclaimer)
+    }
+
+    func testRecommend_후보부족실패메시지를표시한다() async throws {
+        let viewModel = DietRecommendationViewModel()
+        viewModel.selectedDate = Self.fixedDate
+        viewModel.selectedMeals = [.BREAKFAST, .LUNCH, .DINNER]
+
+        let message = "Not enough recommendation candidates after applying restrictions."
+        let apiClient = Self.stubbedAPIClient { request in
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.url?.path, "/api/v1/diet/recommendations/daily")
+            return Self.jsonResponse(statusCode: 422, path: request.url?.path, body: """
+            {
+              "success": false,
+              "code": "BUSINESS_RULE_VIOLATION",
+              "message": "\(message)"
+            }
+            """)
+        }
+
+        await viewModel.recommend(apiClient: apiClient)
+
+        XCTAssertNil(viewModel.result)
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertEqual(viewModel.errorMessage, message)
+    }
+
+    private static let fixedDate: Date = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar.date(from: DateComponents(year: 2026, month: 6, day: 17, hour: 12))!
+    }()
+
+    private static func emptyRecommendationResponse(
+        path: String?,
+        strictAllergyMode: Bool,
+        disclaimer: String
+    ) -> (HTTPURLResponse, Data) {
+        jsonResponse(path: path, body: """
+        {
+          "success": true,
+          "data": {
+            "date": "2026-06-17",
+            "targets": {
+              "calorieTarget": 2000,
+              "proteinTargetG": 150,
+              "carbTargetG": 230,
+              "fatTargetG": 67
+            },
+            "appliedRestrictions": [],
+            "meals": [],
+            "totalNutrients": {
+              "totalCalories": 0,
+              "totalProteinG": 0,
+              "totalCarbsG": 0,
+              "totalFatG": 0
+            },
+            "strictAllergyMode": \(strictAllergyMode),
+            "disclaimer": "\(disclaimer)"
+          },
+          "message": null
+        }
+        """)
+    }
+
+    private static func assertNoMedicalSafetyPromise(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let forbiddenPhrases = [
+            "알러지 위험이 없는",
+            "알레르기 위험이 없는",
+            "안전한 식단",
+            "완전히 안전",
+            "진단",
+            "치료",
+            "처방"
+        ]
+
+        for phrase in forbiddenPhrases {
+            XCTAssertFalse(text.contains(phrase), "'\(phrase)' 문구를 포함하면 의료 안전 단정으로 보일 수 있습니다.", file: file, line: line)
+        }
+    }
+}
+
+private extension DietRestrictionViewModelTests {
+    static func stubbedAPIClient(
+        handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
+    ) -> APIClient {
+        DietFeatureTestNetwork.makeAPIClient(handler: handler)
+    }
+
+    static func jsonResponse(statusCode: Int = 200, path: String?, body: String) -> (HTTPURLResponse, Data) {
+        DietFeatureTestNetwork.jsonResponse(statusCode: statusCode, path: path, body: body)
+    }
+
+    static func bodyJSON(from request: URLRequest) -> [String: Any]? {
+        DietFeatureTestNetwork.bodyJSON(from: request)
+    }
+}
+
+private extension DietRecommendationViewModelTests {
+    static func stubbedAPIClient(
+        handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
+    ) -> APIClient {
+        DietFeatureTestNetwork.makeAPIClient(handler: handler)
+    }
+
+    static func jsonResponse(statusCode: Int = 200, path: String?, body: String) -> (HTTPURLResponse, Data) {
+        DietFeatureTestNetwork.jsonResponse(statusCode: statusCode, path: path, body: body)
+    }
+
+    static func bodyJSON(from request: URLRequest) -> [String: Any]? {
+        DietFeatureTestNetwork.bodyJSON(from: request)
+    }
+}
+
+private enum DietFeatureTestNetwork {
+    static let baseURL = URL(string: "https://unit.test")!
+
+    static func makeAPIClient(
+        handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
+    ) -> APIClient {
+        DietFeatureURLProtocolStub.requestHandler = handler
+        let store = TokenStore()
+        store.clearTokens()
+        store.save(accessToken: jwt(expiringIn: 3600), refreshToken: "refresh")
+
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DietFeatureURLProtocolStub.self]
+        return APIClient(
+            baseURL: baseURL,
+            tokenStore: store,
+            session: URLSession(configuration: configuration)
+        )
+    }
+
+    static func jsonResponse(
+        statusCode: Int = 200,
+        path: String?,
+        body: String
+    ) -> (HTTPURLResponse, Data) {
+        let url = URL(string: path ?? "/", relativeTo: baseURL)!
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: statusCode,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (response, Data(body.utf8))
+    }
+
+    static func bodyJSON(from request: URLRequest) -> [String: Any]? {
+        guard let data = bodyData(from: request) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    }
+
+    private static func bodyData(from request: URLRequest) -> Data? {
+        if let httpBody = request.httpBody {
+            return httpBody
+        }
+
+        guard let stream = request.httpBodyStream else {
+            return nil
+        }
+
+        stream.open()
+        defer { stream.close() }
+
+        var data = Data()
+        let bufferSize = 1024
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        defer { buffer.deallocate() }
+
+        while stream.hasBytesAvailable {
+            let bytesRead = stream.read(buffer, maxLength: bufferSize)
+            if bytesRead < 0 {
+                return nil
+            }
+            if bytesRead == 0 {
+                break
+            }
+            data.append(buffer, count: bytesRead)
+        }
+        return data
+    }
+
+    private static func jwt(expiringIn seconds: TimeInterval) -> String {
+        let header = ["alg": "none", "typ": "JWT"]
+        let payload = ["exp": Date().timeIntervalSince1970 + seconds]
+        return [
+            base64URLEncodedJSON(header),
+            base64URLEncodedJSON(payload),
+            "signature"
+        ].joined(separator: ".")
+    }
+
+    private static func base64URLEncodedJSON(_ object: Any) -> String {
+        let data = try! JSONSerialization.data(withJSONObject: object)
+        return data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+}
+
+private final class DietFeatureURLProtocolStub: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        guard let requestHandler = Self.requestHandler else {
+            client?.urlProtocol(self, didFailWithError: APIError.unknown)
+            return
+        }
+
+        do {
+            let (response, data) = try requestHandler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {
+    }
+}
+
+private final class LockedDietFeatureCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    var value: Int {
+        lock.withLock { count }
+    }
+
+    @discardableResult
+    func increment() -> Int {
+        lock.withLock {
+            count += 1
+            return count
+        }
+    }
+}
