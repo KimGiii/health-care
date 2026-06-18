@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -202,7 +203,69 @@ class DietRecommendationEngineTest {
         }
     }
 
+    // ─── 대안 식단 (상위 복수 해) ───
+
+    @Nested
+    @DisplayName("대안 식단 생성 (상위 복수 해)")
+    class AlternativeMealPlans {
+
+        @Test
+        @DisplayName("3개의 대안 식단을 요청하면 3개의 결과가 반환된다")
+        void recommendAlternatives_returnsRequestedCount() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<List<RecommendedMeal>> alts = engine.recommendAlternatives(
+                    3, LocalDate.of(2026, 6, 12), targets,
+                    List.of(MealType.LUNCH), diverseCandidates());
+
+            assertThat(alts).hasSize(3);
+        }
+
+        @Test
+        @DisplayName("각 대안 식단은 이전 대안과 다른 음식을 포함한다")
+        void recommendAlternatives_eachAltHasDifferentFoods() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<List<RecommendedMeal>> alts = engine.recommendAlternatives(
+                    3, LocalDate.of(2026, 6, 12), targets,
+                    List.of(MealType.LUNCH), diverseCandidates());
+
+            Set<Long> alt0 = recommendedFoodIdsSet(alts.get(0));
+            Set<Long> alt1 = recommendedFoodIdsSet(alts.get(1));
+            Set<Long> alt2 = recommendedFoodIdsSet(alts.get(2));
+
+            assertThat(alt0).isNotEqualTo(alt1);
+            assertThat(alt1).isNotEqualTo(alt2);
+        }
+
+        @Test
+        @DisplayName("대안 식단 간 음식 ID가 중복되지 않는다 (후보가 충분할 때)")
+        void recommendAlternatives_noFoodOverlapAcrossAlts() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<List<RecommendedMeal>> alts = engine.recommendAlternatives(
+                    3, LocalDate.of(2026, 6, 12), targets,
+                    List.of(MealType.LUNCH), diverseCandidates());
+
+            Set<Long> alt0 = recommendedFoodIdsSet(alts.get(0));
+            Set<Long> alt1 = recommendedFoodIdsSet(alts.get(1));
+            Set<Long> alt2 = recommendedFoodIdsSet(alts.get(2));
+
+            // alt0 ∩ alt1 = ∅
+            assertThat(alt0).doesNotContainAnyElementsOf(alt1);
+            // alt1 ∩ alt2 = ∅
+            assertThat(alt1).doesNotContainAnyElementsOf(alt2);
+        }
+    }
+
     // ─── 헬퍼 ───
+
+    private Set<Long> recommendedFoodIdsSet(List<RecommendedMeal> meals) {
+        return meals.stream()
+                .flatMap(m -> m.items().stream())
+                .map(RecommendedFoodEntry::foodCatalogId)
+                .collect(java.util.stream.Collectors.toSet());
+    }
 
     private List<Long> recommendedFoodIds(List<RecommendedMeal> meals) {
         return meals.stream()

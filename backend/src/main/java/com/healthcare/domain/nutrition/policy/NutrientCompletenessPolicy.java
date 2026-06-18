@@ -2,6 +2,7 @@ package com.healthcare.domain.nutrition.policy;
 
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.goals.entity.Goal;
+import com.healthcare.domain.goals.entity.Goal.GoalType;
 
 /**
  * 목표 유형별 추천 후보 영양 완전성 정책.
@@ -9,7 +10,7 @@ import com.healthcare.domain.goals.entity.Goal;
  */
 public class NutrientCompletenessPolicy {
 
-    public boolean isComplete(Goal.GoalType goalType, DietRecommendationCandidate candidate) {
+    public boolean isComplete(GoalType goalType, DietRecommendationCandidate candidate) {
         return candidate.macroDataComplete();
     }
 }

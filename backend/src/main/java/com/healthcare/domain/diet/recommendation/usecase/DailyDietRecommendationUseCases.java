@@ -1,6 +1,7 @@
 package com.healthcare.domain.diet.recommendation.usecase;
 
 import com.healthcare.common.exception.BusinessRuleViolationException;
+import com.healthcare.domain.diet.entity.DietLog;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
@@ -8,11 +9,13 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResp
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
+import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
+import com.healthcare.domain.nutrition.dto.ConsumedNutrients;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
 import com.healthcare.domain.nutrition.service.NutritionCalculator;
 import com.healthcare.domain.user.entity.User;
@@ -38,6 +41,7 @@ public class DailyDietRecommendationUseCases {
     private final UserRepository userRepository;
     private final GoalRepository goalRepository;
     private final DietRestrictionRepository dietRestrictionRepository;
+    private final DietLogRepository dietLogRepository;
     private final DietRecommendationCandidatePool candidatePool;
     private final DietRecommendationEngine engine;
 
@@ -58,6 +62,10 @@ public class DailyDietRecommendationUseCases {
         List<DietRestriction> restrictions = dietRestrictionRepository
                 .findByUserIdAndDeletedAtIsNull(userId);
 
+        List<DietLog> todayLogs = dietLogRepository.findByUserIdAndLogDate(userId, request.date());
+        ConsumedNutrients consumed = ConsumedNutrients.from(todayLogs);
+        NutritionTargets remainingTargets = targets.minus(consumed);
+
         DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
         if (candidates.foods().isEmpty()) {
             throw new BusinessRuleViolationException(
@@ -66,7 +74,7 @@ public class DailyDietRecommendationUseCases {
 
         List<RecommendedMeal> meals = engine.recommend(
                 request.date(),
-                targets,
+                remainingTargets,
                 request.mealTypes(),
                 candidates.foods());
         if (meals.stream().anyMatch(meal -> meal.items().isEmpty())) {
@@ -75,35 +83,43 @@ public class DailyDietRecommendationUseCases {
         }
 
         NutrientSummary summary = buildSummary(meals);
-        validateTargets(targets, summary);
+        String failureReason = checkTargets(remainingTargets, summary);
         List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
                 .map(DietRestrictionResponse::from)
                 .toList();
 
+        List<List<RecommendedMeal>> alternatives = request.alternativeCount() > 0
+                ? engine.recommendAlternatives(request.alternativeCount(), request.date(),
+                        remainingTargets, request.mealTypes(), candidates.foods())
+                : List.of();
+
         return new DailyDietRecommendationResponse(
                 request.date(),
                 targets,
+                remainingTargets,
                 appliedRestrictions,
                 meals,
                 summary,
+                failureReason,
                 request.strictAllergyMode(),
-                DISCLAIMER
+                DISCLAIMER,
+                alternatives
         );
     }
 
-    private void validateTargets(NutritionTargets targets, NutrientSummary summary) {
+    private String checkTargets(NutritionTargets targets, NutrientSummary summary) {
         double lowerCalorie = targets.calorieTarget() * CALORIE_LOWER_BOUND_RATIO;
         double upperCalorie = targets.calorieTarget() * CALORIE_UPPER_BOUND_RATIO;
         if (summary.totalCalories() < lowerCalorie || summary.totalCalories() > upperCalorie) {
-            throw new BusinessRuleViolationException(
-                    "현재 후보 식품만으로 하루 칼로리 목표에 맞는 추천 식단을 만들기 어렵습니다.");
+            return "현재 후보 식품만으로 하루 칼로리 목표에 맞는 추천 식단을 만들기 어렵습니다.";
         }
 
         double lowerProtein = targets.proteinTargetG() * PROTEIN_LOWER_BOUND_RATIO;
         if (summary.totalProteinG() < lowerProtein) {
-            throw new BusinessRuleViolationException(
-                    "현재 후보 식품만으로 단백질 목표에 맞는 추천 식단을 만들기 어렵습니다.");
+            return "현재 후보 식품만으로 단백질 목표에 맞는 추천 식단을 만들기 어렵습니다.";
         }
+
+        return null;
     }
 
     private NutrientSummary buildSummary(List<RecommendedMeal> meals) {

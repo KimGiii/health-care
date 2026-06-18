@@ -95,6 +95,37 @@ public class DietRecommendationEngine {
         return recommend(LocalDate.now(), targets, selectedMeals, filteredCandidates);
     }
 
+    /**
+     * 이전 대안에서 사용된 음식을 순차 제외하여 다양한 식단 대안을 N개 생성한다.
+     * 후보가 소진되면 전체 후보를 다시 허용한다.
+     */
+    public List<List<RecommendedMeal>> recommendAlternatives(
+            int count,
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> candidates
+    ) {
+        List<List<RecommendedMeal>> results = new ArrayList<>();
+        Set<Long> excludedFoodIds = new HashSet<>();
+
+        for (int i = 0; i < count; i++) {
+            List<DietRecommendationCandidate> pool = candidates.stream()
+                    .filter(f -> !excludedFoodIds.contains(f.foodCatalogId()))
+                    .toList();
+            if (pool.isEmpty()) pool = candidates;
+
+            List<RecommendedMeal> alt = recommend(date, targets, selectedMeals, pool);
+            results.add(alt);
+
+            alt.stream()
+                    .flatMap(m -> m.items().stream())
+                    .map(RecommendedFoodEntry::foodCatalogId)
+                    .forEach(excludedFoodIds::add);
+        }
+        return results;
+    }
+
     // ─── 내부 로직 ───
 
     private List<RecommendedFoodEntry> selectItemsForMeal(

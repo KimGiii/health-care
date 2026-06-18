@@ -9,12 +9,19 @@ import java.util.List;
 public record DailyDietRecommendationResponse(
         LocalDate date,
         NutritionTargets targets,
+        NutritionTargets remainingTargets,
         List<DietRestrictionResponse> appliedRestrictions,
         List<RecommendedMeal> meals,
         NutrientSummary totalNutrients,
+        String failureReason,
         boolean strictAllergyMode,
-        String disclaimer
+        String disclaimer,
+        List<List<RecommendedMeal>> alternatives
 ) {
+    public boolean succeeded() {
+        return failureReason == null;
+    }
+
     public record NutrientSummary(
             double totalCalories,
             double totalProteinG,
