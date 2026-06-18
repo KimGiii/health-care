@@ -153,7 +153,16 @@ public class DietRecommendationEngine {
                     });
         }
 
-        // 선호 카테고리에서 maxItems 미달 시 나머지에서 보충
+        // 선호 카테고리에서 maxItems 미달 시: 새 카테고리 우선, 없으면 기존 카테고리에서 보충
+        if (selected.size() < maxItems) {
+            candidates.stream()
+                    .filter(f -> !selected.contains(f) && !usedCategories.contains(f.category()))
+                    .limit(maxItems - selected.size())
+                    .forEach(f -> {
+                        selected.add(f);
+                        usedCategories.add(f.category());
+                    });
+        }
         if (selected.size() < maxItems) {
             candidates.stream()
                     .filter(f -> !selected.contains(f))

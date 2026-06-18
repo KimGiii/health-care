@@ -203,6 +203,80 @@ class DietRecommendationEngineTest {
         }
     }
 
+    // ─── 카테고리 다양성 ───
+
+    @Nested
+    @DisplayName("끼니 간 카테고리 다양성")
+    class CrossMealCategoryDiversity {
+
+        @Test
+        @DisplayName("fill 단계에서 이미 선택된 카테고리보다 새 카테고리 식품을 우선 선택한다")
+        void recommend_fillStep_prefersNewCategoryOverUsedCategory() {
+            // BREAKFAST preferred: [GRAIN, DAIRY, FRUIT, PROTEIN_SOURCE]
+            // GRAIN: 현미밥(1), PROTEIN: 닭가슴살(2), maxItems=3 → fill 1개 필요
+            // fill 후보: 보리밥(GRAIN, high usageCount), 브로콜리(VEGETABLE, low usageCount)
+            // 다양성 없이: 보리밥(GRAIN) 선택 → categories = {GRAIN, PROTEIN}
+            // 다양성 적용: 브로콜리(VEGETABLE) 선택 → categories = {GRAIN, PROTEIN, VEGETABLE}
+            List<DietRecommendationCandidate> candidates = List.of(
+                    food(1L, "현미밥",   FoodCategory.GRAIN,          350.0),
+                    food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
+                    food(3L, "보리밥",   FoodCategory.GRAIN,          340.0),
+                    food(4L, "귀리죽",   FoodCategory.GRAIN,          300.0),
+                    food(5L, "브로콜리", FoodCategory.VEGETABLE,       34.0)
+            );
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<RecommendedMeal> meals = engine.recommend(
+                    LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.BREAKFAST), candidates);
+
+            // fill이 새 카테고리(VEGETABLE)를 선택했는지 확인
+            assertThat(categorySet(meals.get(0))).contains(FoodCategory.VEGETABLE);
+        }
+
+        @Test
+        @DisplayName("fill 다양성은 날짜에 관계없이 새 카테고리를 우선한다")
+        void recommend_fillCategoryDiversity_stableAcrossDates() {
+            List<DietRecommendationCandidate> candidates = List.of(
+                    food(1L, "현미밥",   FoodCategory.GRAIN,          350.0),
+                    food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
+                    food(3L, "보리밥",   FoodCategory.GRAIN,          340.0),
+                    food(4L, "귀리죽",   FoodCategory.GRAIN,          300.0),
+                    food(5L, "브로콜리", FoodCategory.VEGETABLE,       34.0)
+            );
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            // 7일 동안 모든 날짜에서 VEGETABLE이 포함되어야 한다
+            for (int day = 1; day <= 7; day++) {
+                LocalDate date = LocalDate.of(2026, 6, day);
+                List<RecommendedMeal> meals = engine.recommend(
+                        date, targets, List.of(MealType.BREAKFAST), candidates);
+
+                assertThat(categorySet(meals.get(0)))
+                        .as("날짜 %s의 BREAKFAST에 VEGETABLE이 있어야 한다", date)
+                        .contains(FoodCategory.VEGETABLE);
+            }
+        }
+
+        @Test
+        @DisplayName("3끼 추천 시 매 끼니마다 최소 2개 이상의 서로 다른 카테고리가 등장한다")
+        void recommend_threeMeals_eachHasAtLeastTwoCategories() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+
+            List<RecommendedMeal> meals = engine.recommend(
+                    LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER),
+                    diverseCandidates());
+
+            for (RecommendedMeal meal : meals) {
+                Set<FoodCategory> categories = categorySet(meal);
+                assertThat(categories)
+                        .as("끼니 %s에 카테고리가 2개 이상이어야 한다", meal.mealType())
+                        .hasSizeGreaterThanOrEqualTo(2);
+            }
+        }
+    }
+
     // ─── 대안 식단 (상위 복수 해) ───
 
     @Nested
@@ -259,6 +333,12 @@ class DietRecommendationEngineTest {
     }
 
     // ─── 헬퍼 ───
+
+    private Set<FoodCategory> categorySet(RecommendedMeal meal) {
+        return meal.items().stream()
+                .map(RecommendedFoodEntry::category)
+                .collect(java.util.stream.Collectors.toSet());
+    }
 
     private Set<Long> recommendedFoodIdsSet(List<RecommendedMeal> meals) {
         return meals.stream()

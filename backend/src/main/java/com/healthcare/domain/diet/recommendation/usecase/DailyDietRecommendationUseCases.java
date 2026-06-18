@@ -66,6 +66,16 @@ public class DailyDietRecommendationUseCases {
         ConsumedNutrients consumed = ConsumedNutrients.from(todayLogs);
         NutritionTargets remainingTargets = targets.minus(consumed);
 
+        if (remainingTargets.calorieTarget() <= 0) {
+            List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
+                    .map(DietRestrictionResponse::from).toList();
+            return new DailyDietRecommendationResponse(
+                    request.date(), targets, remainingTargets, appliedRestrictions,
+                    List.of(), new NutrientSummary(0, 0, 0, 0),
+                    "오늘 칼로리 목표를 이미 달성했습니다. 추가 추천이 필요하지 않습니다.",
+                    request.strictAllergyMode(), DISCLAIMER, List.of());
+        }
+
         DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
         if (candidates.foods().isEmpty()) {
             throw new BusinessRuleViolationException(

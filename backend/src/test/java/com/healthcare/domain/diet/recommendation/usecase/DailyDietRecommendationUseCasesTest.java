@@ -193,6 +193,56 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     @Test
+    @DisplayName("당일 칼로리 목표를 이미 달성했으면 추천 없이 달성 안내 failureReason을 반환한다")
+    void recommend_caloriesAlreadyMet_returnsGoalAchievedFailureReason() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+
+        // 이미 하루 칼로리 목표(약 2500kcal)를 초과 섭취한 기록
+        DietLog heavyLog = DietLog.builder()
+                .userId(1L).logDate(LocalDate.now()).mealType(MealType.LUNCH)
+                .totalCalories(3000.0).totalProteinG(200.0).totalCarbsG(350.0).totalFatG(100.0)
+                .build();
+        given(dietLogRepository.findByUserIdAndLogDate(1L, LocalDate.now()))
+                .willReturn(List.of(heavyLog));
+
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.DINNER)));
+
+        assertThat(response.succeeded()).isFalse();
+        assertThat(response.failureReason()).contains("달성");
+        assertThat(response.meals()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("remainingTargets가 모두 0이 아니지만 candidatePool이 비면 noCandidates 예외다")
+    void recommend_goalsPartiallyMet_stillRecommends() {
+        User user = fullProfileUser();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+
+        // 칼로리는 절반만 소비
+        DietLog halfLog = DietLog.builder()
+                .userId(1L).logDate(LocalDate.now()).mealType(MealType.BREAKFAST)
+                .totalCalories(800.0).totalProteinG(50.0).totalCarbsG(100.0).totalFatG(25.0)
+                .build();
+        given(dietLogRepository.findByUserIdAndLogDate(1L, LocalDate.now()))
+                .willReturn(List.of(halfLog));
+        given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+
+        // 남은 목표가 있으므로 정상 추천 응답을 반환해야 한다
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.LUNCH, MealType.DINNER)));
+
+        assertThat(response.meals()).hasSize(2);
+        assertThat(response.remainingTargets().calorieTarget())
+                .isGreaterThan(0);
+    }
+
+    @Test
     @DisplayName("alternativeCount=2 요청 시 응답에 2개의 대안 식단이 포함된다")
     void recommend_alternativeCount2_responseContainsTwoAlternatives() {
         User user = fullProfileUser();
