@@ -99,8 +99,9 @@ public class DailyDietRecommendationUseCases {
                 .toList();
 
         List<List<RecommendedMeal>> alternatives = request.alternativeCount() > 0
-                ? engine.recommendAlternatives(request.alternativeCount(), request.date(),
-                        remainingTargets, request.mealTypes(), candidates.foods())
+                ? engine.sortByDiversityFrom(meals,
+                        engine.recommendAlternatives(request.alternativeCount(), request.date(),
+                                remainingTargets, request.mealTypes(), candidates.foods()))
                 : List.of();
 
         return new DailyDietRecommendationResponse(

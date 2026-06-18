@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -124,6 +125,31 @@ public class DietRecommendationEngine {
                     .forEach(excludedFoodIds::add);
         }
         return results;
+    }
+
+    /**
+     * 대안 식단 목록을 1차 추천 대비 카테고리 다양성 점수 내림차순으로 정렬한다.
+     * 점수 = 1차 추천에 없는 새 카테고리 수.
+     */
+    public List<List<RecommendedMeal>> sortByDiversityFrom(
+            List<RecommendedMeal> primary,
+            List<List<RecommendedMeal>> alternatives
+    ) {
+        Set<FoodCategory> primaryCategories = extractCategories(primary);
+        return alternatives.stream()
+                .sorted(Comparator.comparingLong((List<RecommendedMeal> alt) ->
+                        extractCategories(alt).stream()
+                                .filter(c -> !primaryCategories.contains(c))
+                                .count())
+                        .reversed())
+                .toList();
+    }
+
+    private Set<FoodCategory> extractCategories(List<RecommendedMeal> meals) {
+        return meals.stream()
+                .flatMap(m -> m.items().stream())
+                .map(RecommendedFoodEntry::category)
+                .collect(Collectors.toSet());
     }
 
     // ─── 내부 로직 ───

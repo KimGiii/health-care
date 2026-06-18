@@ -359,7 +359,69 @@ class DietRecommendationEngineTest {
         }
     }
 
+    // ─── 대안 식단 다양성 정렬 ───
+
+    @Nested
+    @DisplayName("대안 식단 다양성 정렬")
+    class AlternativeDiversitySorting {
+
+        @Test
+        @DisplayName("1차 추천과 카테고리가 가장 다른 대안이 앞으로 정렬된다")
+        void sortByDiversityFrom_mostDiverseAltComesFirst() {
+            // primary: PROTEIN_SOURCE + GRAIN → primaryCategories = {PROTEIN_SOURCE, GRAIN}
+            List<RecommendedMeal> primary = List.of(
+                    mealOf(MealType.LUNCH,
+                            entryOf(1L, FoodCategory.PROTEIN_SOURCE),
+                            entryOf(2L, FoodCategory.GRAIN)));
+
+            // 낮은 다양성: 동일 카테고리 (PROTEIN_SOURCE + GRAIN) → 새 카테고리 0개
+            List<RecommendedMeal> lowDiversity = List.of(
+                    mealOf(MealType.LUNCH,
+                            entryOf(3L, FoodCategory.PROTEIN_SOURCE),
+                            entryOf(4L, FoodCategory.GRAIN)));
+
+            // 높은 다양성: 완전 다른 카테고리 (FRUIT + DAIRY) → 새 카테고리 2개
+            List<RecommendedMeal> highDiversity = List.of(
+                    mealOf(MealType.LUNCH,
+                            entryOf(5L, FoodCategory.FRUIT),
+                            entryOf(6L, FoodCategory.DAIRY)));
+
+            List<List<RecommendedMeal>> sorted = engine.sortByDiversityFrom(
+                    primary, List.of(lowDiversity, highDiversity));
+
+            assertThat(sorted.get(0)).isEqualTo(highDiversity);
+        }
+
+        @Test
+        @DisplayName("다양성 점수가 같은 대안들은 원래 순서를 유지한다")
+        void sortByDiversityFrom_sameDiversityPreservesOrder() {
+            // primary: PROTEIN_SOURCE
+            List<RecommendedMeal> primary = List.of(
+                    mealOf(MealType.LUNCH, entryOf(1L, FoodCategory.PROTEIN_SOURCE)));
+
+            // 둘 다 새 카테고리 1개 (diversity = 1)
+            List<RecommendedMeal> alt0 = List.of(mealOf(MealType.LUNCH, entryOf(2L, FoodCategory.GRAIN)));
+            List<RecommendedMeal> alt1 = List.of(mealOf(MealType.LUNCH, entryOf(3L, FoodCategory.VEGETABLE)));
+
+            List<List<RecommendedMeal>> sorted = engine.sortByDiversityFrom(
+                    primary, List.of(alt0, alt1));
+
+            // 점수 동일 → stable sort → 원래 순서 유지
+            assertThat(sorted).hasSize(2);
+            assertThat(sorted.get(0)).isEqualTo(alt0);
+        }
+    }
+
     // ─── 헬퍼 ───
+
+    private RecommendedMeal mealOf(MealType type, RecommendedFoodEntry... entries) {
+        return new RecommendedMeal(type, 500, 500, 0, 0, 0, List.of(entries));
+    }
+
+    private RecommendedFoodEntry entryOf(Long id, FoodCategory category) {
+        return new RecommendedFoodEntry(id, "food" + id, null, category,
+                100.0, 200.0, 20.0, 20.0, 5.0, AllergenConfidenceLevel.UNKNOWN, null);
+    }
 
     private Set<FoodCategory> categorySet(RecommendedMeal meal) {
         return meal.items().stream()
