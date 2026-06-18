@@ -13,6 +13,7 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequ
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
+import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.RestrictionType;
@@ -53,6 +54,7 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private DietLogRepository dietLogRepository;
     @Mock private DietRecommendationCandidatePool candidatePool;
     @Mock private RecommendationSnapshotStore snapshotStore;
+    @Mock private FoodEntryRepository foodEntryRepository;
     @Spy  private DietRecommendationEngine engine = new DietRecommendationEngine();
 
     @InjectMocks

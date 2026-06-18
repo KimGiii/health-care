@@ -9,8 +9,11 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResp
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
+import com.healthcare.domain.diet.recommendation.engine.UserRepetitionPolicy;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.DietLogRepository;
+import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
@@ -25,7 +28,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +51,9 @@ public class DailyDietRecommendationUseCases {
     private final DietRecommendationCandidatePool candidatePool;
     private final DietRecommendationEngine engine;
     private final RecommendationSnapshotStore snapshotStore;
+    private final FoodEntryRepository foodEntryRepository;
+
+    private static final int REPETITION_LOOKBACK_DAYS = 7;
 
     public DailyDietRecommendationResponse recommend(Long userId, DailyDietRecommendationRequest request) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
@@ -84,11 +92,17 @@ public class DailyDietRecommendationUseCases {
                     "등록한 제한 조건을 모두 반영하면 추천 가능한 식품 후보가 부족합니다. 제한 조건을 조정하거나 직접 식단을 기록해 주세요.");
         }
 
+        Set<Long> recentIds = foodEntryRepository.findRecentFoodCatalogIds(
+                userId, request.date().minusDays(REPETITION_LOOKBACK_DAYS));
+        UserRepetitionPolicy repetitionPolicy = new UserRepetitionPolicy(recentIds);
+        List<DietRecommendationCandidate> preferredCandidates =
+                repetitionPolicy.sortByPreference(candidates.foods());
+
         List<RecommendedMeal> meals = engine.recommend(
                 request.date(),
                 remainingTargets,
                 request.mealTypes(),
-                candidates.foods());
+                preferredCandidates);
         if (meals.stream().anyMatch(meal -> meal.items().isEmpty())) {
             throw new BusinessRuleViolationException(
                     "선택한 끼니 구성에 맞는 추천 식단을 만들기 어렵습니다. 끼니 수를 조정하거나 제한 조건을 줄여 주세요.");
@@ -103,7 +117,7 @@ public class DailyDietRecommendationUseCases {
         List<List<RecommendedMeal>> alternatives = request.alternativeCount() > 0
                 ? engine.sortByDiversityFrom(meals,
                         engine.recommendAlternatives(request.alternativeCount(), request.date(),
-                                remainingTargets, request.mealTypes(), candidates.foods()))
+                                remainingTargets, request.mealTypes(), preferredCandidates))
                 : List.of();
 
         String mealsJson = snapshotStore.serializeMeals(meals);
