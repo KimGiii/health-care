@@ -1,10 +1,9 @@
 package com.healthcare.domain.diet.recommendation.candidate;
 
-import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenDataSource;
+import com.healthcare.domain.diet.allergen.AllergenSafetyGate;
 import com.healthcare.domain.diet.allergen.AllergenTag;
-import com.healthcare.domain.diet.allergen.FoodAllergenProfileGate;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenProfile;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileRepository;
@@ -64,8 +63,7 @@ class DietRecommendationCandidatePoolTest {
                 foodCatalogRepository,
                 foodAllergenTagRepository,
                 foodAllergenProfileRepository,
-                new AllergenConfidenceGate(),
-                new FoodAllergenProfileGate()
+                new AllergenSafetyGate()
         );
     }
 
