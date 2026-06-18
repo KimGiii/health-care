@@ -10,7 +10,9 @@ import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileReposit
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
+import com.healthcare.domain.diet.policy.DataFreshnessPolicy;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.RestrictionType;
@@ -63,7 +65,8 @@ class DietRecommendationCandidatePoolTest {
                 foodCatalogRepository,
                 foodAllergenTagRepository,
                 foodAllergenProfileRepository,
-                new AllergenSafetyGate()
+                new AllergenSafetyGate(),
+                new DataFreshnessPolicy()
         );
     }
 
@@ -196,6 +199,59 @@ class DietRecommendationCandidatePoolTest {
         List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), false).foods();
 
         assertThat(resultFoodIds(result)).contains(plainRice.getId());
+    }
+
+    @Test
+    @DisplayName("MFDS source 식품이 만료된 lastVerifiedAt을 가지면 후보에서 제외된다")
+    void load_mfdsFood_staleData_excluded() {
+        FoodCatalog staleFood = FoodCatalog.builder()
+                .id(1L).name("구식MFDS식품").category(FoodCategory.GRAIN)
+                .caloriesPer100g(100.0).proteinPer100g(3.0)
+                .carbsPer100g(20.0).fatPer100g(1.0)
+                .isCustom(false).usageCount(0L)
+                .source(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB)
+                .lastVerifiedAt(OffsetDateTime.now().minusDays(3000)) // 3000일 전 → 2년 초과
+                .build();
+        FoodCatalog freshFood = food(2L, "신선한식품", FoodCategory.GRAIN, 120.0);
+        givenCatalogCandidates(List.of(staleFood, freshFood));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(resultFoodIds(result)).doesNotContain(staleFood.getId());
+        assertThat(resultFoodIds(result)).contains(freshFood.getId());
+    }
+
+    @Test
+    @DisplayName("MFDS source 식품이 freshness 범위 내의 lastVerifiedAt을 가지면 후보에 포함된다")
+    void load_mfdsFood_freshData_included() {
+        FoodCatalog freshMfds = FoodCatalog.builder()
+                .id(1L).name("최신MFDS식품").category(FoodCategory.GRAIN)
+                .caloriesPer100g(100.0).proteinPer100g(3.0)
+                .carbsPer100g(20.0).fatPer100g(1.0)
+                .isCustom(false).usageCount(0L)
+                .source(FoodCatalogSource.MFDS_STANDARD_PROCESSED)
+                .lastVerifiedAt(OffsetDateTime.now().minusDays(30)) // 30일 전 → 유효
+                .build();
+        givenCatalogCandidates(List.of(freshMfds));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(resultFoodIds(result)).contains(freshMfds.getId());
+    }
+
+    @Test
+    @DisplayName("SEED source 식품은 lastVerifiedAt이 없어도 후보에 포함된다")
+    void load_seedFood_nullVerifiedAt_included() {
+        // food() 헬퍼가 SEED source(기본값)로 생성하고 lastVerifiedAt=null
+        FoodCatalog seedFood = food(1L, "시드식품", FoodCategory.GRAIN, 130.0);
+        givenCatalogCandidates(List.of(seedFood));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any())).willReturn(List.of());
+
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(), false).foods();
+
+        assertThat(resultFoodIds(result)).contains(seedFood.getId());
     }
 
     @Test

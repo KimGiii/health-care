@@ -10,6 +10,7 @@ import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileReposit
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.policy.DataFreshnessPolicy;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogSpecs;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
@@ -41,6 +42,7 @@ public class DietRecommendationCandidatePool {
     private final FoodAllergenTagRepository foodAllergenTagRepository;
     private final FoodAllergenProfileRepository foodAllergenProfileRepository;
     private final AllergenSafetyGate allergenSafetyGate;
+    private final DataFreshnessPolicy dataFreshnessPolicy;
 
     public DietRecommendationCandidates load(
             List<DietRestriction> restrictions,
@@ -52,11 +54,12 @@ public class DietRecommendationCandidatePool {
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsed);
 
         // DB Spec이 foodIds·categories를 먼저 제거하고, 아래 두 줄은 Mock 환경 안전망이다.
-        // keywords·allergen은 DB Spec 대응이 없어 인메모리만 적용한다.
+        // keywords·allergen·freshness는 DB Spec 대응이 없어 인메모리만 적용한다.
         List<DietRecommendationCandidate> candidates = catalogCandidates.stream()
                 .filter(food -> food.getCaloriesPer100g() != null)
                 .filter(food -> !parsed.foodIds().contains(food.getId()))
                 .filter(food -> !parsed.categories().contains(food.getCategory()))
+                .filter(food -> dataFreshnessPolicy.isCurrent(food))
                 .filter(food -> !matchesKeyword(food, parsed.keywords()))
                 .flatMap(food -> {
                     AllergenContext ctx = new AllergenContext(

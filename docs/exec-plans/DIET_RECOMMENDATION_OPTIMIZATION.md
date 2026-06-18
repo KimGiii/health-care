@@ -303,7 +303,9 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `DietRecommendationCandidate.macroDataComplete`: `from(FoodCatalog)` 시점에 4대 영양소 null 여부 자동 계산
   - `NutrientCompletenessPolicy`: 모든 목표 유형에 동일 정책 적용
   - `DietRecommendationCandidatePool`: 영양 완전성 요약 메서드 추가
-- [ ] source 신뢰도·버전 만료 정책
+- [x] source 신뢰도·버전 만료 정책
+  - `DataFreshnessPolicy`: source별 최대 허용 연령 (MFDS 2년, BRAND_OFFICIAL 1년, SEED·USER_CUSTOM 무제한)
+  - `DietRecommendationCandidatePool`: `dataFreshnessPolicy.isCurrent(food)` 인메모리 필터 추가
 - [ ] 제공량 옵션 모델 (`food_serving_options`)과 iOS 프리셋 UX
 - [ ] canonical 식품 그룹과 대표 후보 조회
 - [ ] 검증 우선순위 리포트 (운영자 조회)
