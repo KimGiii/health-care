@@ -1,9 +1,9 @@
-brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://www.subway.com/ko-KR/MenuNutrition/Menu,2026-01-01,RECOMMENDABLE,
-서브웨이,베지 샌드위치,VEGETABLE,PER_SERVING,215,270,11,46,3.5,630,6,0.5,https://www.subway.com/ko-KR/MenuNutrition/Menu,2026-01-01,RECOMMENDABLE,
-샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,PER_SERVING,300,250,28,15,8,480,5,2,https://www.saladii.co.kr/menu,2026-01-01,RECOMMENDABLE,
-샐러디,연어 포케볼,PROTEIN_SOURCE,PER_SERVING,350,420,30,40,12,680,4,2.5,https://www.saladii.co.kr/menu,2026-01-01,RECOMMENDABLE,
-프레퍼스,닭가슴살 현미밥,PROTEIN_SOURCE,PER_SERVING,350,380,40,35,6,580,3,1.5,https://www.preppers.co.kr/menu,2026-01-01,RECOMMENDABLE,
-버거킹,와퍼,PROCESSED,PER_SERVING,290,660,28,49,40,980,11,12,https://www.burgerking.co.kr/menu,2026-01-01,RECOMMENDABLE_WITH_CAUTION,고지방·고나트륨
-버거킹,통새우 와퍼,PROTEIN_SOURCE,PER_SERVING,290,580,26,52,30,1100,10,8,https://www.burgerking.co.kr/menu,2026-01-01,SEARCH_ONLY,
-BBQ,황금올리브치킨,PROTEIN_SOURCE,PER_100G,,253,18,10,16,450,1,3,https://www.bbq.co.kr/menu,2026-01-01,SEARCH_ONLY,
+brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason,allergen_tags,allergen_profile_verified
+서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://www.subway.com/ko-KR/MenuNutrition/Menu,2026-01-01,RECOMMENDABLE,,밀,false
+서브웨이,베지 샌드위치,VEGETABLE,PER_SERVING,215,270,11,46,3.5,630,6,0.5,https://www.subway.com/ko-KR/MenuNutrition/Menu,2026-01-01,RECOMMENDABLE,,밀,false
+샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,PER_SERVING,300,250,28,15,8,480,5,2,https://www.saladii.co.kr/menu,2026-01-01,RECOMMENDABLE,,닭고기,true
+샐러디,연어 포케볼,PROTEIN_SOURCE,PER_SERVING,350,420,30,40,12,680,4,2.5,https://www.saladii.co.kr/menu,2026-01-01,RECOMMENDABLE,,,
+프레퍼스,닭가슴살 현미밥,PROTEIN_SOURCE,PER_SERVING,350,380,40,35,6,580,3,1.5,https://www.preppers.co.kr/menu,2026-01-01,RECOMMENDABLE,,닭고기,true
+버거킹,와퍼,PROCESSED,PER_SERVING,290,660,28,49,40,980,11,12,https://www.burgerking.co.kr/menu,2026-01-01,RECOMMENDABLE_WITH_CAUTION,고지방·고나트륨,"쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀",true
+버거킹,통새우 와퍼,PROTEIN_SOURCE,PER_SERVING,290,580,26,52,30,1100,10,8,https://www.burgerking.co.kr/menu,2026-01-01,SEARCH_ONLY,,"쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀, 새우",true
+BBQ,황금올리브치킨,PROTEIN_SOURCE,PER_100G,,253,18,10,16,450,1,3,https://www.bbq.co.kr/menu,2026-01-01,SEARCH_ONLY,,닭고기,true

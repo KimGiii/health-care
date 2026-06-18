@@ -20,13 +20,16 @@ public record BrandMenuCsvRow(
         String sourceUrl,
         String lastVerifiedAt,
         String recommendationStatus,
-        String recommendationReason
+        String recommendationReason,
+        String allergenTags,
+        String allergenProfileVerified
 ) {
     static final String[] HEADERS = {
             "brand_name", "menu_name", "category", "nutrition_basis",
             "serving_size_g", "calories", "protein", "carbs", "fat",
             "sodium", "sugar", "saturated_fat",
             "source_url", "last_verified_at",
-            "recommendation_status", "recommendation_reason"
+            "recommendation_status", "recommendation_reason",
+            "allergen_tags", "allergen_profile_verified"
     };
 }

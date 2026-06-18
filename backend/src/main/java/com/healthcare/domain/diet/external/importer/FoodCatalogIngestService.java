@@ -1,6 +1,7 @@
 package com.healthcare.domain.diet.external.importer;
 
 import com.healthcare.domain.diet.entity.FoodCatalog;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,10 @@ public class FoodCatalogIngestService {
         }
 
         return new FoodCatalogImportResult(created, updated, skipped, rejectedRows);
+    }
+
+    Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode) {
+        return foodCatalogRepository.findBySourceAndFoodCode(source, foodCode);
     }
 
     private void updateExisting(

@@ -48,8 +48,8 @@ class FoodCatalogAdminControllerTest {
     @DisplayName("유효한 CSV 파일을 업로드하면 200과 import 결과를 반환한다")
     void importBrandMenuCsv_returnsSummary() throws Exception {
         String csvContent = """
-                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
+                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason,allergen_tags,allergen_profile_verified
+                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,,밀,false
                 """;
         MockMultipartFile file = new MockMultipartFile(
                 "file", "brand_menu.csv", "text/csv",

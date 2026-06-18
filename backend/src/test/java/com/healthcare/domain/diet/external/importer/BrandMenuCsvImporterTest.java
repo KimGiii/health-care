@@ -1,5 +1,10 @@
 package com.healthcare.domain.diet.external.importer;
 
+import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
+import com.healthcare.domain.diet.allergen.AllergenDataSource;
+import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
@@ -15,21 +20,26 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @DisplayName("BrandMenuCsvImporter")
 class BrandMenuCsvImporterTest {
 
     private FoodCatalogRepository repository;
+    private FoodAllergenTagRepository allergenTagRepository;
     private BrandMenuCsvImporter importer;
 
     @BeforeEach
     void setUp() {
         repository = mock(FoodCatalogRepository.class);
-        importer = new BrandMenuCsvImporter(new FoodCatalogIngestService(repository));
+        allergenTagRepository = mock(FoodAllergenTagRepository.class);
+        importer = new BrandMenuCsvImporter(
+                new FoodCatalogIngestService(repository),
+                allergenTagRepository
+        );
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
@@ -45,9 +55,9 @@ class BrandMenuCsvImporterTest {
     @DisplayName("헤더 포함 CSV를 파싱하면 행 수가 일치한다")
     void parseCsv_returnsCorrectRowCount() throws IOException {
         String csv = """
-                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
-                샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,PER_SERVING,300,250,28,15,8,480,5,2,https://saladii.com,2026-01-01,RECOMMENDABLE,
+                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason,allergen_tags,allergen_profile_verified
+                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,,밀,false
+                샐러디,닭가슴살 샐러드,PROTEIN_SOURCE,PER_SERVING,300,250,28,15,8,480,5,2,https://saladii.com,2026-01-01,RECOMMENDABLE,,닭고기,false
                 """;
 
         List<BrandMenuCsvRow> rows = importer.parseCsv(csvStream(csv));
@@ -61,8 +71,8 @@ class BrandMenuCsvImporterTest {
     @DisplayName("빈 행은 파싱 결과에 포함되지 않는다")
     void parseCsv_skipsEmptyLines() throws IOException {
         String csv = """
-                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason
-                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,
+                brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason,allergen_tags,allergen_profile_verified
+                서브웨이,로스트치킨 샌드위치,PROTEIN_SOURCE,PER_SERVING,232,320,24,42,5,720,6,1.5,https://subway.com,2026-01-01,RECOMMENDABLE,,밀,false
 
                 """;
 
@@ -88,7 +98,7 @@ class BrandMenuCsvImporterTest {
                 .protein("24")         // 24 / 200 * 100 = 12
                 .carbs("40")
                 .fat("8")
-                .sodium("720")
+                .sodium("500")
                 .sugar("6")
                 .saturatedFat("2")
                 .sourceUrl("https://subway.com")
@@ -173,13 +183,63 @@ class BrandMenuCsvImporterTest {
     // -----------------------------------------------------------------------
 
     @Test
+    @DisplayName("브랜드 공식 메뉴 CSV의 알러젠 라벨은 LABEL_DERIVED 포함 태그로 저장된다")
+    void importRows_savesLabelDerivedAllergenTags() {
+        FoodCatalog existing = FoodCatalog.builder()
+                .id(42L)
+                .foodCode("버거킹:와퍼")
+                .source(FoodCatalogSource.BRAND_OFFICIAL)
+                .name("와퍼")
+                .nameKo("와퍼")
+                .category(FoodCategory.PROCESSED)
+                .caloriesPer100g(220.0)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
+                .isCustom(false)
+                .build();
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("버거킹").menuName("와퍼").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("290").calories("660").protein("28").carbs("49")
+                .fat("40").sodium("980").sugar("11").saturatedFat("12")
+                .sourceUrl("https://burgerking.co.kr").lastVerifiedAt("2026-06-09")
+                .recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("")
+                .allergenTags("쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀")
+                .allergenProfileVerified("true")
+                .build();
+        when(repository.findBySourceAndFoodCode(FoodCatalogSource.BRAND_OFFICIAL, "버거킹:와퍼"))
+                .thenReturn(Optional.of(existing));
+
+        importer.importRows(List.of(row));
+
+        verify(allergenTagRepository).replaceBySource(
+                eq(42L),
+                eq(AllergenDataSource.BRAND_OFFICIAL),
+                argThat(tags -> tags.size() == 7
+                        && tags.stream().allMatch(tag ->
+                                tag.getFoodCatalogId().equals(42L)
+                                        && tag.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+                                        && tag.getSource() == AllergenDataSource.BRAND_OFFICIAL
+                                        && tag.isAllergenProfileVerified()
+                        )
+                        && tags.stream().map(FoodAllergenTag::getAllergenTag)
+                        .collect(java.util.stream.Collectors.toSet())
+                        .containsAll(List.of(
+                                AllergenTag.BEEF, AllergenTag.EGG, AllergenTag.TOMATO,
+                                AllergenTag.PORK, AllergenTag.MILK, AllergenTag.SOY, AllergenTag.WHEAT
+                        ))
+                )
+        );
+    }
+
+    @Test
     @DisplayName("동일 food_code가 없으면 신규 생성한다")
     void importRows_createsNewWhenNotExists() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("서브웨이").menuName("베지").category("VEGETABLE")
                 .nutritionBasis("PER_SERVING")
                 .servingSizeG("200").calories("280").protein("12").carbs("38")
-                .fat("6").sodium("600").sugar("4").saturatedFat("1")
+                .fat("6").sodium("500").sugar("4").saturatedFat("1")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
                 .recommendationReason("").build();
         when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))
@@ -312,6 +372,75 @@ class BrandMenuCsvImporterTest {
     }
 
     @Test
+    @DisplayName("주의 기준을 넘는 브랜드 메뉴를 일반 추천으로 입력하면 row를 거절한다")
+    void importRows_rejectsRecommendableWhenCautionThresholdExceeded() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("버거킹").menuName("와퍼주니어").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("156").calories("376").protein("17").carbs("")
+                .fat("").sodium("600").sugar("4").saturatedFat("5")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
+                .recommendationReason("").build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows()).containsExactly(
+                new FoodCatalogImportRejectedRow(
+                        0,
+                        "recommendation_status",
+                        "주의 기준 초과 항목은 RECOMMENDABLE_WITH_CAUTION으로 검수해야 합니다: 나트륨/포화지방 주의")
+        );
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("allergen_profile_verified가 true 또는 false가 아니면 row를 거절한다")
+    void importRows_rejectsInvalidAllergenProfileVerified() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("버거킹").menuName("와퍼").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("290").calories("660").protein("28").carbs("49")
+                .fat("40").sodium("980").sugar("11").saturatedFat("12")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("")
+                .allergenTags("우유")
+                .allergenProfileVerified("검토완료")
+                .build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows()).extracting(FoodCatalogImportRejectedRow::field)
+                .containsExactly("allergen_profile_verified");
+        verify(repository, never()).save(any());
+        verify(allergenTagRepository, never()).replaceBySource(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("포함 알러젠 없이 allergen_profile_verified=true이면 row를 거절한다")
+    void importRows_rejectsVerifiedEmptyAllergenProfile() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("브랜드").menuName("알러젠 없음 메뉴").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("100").calories("200").protein("5").carbs("30")
+                .fat("8").sodium("300").sugar("3").saturatedFat("2")
+                .sourceUrl("").lastVerifiedAt("").recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("")
+                .allergenTags("")
+                .allergenProfileVerified("true")
+                .build();
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.skippedCount()).isEqualTo(1);
+        assertThat(result.rejectedRows()).extracting(FoodCatalogImportRejectedRow::field)
+                .containsExactly("allergen_tags");
+        verify(repository, never()).save(any());
+        verify(allergenTagRepository, never()).replaceBySource(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("DB 저장 길이를 넘는 source_url은 row를 거절한다")
     void importRows_rejectsSourceUrlLongerThanDbEnvelope() {
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
@@ -341,7 +470,7 @@ class BrandMenuCsvImporterTest {
                 .brandName("서브웨이").menuName("로스트치킨 샌드위치").category("PROTEIN_SOURCE")
                 .nutritionBasis("PER_SERVING")
                 .servingSizeG("232").calories("320").protein("24").carbs("42")
-                .fat("5").sodium("720").sugar("6").saturatedFat("1.5")
+                .fat("5").sodium("500").sugar("6").saturatedFat("1.5")
                 .sourceUrl("").lastVerifiedAt("").recommendationStatus("RECOMMENDABLE")
                 .recommendationReason("").build();
         when(repository.findBySourceAndFoodCode(eq(FoodCatalogSource.BRAND_OFFICIAL), any()))

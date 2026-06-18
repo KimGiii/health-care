@@ -44,20 +44,28 @@ public sealed interface RecommendationCuration
 
     record ImportResult(
             RecommendationCuration curation,
+            String rejectionField,
             String rejectionReason
     ) {
         public ImportResult {
             if ((curation == null) == (rejectionReason == null)) {
                 throw new IllegalArgumentException("ImportResult must be accepted or rejected");
             }
+            if (rejectionReason != null && (rejectionField == null || rejectionField.isBlank())) {
+                throw new IllegalArgumentException("Rejected ImportResult requires a rejection field");
+            }
         }
 
         public static ImportResult accepted(RecommendationCuration curation) {
-            return new ImportResult(curation, null);
+            return new ImportResult(curation, null, null);
         }
 
         public static ImportResult rejected(String reason) {
-            return new ImportResult(null, reason);
+            return rejected("recommendation_reason", reason);
+        }
+
+        public static ImportResult rejected(String field, String reason) {
+            return new ImportResult(null, field, reason);
         }
 
         public boolean rejected() {

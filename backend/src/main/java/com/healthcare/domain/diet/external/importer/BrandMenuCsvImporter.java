@@ -1,9 +1,15 @@
 package com.healthcare.domain.diet.external.importer;
 
 import com.healthcare.common.exception.ValidationException;
+import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
+import com.healthcare.domain.diet.allergen.AllergenDataSource;
+import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationCautionPolicy;
 import com.healthcare.domain.diet.entity.RecommendationCuration;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.identity.FoodCatalogIdentity;
@@ -12,6 +18,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,24 +29,62 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class BrandMenuCsvImporter {
 
     private static final ZoneOffset KOREA_OFFSET = ZoneOffset.ofHours(9);
+    private static final Pattern ALLERGEN_DELIMITER = Pattern.compile("[,|/]+");
+    private static final Map<String, AllergenTag> KOREAN_ALLERGEN_LABELS = Map.ofEntries(
+            Map.entry("난류", AllergenTag.EGG),
+            Map.entry("계란", AllergenTag.EGG),
+            Map.entry("달걀", AllergenTag.EGG),
+            Map.entry("우유", AllergenTag.MILK),
+            Map.entry("메밀", AllergenTag.BUCKWHEAT),
+            Map.entry("땅콩", AllergenTag.PEANUT),
+            Map.entry("대두", AllergenTag.SOY),
+            Map.entry("콩", AllergenTag.SOY),
+            Map.entry("밀", AllergenTag.WHEAT),
+            Map.entry("고등어", AllergenTag.MACKEREL),
+            Map.entry("게", AllergenTag.CRAB),
+            Map.entry("새우", AllergenTag.SHRIMP),
+            Map.entry("잣", AllergenTag.PINE_NUT),
+            Map.entry("돼지고기", AllergenTag.PORK),
+            Map.entry("복숭아", AllergenTag.PEACH),
+            Map.entry("토마토", AllergenTag.TOMATO),
+            Map.entry("아황산류", AllergenTag.SULFITE),
+            Map.entry("호두", AllergenTag.WALNUT),
+            Map.entry("닭고기", AllergenTag.CHICKEN),
+            Map.entry("쇠고기", AllergenTag.BEEF),
+            Map.entry("소고기", AllergenTag.BEEF),
+            Map.entry("오징어", AllergenTag.SQUID),
+            Map.entry("조개류", AllergenTag.SHELLFISH),
+            Map.entry("굴", AllergenTag.SHELLFISH),
+            Map.entry("전복", AllergenTag.SHELLFISH),
+            Map.entry("홍합", AllergenTag.SHELLFISH),
+            Map.entry("글루텐", AllergenTag.GLUTEN)
+    );
     private static final int FOOD_CODE_MAX_LENGTH = 60;
     private static final int NAME_MAX_LENGTH = 150;
     private static final int SOURCE_DETAIL_MAX_LENGTH = 120;
     private static final int SERVING_REFERENCE_MAX_LENGTH = 80;
 
     private final FoodCatalogIngestService ingestService;
+    private final FoodAllergenTagRepository allergenTagRepository;
 
     /**
      * CSV 파일을 파싱해서 BRAND_OFFICIAL 출처로 upsert한다.
      * nutrition_basis로 입력 영양값의 기준을 명시하고 내부 저장은 100g당 값으로 정규화한다.
      */
+    @Transactional
     public FoodCatalogImportResult importFromCsv(InputStream csvStream) throws IOException {
         List<BrandMenuCsvRow> rows = parseCsv(csvStream);
         return importRows(rows);
@@ -76,17 +121,63 @@ public class BrandMenuCsvImporter {
                         .lastVerifiedAt(record.get("last_verified_at"))
                         .recommendationStatus(record.get("recommendation_status"))
                         .recommendationReason(record.get("recommendation_reason"))
+                        .allergenTags(record.get("allergen_tags"))
+                        .allergenProfileVerified(record.get("allergen_profile_verified"))
                         .build());
             }
         }
         return rows;
     }
 
+    @Transactional
     public FoodCatalogImportResult importRows(List<BrandMenuCsvRow> rows) {
-        List<FoodCatalogIngestCandidate> candidates = rows.stream()
-                .map(this::toFoodCatalog)
+        List<PreparedBrandMenuRow> preparedRows = rows.stream()
+                .map(this::prepareRow)
                 .toList();
-        return ingestService.ingest(candidates, FoodCatalogIngestCurationMode.REPLACE_FROM_IMPORT);
+        FoodCatalogImportResult result = ingestService.ingest(
+                preparedRows.stream().map(PreparedBrandMenuRow::candidate).toList(),
+                FoodCatalogIngestCurationMode.REPLACE_FROM_IMPORT
+        );
+        preparedRows.stream()
+                .filter(row -> row.candidate().accepted())
+                .filter(PreparedBrandMenuRow::hasAllergenReview)
+                .forEach(this::replaceBrandOfficialAllergenTags);
+        return result;
+    }
+
+    private PreparedBrandMenuRow prepareRow(BrandMenuCsvRow row) {
+        AllergenParseResult allergens = parseAllergenTags(row.allergenTags());
+        if (allergens.rejectionReason() != null) {
+            return new PreparedBrandMenuRow(
+                    rejected(row, "allergen_tags", allergens.rejectionReason()),
+                    List.of(),
+                    false,
+                    false
+            );
+        }
+        BooleanParseResult allergenProfileVerified = parseAllergenProfileVerified(row.allergenProfileVerified());
+        if (allergenProfileVerified.rejectionReason() != null) {
+            return new PreparedBrandMenuRow(
+                    rejected(row, "allergen_profile_verified", allergenProfileVerified.rejectionReason()),
+                    List.of(),
+                    false,
+                    false
+            );
+        }
+        if (allergenProfileVerified.value() && allergens.tags().isEmpty()) {
+            return new PreparedBrandMenuRow(
+                    rejected(row, "allergen_tags", "포함 알러젠 태그 없이 완결 프로필 검토를 표시할 수 없습니다."),
+                    List.of(),
+                    false,
+                    false
+            );
+        }
+        return new PreparedBrandMenuRow(
+                toFoodCatalog(row),
+                allergens.tags(),
+                allergenProfileVerified.value(),
+                hasAllergenReview(row)
+        );
     }
 
     private FoodCatalogIngestCandidate toFoodCatalog(BrandMenuCsvRow row) {
@@ -142,9 +233,9 @@ public class BrandMenuCsvImporter {
             return rejected(row, lengthFailure.field(), lengthFailure.reason());
         }
 
-        RecommendationCuration.ImportResult curationResult = parseCuration(row);
+        RecommendationCuration.ImportResult curationResult = parseCuration(row, nutritionBasis, servingSizeG);
         if (curationResult.rejected()) {
-            return rejected(row, "recommendation_reason", curationResult.rejectionReason());
+            return rejected(row, curationResult.rejectionField(), curationResult.rejectionReason());
         }
         RecommendationCuration curation = curationResult.curation();
 
@@ -170,6 +261,32 @@ public class BrandMenuCsvImporter {
                 .lastVerifiedAt(parseDate(row.lastVerifiedAt()))
                 .isCustom(false)
                 .build());
+    }
+
+    private void replaceBrandOfficialAllergenTags(PreparedBrandMenuRow preparedRow) {
+        FoodCatalog imported = preparedRow.candidate().food();
+        foodBySourceAndCode(imported)
+                .ifPresent(food -> allergenTagRepository.replaceBySource(
+                        food.getId(),
+                        AllergenDataSource.BRAND_OFFICIAL,
+                        preparedRow.allergenTags().stream()
+                                .map(tag -> FoodAllergenTag.builder()
+                                        .foodCatalogId(food.getId())
+                                        .allergenTag(tag)
+                                        .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
+                                        .source(AllergenDataSource.BRAND_OFFICIAL)
+                                        .allergenProfileVerified(preparedRow.allergenProfileVerified())
+                                        .reviewedAt(imported.getLastVerifiedAt())
+                                        .build())
+                                .toList()
+                ));
+    }
+
+    private Optional<FoodCatalog> foodBySourceAndCode(FoodCatalog imported) {
+        if (imported.getSource() == null || imported.getFoodCode() == null) {
+            return Optional.empty();
+        }
+        return ingestService.findBySourceAndFoodCode(imported.getSource(), imported.getFoodCode());
     }
 
     private FoodCatalogIngestCandidate rejected(BrandMenuCsvRow row, String field, String reason) {
@@ -264,10 +381,93 @@ public class BrandMenuCsvImporter {
         }
     }
 
-    private RecommendationCuration.ImportResult parseCuration(BrandMenuCsvRow row) {
+    private RecommendationCuration.ImportResult parseCuration(
+            BrandMenuCsvRow row,
+            BrandMenuNutritionBasis nutritionBasis,
+            Double servingSizeG) {
         RecommendationStatus status = parseRecommendationStatus(row.recommendationStatus());
         String reason = normalize(row.recommendationReason());
-        return RecommendationCuration.fromImport(status, reason);
+        RecommendationCuration.ImportResult result = RecommendationCuration.fromImport(status, reason);
+        if (result.rejected() || status != RecommendationStatus.RECOMMENDABLE) {
+            return result;
+        }
+
+        RecommendationCautionPolicy.Assessment cautionAssessment = RecommendationCautionPolicy.assess(
+                toNutrientPerServing(parseDouble(row.sodium()), servingSizeG, nutritionBasis),
+                toNutrientPerServing(parseDouble(row.sugar()), servingSizeG, nutritionBasis),
+                toNutrientPerServing(parseDouble(row.saturatedFat()), servingSizeG, nutritionBasis)
+        );
+        if (!cautionAssessment.requiresCaution()) {
+            return result;
+        }
+        return RecommendationCuration.ImportResult.rejected(
+                "recommendation_status",
+                "주의 기준 초과 항목은 RECOMMENDABLE_WITH_CAUTION으로 검수해야 합니다: "
+                        + cautionAssessment.defaultReason());
+    }
+
+    private Double toNutrientPerServing(
+            Double inputValue,
+            Double servingSizeG,
+            BrandMenuNutritionBasis nutritionBasis) {
+        if (inputValue == null) {
+            return null;
+        }
+        if (nutritionBasis == BrandMenuNutritionBasis.PER_SERVING || servingSizeG == null) {
+            return inputValue;
+        }
+        return round((inputValue / 100.0) * servingSizeG);
+    }
+
+    private AllergenParseResult parseAllergenTags(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return new AllergenParseResult(List.of(), null);
+        }
+
+        Set<AllergenTag> tags = new LinkedHashSet<>();
+        for (String token : ALLERGEN_DELIMITER.split(normalized)) {
+            String label = normalize(token);
+            if (label == null) {
+                continue;
+            }
+            AllergenTag tag = parseAllergenTag(label);
+            if (tag == null) {
+                return new AllergenParseResult(List.of(), "알 수 없는 알러젠 태그입니다: " + label);
+            }
+            tags.add(tag);
+        }
+        return new AllergenParseResult(List.copyOf(tags), null);
+    }
+
+    private AllergenTag parseAllergenTag(String label) {
+        AllergenTag koreanTag = KOREAN_ALLERGEN_LABELS.get(label);
+        if (koreanTag != null) {
+            return koreanTag;
+        }
+        try {
+            return AllergenTag.valueOf(label.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private BooleanParseResult parseAllergenProfileVerified(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return new BooleanParseResult(false, null);
+        }
+        if ("true".equalsIgnoreCase(normalized)) {
+            return new BooleanParseResult(true, null);
+        }
+        if ("false".equalsIgnoreCase(normalized)) {
+            return new BooleanParseResult(false, null);
+        }
+        return new BooleanParseResult(false, "true 또는 false를 입력해야 합니다.");
+    }
+
+    private boolean hasAllergenReview(BrandMenuCsvRow row) {
+        return normalize(row.allergenTags()) != null || normalize(row.allergenProfileVerified()) != null;
     }
 
     private ValidationFailure firstFieldEnvelopeFailure(
@@ -342,5 +542,19 @@ public class BrandMenuCsvImporter {
     }
 
     private record ValidationFailure(String field, String reason) {
+    }
+
+    private record AllergenParseResult(List<AllergenTag> tags, String rejectionReason) {
+    }
+
+    private record BooleanParseResult(boolean value, String rejectionReason) {
+    }
+
+    private record PreparedBrandMenuRow(
+            FoodCatalogIngestCandidate candidate,
+            List<AllergenTag> allergenTags,
+            boolean allergenProfileVerified,
+            boolean hasAllergenReview
+    ) {
     }
 }

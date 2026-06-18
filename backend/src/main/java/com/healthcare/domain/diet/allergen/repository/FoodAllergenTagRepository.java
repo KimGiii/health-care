@@ -1,5 +1,6 @@
 package com.healthcare.domain.diet.allergen.repository;
 
+import com.healthcare.domain.diet.allergen.AllergenDataSource;
 import com.healthcare.domain.diet.allergen.AllergenTag;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +24,16 @@ public interface FoodAllergenTagRepository extends JpaRepository<FoodAllergenTag
     List<FoodAllergenTag> findByFoodCatalogId(Long foodCatalogId);
 
     boolean existsByFoodCatalogIdAndAllergenTag(Long foodCatalogId, AllergenTag allergenTag);
+
+    void deleteByFoodCatalogId(Long foodCatalogId);
+
+    void deleteByFoodCatalogIdAndSource(Long foodCatalogId, AllergenDataSource source);
+
+    default void replaceBySource(Long foodCatalogId, AllergenDataSource source, List<FoodAllergenTag> tags) {
+        deleteByFoodCatalogIdAndSource(foodCatalogId, source);
+        flush();
+        if (!tags.isEmpty()) {
+            saveAll(tags);
+        }
+    }
 }
