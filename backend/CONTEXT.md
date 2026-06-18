@@ -140,7 +140,7 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 **Avoid:** "remaining calories" (단백질·탄수화물·지방과 불확실성까지 포함하는 개념을 열량으로 축소함)
 
-**Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/nutrition/policy/RemainingNutritionCalculator.java`, `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
 
 ---
 
@@ -150,7 +150,7 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 **Avoid:** "target tolerance", "macro weight" (대칭 오차나 단순 점수 가중치처럼 보임)
 
-**Where it is specified:** `docs/adr/0002-goal-aware-nutrition-optimization.md`
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/nutrition/policy/GoalAwareNutritionPolicy.java`, `docs/adr/0002-goal-aware-nutrition-optimization.md`
 
 ---
 

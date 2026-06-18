@@ -1,7 +1,7 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
 작성일: 2026-06-18
-상태: 제품 결정 완료, 구현 착수 전
+상태: Phase 1 정책·benchmark 완료, Phase 2 데이터 계약 착수 전
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
@@ -63,6 +63,18 @@
 - 활동 수준이 TDEE에 이미 반영되므로 운동 소모 열량을 식사 예산에 1:1로 더하지 않는다.
 - 근육량 증가·지구력 목표에서는 운동 여부를 회복 영양 분배의 제한적 신호로 사용할 수 있다.
 - MET 또는 AI 추정 소모 열량은 자동 보상 근거로 사용하지 않는다.
+
+### 3.4 Phase 1 정책 버전
+
+`2026-06-18.v1`은 새 엔진을 선택하기 위한 초기 benchmark 정책이다. 의료 기준 확정값이 아니며, 이후 비율 변경은 새 버전과 baseline 비교를 동반한다. 현행 추천 API에는 아직 연결하지 않았다.
+
+| 목표 | 열량 hard constraint | 단백질 | 탄수화물 | 지방 |
+|---|---|---|---|---|
+| 체중 감량 | 목표의 98% 이하 | 목표 이상 | 제한 없음 | 제한 없음 |
+| 체형 개선 | 목표의 98% 이하 | 목표 이상 | 제한 없음 | 제한 없음 |
+| 근육량 증가 | 목표의 100~110% | 목표 이상 | 제한 없음 | 제한 없음 |
+| 지구력 향상 | 목표 이상 | 제한 없음 | 목표 이상 | 제한 없음 |
+| 건강 유지 | 목표의 95~105% | 목표의 90~110% | 목표의 90~110% | 목표의 90~110% |
 
 ## 4. 남은 영양량 모델
 
@@ -269,6 +281,16 @@ soft objective:
 - 현행 greedy 엔진 baseline 측정
 
 완료 기준: 새 정책을 구현하지 않아도 현행 엔진의 위반·실패가 수치로 재현된다.
+
+구현 결과 (2026-06-18):
+
+- `domain/nutrition/policy`: 목표별 버전형 `NutritionPolicy`, 위반 원인, 남은 영양량·불확실성 계산 계약
+- `domain/goals/policy`: 희망 목표일과 예상 달성일 분리, ISO 주차당 1회 재계산 계약
+- `domain/diet/recommendation/benchmark` 테스트: 목표 5종, 기존 섭취, 알러젠 검증, 영양 결측, 제공량 옵션, 재현성을 조합한 고정 fixture
+- 현행 greedy baseline: 6개 시나리오 중 차단 5개, 영양 hard constraint 위반 8건, 알러젠 검증 위반 1개 시나리오, 영양 결측 1개 시나리오, 허용되지 않은 제공량 15건, 재현성 위반 0건
+- baseline 상세: `docs/references/DIET_RECOMMENDATION_GREEDY_BASELINE_2026-06-18.md`
+
+Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietRecommendationUseCases`와 `DietRecommendationEngine`의 운영 동작은 바꾸지 않으며, 새 계약 연결은 Phase 2~3에서 단계적으로 수행한다.
 
 ### Phase 2. 데이터 계약
 
