@@ -11,7 +11,7 @@
 
 | 지표 | 현재 값 | 집계 기준 | 근거 |
 |---|---:|---|---|
-| 구현 API 수 | 74개 | Spring Controller의 method-level `@(Get/Post/Put/Patch/Delete)Mapping` 수. 관리자 API 포함, Actuator/정적 페이지 제외 | `backend/src/main/java/com/healthcare/**/*Controller.java` |
+| 구현 API 수 | 75개 | Spring Controller의 method-level `@(Get/Post/Put/Patch/Delete)Mapping` 수. 관리자 API 포함, Actuator/정적 페이지 제외 | `backend/src/main/java/com/healthcare/**/*Controller.java` |
 | DB 테이블 수 | 23개 | Flyway migration의 `CREATE TABLE` 수. 인덱스/제약조건/뷰 제외 | `backend/src/main/resources/db/migration/` |
 | 외부 테스터 수 | 8명 | App Store Connect/TestFlight 외부 테스터 그룹의 실제 초대·참여 인원 | 운영주 보고(2026-06-19). App Store Connect 외부 테스터 그룹 기준 |
 | 발견·수정한 버그/운영 리스크 수 | 최소 14건 | 해결 완료로 문서화된 코드 리뷰·운영 장애·심사 리젝만 포함 | 백엔드 코드 리뷰 9건, App Store 재심사 거절 3건, 운영 502 1건, Redis 캐시 장애 1건 |
@@ -29,12 +29,12 @@
 |---|---:|---|
 | 인증·사용자 | 10개 | `AuthController`(7), `UserController`(3) |
 | 운동 | 7개 | `ExerciseSessionController`(4), `ExerciseCatalogController`(2), `AiExerciseController`(1) |
-| 식단·식품·AI·추천 | 32개 | `FoodCatalogAdminController`(7), `DietLogController`(5), `MealPhotoAnalysisController`(4), `FoodAllergenTagAdminController`(4), `DietRestrictionController`(3), `FoodCatalogController`(2), `ExternalFoodAdminController`(2), `CandidatePoolAdminController`(2), `RecommendationFeedbackController`(1), `DietRecommendationController`(1), `AiNutritionController`(1) |
+| 식단·식품·AI·추천 | 33개 | `FoodCatalogAdminController`(7), `DietLogController`(5), `MealPhotoAnalysisController`(4), `FoodAllergenTagAdminController`(4), `CandidatePoolAdminController`(3), `DietRestrictionController`(3), `FoodCatalogController`(2), `ExternalFoodAdminController`(2), `RecommendationFeedbackController`(1), `DietRecommendationController`(1), `AiNutritionController`(1) |
 | 신체 측정·진행 사진 | 12개 | `BodyMeasurementController`(8), `ProgressPhotoController`(4) |
 | 목표 | 6개 | `GoalController` |
 | 인사이트 | 2개 | `InsightsController` |
 | 알림 | 5개 | `NotificationController` |
-| **합계** | **74개** |  |
+| **합계** | **75개** |  |
 
 재집계 명령:
 
