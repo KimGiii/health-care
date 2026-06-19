@@ -1,6 +1,7 @@
 # Gainsy 정량 변화 지표
 
-**기준일:** 2026-06-15  
+**기준일:** 2026-06-19  
+**집계 브랜치:** `feat/allegen-recommendation` (Phase 1~4 포함, dev 머지 대기)  
 **목적:** Gainsy의 구현 규모, 운영 경험, 품질 개선, 사용자 검증 상태를 숫자로 설명할 수 있게 한곳에서 관리한다.  
 **원칙:** 코드나 운영 문서로 확인되는 값만 확정 수치로 적고, 확인되지 않은 값은 `미측정` 또는 `미기록`으로 남긴다.
 
@@ -10,11 +11,11 @@
 
 | 지표 | 현재 값 | 집계 기준 | 근거 |
 |---|---:|---|---|
-| 구현 API 수 | 69개 | Spring Controller의 method-level `@(Get/Post/Put/Patch/Delete)Mapping` 수. 관리자 API 포함, Actuator/정적 페이지 제외 | `backend/src/main/java/com/healthcare/**/*Controller.java` |
-| DB 테이블 수 | 19개 | Flyway migration의 `CREATE TABLE` 수. 인덱스/제약조건/뷰 제외 | `backend/src/main/resources/db/migration/` |
+| 구현 API 수 | 74개 | Spring Controller의 method-level `@(Get/Post/Put/Patch/Delete)Mapping` 수. 관리자 API 포함, Actuator/정적 페이지 제외 | `backend/src/main/java/com/healthcare/**/*Controller.java` |
+| DB 테이블 수 | 23개 | Flyway migration의 `CREATE TABLE` 수. 인덱스/제약조건/뷰 제외 | `backend/src/main/resources/db/migration/` |
 | 외부 테스터 수 | 미기록 | App Store Connect/TestFlight 외부 테스터 그룹의 실제 초대·참여 인원 | 목표 5~10명은 `docs/exec-plans/APPSTORE_RELEASE_CHECKLIST.md`에만 존재 |
 | 발견·수정한 버그/운영 리스크 수 | 최소 14건 | 해결 완료로 문서화된 코드 리뷰·운영 장애·심사 리젝만 포함 | 백엔드 코드 리뷰 9건, App Store 재심사 거절 3건, 운영 502 1건, Redis 캐시 장애 1건 |
-| AWS 운영 기간 | 최소 31일 | 운영 도메인 장애가 문서화된 2026-05-15부터 기준일 2026-06-15까지 | `docs/operations/TROUBLESHOOTING.md`, `docs/retrospectives/2026-W20.md` |
+| AWS 운영 기간 | 최소 35일 | 운영 도메인 장애가 문서화된 2026-05-15부터 기준일 2026-06-19까지 | `docs/operations/TROUBLESHOOTING.md`, `docs/retrospectives/2026-W20.md` |
 | 테스트 사용자 수 | 미기록 | 운영 DB, TestFlight, App Store Connect, 분석 도구에서 확인된 실제 사용자 수 | 로컬 테스트 fixture의 "테스터" 문자열은 제외 |
 | AI 음식 분석 정확도 개선 수치 | 미측정 | 동일 benchmark set에서 baseline과 current의 음식 인식률·칼로리/영양소 오차를 비교해야 함 | 현재 릴리즈 노트에는 "정확도 향상" 표현만 있고 검증 수치 없음 |
 
@@ -26,14 +27,14 @@
 
 | 영역 | API 수 | 포함 컨트롤러 |
 |---|---:|---|
-| 인증·사용자 | 10개 | `AuthController`, `UserController` |
-| 운동 | 7개 | `ExerciseCatalogController`, `ExerciseSessionController`, `AiExerciseController` |
-| 식단·식품·AI·추천 | 27개 | `DietLogController`, `FoodCatalogController`, `AiNutritionController`, `MealPhotoAnalysisController`, `DietRecommendationController`, `DietRestrictionController`, 관리자 식품 컨트롤러 |
-| 신체 측정·진행 사진 | 12개 | `BodyMeasurementController`, `ProgressPhotoController` |
+| 인증·사용자 | 10개 | `AuthController`(7), `UserController`(3) |
+| 운동 | 7개 | `ExerciseSessionController`(4), `ExerciseCatalogController`(2), `AiExerciseController`(1) |
+| 식단·식품·AI·추천 | 32개 | `FoodCatalogAdminController`(7), `DietLogController`(5), `MealPhotoAnalysisController`(4), `FoodAllergenTagAdminController`(4), `DietRestrictionController`(3), `FoodCatalogController`(2), `ExternalFoodAdminController`(2), `CandidatePoolAdminController`(2), `RecommendationFeedbackController`(1), `DietRecommendationController`(1), `AiNutritionController`(1) |
+| 신체 측정·진행 사진 | 12개 | `BodyMeasurementController`(8), `ProgressPhotoController`(4) |
 | 목표 | 6개 | `GoalController` |
 | 인사이트 | 2개 | `InsightsController` |
 | 알림 | 5개 | `NotificationController` |
-| **합계** | **69개** |  |
+| **합계** | **74개** |  |
 
 재집계 명령:
 
@@ -49,12 +50,14 @@ rg -n "@(Get|Post|Put|Patch|Delete)Mapping" backend/src/main/java/com/healthcare
 | 운동 | 3개 | `exercise_catalog`, `exercise_sessions`, `exercise_sets` |
 | 식단 기록·식품 카탈로그 | 3개 | `food_catalog`, `diet_logs`, `food_entries` |
 | AI 식사 사진 분석 | 2개 | `meal_photo_analyses`, `meal_photo_analysis_items` |
-| 식단 제한·알러젠 | 2개 | `diet_restrictions`, `food_allergen_tags` |
+| 식단 제한·알러젠 | 3개 | `diet_restrictions`, `food_allergen_tags`, `food_allergen_profiles` |
+| 식품 서빙 옵션 | 1개 | `food_serving_options` |
+| 추천 스냅샷·이벤트 | 2개 | `recommendation_snapshots`, `recommendation_events` |
 | 목표 | 2개 | `goals`, `goal_checkpoints` |
 | 신체 변화 | 2개 | `body_measurements`, `progress_photos` |
 | 알림 | 1개 | `notification_logs` |
 | 식품 적재 운영 | 1개 | `food_catalog_import_checkpoints` |
-| **합계** | **19개** |  |
+| **합계** | **23개** |  |
 
 재집계 명령:
 
