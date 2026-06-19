@@ -6,6 +6,7 @@ import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodServingOption;
 import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -67,6 +68,33 @@ public record DietRecommendationCandidate(
                 snapshots,
                 hasVerified
         );
+    }
+
+    private static final double DEFAULT_SERVING_G = 100.0;
+    private static final double SERVING_STEP_G = 25.0;
+    private static final double MIN_SERVING_G = 25.0;
+    private static final double MAX_SERVING_G = 500.0;
+
+    /**
+     * 목표 칼로리에 맞는 제공량(g)을 고른다.
+     * 검증된 제공량 옵션이 있으면 임의 g 대신 목표량에 가장 가까운 검증 옵션을 사용하고,
+     * 없으면 25g 단위 반올림 fallback을 쓴다. (ADR-0002 §5)
+     */
+    public double chooseServingGramsFor(double targetCalories) {
+        if (caloriesPer100g <= 0) {
+            return DEFAULT_SERVING_G;
+        }
+        double rawGrams = targetCalories / caloriesPer100g * 100.0;
+        return servingOptions.stream()
+                .filter(ServingOptionSnapshot::verified)
+                .min(Comparator.comparingDouble(o -> Math.abs(o.equivalentG() - rawGrams)))
+                .map(ServingOptionSnapshot::equivalentG)
+                .orElseGet(() -> fallbackGrams(rawGrams));
+    }
+
+    private static double fallbackGrams(double rawGrams) {
+        double rounded = Math.round(rawGrams / SERVING_STEP_G) * SERVING_STEP_G;
+        return Math.max(MIN_SERVING_G, Math.min(MAX_SERVING_G, rounded));
     }
 
     private static long stableFoodKey(FoodCatalog food) {

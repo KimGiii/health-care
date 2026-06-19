@@ -3,6 +3,8 @@ package com.healthcare.domain.diet.recommendation.engine;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodServingOption;
+import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedFoodEntry;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
@@ -454,7 +456,66 @@ class DietRecommendationEngineTest {
         }
     }
 
+    // ─── 검증된 제공량 옵션 ───
+
+    @Nested
+    @DisplayName("검증된 제공량 옵션 반영")
+    class VerifiedServingOptions {
+
+        @Test
+        @DisplayName("검증된 제공량 옵션이 있으면 임의 g 대신 가장 가까운 옵션 제공량을 사용한다")
+        void recommend_usesNearestVerifiedServingOption() {
+            // caloriesPer100g=200, LUNCH 단독 600kcal → perItem 600kcal → rawGrams 300g
+            // 검증 옵션 320g(채택) vs 미검증 290g(rawGrams에 더 가깝지만 무시)
+            DietRecommendationCandidate food = candidateWithServingOptions(
+                    1L, FoodCategory.PROTEIN_SOURCE, 200.0,
+                    List.of(
+                            new ServingOptionSnapshot("serving", "1인분", 320.0, 0,
+                                    FoodServingOption.ServingType.OFFICIAL_SERVING, true),
+                            new ServingOptionSnapshot("portion", "조금", 290.0, 1,
+                                    FoodServingOption.ServingType.WEIGHT_STEP, false)
+                    ));
+            NutritionTargets targets = new NutritionTargets(600, 50, 70, 20);
+
+            List<RecommendedMeal> meals = engine.recommend(
+                    LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.LUNCH), List.of(food));
+
+            assertThat(meals.get(0).items().get(0).servingG()).isEqualTo(320.0);
+        }
+
+        @Test
+        @DisplayName("검증된 옵션이 없으면 기존 25g 단위 반올림 fallback을 유지한다")
+        void recommend_noVerifiedOption_fallsBackTo25gStep() {
+            // 미검증 옵션만 → fallback. caloriesPer100g=200, 600kcal → rawGrams 300 → 25g배수 300
+            DietRecommendationCandidate food = candidateWithServingOptions(
+                    1L, FoodCategory.PROTEIN_SOURCE, 200.0,
+                    List.of(new ServingOptionSnapshot("portion", "조금", 137.0, 0,
+                            FoodServingOption.ServingType.WEIGHT_STEP, false)));
+            NutritionTargets targets = new NutritionTargets(600, 50, 70, 20);
+
+            List<RecommendedMeal> meals = engine.recommend(
+                    LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.LUNCH), List.of(food));
+
+            double servingG = meals.get(0).items().get(0).servingG();
+            assertThat(servingG % 25.0).isEqualTo(0.0);
+        }
+    }
+
     // ─── 헬퍼 ───
+
+    private DietRecommendationCandidate candidateWithServingOptions(
+            Long id, FoodCategory category, double caloriesPer100g,
+            List<ServingOptionSnapshot> servingOptions
+    ) {
+        boolean hasVerified = servingOptions.stream().anyMatch(ServingOptionSnapshot::verified);
+        return new DietRecommendationCandidate(
+                id, "음식" + id, null, category,
+                caloriesPer100g, 20.0, 10.0, 5.0,
+                0L, id, AllergenConfidenceLevel.UNKNOWN, null, true,
+                servingOptions, hasVerified);
+    }
 
     private RecommendedMeal mealOf(MealType type, RecommendedFoodEntry... entries) {
         return new RecommendedMeal(type, 500, 500, 0, 0, 0, List.of(entries));

@@ -231,19 +231,10 @@ public class DietRecommendationEngine {
         double perItemCalories = targetCalories / selected.size();
         List<RecommendedFoodEntry> items = new ArrayList<>();
         for (DietRecommendationCandidate food : selected) {
-            double servingG = calculateServing(food, perItemCalories);
+            double servingG = food.chooseServingGramsFor(perItemCalories);
             items.add(RecommendedFoodEntry.from(food, servingG));
         }
         return items;
-    }
-
-    /** 목표 칼로리에 맞는 제공량(g)을 계산한다. 25g 단위로 반올림. */
-    private double calculateServing(DietRecommendationCandidate food, double targetCalories) {
-        if (food.caloriesPer100g() <= 0) return 100.0;
-        double rawServing = targetCalories / food.caloriesPer100g() * 100.0;
-        // 25g 단위 반올림, 최소 25g 최대 500g
-        double rounded = Math.round(rawServing / 25.0) * 25.0;
-        return Math.max(25.0, Math.min(500.0, rounded));
     }
 
     /**
