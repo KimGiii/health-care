@@ -412,6 +412,48 @@ class DietRecommendationEngineTest {
         }
     }
 
+    // ─── 반복 기피 개인 선호 ───
+
+    @Nested
+    @DisplayName("최근 섭취 반복 기피")
+    class RepetitionPreference {
+
+        @Test
+        @DisplayName("recommend는 최근 섭취한 음식보다 새 음식을 먼저 고른다")
+        void recommend_prefersNonRecentlyConsumedFood() {
+            // 같은 카테고리(PROTEIN_SOURCE) 두 후보 — 1L은 최근 섭취, 2L은 새 음식
+            List<DietRecommendationCandidate> candidates = List.of(
+                    food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
+                    food(2L, "두부",     FoodCategory.PROTEIN_SOURCE, 76.0)
+            );
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+            UserRepetitionPolicy policy = new UserRepetitionPolicy(Set.of(1L));
+
+            List<RecommendedMeal> meals = engine.recommend(
+                    LocalDate.of(2026, 6, 19), targets,
+                    List.of(MealType.LUNCH), candidates, policy);
+
+            // 끼니의 첫 항목은 최근 먹지 않은 음식(2L)이어야 한다
+            assertThat(meals.get(0).items().get(0).foodCatalogId()).isEqualTo(2L);
+        }
+
+        @Test
+        @DisplayName("noRestrictions 정책은 반복 페널티 없이 기존 정렬을 유지한다")
+        void recommend_noRestrictionsPolicy_matchesDefaultOrdering() {
+            NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+            LocalDate date = LocalDate.of(2026, 6, 19);
+
+            List<RecommendedMeal> withoutPolicy = engine.recommend(
+                    date, targets, List.of(MealType.LUNCH), diverseCandidates());
+            List<RecommendedMeal> withNoRestrictions = engine.recommend(
+                    date, targets, List.of(MealType.LUNCH), diverseCandidates(),
+                    UserRepetitionPolicy.noRestrictions());
+
+            assertThat(recommendedFoodIds(withNoRestrictions))
+                    .isEqualTo(recommendedFoodIds(withoutPolicy));
+        }
+    }
+
     // ─── 헬퍼 ───
 
     private RecommendedMeal mealOf(MealType type, RecommendedFoodEntry... entries) {

@@ -9,7 +9,6 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResp
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
-import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.engine.UserRepetitionPolicy;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.DietLogRepository;
@@ -95,14 +94,13 @@ public class DailyDietRecommendationUseCases {
         Set<Long> recentIds = foodEntryRepository.findRecentFoodCatalogIds(
                 userId, request.date().minusDays(REPETITION_LOOKBACK_DAYS));
         UserRepetitionPolicy repetitionPolicy = new UserRepetitionPolicy(recentIds);
-        List<DietRecommendationCandidate> preferredCandidates =
-                repetitionPolicy.sortByPreference(candidates.foods());
 
         List<RecommendedMeal> meals = engine.recommend(
                 request.date(),
                 remainingTargets,
                 request.mealTypes(),
-                preferredCandidates);
+                candidates.foods(),
+                repetitionPolicy);
         if (meals.stream().anyMatch(meal -> meal.items().isEmpty())) {
             throw new BusinessRuleViolationException(
                     "선택한 끼니 구성에 맞는 추천 식단을 만들기 어렵습니다. 끼니 수를 조정하거나 제한 조건을 줄여 주세요.");
@@ -117,7 +115,8 @@ public class DailyDietRecommendationUseCases {
         List<List<RecommendedMeal>> alternatives = request.alternativeCount() > 0
                 ? engine.sortByDiversityFrom(meals,
                         engine.recommendAlternatives(request.alternativeCount(), request.date(),
-                                remainingTargets, request.mealTypes(), preferredCandidates))
+                                remainingTargets, request.mealTypes(), candidates.foods(),
+                                repetitionPolicy))
                 : List.of();
 
         String mealsJson = snapshotStore.serializeMeals(meals);

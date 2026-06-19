@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아키텍처 리뷰 — 식단 추천·알러젠·카탈로그</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: {
+    primaryColor: '#1e293b', primaryTextColor: '#e2e8f0', primaryBorderColor: '#475569',
+    lineColor: '#64748b', fontSize: '13px'
+  }});
+</script>
+<style>
+  body { background:#0b1120; color:#cbd5e1; font-family: ui-sans-serif, system-ui, -apple-system, "Pretendard", sans-serif; }
+  .card { background:#0f172a; border:1px solid #1e293b; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .badge-strong { background:#7f1d1d; color:#fecaca; }
+  .badge-explore { background:#78350f; color:#fde68a; }
+  .badge-spec { background:#1e3a5f; color:#bae6fd; }
+  .sev-high { color:#f87171; } .sev-med { color:#fbbf24; } .sev-low { color:#93c5fd; }
+  .before { background:#1a1014; border:1px solid #4c1d24; }
+  .after  { background:#0c1a14; border:1px solid #14532d; }
+  .pill { background:#1e293b; border:1px solid #334155; }
+  code { color:#a5b4fc; }
+  .flow-box { background:#111c33; border:1px solid #1e3a5f; border-radius:8px; }
+  .dead { text-decoration: line-through; opacity:.5; }
+</style>
+</head>
+<body class="px-5 py-8 md:px-12">
+
+<header class="max-w-6xl mx-auto mb-10">
+  <p class="text-sm text-slate-500 mono">architecture-review · 2026-06-19 · feat/allegen-recommendation</p>
+  <h1 class="text-3xl md:text-4xl font-bold text-slate-100 mt-2">식단 추천 · 알러젠 · 카탈로그 깊이 리뷰</h1>
+  <p class="text-slate-400 mt-3 max-w-3xl leading-relaxed">
+    어제·오늘 작업한 추천 후보 풀, 추천 엔진, 알러젠 게이트, 스냅샷, 제공량 모델을
+    <span class="text-slate-200">모듈 깊이(depth)</span> 관점에서 점검했습니다. 핵심 질문:
+    <em>작은 인터페이스 뒤에 레버리지가 쌓여 있는가, 아니면 인터페이스가 구현만큼 복잡한 얕은 모듈인가.</em>
+    아래 5개 후보 중 2개는 <span class="sev-high font-semibold">동작하지 않는 코드(테스트는 통과)</span>를 가리킵니다.
+  </p>
+</header>
+
+<!-- SUMMARY TABLE -->
+<section class="max-w-6xl mx-auto mb-12">
+  <div class="card rounded-xl p-5">
+    <h2 class="text-lg font-semibold text-slate-200 mb-4">마찰 지점 요약</h2>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-slate-400 border-b border-slate-700">
+        <tr><th class="text-left py-2 pr-4">#</th><th class="text-left py-2 pr-4">마찰</th><th class="text-left py-2 pr-4">위치</th><th class="text-left py-2 pr-4">심각도</th><th class="text-left py-2">강도</th></tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800">
+        <tr>
+          <td class="py-3 pr-4 mono text-slate-500">1</td>
+          <td class="py-3 pr-4 text-slate-200">반복 기피 정렬이 운영에서 무효 — 엔진이 다시 정렬해 폐기</td>
+          <td class="py-3 pr-4 mono text-xs text-slate-400">UseCases:99 → Engine:74</td>
+          <td class="py-3 pr-4 sev-high">High · 정확성</td>
+          <td class="py-3"><span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span></td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 mono text-slate-500">2</td>
+          <td class="py-3 pr-4 text-slate-200">엔진이 검증된 제공량 옵션을 무시 (25g 하드코딩)</td>
+          <td class="py-3 pr-4 mono text-xs text-slate-400">Engine:212–218</td>
+          <td class="py-3 pr-4 sev-high">High · ADR 위반</td>
+          <td class="py-3"><span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span></td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 mono text-slate-500">3</td>
+          <td class="py-3 pr-4 text-slate-200">UseCase 82줄 절차적 오케스트레이션 + 11-인자 응답 생성자 2곳 중복</td>
+          <td class="py-3 pr-4 mono text-xs text-slate-400">UseCases:82,127</td>
+          <td class="py-3 pr-4 sev-med">Medium · 유지보수</td>
+          <td class="py-3"><span class="badge-explore px-2 py-0.5 rounded text-xs font-semibold">Worth exploring</span></td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 mono text-slate-500">4</td>
+          <td class="py-3 pr-4 text-slate-200">알러젠 "검증됨" 개념이 3곳에 분산</td>
+          <td class="py-3 pr-4 mono text-xs text-slate-400">tag / profile / gate</td>
+          <td class="py-3 pr-4 sev-med">Medium · 안전 의미론</td>
+          <td class="py-3"><span class="badge-explore px-2 py-0.5 rounded text-xs font-semibold">Worth exploring</span></td>
+        </tr>
+        <tr>
+          <td class="py-3 pr-4 mono text-slate-500">5</td>
+          <td class="py-3 pr-4 text-slate-200">GENERATED 이벤트 유실 + 대안 식단 스냅샷 미저장</td>
+          <td class="py-3 pr-4 mono text-xs text-slate-400">SnapshotStore / Snapshot:55</td>
+          <td class="py-3 pr-4 sev-low">Low · 감사 일관성</td>
+          <td class="py-3"><span class="badge-spec px-2 py-0.5 rounded text-xs font-semibold">Speculative</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- CANDIDATE 1 -->
+<section class="max-w-6xl mx-auto mb-10">
+  <div class="card rounded-xl p-6">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span>
+        <h2 class="text-2xl font-bold text-slate-100 mt-2">후보 1 · 반복 기피 정렬은 죽어 있다</h2>
+        <p class="text-slate-400 mt-1">테스트 통과 + 운영 효과 0 — 이 스킬이 정확히 겨냥하는 안티패턴</p>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-5 text-sm">
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">파일</h3>
+        <ul class="text-slate-400 space-y-1 mono text-xs">
+          <li>UserRepetitionPolicy.java <span class="text-slate-600">(Unit 5)</span></li>
+          <li>DailyDietRecommendationUseCases.java:95–105</li>
+          <li>DietRecommendationEngine.java:74, 221–234</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">문제</h3>
+        <p class="text-slate-400 leading-relaxed">
+          UseCase가 <code>repetitionPolicy.sortByPreference(candidates)</code>로 최근 먹은 음식을 뒤로 보낸 뒤
+          <code>engine.recommend(preferredCandidates)</code>를 호출한다. 그런데 엔진은 끼니마다
+          <code>sortByScore()</code>로 후보를 <span class="text-red-300">처음부터 다시 정렬</span>한다.
+          이 비교자는 <code>rotationKey(date)</code>가 사실상 순서를 결정하며 반복 페널티를 전혀 보지 않는다.
+          입력 순서는 마지막 동점 처리(unique stableKey 이후)라 절대 도달하지 않는다.
+        </p>
+      </div>
+    </div>
+
+    <!-- deletion test callout -->
+    <div class="flow-box p-4 mt-5">
+      <p class="text-xs text-slate-500 uppercase mono mb-1">deletion test</p>
+      <p class="text-slate-300 text-sm">
+        <code>sortByPreference</code> 호출을 지우고 <code>candidates.foods()</code>를 그대로 엔진에 넘겨도
+        <span class="sev-high font-semibold">출력은 한 글자도 바뀌지 않는다.</span>
+        → 현재 이 모듈은 레버리지 0의 pass-through. 버그는 함수 안이 아니라 <em>호출 방식</em>에 있다.
+      </p>
+    </div>
+
+    <!-- before / after -->
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+      <div class="before rounded-lg p-4">
+        <p class="text-xs text-red-300/80 uppercase mono mb-3">before — 두 개의 정렬 seam, 뒤가 앞을 덮어씀</p>
+        <div class="space-y-2 text-sm mono">
+          <div class="pill rounded px-3 py-2 text-slate-300">candidates.foods()</div>
+          <div class="text-center text-slate-600">▼</div>
+          <div class="rounded px-3 py-2 text-amber-200" style="background:#3a2a10;border:1px solid #78350f">sortByPreference() · 반복 페널티</div>
+          <div class="text-center text-slate-600">▼ preferredCandidates</div>
+          <div class="rounded px-3 py-2 text-red-200" style="background:#3a1414;border:1px solid #7f1d1d">engine.sortByScore() · rotationKey<br><span class="text-xs">↑ 처음부터 재정렬, 앞 순서 폐기</span></div>
+          <div class="text-center text-slate-600">▼</div>
+          <div class="pill rounded px-3 py-2 text-slate-500 dead">반복 기피 반영된 추천</div>
+        </div>
+      </div>
+      <div class="after rounded-lg p-4">
+        <p class="text-xs text-emerald-300/80 uppercase mono mb-3">after — 점수화 seam 하나로 융합</p>
+        <div class="space-y-2 text-sm mono">
+          <div class="pill rounded px-3 py-2 text-slate-300">candidates.foods()</div>
+          <div class="text-center text-slate-600">▼ + RepetitionPolicy 주입</div>
+          <div class="rounded px-3 py-2 text-emerald-200" style="background:#0c2a1a;border:1px solid #14532d">
+            engine.sortByScore(policy)<br>
+            <span class="text-xs">penalty → rotationKey → usage → stableKey<br>하나의 비교자에 반복 페널티 포함</span>
+          </div>
+          <div class="text-center text-slate-600">▼</div>
+          <div class="pill rounded px-3 py-2 text-emerald-100">반복 기피가 실제로 반영된 추천</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 text-sm">
+      <h3 class="text-slate-300 font-semibold mb-1">해법 (영문 설명 아님 — 평이하게)</h3>
+      <p class="text-slate-400 leading-relaxed">
+        점수화 seam을 <span class="text-slate-200">엔진 한 곳</span>으로 합친다. <code>sortByScore</code>가
+        <code>UserRepetitionPolicy</code>(또는 penalty 함수)를 받아 비교자 <em>맨 앞 키</em>로 쓰게 한다.
+        UseCase는 정책을 <em>만들어 주입</em>만 하고 직접 정렬하지 않는다. 그러면 반복 페널티가
+        끼니별 재정렬에서도 살아남는다.
+      </p>
+      <h3 class="text-slate-300 font-semibold mt-3 mb-1">이득 (locality · leverage · 테스트)</h3>
+      <ul class="text-slate-400 list-disc ml-5 space-y-1">
+        <li><b>Leverage</b>: "최근 먹은 건 덜 추천한다"가 모든 끼니·대안에 일괄 적용된다.</li>
+        <li><b>Locality</b>: 추천 순위 규칙이 <code>sortByScore</code> 한 곳에 모인다. 지금은 UseCase와 엔진에 흩어져 충돌.</li>
+        <li><b>테스트</b>: "어제 먹은 닭가슴살이 오늘 추천 뒤로 간다"를 <em>엔진 출력</em>으로 검증 — 현재 단위 테스트는 호출되지 않는 함수를 검증 중.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CANDIDATE 2 -->
+<section class="max-w-6xl mx-auto mb-10">
+  <div class="card rounded-xl p-6">
+    <span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span>
+    <div class="mt-2 mb-1 inline-flex items-center gap-2">
+      <h2 class="text-2xl font-bold text-slate-100">후보 2 · 엔진이 검증된 제공량 옵션을 무시한다</h2>
+    </div>
+    <div class="rounded-lg p-3 mt-2 mb-4" style="background:#2a1810;border:1px solid #78350f">
+      <p class="text-amber-200 text-sm">⚠ ADR-0002 §5와 직접 충돌 — <em>"추천 엔진은 임의 g 대신 검증된 이산 제공량 옵션을 사용한다"</em>가 미구현 상태.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">문제</h3>
+        <p class="text-slate-400 leading-relaxed">
+          <code>DietRecommendationCandidate</code>는 이제 <code>servingOptions</code>와
+          <code>hasVerifiedServingOptions</code>를 싣고 다닌다(후보 풀이 4번째 병렬 쿼리로 적재, iOS 프리셋도 연결됨).
+          그러나 엔진의 <code>calculateServing()</code>은 이 필드를 한 번도 읽지 않고
+          <code>targetCalories / kcal100 × 100</code>을 <span class="text-red-300">25g 단위로 반올림</span>할 뿐이다.
+          후보 풀과 iOS가 들인 제공량 작업이 추천 알고리즘에 0% 반영된다.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">deletion test</h3>
+        <div class="flow-box p-3">
+          <p class="text-slate-300">
+            <code>DietRecommendationCandidate</code>에서 <code>servingOptions</code> 두 필드를 지워도
+            <span class="sev-high">추천 엔진은 컴파일·동작 모두 영향 없음.</span>
+            소비처는 응답 직렬화/iOS 뿐 — 추천 깊이에는 기여 0.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+      <div class="before rounded-lg p-4">
+        <p class="text-xs text-red-300/80 uppercase mono mb-3">before</p>
+        <pre class="mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">double rawServing =
+    targetCal / kcalPer100g * 100;
+double rounded =
+    round(rawServing / 25) * 25;  // 임의 g
+return clamp(25, 500, rounded);
+// servingOptions 무시됨 ✗</pre>
+        <p class="text-xs text-red-300/70 mt-2">"닭가슴살 137g" 같은 비현실적 제공량 발생 가능</p>
+      </div>
+      <div class="after rounded-lg p-4">
+        <p class="text-xs text-emerald-300/80 uppercase mono mb-3">after — ServingSelector seam</p>
+        <pre class="mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">servingSelector.choose(
+    food.servingOptions(),
+    targetCalories)
+// 검증된 옵션 우선,
+// 없으면 25g step fallback
+// → "1쪽(100g)", "1컵(240g)"</pre>
+        <p class="text-xs text-emerald-300/70 mt-2">검증 옵션 → 이산 프리셋, 미검증 → 기존 fallback</p>
+      </div>
+    </div>
+
+    <div class="mt-5 text-sm">
+      <h3 class="text-slate-300 font-semibold mb-1">해법</h3>
+      <p class="text-slate-400 leading-relaxed">
+        제공량 결정을 작은 깊은 모듈 <code>ServingSelector</code>(또는 후보의
+        <code>chooseServing(targetCalories)</code> 메서드)로 만든다. 검증된 옵션이 있으면 가장 가까운 이산 옵션을,
+        없으면 현재의 25g 스텝을 쓴다. 엔진은 "제공량은 셀렉터가 안다"만 알면 된다.
+      </p>
+      <ul class="text-slate-400 list-disc ml-5 space-y-1 mt-2">
+        <li><b>Leverage</b>: 미검증 식품은 기존 동작 유지, 검증 식품은 즉시 현실적 제공량으로 업그레이드.</li>
+        <li><b>Locality</b>: "제공량을 어떻게 정하나"가 한 곳에. 지금은 엔진 안 5줄 + 무시되는 후보 필드로 분리.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CANDIDATE 3 -->
+<section class="max-w-6xl mx-auto mb-10">
+  <div class="card rounded-xl p-6">
+    <span class="badge-explore px-2 py-0.5 rounded text-xs font-semibold">Worth exploring</span>
+    <h2 class="text-2xl font-bold text-slate-100 mt-2 mb-1">후보 3 · UseCase가 얕은 82줄 오케스트레이터</h2>
+    <p class="text-slate-400 text-sm mb-4">작은 인터페이스(<code>recommend(userId, request)</code>)는 좋지만, 구현이 응답 조립 디테일을 흘린다.</p>
+
+    <div class="grid md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">문제</h3>
+        <ul class="text-slate-400 list-disc ml-5 space-y-1">
+          <li>한 메서드가 8개 협력자(레포 5 + 풀 + 엔진 + 스냅샷)를 순차 호출.</li>
+          <li><code>DailyDietRecommendationResponse</code> <b>11-인자 생성자가 2곳</b>(조기 종료 82행, 정상 127행)에서 중복. 필드 추가 시 양쪽 수정 필요 — 실제로 이번 작업에서 한 번 어긋났던 지점.</li>
+          <li><code>checkTargets()</code>가 실패 사유를 <em>문자열</em>로 반환, <code>succeeded()</code>는 null 검사 — 비즈니스 규칙이 문자열에 숨음.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">현재 흐름</h3>
+        <div class="flow-box p-3 mono text-xs text-slate-400 leading-relaxed">
+          user → goal → targets → restrictions<br>
+          → consumed → <span class="text-amber-300">[조기종료 응답 ①]</span><br>
+          → pool.load → repetitionPolicy<br>
+          → engine.recommend → checkTargets<br>
+          → recommendAlternatives → sortByDiversity<br>
+          → serializeMeals → snapshot.save<br>
+          → <span class="text-amber-300">[정상 응답 ②]</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 text-sm">
+      <h3 class="text-slate-300 font-semibold mb-1">해법 (가벼운 단계부터)</h3>
+      <ol class="text-slate-400 list-decimal ml-5 space-y-1">
+        <li>응답 생성을 <code>DailyDietRecommendationResponse.of(...)</code> 정적 팩토리 / 빌더로 모아 11-인자 중복 제거.</li>
+        <li>대안 생성+다양성 정렬+스냅샷 저장을 엔진/스냅샷 쪽 한 호출로 묶어 UseCase는 "조립"만.</li>
+        <li>(선택) <code>failureReason</code> 문자열을 <code>RecommendationOutcome</code> 값 객체로 — UI 문구와 규칙 분리.</li>
+      </ol>
+      <p class="text-slate-500 mt-2 text-xs">※ ADR-0002/0004가 정의한 "UseCase는 조립, 엔진은 끼니 구성" 경계는 유지 — 이건 그 경계를 <em>더 선명히</em> 하는 방향.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CANDIDATE 4 -->
+<section class="max-w-6xl mx-auto mb-10">
+  <div class="card rounded-xl p-6">
+    <span class="badge-explore px-2 py-0.5 rounded text-xs font-semibold">Worth exploring</span>
+    <h2 class="text-2xl font-bold text-slate-100 mt-2 mb-1">후보 4 · 알러젠 "검증됨" 개념이 3곳에 분산</h2>
+
+    <div class="grid md:grid-cols-3 gap-3 mt-4 text-sm">
+      <div class="before rounded-lg p-3">
+        <p class="mono text-xs text-red-200">FoodAllergenTag<br>.allergenProfileVerified</p>
+        <p class="text-slate-400 text-xs mt-2">태그 행의 boolean 플래그</p>
+      </div>
+      <div class="before rounded-lg p-3">
+        <p class="mono text-xs text-red-200">FoodAllergenProfile<br>.isVerifiedAt(now)</p>
+        <p class="text-slate-400 text-xs mt-2">신뢰도+만료+무효화 종합 메서드</p>
+      </div>
+      <div class="before rounded-lg p-3">
+        <p class="mono text-xs text-red-200">AllergenSafetyGate<br>.hasHighConfidenceVerifiedTag</p>
+        <p class="text-slate-400 text-xs mt-2">게이트 내부 로직</p>
+      </div>
+    </div>
+
+    <p class="text-slate-400 text-sm mt-4 leading-relaxed">
+      세 개념이 부분적으로 겹치지만 의미가 미묘히 다르다. 안전 게이트를 다른 곳(검수 큐, 관리자 리포트)에서
+      재사용하려면 어느 것을 믿어야 하는지 매번 추론해야 한다. <code>ordinal()</code> 기반 신뢰도 비교는
+      enum 순서 변경에 취약(현재 DIRECT_VERIFIED &lt; LABEL_DERIVED &lt; … 가정).
+    </p>
+    <div class="after rounded-lg p-4 mt-4 text-sm">
+      <p class="text-xs text-emerald-300/80 uppercase mono mb-2">after</p>
+      <p class="text-slate-300">
+        검증 상태를 하나의 값/메서드 <code>AllergenVerification.evaluate(tags, profile, clock)</code>로 모아
+        <code>SafetyDecision</code>만 노출. 호출자(풀·게이트·리포트)는 boolean 세 개가 아니라 결정 하나를 본다.
+        신뢰도 비교는 <code>ordinal()</code> 대신 명시적 순위 메서드로.
+      </p>
+    </div>
+    <p class="text-slate-500 text-xs mt-3">
+      ⚠ ADR-0001/0002의 안전 계약(포함 태그 의미, verified-only 게이트)은 그대로 유지 — 표현만 한 seam으로 통합.
+    </p>
+  </div>
+</section>
+
+<!-- CANDIDATE 5 -->
+<section class="max-w-6xl mx-auto mb-10">
+  <div class="card rounded-xl p-6">
+    <span class="badge-spec px-2 py-0.5 rounded text-xs font-semibold">Speculative</span>
+    <h2 class="text-2xl font-bold text-slate-100 mt-2 mb-1">후보 5 · 스냅샷 감사 일관성 틈</h2>
+    <div class="grid md:grid-cols-2 gap-4 text-sm mt-3">
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">관찰</h3>
+        <ul class="text-slate-400 list-disc ml-5 space-y-1">
+          <li><code>Snapshot.create()</code>가 <code>GENERATED</code> 이벤트를 <code>snapshotId=null</code>로 @Transient 리스트에 넣지만, <code>SnapshotStore.save()</code>는 스냅샷만 저장 → <span class="sev-low">GENERATED 이벤트 유실.</span></li>
+          <li>피드백/전환 서비스는 <code>getEvents().getLast()</code>를 다시 저장하는 2단계 — 두 번째 저장 실패 시 이벤트만 유실.</li>
+          <li><code>serializeMeals(meals)</code>는 1차 식단만 저장. 응답엔 <code>alternatives</code>가 있지만 스냅샷엔 없음 → 나중에 "그때 뭘 대안으로 줬나" 복원 불가.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-slate-300 font-semibold mb-1">왜 Speculative인가</h3>
+        <p class="text-slate-400 leading-relaxed">
+          대안 미저장은 <em>의도</em>일 수 있다(대안은 요청마다 휘발). GENERATED 유실도 현재 지표 계산엔
+          치명적이지 않을 수 있다. 다만 ADR-0002 §6이 "노출·재추천·기록 전환 이벤트 저장"을 명시하므로,
+          이벤트 영속화 경로를 <code>save()</code> 한 트랜잭션 안으로 합칠지 결정이 필요하다.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOP RECOMMENDATION -->
+<section class="max-w-6xl mx-auto mb-16">
+  <div class="rounded-xl p-6" style="background:linear-gradient(135deg,#0c1a2e,#0f172a);border:1px solid #1e40af">
+    <p class="text-xs uppercase mono text-blue-300/70 mb-2">top recommendation</p>
+    <h2 class="text-2xl font-bold text-slate-100">먼저 후보 1 — 반복 기피 정렬 융합</h2>
+    <p class="text-slate-300 mt-3 leading-relaxed max-w-3xl">
+      이건 단순 리팩터가 아니라 <span class="text-blue-200 font-semibold">조용한 정확성 버그</span>다.
+      Phase 4 Unit 5에서 들인 "최근 7일 반복 기피"가 운영에서 전혀 작동하지 않고, 단위 테스트는
+      호출되지 않는 함수를 검증해 <em>녹색</em>이다. 이 스킬이 가장 경계하는 패턴 —
+      <em>"테스트 가능성 때문에 순수 함수를 뽑았지만 진짜 버그는 그걸 부르는 방식에 숨는다"</em> — 의 교과서적 사례다.
+      수정 범위도 작다: <code>sortByScore</code>가 정책을 받게 하고 UseCase의 사전 정렬을 제거.
+    </p>
+    <div class="mt-4 flex gap-3 flex-wrap text-sm">
+      <span class="pill rounded-full px-3 py-1 text-slate-300">① 후보 1 (정확성·작음)</span>
+      <span class="pill rounded-full px-3 py-1 text-slate-300">② 후보 2 (ADR 위반·중간)</span>
+      <span class="pill rounded-full px-3 py-1 text-slate-400">③ 후보 3 (유지보수)</span>
+      <span class="pill rounded-full px-3 py-1 text-slate-500">④⑤ 여력 시</span>
+    </div>
+    <p class="text-slate-500 text-xs mt-4">
+      후보 1·2 모두 dev 머지 <em>전</em>에 잡는 게 좋다 — Phase 4가 PR로 나가기 전이라 회귀 테스트를 같이 넣을 수 있다.
+    </p>
+  </div>
+</section>
+
+<footer class="max-w-6xl mx-auto text-center text-xs text-slate-600 pb-8">
+  생성: /improve-codebase-architecture · 모듈/seam/깊이 용어는 LANGUAGE.md, 도메인 용어는 backend/CONTEXT.md 기준
+</footer>
+
+</body>
+</html>

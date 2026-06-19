@@ -43,21 +43,8 @@ class UserRepetitionPolicyTest {
         assertThat(policy.penaltyScore(food(2L))).isEqualTo(0.0);
     }
 
-    @Test
-    @DisplayName("sortByPreference()는 penalty 낮은 순으로 정렬한다")
-    void sortByPreference_sortsByPenaltyAscending() {
-        UserRepetitionPolicy policy = new UserRepetitionPolicy(Set.of(1L));
-
-        List<DietRecommendationCandidate> foods = List.of(
-                food(1L),  // penalty 있음
-                food(2L),  // penalty 없음
-                food(3L)   // penalty 없음
-        );
-
-        List<DietRecommendationCandidate> sorted = policy.sortByPreference(foods);
-
-        assertThat(sorted.getFirst().foodCatalogId()).isNotEqualTo(1L);
-    }
+    // 반복 페널티가 추천 결과에 실제로 반영되는지(정렬 융합)는
+    // DietRecommendationEngineTest.RepetitionPreference 에서 엔진 출력으로 검증한다.
 
     // ─── 헬퍼 ───
 

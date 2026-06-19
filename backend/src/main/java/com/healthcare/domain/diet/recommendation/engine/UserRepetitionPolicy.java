@@ -2,8 +2,6 @@ package com.healthcare.domain.diet.recommendation.engine;
 
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -22,12 +20,6 @@ public class UserRepetitionPolicy {
 
     public double penaltyScore(DietRecommendationCandidate candidate) {
         return recentlyConsumedFoodIds.contains(candidate.foodCatalogId()) ? RECENT_PENALTY : 0.0;
-    }
-
-    public List<DietRecommendationCandidate> sortByPreference(List<DietRecommendationCandidate> candidates) {
-        return candidates.stream()
-                .sorted(Comparator.comparingDouble(this::penaltyScore))
-                .toList();
     }
 
     public static UserRepetitionPolicy noRestrictions() {

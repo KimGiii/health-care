@@ -56,13 +56,29 @@ public class DietRecommendationEngine {
     }
 
     /**
-     * 전체 하루 식단 추천을 생성한다.
+     * 전체 하루 식단 추천을 생성한다. 반복 페널티 없이 정렬한다.
      */
     public List<RecommendedMeal> recommend(
             LocalDate date,
             NutritionTargets targets,
             List<MealType> selectedMeals,
             List<DietRecommendationCandidate> filteredCandidates
+    ) {
+        return recommend(date, targets, selectedMeals, filteredCandidates,
+                UserRepetitionPolicy.noRestrictions());
+    }
+
+    /**
+     * 전체 하루 식단 추천을 생성한다.
+     * 후보 정렬은 한 곳({@link #sortByScore})에서 이루어지며, 최근 섭취 반복 페널티를
+     * soft objective로 함께 반영한다.
+     */
+    public List<RecommendedMeal> recommend(
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> filteredCandidates,
+            UserRepetitionPolicy repetitionPolicy
     ) {
         Map<MealType, Double> calorieDistribution = distributeCalories(targets.calorieTarget(), selectedMeals);
         Set<Long> usedFoodIds = new HashSet<>();
@@ -71,7 +87,8 @@ public class DietRecommendationEngine {
         for (MealType mealType : selectedMeals) {
             double targetCal = calorieDistribution.getOrDefault(mealType, 0.0);
 
-            List<DietRecommendationCandidate> mealCandidates = sortByScore(filteredCandidates, usedFoodIds, date);
+            List<DietRecommendationCandidate> mealCandidates =
+                    sortByScore(filteredCandidates, usedFoodIds, repetitionPolicy, date);
             List<RecommendedFoodEntry> items = selectItemsForMeal(
                     mealType, mealCandidates, targetCal);
 
@@ -107,6 +124,18 @@ public class DietRecommendationEngine {
             List<MealType> selectedMeals,
             List<DietRecommendationCandidate> candidates
     ) {
+        return recommendAlternatives(count, date, targets, selectedMeals, candidates,
+                UserRepetitionPolicy.noRestrictions());
+    }
+
+    public List<List<RecommendedMeal>> recommendAlternatives(
+            int count,
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> candidates,
+            UserRepetitionPolicy repetitionPolicy
+    ) {
         List<List<RecommendedMeal>> results = new ArrayList<>();
         Set<Long> excludedFoodIds = new HashSet<>();
 
@@ -116,7 +145,7 @@ public class DietRecommendationEngine {
                     .toList();
             if (pool.isEmpty()) break;
 
-            List<RecommendedMeal> alt = recommend(date, targets, selectedMeals, pool);
+            List<RecommendedMeal> alt = recommend(date, targets, selectedMeals, pool, repetitionPolicy);
             results.add(alt);
 
             alt.stream()
@@ -217,16 +246,22 @@ public class DietRecommendationEngine {
         return Math.max(25.0, Math.min(500.0, rounded));
     }
 
-    /** 이미 사용된 식품 페널티를 먼저 적용하고, 같은 후보 풀은 날짜 기준으로 안정적으로 회전한다. */
+    /**
+     * 후보 점수화 seam — 모든 순위 규칙을 한 곳에 모은다.
+     * 1) 같은 추천 내 이미 사용된 식품을 뒤로, 2) 최근 섭취 반복 페널티(soft),
+     * 3) 날짜 기준 안정적 회전, 4) 사용 횟수, 5) 안정 key.
+     */
     private List<DietRecommendationCandidate> sortByScore(
             List<DietRecommendationCandidate> candidates,
             Set<Long> usedFoodIds,
+            UserRepetitionPolicy repetitionPolicy,
             LocalDate date
     ) {
         return candidates.stream()
                 .sorted(Comparator
                         .comparingInt((DietRecommendationCandidate f) ->
                                 usedFoodIds.contains(f.foodCatalogId()) ? 1 : 0)
+                        .thenComparingDouble(repetitionPolicy::penaltyScore)
                         .thenComparingLong(f -> rotationKey(date, f))
                         .thenComparing(Comparator.comparingLong(this::usageCount).reversed())
                         .thenComparingLong(DietRecommendationCandidate::stableKey))
