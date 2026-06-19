@@ -355,7 +355,9 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `FoodCatalog.recommendationFactsDifferFrom(imported)`: 4대 매크로·제공량·주의 영양소(나트륨·당류·포화지방)의 유의미한 변화 판정. 상대 5% 초과 또는 데이터 완전성 전환(null↔값)만 변경으로 본다. 미세 변동(반올림·소폭 갱신)은 무시.
   - `FoodCatalog.revokeRecommendationForStaleFacts()`: 추천 후보였던 항목만 `SEARCH_ONLY`로 강등하고 `recommendation_reason`에 재검증 사유 기록.
   - `FoodCatalogIngestService.updateExisting`: `PRESERVE_EXISTING` 재적재에서 사실이 유의미하게 바뀌면 자격 회수. `REPLACE_FROM_IMPORT`(브랜드 CSV)는 가져온 큐레이션으로 교체하므로 회수 대상 아님.
-- [ ] 조건별 실패 커버리지 기반 검증 큐 (Unit 2)
+- [x] 조건별 실패 커버리지 기반 검증 큐 (Unit 2)
+  - `RevalidationQueueService`: 자동 회수 항목(`REVOKED_STALE_FACTS`)과 신선도 만료 추천 후보(`DATA_EXPIRED`)를 사유 우선·usageCount 내림차순으로 집계. `GET /api/v1/admin/diet/candidate-pool/revalidation-queue` (admin 토큰 가드).
+  - `VerificationPriorityService`: priorityScore에 `coverageWeight`(후보 부족 카테고리 2, 충분 1) 추가 — §5.3 incremental feasibility coverage 근사. `UNDERREPRESENTED_THRESHOLD`를 `CandidatePoolSummary`와 공유.
 - [ ] benchmark shadow run과 단계적 승격 (Unit 3)
 - [ ] 온라인 지표를 이용한 순위 가중치 조정 (Unit 4)
 
