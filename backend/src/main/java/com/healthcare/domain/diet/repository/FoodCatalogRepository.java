@@ -59,6 +59,9 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
     /** 외부/배치 적재 시 source + foodCode 기준으로 기존 카탈로그 항목을 찾는다. */
     Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode);
 
+    /** 재검증 큐: 자동 자격 회수 등 특정 사유가 기록된 항목을 조회한다. */
+    List<FoodCatalog> findByRecommendationReason(String recommendationReason);
+
     /** 표시명 수동 오버라이드용: 동일한 원본명(name)을 가진 모든 행을 조회한다(soft-delete 제외). */
     List<FoodCatalog> findByName(String name);
 
