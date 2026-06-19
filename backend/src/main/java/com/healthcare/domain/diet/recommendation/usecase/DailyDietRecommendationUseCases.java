@@ -39,9 +39,6 @@ public class DailyDietRecommendationUseCases {
     private static final double CALORIE_LOWER_BOUND_RATIO = 0.90;
     private static final double CALORIE_UPPER_BOUND_RATIO = 1.10;
     private static final double PROTEIN_LOWER_BOUND_RATIO = 0.90;
-    private static final String DISCLAIMER =
-            "이 추천은 영양 정보 기반의 참고용 제안입니다. " +
-            "알러젠 정보는 완전하지 않을 수 있으니, 식품 라벨을 반드시 확인하세요.";
 
     private final UserRepository userRepository;
     private final GoalRepository goalRepository;
@@ -78,11 +75,10 @@ public class DailyDietRecommendationUseCases {
         if (remainingTargets.calorieTarget() <= 0) {
             List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
                     .map(DietRestrictionResponse::from).toList();
-            return new DailyDietRecommendationResponse(
+            return DailyDietRecommendationResponse.alreadyMet(
                     request.date(), targets, remainingTargets, appliedRestrictions,
-                    List.of(), new NutrientSummary(0, 0, 0, 0),
-                    "오늘 칼로리 목표를 이미 달성했습니다. 추가 추천이 필요하지 않습니다.",
-                    request.strictAllergyMode(), DISCLAIMER, List.of(), null);
+                    request.strictAllergyMode(),
+                    "오늘 칼로리 목표를 이미 달성했습니다. 추가 추천이 필요하지 않습니다.");
         }
 
         DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
@@ -123,7 +119,7 @@ public class DailyDietRecommendationUseCases {
         Long snapshotId = snapshotStore.save(userId, request.date(), mealsJson, goalType,
                 request.strictAllergyMode());
 
-        return new DailyDietRecommendationResponse(
+        return DailyDietRecommendationResponse.of(
                 request.date(),
                 targets,
                 remainingTargets,
@@ -132,7 +128,6 @@ public class DailyDietRecommendationUseCases {
                 summary,
                 failureReason,
                 request.strictAllergyMode(),
-                DISCLAIMER,
                 alternatives,
                 snapshotId
         );
