@@ -372,17 +372,18 @@ struct DietRecommendationView: View {
                     .foregroundStyle(Color.textPrimary)
             }
             ForEach(Array(alts.enumerated()), id: \.offset) { index, altMeals in
-                alternativeCard(index: index + 1, meals: altMeals)
+                alternativeCard(index: index + 1, meals: altMeals, altIndex: index)
             }
         }
     }
 
-    private func alternativeCard(index: Int, meals: [RecommendedMeal]) -> some View {
+    private func alternativeCard(index: Int, meals: [RecommendedMeal], altIndex: Int) -> some View {
         DisclosureGroup {
             VStack(spacing: 10) {
                 ForEach(meals) { meal in
                     alternativeMealRow(meal)
                 }
+                applyAlternativeButton(altIndex: altIndex)
             }
             .padding(.top, Spacing.sm)
         } label: {
@@ -401,6 +402,26 @@ struct DietRecommendationView: View {
         .background(Color.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 14)) // design-lint:ignore
         .elevation(.low)
+    }
+
+    private func applyAlternativeButton(altIndex: Int) -> some View {
+        Button {
+            withAnimation { viewModel.applyAlternative(at: altIndex) }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.labelSmall)
+                Text("recommend.alternative.apply")
+                    .font(.caption).fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.sm)
+            .background(Color.brandAccent.opacity(0.12))
+            .foregroundStyle(Color.brandAccent)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+        }
+        .buttonStyle(.plain)
+        .padding(.top, Spacing.xs)
     }
 
     private func alternativeMealRow(_ meal: RecommendedMeal) -> some View {

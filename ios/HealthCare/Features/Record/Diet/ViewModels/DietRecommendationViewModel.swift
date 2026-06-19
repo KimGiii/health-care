@@ -96,6 +96,60 @@ final class DietRecommendationViewModel: ObservableObject {
         }
     }
 
+    /// 백엔드 checkTargets와 동일한 목표 허용 범위 (UseCases와 일치).
+    private static let calorieLowerRatio = 0.90
+    private static let calorieUpperRatio = 1.10
+    private static let proteinLowerRatio = 0.90
+
+    /// 대안 식단을 상단 추천으로 적용하고, 기존 추천은 해당 대안 자리로 보낸다(swap).
+    /// 합계와 실패 사유를 새 식단 기준으로 재계산한다.
+    func applyAlternative(at index: Int) {
+        guard let current = result,
+              index >= 0, index < current.alternatives.count else { return }
+
+        let chosen = current.alternatives[index]
+        var newAlternatives = current.alternatives
+        newAlternatives[index] = current.meals
+
+        result = DailyDietRecommendationResponse(
+            date: current.date,
+            targets: current.targets,
+            remainingTargets: current.remainingTargets,
+            appliedRestrictions: current.appliedRestrictions,
+            meals: chosen,
+            totalNutrients: Self.summarize(chosen),
+            failureReason: Self.evaluateFailureReason(meals: chosen, targets: current.targets),
+            strictAllergyMode: current.strictAllergyMode,
+            disclaimer: current.disclaimer,
+            alternatives: newAlternatives,
+            snapshotId: current.snapshotId
+        )
+        // 새 식단으로 바뀌었으므로 저장 상태를 초기화한다.
+        savedMealTypes = []
+    }
+
+    static func summarize(_ meals: [RecommendedMeal]) -> DailyDietRecommendationResponse.NutrientSummary {
+        DailyDietRecommendationResponse.NutrientSummary(
+            totalCalories: meals.reduce(0) { $0 + $1.totalCalories },
+            totalProteinG: meals.reduce(0) { $0 + $1.totalProteinG },
+            totalCarbsG: meals.reduce(0) { $0 + $1.totalCarbsG },
+            totalFatG: meals.reduce(0) { $0 + $1.totalFatG }
+        )
+    }
+
+    static func evaluateFailureReason(meals: [RecommendedMeal], targets: NutritionTargets) -> String? {
+        let totalCalories = meals.reduce(0) { $0 + $1.totalCalories }
+        let totalProtein = meals.reduce(0) { $0 + $1.totalProteinG }
+        if totalCalories < targets.calorieTarget * calorieLowerRatio
+            || totalCalories > targets.calorieTarget * calorieUpperRatio {
+            return String(localized: "recommend.failure.calorie")
+        }
+        if totalProtein < targets.proteinTargetG * proteinLowerRatio {
+            return String(localized: "recommend.failure.protein")
+        }
+        return nil
+    }
+
     func toggleMeal(_ meal: MealType) {
         if selectedMeals.contains(meal) {
             selectedMeals.remove(meal)
