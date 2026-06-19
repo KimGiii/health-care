@@ -97,7 +97,7 @@ class MfdsFoodNutrientDbImporterTest {
     }
 
     @Test
-    @DisplayName("기존 식품영양성분DB 항목 갱신 시 추천 검수 상태는 보존한다")
+    @DisplayName("기존 식품영양성분DB 항목 갱신 시 영양 사실이 유의미하게 바뀌면 추천 자격을 회수한다")
     void importRows_updatesSourceFactsButPreservesRecommendationCuration() {
         FoodCatalog existing = FoodCatalog.builder()
                 .id(10L)
@@ -136,7 +136,7 @@ class MfdsFoodNutrientDbImporterTest {
         FoodCatalog saved = foodCaptor.getValue();
         assertThat(saved.getNameKo()).isEqualTo("와퍼");
         assertThat(saved.getCaloriesPer100g()).isEqualTo(619.0);
-        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE_WITH_CAUTION);
-        assertThat(saved.getRecommendationReason()).isEqualTo("나트륨 주의");
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
+        assertThat(saved.getRecommendationReason()).isEqualTo(FoodCatalog.STALE_FACTS_REVALIDATION_REASON);
     }
 }

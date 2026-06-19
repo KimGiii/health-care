@@ -131,7 +131,7 @@ class StandardProcessedFoodImporterTest {
     }
 
     @Test
-    @DisplayName("같은 source와 food_code를 다시 적재하면 기존 항목을 갱신한다")
+    @DisplayName("같은 source와 food_code를 다시 적재하면 기존 항목을 갱신하고, 영양 사실이 유의미하게 바뀌면 추천 자격을 회수한다")
     void importRows_updatesExistingFoodCatalogItem() {
         FoodCatalog existing = FoodCatalog.builder()
                 .id(10L)
@@ -183,7 +183,7 @@ class StandardProcessedFoodImporterTest {
         assertThat(saved.getMaker()).isEqualTo("헬스푸드");
         assertThat(saved.getCaloriesPer100g()).isEqualTo(165.0);
         assertThat(saved.getProteinPer100g()).isEqualTo(31.0);
-        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
-        assertThat(saved.getRecommendationReason()).isEqualTo("관리자 검수 완료");
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
+        assertThat(saved.getRecommendationReason()).isEqualTo(FoodCatalog.STALE_FACTS_REVALIDATION_REASON);
     }
 }

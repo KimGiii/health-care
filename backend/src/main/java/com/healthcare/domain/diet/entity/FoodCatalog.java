@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "food_catalog")
@@ -181,6 +182,60 @@ public class FoodCatalog {
         this.dataVersion = imported.dataVersion;
         this.lastVerifiedAt = imported.lastVerifiedAt;
         this.isCustom = imported.isCustom;
+    }
+
+    /**
+     * source 사실 변경으로 추천 자격을 자동 회수했을 때 남기는 사유. 운영자 재검증 큐 식별에 쓰인다.
+     */
+    public static final String STALE_FACTS_REVALIDATION_REASON = "source 사실 변경으로 재검증 필요";
+
+    /**
+     * 유의미한 변화로 판단하는 상대 변화율 임계값. 연속 재적재의 미세 변동(반올림·소폭 갱신)은
+     * 회수 대상에서 제외하고, 실제 사실 변경만 회수하기 위한 운영 기준이다.
+     */
+    private static final double SIGNIFICANT_RELATIVE_CHANGE = 0.05;
+
+    /**
+     * 추천 자격 판정에 직접 영향을 주는 source 사실(4대 매크로, 제공량, 주의 판정 영양소)이
+     * 가져온 항목과 <em>유의미하게</em> 다른지 비교한다. 상대 5%를 초과하는 변화이거나
+     * 데이터 완전성이 바뀌는 경우(null↔값)만 변경으로 본다.
+     * 이름·브랜드·카테고리 등 안전성과 무관한 변경은 포함하지 않는다.
+     */
+    public boolean recommendationFactsDifferFrom(FoodCatalog imported) {
+        return significantlyDiffers(caloriesPer100g, imported.caloriesPer100g)
+                || significantlyDiffers(proteinPer100g, imported.proteinPer100g)
+                || significantlyDiffers(carbsPer100g, imported.carbsPer100g)
+                || significantlyDiffers(fatPer100g, imported.fatPer100g)
+                || significantlyDiffers(servingSizeG, imported.servingSizeG)
+                || significantlyDiffers(sodiumPer100gMg, imported.sodiumPer100gMg)
+                || significantlyDiffers(sugarsPer100g, imported.sugarsPer100g)
+                || significantlyDiffers(saturatedFatPer100g, imported.saturatedFatPer100g);
+    }
+
+    private static boolean significantlyDiffers(Double oldValue, Double newValue) {
+        if (Objects.equals(oldValue, newValue)) {
+            return false;
+        }
+        if (oldValue == null || newValue == null) {
+            return true; // 데이터 완전성 변화는 항상 유의미
+        }
+        double denominator = Math.max(Math.abs(oldValue), Math.abs(newValue));
+        if (denominator == 0.0) {
+            return false;
+        }
+        return Math.abs(oldValue - newValue) / denominator > SIGNIFICANT_RELATIVE_CHANGE;
+    }
+
+    /**
+     * source 사실이 바뀐 추천 후보의 자격을 회수해 재검증 대상으로 강등한다.
+     * 추천 후보가 아닌 항목에는 영향을 주지 않는다.
+     */
+    public void revokeRecommendationForStaleFacts() {
+        if (!recommendationStatus.isRecommendationCandidate()) {
+            return;
+        }
+        this.recommendationStatus = RecommendationStatus.SEARCH_ONLY;
+        this.recommendationReason = STALE_FACTS_REVALIDATION_REASON;
     }
 
     public RecommendationCuration curation() {

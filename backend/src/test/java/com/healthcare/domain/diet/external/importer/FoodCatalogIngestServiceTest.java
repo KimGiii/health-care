@@ -85,6 +85,120 @@ class FoodCatalogIngestServiceTest {
     }
 
     @Test
+    @DisplayName("PRESERVE_EXISTING에서 추천 후보의 핵심 영양값이 바뀌면 자격을 회수하고 재검증 사유를 남긴다")
+    void ingest_preserveExisting_revokesWhenNutritionFactsChanged() {
+        FoodCatalog existing = food("이름", RecommendationStatus.RECOMMENDABLE, null);
+        FoodCatalog imported = foodWithCalories("이름", RecommendationStatus.SEARCH_ONLY, null, 250.0);
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getCaloriesPer100g()).isEqualTo(250.0);
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
+        assertThat(saved.getRecommendationReason())
+                .isEqualTo(FoodCatalog.STALE_FACTS_REVALIDATION_REASON);
+    }
+
+    @Test
+    @DisplayName("PRESERVE_EXISTING에서 영양 사실이 같으면(이름만 변경) 추천 자격을 유지한다")
+    void ingest_preserveExisting_keepsCandidateWhenFactsUnchanged() {
+        FoodCatalog existing = food("이전 이름", RecommendationStatus.RECOMMENDABLE, null);
+        FoodCatalog imported = food("새 이름", RecommendationStatus.SEARCH_ONLY, null);
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getName()).isEqualTo("새 이름");
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
+        assertThat(saved.getRecommendationReason()).isNull();
+    }
+
+    @Test
+    @DisplayName("PRESERVE_EXISTING에서 영양값 미세 변동(상대 5% 이하)은 추천 자격을 유지한다")
+    void ingest_preserveExisting_keepsCandidateOnMinorFactChange() {
+        FoodCatalog existing = foodWithCalories("이름", RecommendationStatus.RECOMMENDABLE, null, 165.0);
+        FoodCatalog imported = foodWithCalories("이름", RecommendationStatus.SEARCH_ONLY, null, 169.0); // +2.4%
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getCaloriesPer100g()).isEqualTo(169.0);
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
+        assertThat(saved.getRecommendationReason()).isNull();
+    }
+
+    @Test
+    @DisplayName("PRESERVE_EXISTING에서 이미 추천 후보가 아닌 항목은 영양값이 바뀌어도 회수하지 않는다")
+    void ingest_preserveExisting_nonCandidateUnaffectedByFactChange() {
+        FoodCatalog existing = food("이름", RecommendationStatus.SEARCH_ONLY, null);
+        FoodCatalog imported = foodWithCalories("이름", RecommendationStatus.SEARCH_ONLY, null, 250.0);
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
+        assertThat(saved.getRecommendationReason()).isNull();
+    }
+
+    @Test
+    @DisplayName("REPLACE_FROM_IMPORT는 영양값이 바뀌어도 회수가 아니라 가져온 큐레이션으로 교체한다")
+    void ingest_replaceFromImport_doesNotRevokeOnFactChange() {
+        FoodCatalog existing = food("이름", RecommendationStatus.RECOMMENDABLE, null);
+        FoodCatalog imported = foodWithCalories("이름", RecommendationStatus.RECOMMENDABLE, null, 250.0);
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_STANDARD_PROCESSED, "P001"))
+                .willReturn(Optional.of(existing));
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.REPLACE_FROM_IMPORT
+        );
+
+        ArgumentCaptor<FoodCatalog> foodCaptor = ArgumentCaptor.forClass(FoodCatalog.class);
+        verify(foodCatalogRepository).save(foodCaptor.capture());
+        FoodCatalog saved = foodCaptor.getValue();
+        assertThat(saved.getRecommendationStatus()).isEqualTo(RecommendationStatus.RECOMMENDABLE);
+        assertThat(saved.getRecommendationReason()).isNull();
+    }
+
+    @Test
     @DisplayName("거절 candidate는 저장하지 않고 rejectedRows에 담는다")
     void ingest_rejectedCandidate_returnsRejectedRows() {
         FoodCatalogImportResult result = ingestService.ingest(
@@ -102,6 +216,11 @@ class FoodCatalogIngestServiceTest {
     }
 
     private FoodCatalog food(String name, RecommendationStatus status, String reason) {
+        return foodWithCalories(name, status, reason, 165.0);
+    }
+
+    private FoodCatalog foodWithCalories(
+            String name, RecommendationStatus status, String reason, double calories) {
         return FoodCatalog.builder()
                 .foodCode("P001")
                 .source(FoodCatalogSource.MFDS_STANDARD_PROCESSED)
@@ -109,7 +228,7 @@ class FoodCatalogIngestServiceTest {
                 .name(name)
                 .nameKo(name)
                 .category(FoodCategory.PROTEIN_SOURCE)
-                .caloriesPer100g(165.0)
+                .caloriesPer100g(calories)
                 .recommendationStatus(status)
                 .recommendationReason(reason)
                 .isCustom(false)

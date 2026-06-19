@@ -1,7 +1,7 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
 작성일: 2026-06-18
-상태: Phase 1·2 완료, Phase 3 대기
+상태: Phase 1~4 완료, Phase 5 진행 중
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
@@ -351,10 +351,13 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 
 ### Phase 5. 검증 풀 확장과 지속 개선
 
-- 조건별 실패 커버리지 기반 검증 큐
-- source 변경 감지와 자동 추천 자격 회수
-- benchmark shadow run과 단계적 승격
-- 온라인 지표를 이용한 순위 가중치 조정
+- [x] source 변경 감지와 자동 추천 자격 회수 (Unit 1)
+  - `FoodCatalog.recommendationFactsDifferFrom(imported)`: 4대 매크로·제공량·주의 영양소(나트륨·당류·포화지방)의 유의미한 변화 판정. 상대 5% 초과 또는 데이터 완전성 전환(null↔값)만 변경으로 본다. 미세 변동(반올림·소폭 갱신)은 무시.
+  - `FoodCatalog.revokeRecommendationForStaleFacts()`: 추천 후보였던 항목만 `SEARCH_ONLY`로 강등하고 `recommendation_reason`에 재검증 사유 기록.
+  - `FoodCatalogIngestService.updateExisting`: `PRESERVE_EXISTING` 재적재에서 사실이 유의미하게 바뀌면 자격 회수. `REPLACE_FROM_IMPORT`(브랜드 CSV)는 가져온 큐레이션으로 교체하므로 회수 대상 아님.
+- [ ] 조건별 실패 커버리지 기반 검증 큐 (Unit 2)
+- [ ] benchmark shadow run과 단계적 승격 (Unit 3)
+- [ ] 온라인 지표를 이용한 순위 가중치 조정 (Unit 4)
 
 완료 기준: 안전 위반 없이 주요 조건의 추천 성공률과 기록 전환율이 지속적으로 개선된다.
 

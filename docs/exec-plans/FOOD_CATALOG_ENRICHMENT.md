@@ -414,7 +414,7 @@ seed allowlist 최소 기준:
 - `StandardDishFoodImporter`를 추가해 15100070 음식 표준데이터 row를 `MFDS_STANDARD_DISH` 출처로 적재한다. `restNm` 성격의 값은 `brand_name`/`maker`에 보존한다.
 - `MfdsFoodNutrientDbImporter`를 추가해 `FoodNtrCpntDbInfo02` row를 `MFDS_FOOD_NUTRIENT_DB` 출처로 적재한다.
 - 공통 동작은 `source + food_code` 기준 신규 생성/기존 항목 갱신이며, 필수값(`food_code`, 식품명, 열량)이 없으면 skip 처리한다.
-- 공공데이터 재적재는 원본 메타데이터와 영양값만 갱신하고, 기존 항목의 추천 검수 상태(`recommendation_status`, `recommendation_reason`)는 보존한다.
+- 공공데이터 재적재는 원본 메타데이터와 영양값만 갱신하고, 기존 항목의 추천 검수 상태(`recommendation_status`, `recommendation_reason`)는 보존한다. 단, 추천 후보(`RECOMMENDABLE`/`RECOMMENDABLE_WITH_CAUTION`)였던 항목의 영양 사실(4대 매크로·제공량·나트륨·당류·포화지방)이 **유의미하게**(상대 5% 초과 또는 null↔값 전환) 바뀌면 검수 근거가 무효화되므로 추천 자격을 회수해 `SEARCH_ONLY`로 강등하고 재검증 대상으로 둔다(추천 최적화 계획 §5.1, Phase 5 Unit 1). 미세 변동(반올림·소폭 갱신)은 회수하지 않는다.
 - 공공데이터로 신규 적재되는 항목은 기본 `SEARCH_ONLY`로 둔다. v1에서는 공공데이터 항목을 추천 후보로 대량 자동 승격하지 않고, 필요 시 `source + food_code` 기준 큐레이션 오버레이 CSV를 별도 운영 작업으로 검토한다.
 - `StandardProcessedFoodPageFetcher`, `StandardDishFoodPageFetcher`, `MfdsFoodNutrientDbPageFetcher`를 추가해 공공데이터 API 페이지 응답을 importer row로 변환한다.
 - `FoodCatalogImportBatchRunner`는 체크포인트의 다음 페이지부터 `fetcher -> importer -> checkpoint 저장` 순서로 순회한다. 페이지 처리 중 예외가 나면 해당 페이지는 완료로 기록하지 않아 재시작 시 같은 페이지부터 다시 처리한다.

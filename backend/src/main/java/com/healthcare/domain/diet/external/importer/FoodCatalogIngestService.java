@@ -60,9 +60,14 @@ public class FoodCatalogIngestService {
             FoodCatalog existing,
             FoodCatalog imported,
             FoodCatalogIngestCurationMode curationMode) {
+        boolean factsChanged = existing.recommendationFactsDifferFrom(imported);
         existing.updateSourceFactsFromImportedCatalog(imported);
         if (curationMode == FoodCatalogIngestCurationMode.REPLACE_FROM_IMPORT) {
             existing.updateCuration(imported.curation());
+        } else if (factsChanged) {
+            // PRESERVE 모드(공공데이터 재적재)에서 추천 후보의 핵심 사실이 바뀌면
+            // 기존 검수 근거가 무효화되므로 자격을 회수하고 재검증 대상으로 강등한다. (계획 §5.1)
+            existing.revokeRecommendationForStaleFacts();
         }
         foodCatalogRepository.save(existing);
     }

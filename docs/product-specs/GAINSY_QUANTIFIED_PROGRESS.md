@@ -13,10 +13,10 @@
 |---|---:|---|---|
 | 구현 API 수 | 74개 | Spring Controller의 method-level `@(Get/Post/Put/Patch/Delete)Mapping` 수. 관리자 API 포함, Actuator/정적 페이지 제외 | `backend/src/main/java/com/healthcare/**/*Controller.java` |
 | DB 테이블 수 | 23개 | Flyway migration의 `CREATE TABLE` 수. 인덱스/제약조건/뷰 제외 | `backend/src/main/resources/db/migration/` |
-| 외부 테스터 수 | 미기록 | App Store Connect/TestFlight 외부 테스터 그룹의 실제 초대·참여 인원 | 목표 5~10명은 `docs/exec-plans/APPSTORE_RELEASE_CHECKLIST.md`에만 존재 |
+| 외부 테스터 수 | 8명 | App Store Connect/TestFlight 외부 테스터 그룹의 실제 초대·참여 인원 | 운영주 보고(2026-06-19). App Store Connect 외부 테스터 그룹 기준 |
 | 발견·수정한 버그/운영 리스크 수 | 최소 14건 | 해결 완료로 문서화된 코드 리뷰·운영 장애·심사 리젝만 포함 | 백엔드 코드 리뷰 9건, App Store 재심사 거절 3건, 운영 502 1건, Redis 캐시 장애 1건 |
 | AWS 운영 기간 | 최소 35일 | 운영 도메인 장애가 문서화된 2026-05-15부터 기준일 2026-06-19까지 | `docs/operations/TROUBLESHOOTING.md`, `docs/retrospectives/2026-W20.md` |
-| 테스트 사용자 수 | 미기록 | 운영 DB, TestFlight, App Store Connect, 분석 도구에서 확인된 실제 사용자 수 | 로컬 테스트 fixture의 "테스터" 문자열은 제외 |
+| 사용자 수 | 12명 | 운영 DB, TestFlight, App Store Connect, 분석 도구에서 확인된 실제 사용자 수 | 운영주 보고(2026-06-19). 로컬 테스트 fixture의 "테스터" 문자열은 제외 |
 | AI 음식 분석 정확도 개선 수치 | 미측정 | 동일 benchmark set에서 baseline과 current의 음식 인식률·칼로리/영양소 오차를 비교해야 함 | 현재 릴리즈 노트에는 "정확도 향상" 표현만 있고 검증 수치 없음 |
 
 ---
@@ -87,10 +87,10 @@ rg -n "CREATE TABLE|create table" backend/src/main/resources/db/migration | wc -
 
 | 항목 | 필요한 근거 | 다음 액션 |
 |---|---|---|
-| 외부 테스터 수 | App Store Connect/TestFlight 외부 테스터 그룹 캡처 또는 export | 초대 수, 수락 수, smoke test 완료 수를 분리해서 기록 |
-| 테스트 사용자 수 | 운영 DB의 활성 사용자 수 또는 분석 도구 기준 | `가입 사용자`, `최근 7일 활성 사용자`, `기록 1회 이상 사용자`를 별도 지표로 정의 |
 | AI 음식 분석 정확도 | 고정된 식사 사진 benchmark set과 정답 라벨 | 음식 인식률, 칼로리 MAPE, 단백질/탄수화물/지방 MAPE를 baseline/current로 비교 |
 | AI 정확도 개선률 | 동일 데이터셋에서 이전 버전과 현재 버전 결과 | `(baseline error - current error) / baseline error`로 개선률 산출 |
+
+> 외부 테스터 수(8명)·사용자 수(12명)는 2026-06-19 운영주 보고로 §1에 기록했다. App Store Connect/운영 DB 캡처로 교차검증되면 근거를 갱신한다. 활성 사용자(최근 7일)·기록 1회 이상 사용자는 아직 별도 집계가 없으므로 단일 "사용자 수"로만 표기한다.
 
 ---
 
