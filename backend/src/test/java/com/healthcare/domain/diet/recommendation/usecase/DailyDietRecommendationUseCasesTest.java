@@ -44,6 +44,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DailyDietRecommendationUseCases 단위 테스트")
 class DailyDietRecommendationUseCasesTest {
@@ -59,6 +61,21 @@ class DailyDietRecommendationUseCasesTest {
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
+
+    @Test
+    @DisplayName("recommend는 스냅샷·이벤트를 저장하므로 쓰기 트랜잭션 경계를 가진다")
+    void recommend_hasWritableTransaction() throws NoSuchMethodException {
+        Transactional annotation = DailyDietRecommendationUseCases.class
+                .getMethod("recommend", Long.class, DailyDietRecommendationRequest.class)
+                .getAnnotation(Transactional.class);
+
+        assertThat(annotation)
+                .as("recommend는 메서드 레벨 @Transactional로 클래스 기본 readOnly를 오버라이드해야 한다")
+                .isNotNull();
+        assertThat(annotation.readOnly())
+                .as("스냅샷 INSERT가 read-only 트랜잭션에서 실패하지 않도록 readOnly=false 여야 한다")
+                .isFalse();
+    }
 
     @Test
     @DisplayName("필수 프로필 정보가 없으면 BusinessRuleViolationException을 던진다")

@@ -51,6 +51,8 @@ public class DailyDietRecommendationUseCases {
 
     private static final int REPETITION_LOOKBACK_DAYS = 7;
 
+    // 추천 생성 시 스냅샷·이벤트를 저장하므로 클래스 기본 readOnly 트랜잭션을 쓰기 트랜잭션으로 오버라이드한다.
+    @Transactional
     public DailyDietRecommendationResponse recommend(Long userId, DailyDietRecommendationRequest request) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessRuleViolationException("사용자를 찾을 수 없습니다."));

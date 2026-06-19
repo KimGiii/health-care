@@ -12123,6 +12123,39 @@
         }
       }
     },
+    "recommend.alternative.n" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative %d"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대안 %d"
+          }
+        }
+      }
+    },
+    "recommend.alternatives.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative Plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대안 식단"
+          }
+        }
+      }
+    },
     "recommend.cta" : {
       "localizations" : {
         "en" : {
@@ -12171,6 +12204,23 @@
         }
       }
     },
+    "recommend.error.feedback" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to send feedback."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "피드백 전송에 실패했습니다."
+          }
+        }
+      }
+    },
     "recommend.error.load" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12205,23 +12255,8 @@
         }
       }
     },
-    "recommend.error.feedback" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to send feedback."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "피드백 전송에 실패했습니다."
-          }
-        }
-      }
-    },
     "recommend.feedback.hardToPrepare" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12238,6 +12273,7 @@
       }
     },
     "recommend.feedback.noReason" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12254,6 +12290,7 @@
       }
     },
     "recommend.feedback.notHungry" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12270,6 +12307,7 @@
       }
     },
     "recommend.feedback.nutritionDislike" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12286,6 +12324,7 @@
       }
     },
     "recommend.feedback.portionWrong" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12302,6 +12341,7 @@
       }
     },
     "recommend.feedback.recentlyAte" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -12345,22 +12385,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "다시 추천받는 이유를 알려주세요"
-          }
-        }
-      }
-    },
-    "recommend.refresh.cta" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get New Recommendation"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "다시 추천받기"
           }
         }
       }
@@ -12410,6 +12434,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "식사 종류"
+          }
+        }
+      }
+    },
+    "recommend.refresh.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get New Recommendation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 추천받기"
           }
         }
       }
@@ -12541,38 +12581,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "합계"
-          }
-        }
-      }
-    },
-    "recommend.alternatives.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alternative Plans"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "대안 식단"
-          }
-        }
-      }
-    },
-    "recommend.alternative.n" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alternative %d"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "대안 %d"
           }
         }
       }
