@@ -104,15 +104,11 @@ public class FoodAllergenTagAdminOperations {
         if (request.source() == null) {
             throw new ValidationException("source는 필수입니다.");
         }
-        if (Boolean.TRUE.equals(request.allergenProfileVerified()) && !strictEligibleConfidence(request.confidenceLevel())) {
+        if (Boolean.TRUE.equals(request.allergenProfileVerified())
+                && !request.confidenceLevel().isProfileGrade()) {
             throw new ValidationException(
                     "allergenProfileVerified는 DIRECT_VERIFIED 또는 LABEL_DERIVED 태그에만 사용할 수 있습니다.");
         }
-    }
-
-    private boolean strictEligibleConfidence(AllergenConfidenceLevel confidenceLevel) {
-        return confidenceLevel == AllergenConfidenceLevel.DIRECT_VERIFIED
-                || confidenceLevel == AllergenConfidenceLevel.LABEL_DERIVED;
     }
 
     private void assertFoodExists(Long foodCatalogId) {

@@ -14,5 +14,13 @@ public enum AllergenConfidenceLevel {
     /** 음식별 식품재료량 DB 재료 분해 합집합 (v1.1+ 구현) */
     RECIPE_DERIVED,
     /** 검토 미완 (사용자 커스텀, 정보 부족) */
-    UNKNOWN
+    UNKNOWN;
+
+    /**
+     * 이 신뢰 수준이 완결 알러젠 프로필(allergen_profile_verified)과 strict 모드 통과의
+     * 근거가 될 수 있는지 여부. ADR-0001: DIRECT_VERIFIED 또는 LABEL_DERIVED만 허용한다.
+     */
+    public boolean isProfileGrade() {
+        return this == DIRECT_VERIFIED || this == LABEL_DERIVED;
+    }
 }

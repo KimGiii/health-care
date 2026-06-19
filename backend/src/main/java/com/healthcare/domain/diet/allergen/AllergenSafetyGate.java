@@ -58,11 +58,7 @@ public class AllergenSafetyGate {
 
     private boolean hasHighConfidenceVerifiedTag(AllergenContext ctx) {
         return ctx.tags().stream().anyMatch(t ->
-                t.isAllergenProfileVerified() && (
-                        t.getConfidenceLevel() == AllergenConfidenceLevel.DIRECT_VERIFIED ||
-                        t.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
-                )
-        );
+                t.isAllergenProfileVerified() && t.getConfidenceLevel().isProfileGrade());
     }
 
     private boolean profileIsVerified(AllergenContext ctx) {

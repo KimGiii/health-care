@@ -63,10 +63,8 @@ public class FoodAllergenProfile {
     }
 
     public boolean isVerifiedAt(OffsetDateTime referenceTime) {
-        boolean highConfidence = confidenceLevel == AllergenConfidenceLevel.DIRECT_VERIFIED
-                || confidenceLevel == AllergenConfidenceLevel.LABEL_DERIVED;
         boolean reviewStarted = reviewedAt != null && !reviewedAt.isAfter(referenceTime);
         boolean notExpired = validUntil == null || validUntil.isAfter(referenceTime);
-        return highConfidence && reviewStarted && notExpired && invalidatedAt == null;
+        return confidenceLevel.isProfileGrade() && reviewStarted && notExpired && invalidatedAt == null;
     }
 }
