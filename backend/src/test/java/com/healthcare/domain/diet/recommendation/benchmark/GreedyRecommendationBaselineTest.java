@@ -10,6 +10,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("현행 greedy 추천 benchmark")
 class GreedyRecommendationBaselineTest {
 
+    /**
+     * 2026-06-18 측정된 현행 greedy 엔진의 고정 baseline 스냅샷.
+     * 엔진·정책을 교체할 때 이 스냅샷 대비 회귀가 없는지 {@link RecommendationBenchmarkRegressionGate}로 검증한다.
+     */
+    private static final RecommendationBenchmarkReport BASELINE_SNAPSHOT =
+            new RecommendationBenchmarkReport(6, 5, 8, 1, 1, 15, 0);
+
     private final RecommendationBenchmarkRunner runner = new RecommendationBenchmarkRunner(
             new DietRecommendationEngine(),
             new GoalAwareNutritionPolicy()
@@ -28,6 +35,15 @@ class GreedyRecommendationBaselineTest {
         assertThat(report.incompleteDataScenarioCount()).as("영양 데이터 결측 시나리오").isEqualTo(1);
         assertThat(report.unsupportedServingCount()).as("허용되지 않은 제공량").isEqualTo(15);
         assertThat(report.determinismViolationCount()).as("동일 조건 재현성 위반").isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("현행 엔진 shadow run은 박제된 baseline 대비 안전 지표 회귀가 없다")
+    void currentEngineHasNoRegressionAgainstBaseline() {
+        RecommendationBenchmarkReport candidate =
+                RecommendationBenchmarkReport.from(runner.run(RecommendationBenchmarkFixtures.v1()));
+
+        RecommendationBenchmarkRegressionGate.assertNoSafetyRegression(BASELINE_SNAPSHOT, candidate);
     }
 
     @Test

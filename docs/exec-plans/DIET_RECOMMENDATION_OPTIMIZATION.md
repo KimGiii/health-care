@@ -358,7 +358,9 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 - [x] 조건별 실패 커버리지 기반 검증 큐 (Unit 2)
   - `RevalidationQueueService`: 자동 회수 항목(`REVOKED_STALE_FACTS`)과 신선도 만료 추천 후보(`DATA_EXPIRED`)를 사유 우선·usageCount 내림차순으로 집계. `GET /api/v1/admin/diet/candidate-pool/revalidation-queue` (admin 토큰 가드).
   - `VerificationPriorityService`: priorityScore에 `coverageWeight`(후보 부족 카테고리 2, 충분 1) 추가 — §5.3 incremental feasibility coverage 근사. `UNDERREPRESENTED_THRESHOLD`를 `CandidatePoolSummary`와 공유.
-- [ ] benchmark shadow run과 단계적 승격 (Unit 3)
+- [x] benchmark shadow run과 단계적 승격 (Unit 3)
+  - `RecommendationBenchmarkRegressionGate`: 후보(candidate)를 baseline과 같은 고정 시나리오로 shadow run 후 배포 차단 안전 지표가 하나라도 악화되지 않았는지 검증(회귀 0 = 승격 가능). `assertDeployable`(절대 0)과 분리된 점진 승격 게이트.
+  - `GreedyRecommendationBaselineTest`: 박제된 baseline 스냅샷 대비 현행 엔진 shadow run의 안전 회귀 없음을 검증 — 엔진·정책 교체 시 회귀 감지.
 - [ ] 온라인 지표를 이용한 순위 가중치 조정 (Unit 4)
 
 완료 기준: 안전 위반 없이 주요 조건의 추천 성공률과 기록 전환율이 지속적으로 개선된다.
