@@ -1,7 +1,7 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
 작성일: 2026-06-18
-상태: Phase 1~4 완료, Phase 5 진행 중
+상태: Phase 1~4 완료, Phase 5 메커니즘 완료 (온라인 가중치 튜닝은 운영 데이터 후속)
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
@@ -361,9 +361,12 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 - [x] benchmark shadow run과 단계적 승격 (Unit 3)
   - `RecommendationBenchmarkRegressionGate`: 후보(candidate)를 baseline과 같은 고정 시나리오로 shadow run 후 배포 차단 안전 지표가 하나라도 악화되지 않았는지 검증(회귀 0 = 승격 가능). `assertDeployable`(절대 0)과 분리된 점진 승격 게이트.
   - `GreedyRecommendationBaselineTest`: 박제된 baseline 스냅샷 대비 현행 엔진 shadow run의 안전 회귀 없음을 검증 — 엔진·정책 교체 시 회귀 감지.
-- [ ] 온라인 지표를 이용한 순위 가중치 조정 (Unit 4)
+- [x] 온라인 지표를 이용한 순위 가중치 조정 — 메커니즘 (Unit 4)
+  - `FoodEngagementStat`: 식품별 전환(recorded)·회피(refreshed) 집계 결과 계약.
+  - `OnlinePreferencePolicy`: 집계 통계를 식품별 penalty(전환↑ 우대, 회피↑ 불이익)로 변환. `UserRepetitionPolicy`와 같은 `penaltyScore` 모양으로 엔진 점수화 seam에 합류 가능. 신호 없으면 무영향(`noSignals`).
+  - **이후 작업**: 추천 이벤트는 현재 snapshot 단위라 식품별 매핑이 없다. 식품별 집계 파이프라인(스냅샷 항목-식품 연결 보강)과 엔진 실제 통합·가중치 튜닝은 운영 이벤트가 쌓인 뒤 benchmark 회귀 게이트(Unit 3)로 검증하며 단계적으로 반영한다.
 
-완료 기준: 안전 위반 없이 주요 조건의 추천 성공률과 기록 전환율이 지속적으로 개선된다.
+완료 기준: 안전 위반 없이 주요 조건의 추천 성공률과 기록 전환율이 지속적으로 개선된다. (온라인 튜닝은 운영 데이터 확보 후 지속)
 
 ## 13. 명시적 제외 범위
 
