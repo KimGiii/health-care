@@ -33,7 +33,10 @@ class FoodCatalogIngestServiceTest {
 
     @BeforeEach
     void setUp() {
-        ingestService = new FoodCatalogIngestService(foodCatalogRepository);
+        ingestService = new FoodCatalogIngestService(
+                foodCatalogRepository,
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
+                new ServingOptionDeriver());
     }
 
     @Test

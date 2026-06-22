@@ -37,7 +37,10 @@ class BrandMenuCsvImporterTest {
         repository = mock(FoodCatalogRepository.class);
         allergenTagRepository = mock(FoodAllergenTagRepository.class);
         importer = new BrandMenuCsvImporter(
-                new FoodCatalogIngestService(repository),
+                new FoodCatalogIngestService(
+                        repository,
+                        mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
+                        new ServingOptionDeriver()),
                 allergenTagRepository
         );
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));

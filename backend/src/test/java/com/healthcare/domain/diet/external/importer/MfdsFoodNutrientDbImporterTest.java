@@ -34,7 +34,10 @@ class MfdsFoodNutrientDbImporterTest {
 
     @BeforeEach
     void setUp() {
-        importer = new MfdsFoodNutrientDbImporter(new FoodCatalogIngestService(foodCatalogRepository));
+        importer = new MfdsFoodNutrientDbImporter(new FoodCatalogIngestService(
+                foodCatalogRepository,
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
+                new ServingOptionDeriver()));
     }
 
     @Test

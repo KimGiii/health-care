@@ -34,7 +34,10 @@ class StandardProcessedFoodImporterTest {
 
     @BeforeEach
     void setUp() {
-        importer = new StandardProcessedFoodImporter(new FoodCatalogIngestService(foodCatalogRepository));
+        importer = new StandardProcessedFoodImporter(new FoodCatalogIngestService(
+                foodCatalogRepository,
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
+                new ServingOptionDeriver()));
     }
 
     @Test

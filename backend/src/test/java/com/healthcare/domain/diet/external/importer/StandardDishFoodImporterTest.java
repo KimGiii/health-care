@@ -32,7 +32,10 @@ class StandardDishFoodImporterTest {
 
     @BeforeEach
     void setUp() {
-        importer = new StandardDishFoodImporter(new FoodCatalogIngestService(foodCatalogRepository));
+        importer = new StandardDishFoodImporter(new FoodCatalogIngestService(
+                foodCatalogRepository,
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
+                new ServingOptionDeriver()));
     }
 
     @Test
