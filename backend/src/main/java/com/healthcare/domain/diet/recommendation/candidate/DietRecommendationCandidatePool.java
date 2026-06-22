@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * 식단 추천 후보 풀 Module.
@@ -57,34 +56,62 @@ public class DietRecommendationCandidatePool {
         Map<Long, FoodAllergenProfile> profilesByFoodId = loadProfiles(catalogCandidates, parsed);
         Map<Long, List<FoodServingOption>> optionsByFoodId = loadServingOptions(catalogCandidates);
 
-        // DB Spec이 foodIds·categories·canonical을 먼저 제거하고, 아래는 Mock 환경 안전망이다.
+        // DB Spec이 foodIds·categories·canonical을 먼저 제거하고, 아래는 Mock 환경 안전망 겸
+        // 실패 분류용 단계별 진단 집계다(계획 리뷰 P0-3).
         // keywords·allergen·freshness는 DB Spec 대응이 없어 인메모리만 적용한다.
-        List<DietRecommendationCandidate> candidates = catalogCandidates.stream()
-                .filter(food -> food.getCaloriesPer100g() != null)
-                .filter(food -> food.getCanonicalGroupId() == null)
-                .filter(food -> !parsed.foodIds().contains(food.getId()))
-                .filter(food -> !parsed.categories().contains(food.getCategory()))
-                .filter(food -> dataFreshnessPolicy.isCurrent(food))
-                .filter(food -> !matchesKeyword(food, parsed.keywords()))
-                .flatMap(food -> {
-                    AllergenContext ctx = new AllergenContext(
-                            food.getId(),
-                            parsed.allergenTags(),
-                            tagsByFoodId.getOrDefault(food.getId(), List.of()),
-                            profilesByFoodId.get(food.getId()),
-                            parsed.strictAllergyMode()
-                    );
-                    SafetyDecision decision = allergenSafetyGate.decide(ctx);
-                    return decision.passes()
-                            ? Stream.of(DietRecommendationCandidate.from(
-                                    food,
-                                    decision.confidence(),
-                                    optionsByFoodId.getOrDefault(food.getId(), List.of())))
-                            : Stream.empty();
-                })
-                .toList();
+        List<DietRecommendationCandidate> candidates = new java.util.ArrayList<>();
+        int restrictionFiltered = 0;
+        int freshnessExpired = 0;
+        int incompleteMacro = 0;
+        int allergenRejected = 0;
 
-        return new DietRecommendationCandidates(candidates);
+        for (FoodCatalog food : catalogCandidates) {
+            if (food.getCaloriesPer100g() == null) {
+                incompleteMacro++;
+                continue;
+            }
+            if (food.getCanonicalGroupId() != null) {
+                // canonical 비대표 후보는 dedup 대상이라 사유로 집계하지 않는다.
+                continue;
+            }
+            if (parsed.foodIds().contains(food.getId())
+                    || parsed.categories().contains(food.getCategory())
+                    || matchesKeyword(food, parsed.keywords())) {
+                restrictionFiltered++;
+                continue;
+            }
+            if (!dataFreshnessPolicy.isCurrent(food)) {
+                freshnessExpired++;
+                continue;
+            }
+
+            AllergenContext ctx = new AllergenContext(
+                    food.getId(),
+                    parsed.allergenTags(),
+                    tagsByFoodId.getOrDefault(food.getId(), List.of()),
+                    profilesByFoodId.get(food.getId()),
+                    parsed.strictAllergyMode()
+            );
+            SafetyDecision decision = allergenSafetyGate.decide(ctx);
+            if (!decision.passes()) {
+                allergenRejected++;
+                continue;
+            }
+
+            DietRecommendationCandidate candidate = DietRecommendationCandidate.from(
+                    food,
+                    decision.confidence(),
+                    optionsByFoodId.getOrDefault(food.getId(), List.of()));
+            // 핵심 매크로 결측 후보는 풀에 포함하되(엔진이 hard filter), 진단에는 결측으로 집계한다.
+            if (!candidate.macroDataComplete()) {
+                incompleteMacro++;
+            }
+            candidates.add(candidate);
+        }
+
+        CandidatePoolDiagnostics diagnostics = new CandidatePoolDiagnostics(
+                candidates.size(), restrictionFiltered, freshnessExpired, incompleteMacro, allergenRejected);
+        return new DietRecommendationCandidates(List.copyOf(candidates), diagnostics);
     }
 
     private List<FoodCatalog> loadCatalogCandidates(CandidateRestrictions restrictions) {

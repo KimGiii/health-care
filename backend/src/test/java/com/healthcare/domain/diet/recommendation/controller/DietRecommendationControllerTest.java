@@ -78,7 +78,7 @@ class DietRecommendationControllerTest {
                 false
         );
         NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
-        DailyDietRecommendationResponse response = new DailyDietRecommendationResponse(
+        DailyDietRecommendationResponse response = DailyDietRecommendationResponse.of(
                 LocalDate.now(),
                 targets,
                 targets,
@@ -86,8 +86,8 @@ class DietRecommendationControllerTest {
                 List.of(),
                 new NutrientSummary(1800.0, 130.0, 210.0, 60.0),
                 null,
+                null,
                 false,
-                "이 추천은 참고용입니다.",
                 List.of(),
                 1L
         );

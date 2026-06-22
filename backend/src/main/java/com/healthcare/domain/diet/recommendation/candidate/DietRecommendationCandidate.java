@@ -97,6 +97,19 @@ public record DietRecommendationCandidate(
         return Math.max(MIN_SERVING_G, Math.min(MAX_SERVING_G, rounded));
     }
 
+    /**
+     * 추천이 선택할 수 있는 검증된 제공량(g) 후보. 공식 1회 제공량 multiplier·개수·g-step이
+     * 여기에 전개되어 있다. 비어 있으면 제공량 근거가 없는 식품이므로 추천 대상이 아니다(§7.1).
+     */
+    public List<Double> verifiedServingGramOptions() {
+        return servingOptions.stream()
+                .filter(ServingOptionSnapshot::verified)
+                .map(ServingOptionSnapshot::equivalentG)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
     private static long stableFoodKey(FoodCatalog food) {
         if (food.getId() != null) {
             return food.getId();

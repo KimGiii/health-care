@@ -11,7 +11,13 @@ import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCan
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
-import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.dto.RecommendedFoodEntry;
+import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
+import com.healthcare.domain.diet.recommendation.engine.ConstraintRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationFailureReason;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationRationale;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.repository.DietLogRepository;
@@ -19,21 +25,18 @@ import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.RestrictionType;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
-import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
-import com.healthcare.domain.nutrition.dto.NutritionTargets;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -57,7 +61,7 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private DietRecommendationCandidatePool candidatePool;
     @Mock private RecommendationSnapshotStore snapshotStore;
     @Mock private FoodEntryRepository foodEntryRepository;
-    @Spy  private DietRecommendationEngine engine = new DietRecommendationEngine();
+    @Mock private ConstraintRecommendationEngine engine;
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
@@ -78,15 +82,19 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     @Test
-    @DisplayName("필수 프로필 정보가 없으면 BusinessRuleViolationException을 던진다")
-    void recommend_incompleteProfile_throws() {
+    @DisplayName("필수 프로필 정보가 없으면 TARGET_PROFILE_MISSING 실패 응답을 반환한다")
+    void recommend_incompleteProfile_returnsStructuredFailure() {
         User user = User.builder().id(1L).email("a@b.com").displayName("test").build(); // 프로필 미완
         given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
 
-        var request = request(List.of(MealType.BREAKFAST, MealType.LUNCH));
-        assertThatThrownBy(() -> useCases.recommend(1L, request))
-                .isInstanceOf(BusinessRuleViolationException.class)
-                .hasMessageContaining("프로필");
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.BREAKFAST, MealType.LUNCH)));
+
+        assertThat(response.succeeded()).isFalse();
+        assertThat(response.failureCode())
+                .isEqualTo(RecommendationFailureReason.TARGET_PROFILE_MISSING.name());
+        assertThat(response.meals()).isEmpty();
     }
 
     @Test
@@ -101,12 +109,9 @@ class DailyDietRecommendationUseCasesTest {
     @Test
     @DisplayName("프로필이 완전하면 추천을 생성하고 응답을 반환한다")
     void recommend_completeProfile_returnsRecommendation() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        stubCommon();
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER), 0);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)));
@@ -114,17 +119,15 @@ class DailyDietRecommendationUseCasesTest {
         assertThat(response).isNotNull();
         assertThat(response.meals()).hasSize(3);
         assertThat(response.appliedRestrictions()).isEmpty();
+        assertThat(response.rationale()).isNotNull();
     }
 
     @Test
     @DisplayName("추천 후보 풀 Module에서 후보를 로드한다")
     void recommend_loadsCandidatesFromCandidatePool() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        stubCommon();
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST), 0);
 
         useCases.recommend(1L, request(List.of(MealType.BREAKFAST)));
 
@@ -134,16 +137,16 @@ class DailyDietRecommendationUseCasesTest {
     @Test
     @DisplayName("알러젠 제한이 있으면 응답에 적용된 제한 조건이 포함된다")
     void recommend_withRestrictions_appliedRestrictionsInResponse() {
-        User user = fullProfileUser();
         DietRestriction restriction = DietRestriction.builder()
                 .id(1L).userId(1L).restrictionType(RestrictionType.ALLERGY)
                 .targetType(TargetType.ALLERGEN_TAG).allergenTag(AllergenTag.MILK)
                 .build();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of(restriction));
         given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH), 0);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.LUNCH)));
@@ -152,50 +155,48 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     @Test
-    @DisplayName("제한 적용 후 추천 후보가 없으면 BusinessRuleViolationException을 던진다")
-    void recommend_noCandidates_throws() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
-        given(candidatePool.load(any(), anyBoolean()))
-                .willReturn(new DietRecommendationCandidates(List.of()));
+    @DisplayName("제한 적용 후 추천 후보가 없으면 ALLERGEN_VERIFIED_POOL_INSUFFICIENT 실패 응답을 반환한다")
+    void recommend_noCandidates_returnsStructuredFailure() {
+        stubCommon();
+        // 알러젠 게이트에서 모두 탈락 → 통과 0, 지배 원인 ALLERGEN
+        given(candidatePool.load(any(), anyBoolean())).willReturn(new DietRecommendationCandidates(
+                List.of(),
+                new com.healthcare.domain.diet.recommendation.candidate.CandidatePoolDiagnostics(
+                        0, 0, 0, 0, 5)));
 
-        assertThatThrownBy(() -> useCases.recommend(1L, request(List.of(MealType.BREAKFAST))))
-                .isInstanceOf(BusinessRuleViolationException.class)
-                .hasMessageContaining("후보");
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.BREAKFAST)));
+
+        assertThat(response.succeeded()).isFalse();
+        assertThat(response.failureCode())
+                .isEqualTo(RecommendationFailureReason.ALLERGEN_VERIFIED_POOL_INSUFFICIENT.name());
     }
 
     @Test
-    @DisplayName("추천 결과가 영양 목표를 충족하지 못하면 failureReason이 포함된 응답을 반환한다")
-    void recommend_targetMismatch_returnsFailureReason() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
-        given(candidatePool.load(any(), anyBoolean()))
-                .willReturn(new DietRecommendationCandidates(List.of(
-                        food(1L, "오이", FoodCategory.VEGETABLE, 1.0)
-                )));
+    @DisplayName("엔진이 구조화된 실패를 반환하면 failureCode·failureReason 응답을 반환한다")
+    void recommend_engineFailure_returnsFailureReason() {
+        stubCommon();
+        given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
+                .willReturn(RecommendationResult.failure(
+                        RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE));
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.BREAKFAST)));
 
         assertThat(response.succeeded()).isFalse();
         assertThat(response.failureReason()).isNotBlank();
+        assertThat(response.failureCode())
+                .isEqualTo(RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE.name());
     }
 
     @Test
     @DisplayName("당일 이미 섭취한 영양량이 있으면 응답에 남은 목표가 반영된다")
     void recommend_withConsumedNutrients_remainingTargetsReflected() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
 
-        // 아침에 이미 500kcal 섭취한 기록
         DietLog breakfastLog = DietLog.builder()
                 .userId(1L).logDate(LocalDate.now()).mealType(MealType.BREAKFAST)
                 .totalCalories(500.0).totalProteinG(30.0).totalCarbsG(60.0).totalFatG(15.0)
@@ -203,11 +204,11 @@ class DailyDietRecommendationUseCasesTest {
         given(dietLogRepository.findByUserIdAndLogDate(1L, LocalDate.now()))
                 .willReturn(List.of(breakfastLog));
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH, MealType.DINNER), 0);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.LUNCH, MealType.DINNER)));
 
-        // 응답에 남은 목표가 포함되어야 한다
         assertThat(response.remainingTargets()).isNotNull();
         assertThat(response.remainingTargets().calorieTarget())
                 .isLessThan(response.targets().calorieTarget());
@@ -216,12 +217,10 @@ class DailyDietRecommendationUseCasesTest {
     @Test
     @DisplayName("당일 칼로리 목표를 이미 달성했으면 추천 없이 달성 안내 failureReason을 반환한다")
     void recommend_caloriesAlreadyMet_returnsGoalAchievedFailureReason() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
 
-        // 이미 하루 칼로리 목표(약 2500kcal)를 초과 섭취한 기록
         DietLog heavyLog = DietLog.builder()
                 .userId(1L).logDate(LocalDate.now()).mealType(MealType.LUNCH)
                 .totalCalories(3000.0).totalProteinG(200.0).totalCarbsG(350.0).totalFatG(100.0)
@@ -238,14 +237,12 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     @Test
-    @DisplayName("remainingTargets가 모두 0이 아니지만 candidatePool이 비면 noCandidates 예외다")
+    @DisplayName("남은 목표가 있으면 정상 추천 응답을 반환한다")
     void recommend_goalsPartiallyMet_stillRecommends() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
         given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
 
-        // 칼로리는 절반만 소비
         DietLog halfLog = DietLog.builder()
                 .userId(1L).logDate(LocalDate.now()).mealType(MealType.BREAKFAST)
                 .totalCalories(800.0).totalProteinG(50.0).totalCarbsG(100.0).totalFatG(25.0)
@@ -253,26 +250,21 @@ class DailyDietRecommendationUseCasesTest {
         given(dietLogRepository.findByUserIdAndLogDate(1L, LocalDate.now()))
                 .willReturn(List.of(halfLog));
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH, MealType.DINNER), 0);
 
-        // 남은 목표가 있으므로 정상 추천 응답을 반환해야 한다
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.LUNCH, MealType.DINNER)));
 
         assertThat(response.meals()).hasSize(2);
-        assertThat(response.remainingTargets().calorieTarget())
-                .isGreaterThan(0);
+        assertThat(response.remainingTargets().calorieTarget()).isGreaterThan(0);
     }
 
     @Test
     @DisplayName("alternativeCount=2 요청 시 응답에 2개의 대안 식단이 포함된다")
     void recommend_alternativeCount2_responseContainsTwoAlternatives() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
-        // LUNCH 1끼 × 대안 2개 → 후보 6개로 충분 (각 대안 3슬롯 × 2 = 6)
+        stubCommon();
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH), 2);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 requestWithAlternatives(List.of(MealType.LUNCH), 2));
@@ -281,27 +273,15 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     @Test
-    @DisplayName("후보가 부족해 alternativeCount보다 적은 대안이 생성되면 실제 생성된 수만큼 반환된다")
-    void recommend_alternativeCountExceedsCandidates_returnsFewerAlternatives() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
-        // 후보 6개 — LUNCH 1끼 3슬롯 기준 최대 2개 대안 가능
-        given(candidatePool.load(any(), anyBoolean())).willReturn(new DietRecommendationCandidates(List.of(
-                food(1L, "현미밥",   FoodCategory.GRAIN,          350.0),
-                food(2L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 165.0),
-                food(3L, "브로콜리", FoodCategory.VEGETABLE,       34.0),
-                food(4L, "보리밥",   FoodCategory.GRAIN,          340.0),
-                food(5L, "두부",     FoodCategory.PROTEIN_SOURCE,  76.0),
-                food(6L, "시금치",   FoodCategory.VEGETABLE,       23.0)
-        )));
+    @DisplayName("엔진이 요청보다 적은 대안을 반환하면 실제 생성된 수만큼 반환된다")
+    void recommend_fewerAlternatives_returnsActualCount() {
+        stubCommon();
+        given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH), 1); // primary + 1 대안만
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 requestWithAlternatives(List.of(MealType.LUNCH), 5));
 
-        // 요청 5개지만 후보 소진으로 실제 가능한 수만 반환
         assertThat(response.alternatives()).hasSizeLessThan(5);
         assertThat(response.alternatives()).isNotEmpty();
     }
@@ -309,12 +289,9 @@ class DailyDietRecommendationUseCasesTest {
     @Test
     @DisplayName("alternativeCount=0(기본값) 요청 시 alternatives는 빈 리스트다")
     void recommend_defaultRequest_alternativesEmpty() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        stubCommon();
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER), 0);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)));
@@ -325,12 +302,9 @@ class DailyDietRecommendationUseCasesTest {
     @Test
     @DisplayName("당일 섭취 기록이 없으면 남은 목표는 원래 목표와 같다")
     void recommend_noConsumed_remainingEqualsFullTargets() {
-        User user = fullProfileUser();
-        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
-        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
-        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
-        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        stubCommon();
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER), 0);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
                 request(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)));
@@ -340,6 +314,40 @@ class DailyDietRecommendationUseCasesTest {
     }
 
     // ─── 헬퍼 ───
+
+    private void stubCommon() {
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+    }
+
+    private void givenEngineSucceeds(List<MealType> mealTypes, int alternativeCount) {
+        given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
+                .willReturn(success(mealTypes, alternativeCount));
+    }
+
+    private RecommendationResult success(List<MealType> mealTypes, int alternativeCount) {
+        List<RecommendationSolution> solutions = new ArrayList<>();
+        for (int s = 0; s <= alternativeCount; s++) {
+            solutions.add(solution(mealTypes));
+        }
+        return RecommendationResult.success(solutions);
+    }
+
+    private RecommendationSolution solution(List<MealType> mealTypes) {
+        List<RecommendedMeal> meals = mealTypes.stream().map(this::meal).toList();
+        RecommendationRationale rationale = new RecommendationRationale(
+                500, 40, 60, 100.0, 5.0, "2026-06-18.v1", "테스트 근거");
+        return new RecommendationSolution(meals, rationale);
+    }
+
+    private RecommendedMeal meal(MealType type) {
+        RecommendedFoodEntry item = new RecommendedFoodEntry(
+                1L, "food", null, FoodCategory.GRAIN, 100, 250, 20, 10, 5,
+                AllergenConfidenceLevel.UNKNOWN, null);
+        return new RecommendedMeal(type, 250, 250, 20, 10, 5, List.of(item));
+    }
 
     private DailyDietRecommendationRequest request(List<MealType> mealTypes) {
         return new DailyDietRecommendationRequest(LocalDate.now(), mealTypes, false);
@@ -359,39 +367,20 @@ class DailyDietRecommendationUseCasesTest {
                 .build();
     }
 
-    private List<DietRecommendationCandidate> diverseFoods() {
-        return List.of(
+    private DietRecommendationCandidates candidateSet() {
+        return new DietRecommendationCandidates(List.of(
                 food(1L, "닭가슴살", FoodCategory.PROTEIN_SOURCE, 250.0),
                 food(2L, "현미밥", FoodCategory.GRAIN, 250.0),
                 food(3L, "브로콜리", FoodCategory.VEGETABLE, 250.0),
                 food(4L, "사과", FoodCategory.FRUIT, 250.0),
                 food(5L, "두부", FoodCategory.PROTEIN_SOURCE, 250.0),
                 food(6L, "고구마", FoodCategory.GRAIN, 250.0)
-        );
-    }
-
-    private DietRecommendationCandidates candidateSet() {
-        return new DietRecommendationCandidates(diverseFoods());
+        ));
     }
 
     private DietRecommendationCandidate food(Long id, String name, FoodCategory category, double cal) {
         return new DietRecommendationCandidate(
-                id,
-                name,
-                null,
-                category,
-                cal,
-                20.0,
-                10.0,
-                5.0,
-                0L,
-                id,
-                AllergenConfidenceLevel.UNKNOWN,
-                null,
-                true,
-                List.of(),
-                false
-        );
+                id, name, null, category, cal, 20.0, 10.0, 5.0, 0L, id,
+                AllergenConfidenceLevel.UNKNOWN, null, true, List.of(), true);
     }
-
 }

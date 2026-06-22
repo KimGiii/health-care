@@ -26,7 +26,11 @@ public class OnlinePreferencePolicy {
     }
 
     public double penaltyScore(DietRecommendationCandidate candidate) {
-        FoodEngagementStat stat = statsByFoodId.get(candidate.foodCatalogId());
+        return penaltyScore(candidate.foodCatalogId());
+    }
+
+    public double penaltyScore(long foodCatalogId) {
+        FoodEngagementStat stat = statsByFoodId.get(foodCatalogId);
         if (stat == null) {
             return 0.0;
         }

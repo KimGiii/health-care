@@ -6,7 +6,12 @@ import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCan
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
-import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.dto.RecommendedFoodEntry;
+import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
+import com.healthcare.domain.diet.recommendation.engine.ConstraintRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationRationale;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
@@ -21,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -31,6 +35,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -46,7 +51,7 @@ class DailyDietRecommendationSnapshotIntegrationTest {
     @Mock private DietRecommendationCandidatePool candidatePool;
     @Mock private RecommendationSnapshotStore snapshotStore;
     @Mock private FoodEntryRepository foodEntryRepository;
-    @Spy  private DietRecommendationEngine engine = new DietRecommendationEngine();
+    @Mock private ConstraintRecommendationEngine engine;
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
@@ -60,6 +65,7 @@ class DailyDietRecommendationSnapshotIntegrationTest {
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
         given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER));
         given(snapshotStore.save(any(), any(), any(), any(), anyBoolean())).willReturn(77L);
 
         DailyDietRecommendationResponse response = useCases.recommend(1L,
@@ -79,6 +85,7 @@ class DailyDietRecommendationSnapshotIntegrationTest {
         given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
         given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
         given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.LUNCH));
         given(snapshotStore.save(any(), any(), any(), any(), anyBoolean())).willReturn(1L);
 
         useCases.recommend(1L,
@@ -94,6 +101,18 @@ class DailyDietRecommendationSnapshotIntegrationTest {
     }
 
     // ─── 헬퍼 ───
+
+    private void givenEngineSucceeds(List<MealType> mealTypes) {
+        List<RecommendedMeal> meals = mealTypes.stream()
+                .map(type -> new RecommendedMeal(type, 250, 250, 20, 10, 5, List.of(
+                        new RecommendedFoodEntry(1L, "food", null, FoodCategory.GRAIN,
+                                100, 250, 20, 10, 5, AllergenConfidenceLevel.UNKNOWN, null))))
+                .toList();
+        RecommendationSolution solution = new RecommendationSolution(meals,
+                new RecommendationRationale(250, 20, 10, 100.0, 5.0, "2026-06-18.v1", "테스트"));
+        given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
+                .willReturn(RecommendationResult.success(List.of(solution)));
+    }
 
     private User fullProfileUser() {
         return User.builder()
@@ -116,6 +135,6 @@ class DailyDietRecommendationSnapshotIntegrationTest {
     private DietRecommendationCandidate food(Long id, String name, FoodCategory cat, double cal) {
         return new DietRecommendationCandidate(
                 id, name, null, cat, cal, 20.0, 10.0, 5.0, 0L, id,
-                AllergenConfidenceLevel.UNKNOWN, null, true, List.of(), false);
+                AllergenConfidenceLevel.UNKNOWN, null, true, List.of(), true);
     }
 }

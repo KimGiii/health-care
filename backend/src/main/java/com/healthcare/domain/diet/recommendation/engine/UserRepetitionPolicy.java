@@ -19,7 +19,11 @@ public class UserRepetitionPolicy {
     }
 
     public double penaltyScore(DietRecommendationCandidate candidate) {
-        return recentlyConsumedFoodIds.contains(candidate.foodCatalogId()) ? RECENT_PENALTY : 0.0;
+        return penaltyScore(candidate.foodCatalogId());
+    }
+
+    public double penaltyScore(long foodCatalogId) {
+        return recentlyConsumedFoodIds.contains(foodCatalogId) ? RECENT_PENALTY : 0.0;
     }
 
     public static UserRepetitionPolicy noRestrictions() {

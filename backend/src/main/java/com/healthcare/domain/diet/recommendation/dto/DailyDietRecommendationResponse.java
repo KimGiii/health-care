@@ -1,5 +1,7 @@
 package com.healthcare.domain.diet.recommendation.dto;
 
+import com.healthcare.domain.diet.recommendation.engine.RecommendationRationale;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
 
@@ -14,9 +16,14 @@ public record DailyDietRecommendationResponse(
         List<RecommendedMeal> meals,
         NutrientSummary totalNutrients,
         String failureReason,
+        /** 구조화된 실패 사유 코드(§8.3). 성공·이미달성 시 null. */
+        String failureCode,
+        /** 추천 근거(§10). primary 해 기준. 실패 시 null. */
+        RecommendationRationale rationale,
         boolean strictAllergyMode,
         String disclaimer,
-        List<List<RecommendedMeal>> alternatives,
+        /** 대안 해 — 각자 끼니 구성과 근거를 함께 보유한다(리뷰 P1-5). */
+        List<RecommendationSolution> alternatives,
         Long snapshotId
 ) {
     public static final String DISCLAIMER =
@@ -32,13 +39,14 @@ public record DailyDietRecommendationResponse(
             List<RecommendedMeal> meals,
             NutrientSummary totalNutrients,
             String failureReason,
+            RecommendationRationale rationale,
             boolean strictAllergyMode,
-            List<List<RecommendedMeal>> alternatives,
+            List<RecommendationSolution> alternatives,
             Long snapshotId
     ) {
         return new DailyDietRecommendationResponse(
                 date, targets, remainingTargets, appliedRestrictions, meals,
-                totalNutrients, failureReason, strictAllergyMode, DISCLAIMER,
+                totalNutrients, failureReason, null, rationale, strictAllergyMode, DISCLAIMER,
                 alternatives, snapshotId);
     }
 
@@ -53,7 +61,23 @@ public record DailyDietRecommendationResponse(
     ) {
         return new DailyDietRecommendationResponse(
                 date, targets, remainingTargets, appliedRestrictions,
-                List.of(), new NutrientSummary(0, 0, 0, 0), reason,
+                List.of(), new NutrientSummary(0, 0, 0, 0), reason, null, null,
+                strictAllergyMode, DISCLAIMER, List.of(), null);
+    }
+
+    /** 구조화된 실패 응답(§8.3). 끼니·대안·근거·스냅샷 없음. */
+    public static DailyDietRecommendationResponse failure(
+            LocalDate date,
+            NutritionTargets targets,
+            NutritionTargets remainingTargets,
+            List<DietRestrictionResponse> appliedRestrictions,
+            boolean strictAllergyMode,
+            String failureCode,
+            String failureReason
+    ) {
+        return new DailyDietRecommendationResponse(
+                date, targets, remainingTargets, appliedRestrictions,
+                List.of(), new NutrientSummary(0, 0, 0, 0), failureReason, failureCode, null,
                 strictAllergyMode, DISCLAIMER, List.of(), null);
     }
 
