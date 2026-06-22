@@ -3,6 +3,13 @@
 > 근거 데이터: [FOOD_API_CENSUS_DEDUP_PROFILE.md](../references/FOOD_API_CENSUS_DEDUP_PROFILE.md)
 > (3 API 전수 902,498행 → 고유 256,925~321,118, **그대로 적재 시 ~64~72% 잉여**)
 
+> **구현 상태(2026-06-22):** 메커니즘 구현 완료(이슈 #68). 단, 본 설계 §3의 `is_canonical`·
+> `superseded_by_id`는 **신설하지 않고** V35 `canonical_group_id`를 재사용한다(대표 = `canonical_group_id IS NULL`,
+> 패자 = 대표 id를 가리킴). 신설은 `dedup_group`·`dedup_name_key`·`dedup_state`(V39)뿐이다.
+> 근거: [backend ADR-0005](../../backend/docs/adr/0005-source-priority-dedup-canonical-reuse.md).
+> 따라서 §5의 후보 풀·검색 게이트는 기존 `canonical_group_id IS NULL` 필터를 그대로 쓴다(추가 술어 불필요).
+> **백필·전량 적재는 미실행**(검증 후 별도 수행).
+
 ## 1. 문제 (현 모델의 격차)
 
 현 적재 dedup은 `(source, food_code)` partial-unique 한 겹뿐이다
