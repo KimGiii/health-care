@@ -25,6 +25,7 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
             SELECT f FROM FoodCatalog f
             WHERE (:category IS NULL OR f.category = :category)
               AND (:customOnly = FALSE OR f.isCustom = TRUE)
+              AND (f.isCustom = TRUE OR f.canonicalGroupId IS NULL)
               AND (
                     :query IS NULL
                     OR LOWER(f.name)   LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
@@ -58,6 +59,32 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
 
     /** 외부/배치 적재 시 source + foodCode 기준으로 기존 카탈로그 항목을 찾는다. */
     Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode);
+
+    /**
+     * dedup 클러스터 (group, nameKey)의 현재 대표(canonical) 행을 찾는다.
+     * 대표 = canonical_group_id IS NULL. 부분 유니크 인덱스가 그룹·이름키당 1개를 보장한다.
+     */
+    @Query("""
+            SELECT f FROM FoodCatalog f
+            WHERE f.dedupGroup = :group
+              AND f.dedupNameKey = :nameKey
+              AND f.canonicalGroupId IS NULL
+            """)
+    Optional<FoodCatalog> findCanonical(
+            @Param("group")   String dedupGroup,
+            @Param("nameKey") String dedupNameKey
+    );
+
+    /** 같은 코드(group)의 모든 대표 행. 이름키가 다른 대표가 둘 이상이면 충돌(검토 대상)이다. */
+    @Query("""
+            SELECT f FROM FoodCatalog f
+            WHERE f.dedupGroup = :group
+              AND f.canonicalGroupId IS NULL
+            """)
+    List<FoodCatalog> findCanonicalsByGroup(@Param("group") String dedupGroup);
+
+    /** 검토 큐: 같은 코드·다른 이름 충돌로 표시된 대표 행을 조회한다(커스텀 제외). */
+    List<FoodCatalog> findByDedupStateAndIsCustomFalse(FoodCatalog.DedupState dedupState);
 
     /** 재검증 큐: 자동 자격 회수 등 특정 사유가 기록된 항목을 조회한다. */
     List<FoodCatalog> findByRecommendationReason(String recommendationReason);

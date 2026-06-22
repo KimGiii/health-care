@@ -40,7 +40,8 @@ class BrandMenuCsvImporterTest {
                 new FoodCatalogIngestService(
                         repository,
                         mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
-                        new ServingOptionDeriver()),
+                        new ServingOptionDeriver(),
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.external.dedup.CanonicalDedupResolver.class)),
                 allergenTagRepository
         );
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));

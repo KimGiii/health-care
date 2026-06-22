@@ -37,7 +37,8 @@ class MfdsFoodNutrientDbImporterTest {
         importer = new MfdsFoodNutrientDbImporter(new FoodCatalogIngestService(
                 foodCatalogRepository,
                 org.mockito.Mockito.mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
-                new ServingOptionDeriver()));
+                new ServingOptionDeriver(),
+                org.mockito.Mockito.mock(com.healthcare.domain.diet.external.dedup.CanonicalDedupResolver.class)));
     }
 
     @Test
