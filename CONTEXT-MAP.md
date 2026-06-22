@@ -2,6 +2,8 @@
 
 이 저장소의 에이전트용 도메인 문서 지도입니다. 작업을 시작하기 전에 관련 컨텍스트의 `CONTEXT.md`와 ADR 인덱스를 읽습니다.
 
+> 전체 문서를 카테고리별로 찾으려면 [`docs/README.md`](docs/README.md) 문서 인덱스를 참고합니다.
+
 ## Contexts
 
 | Context | Domain doc | ADR index | When to read |

@@ -174,9 +174,12 @@ gainsy/
 
 ## 문서
 
+전체 문서는 **[문서 인덱스](./docs/README.md)** 에서 카테고리별로 찾을 수 있습니다.
+
 | 문서 | 내용 |
 |------|------|
-| [현재 상태](./docs/CURRENT_STATUS.md) | 구현 진행률, 최근 변경사항, 남은 작업 |
+| [문서 인덱스](./docs/README.md) | 모든 문서 카탈로그 — 카테고리별 한눈에 보기 |
+| [정량 변화 지표](./docs/product-specs/GAINSY_QUANTIFIED_PROGRESS.md) | 구현 진행률, 운영·품질 수치 기준 문서 |
 | [아키텍처](./ARCHITECTURE.md) | 시스템 설계, 기술 결정 이유 |
 | [API 설계](./docs/design-docs/API_DESIGN.md) | REST 엔드포인트 명세 |
 | [DB 스키마](./docs/design-docs/DB_SCHEMA.md) | PostgreSQL 테이블 설계 |

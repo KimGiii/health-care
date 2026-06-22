@@ -314,6 +314,9 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `DietRecommendationCandidatePool`: serving options 벌크 로드 → 후보에 전달
   - `FoodCatalogService`: 검색 결과에 serving options 벌크 로드 (iOS 프리셋 UX용)
   - `FoodCatalogResponse`: `servingOptions: List<ServingOptionSnapshot>` 필드 추가
+  - `ServingOptionDeriver`: source `servingReference`(깨끗한 단일 g, 100g 기준 제외) → 1회 제공량, 없으면 카테고리 표준값·현실 범위 캡 → 0.5/1/1.5/2회 검증 옵션 전개. `serving_size_g`(제품 전체 중량, 최대 수십 kg)는 신뢰하지 않음.
+  - `FoodCatalogIngestService`: 적재·재적재 시 제공량 옵션을 도출·보장(없으면 backfill, 사실 변경·REPLACE면 재도출)
+  - 추천 후보 hard 필터에 `hasVerifiedServingOptions` 추가 — 제공량 근거 없는 식품은 추천 제외(§7.1)
 - [x] canonical 식품 그룹과 대표 후보 조회
   - V35 Flyway 마이그레이션: `canonical_group_id BIGINT` 컬럼 + 부분 인덱스
   - `FoodCatalog.canonicalGroupId` 필드 추가
@@ -330,13 +333,22 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
 
 ### Phase 3. 제약 최적화
 
-- 남은 하루 공동 최적화 prototype
-- solver/탐색 방식 benchmark 후 backend ADR 작성
-- 상위 복수 해와 다양성 재순위화
-- 구조화된 실패 응답과 추천 근거
-- 기존 API 호환·전환 계획
+- [x] 남은 하루 공동 최적화 엔진 (`ConstraintRecommendationEngine`)
+  - 순수 Java 결정적 beam search. 입력은 `RemainingNutritionBudget`(정책 전체목표 적용 후 차감, `RemainingNutritionCalculator`).
+  - hard: 목표별 열량 상·하한·매크로 하한(budget), 영양 완전성, **같은 foodId 하루 1회(끼니 간 중복 금지)**, 끼니별 최소 1개.
+  - 끼니 비율 정규화(칼로리 하한 충족) + 후보 선택은 매크로 인지(매크로 스패닝·적합 변형)로 단백·탄수·지방 밴드 도달을 보장.
+  - 제공량은 **검증된 1회 제공량 옵션 조합 전수 탐색**으로 끼니 칼로리·제약 매크로 목표에 가장 가까운 조합 선택. 임의 g(25g 스냅)·비현실적 분량(예: 과일 500g)을 만들지 않는다.
+- [x] solver/탐색 방식 결정 후 backend ADR — `docs/adr/0003-constraint-recommendation-engine.md` (OR-Tools 미채택, 결정성·재현성 근거)
+- [x] 상위 복수 해와 다양성 재순위화
+  - `RecommendationResult.Success(List<RecommendationSolution>)`. primary + feasible 해 안에서 카테고리 다양성으로 대안 재순위화.
+- [x] 구조화된 실패 응답과 추천 근거
+  - `RecommendationFailureReason` 7종(§8.3 6종 + 거짓실패 방지용 `SEARCH_LIMIT_REACHED`). 엔진/use case 책임 분리, 분류는 `CandidatePoolDiagnostics` 기반.
+  - `RecommendationRationale`(§10): 채운 열량·단백질·탄수화물, 상·하한 차이, 정책 버전, 한국어 근거.
+- [x] 기존 API 호환·전환 계획
+  - `DailyDietRecommendationResponse`에 `failureCode`·`rationale` 추가(nullable), `alternatives`를 rationale 동반 solution으로 확장. iOS 모델·ViewModel(±10% 재계산 제거)·근거 카드 반영.
+- [x] benchmark — greedy용 `v1` 고정 유지, 새 엔진용 `ConstraintEngineBenchmarkTest`(목표별 FEASIBLE·끼니 foodId 교집합 0·허용 제공량·재현성·구조화 실패).
 
-완료 기준: benchmark에서 hard constraint 위반 0건이며 현행 대비 조건별 성공률 또는 영양 오차가 개선된다.
+완료 기준: benchmark에서 hard constraint 위반 0건이며 끼니 간 중복이 hard로 제거됐다. greedy baseline은 불변 유지(`GreedyRecommendationBaselineTest`).
 
 ### Phase 4. 이벤트와 개인화
 
