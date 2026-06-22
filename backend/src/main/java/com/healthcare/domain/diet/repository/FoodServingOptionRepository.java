@@ -11,4 +11,8 @@ public interface FoodServingOptionRepository extends JpaRepository<FoodServingOp
     List<FoodServingOption> findByFoodCatalogIdIn(Collection<Long> foodCatalogIds);
 
     List<FoodServingOption> findByFoodCatalogIdOrderBySortOrderAsc(Long foodCatalogId);
+
+    boolean existsByFoodCatalogId(Long foodCatalogId);
+
+    void deleteByFoodCatalogId(Long foodCatalogId);
 }

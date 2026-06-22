@@ -8,6 +8,7 @@
 - [0002. 식단 추천 후보 정책을 후보 풀 모듈에 둔다](0002-diet-recommendation-candidate-pool-module.md)
 - [0003. 추천 큐레이션 불변 조건을 값 객체 모듈에 둔다](0003-recommendation-curation-module.md)
 - [0004. 식단 추천 엔진은 후보 값 객체만 입력으로 받는다](0004-diet-recommendation-engine-candidate-interface.md)
+- [0005. 출처 우선순위 dedup은 canonical_group_id를 재사용한다](0005-source-priority-dedup-canonical-reuse.md)
 
 ## When To Add One
 

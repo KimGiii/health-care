@@ -29,11 +29,21 @@ class FoodCatalogIngestServiceTest {
     @Mock
     private FoodCatalogRepository foodCatalogRepository;
 
+    @Mock
+    private com.healthcare.domain.diet.repository.FoodServingOptionRepository servingOptionRepository;
+
+    @Mock
+    private com.healthcare.domain.diet.external.dedup.CanonicalDedupResolver dedupResolver;
+
     private FoodCatalogIngestService ingestService;
 
     @BeforeEach
     void setUp() {
-        ingestService = new FoodCatalogIngestService(foodCatalogRepository);
+        ingestService = new FoodCatalogIngestService(
+                foodCatalogRepository,
+                servingOptionRepository,
+                new ServingOptionDeriver(),
+                dedupResolver);
     }
 
     @Test
@@ -213,6 +223,41 @@ class FoodCatalogIngestServiceTest {
                 new FoodCatalogImportRejectedRow(3, "calories", "칼로리는 필수입니다.")
         );
         verify(foodCatalogRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("dedup 패자(superseded)로 강등된 신규 행은 제공량 옵션을 생성하지 않고 정리한다")
+    void ingest_supersededRow_skipsServingOptionDerivation() {
+        FoodCatalog imported = FoodCatalog.builder()
+                .id(1L)
+                .foodCode("D001")
+                .source(FoodCatalogSource.MFDS_STANDARD_DISH)
+                .name("김치찌개").nameKo("김치찌개")
+                .category(FoodCategory.PROTEIN_SOURCE)
+                .caloriesPer100g(120.0)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
+                .isCustom(false)
+                .build();
+        FoodCatalog canonical = FoodCatalog.builder().id(99L).name("김치찌개").nameKo("김치찌개")
+                .category(FoodCategory.PROTEIN_SOURCE).caloriesPer100g(120.0)
+                .source(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB).isCustom(false).build();
+        given(foodCatalogRepository.findBySourceAndFoodCode(any(), any())).willReturn(Optional.empty());
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+        // resolver가 더 높은 우선순위 대표(영양DB) 존재로 이 행을 패자로 강등했다고 가정
+        org.mockito.BDDMockito.willAnswer(invocation -> {
+            ((FoodCatalog) invocation.getArgument(0)).supersedeBy(canonical);
+            return null;
+        }).given(dedupResolver).resolve(any(FoodCatalog.class));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        // 패자는 옵션을 생성하지 않고 남은 옵션만 정리한다(옵션 행 폭증 방지)
+        verify(servingOptionRepository).deleteByFoodCatalogId(1L);
+        verify(servingOptionRepository, never()).saveAll(any());
     }
 
     private FoodCatalog food(String name, RecommendationStatus status, String reason) {

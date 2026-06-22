@@ -37,3 +37,9 @@ ios/HealthCare/App/GoogleService-Info.plist
 
 # Portfolio artifacts
 docs/portfolio/
+
+# Food census harness intermediate data (대용량 핑거프린트 TSV/체크포인트)
+scripts/food-census/data/
+macos-roots.pem
+__pycache__/
+*.pyc

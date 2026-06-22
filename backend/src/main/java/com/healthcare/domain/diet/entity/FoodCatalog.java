@@ -111,8 +111,25 @@ public class FoodCatalog {
     @Builder.Default
     private Long usageCount = 0L;
 
+    /**
+     * 정규(canonical) 행을 가리키는 supersede 포인터. NULL = 그룹 대표(검색·추천 노출),
+     * NOT NULL = 이 행을 흡수한 canonical 행 id(추천 제외, provenance 보존). (V35 재사용)
+     */
     @Column(name = "canonical_group_id")
     private Long canonicalGroupId;
+
+    /** 출처 간 dedup 클러스터 키. = food_code(공통 코드 공간). 코드 없는 행은 NULL(dedup 비대상). */
+    @Column(name = "dedup_group", length = 60)
+    private String dedupGroup;
+
+    /** dedup 클러스터 분리용 이름키. {@code FoodCatalogIdentity.duplicateNameKey(nameKo)}. */
+    @Column(name = "dedup_name_key", length = 160)
+    private String dedupNameKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dedup_state", nullable = false, length = 20)
+    @Builder.Default
+    private DedupState dedupState = DedupState.CANONICAL;
 
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
@@ -247,8 +264,46 @@ public class FoodCatalog {
         this.recommendationReason = curation.reasonForStorage();
     }
 
+    /** 출처 간 dedup 클러스터 키를 부여한다(설계 §4-1). */
+    public void assignDedupKeys(String dedupGroup, String dedupNameKey) {
+        this.dedupGroup = dedupGroup;
+        this.dedupNameKey = dedupNameKey;
+    }
+
+    /** 그룹 대표(canonical)로 표시한다. supersede 포인터를 끊고 상태를 CANONICAL로 둔다. */
+    public void markCanonical() {
+        this.canonicalGroupId = null;
+        this.dedupState = DedupState.CANONICAL;
+    }
+
+    /** 우선순위에 밀린 패자로 표시한다. canonical 행을 가리키고 추천·검색에서 제외된다. */
+    public void supersedeBy(FoodCatalog canonical) {
+        if (canonical.id == null) {
+            throw new IllegalArgumentException("canonical must be persisted before supersede");
+        }
+        this.canonicalGroupId = canonical.id;
+        this.dedupState = DedupState.SUPERSEDED;
+    }
+
+    /** 같은 코드·다른 이름키 충돌을 검토 큐로 표시한다. 대표 지위는 유지(canonical_group_id 불변). */
+    public void markCollision() {
+        this.dedupState = DedupState.COLLISION;
+    }
+
+    /** 그룹 대표 여부(검색·추천 노출 게이트와 동일 의미). */
+    public boolean isCanonicalRow() {
+        return canonicalGroupId == null;
+    }
 
     public enum FoodCategory {
         GRAIN, PROTEIN_SOURCE, VEGETABLE, FRUIT, DAIRY, FAT, BEVERAGE, PROCESSED, OTHER
+    }
+
+    /**
+     * 출처 우선순위 dedup 상태(설계 §3).
+     * CANONICAL = 그룹 대표 / SUPERSEDED = 내용 일치, 우선순위에 밀림 / COLLISION = 동일 코드·다른 이름(검토 필요).
+     */
+    public enum DedupState {
+        CANONICAL, SUPERSEDED, COLLISION
     }
 }
