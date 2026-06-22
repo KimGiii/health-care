@@ -10,6 +10,7 @@ import com.healthcare.domain.diet.restriction.entity.DietRestriction;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,11 @@ public class DietRestrictionUseCases {
                 .allergenTag(request.getAllergenTag())
                 .build();
 
-        return DietRestrictionResponse.from(dietRestrictionRepository.save(restriction));
+        try {
+            return DietRestrictionResponse.from(dietRestrictionRepository.saveAndFlush(restriction));
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException("이미 등록된 식단 제한 조건입니다.");
+        }
     }
 
     @Transactional

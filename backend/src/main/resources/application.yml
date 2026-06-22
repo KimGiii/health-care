@@ -74,6 +74,10 @@ app:
     # Access token TTL은 짧게(1h) — refresh token으로 재발급 (iOS APIClient가 자동 처리).
     access-token-expiry-hours: 1
     refresh-token-expiry-days: 30
+  admin:
+    # 운영성 admin 작업(/api/v1/admin/**)용 별도 토큰.
+    # 비어 있으면 admin 작업은 fail-closed로 거부된다.
+    operation-token: "${ADMIN_OPERATION_TOKEN:}"
   oauth:
     # iOS 앱 Bundle ID (Apple Sign In aud 클레임)
     apple:

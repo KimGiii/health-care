@@ -4,15 +4,11 @@ import UniformTypeIdentifiers
 
 protocol DietFoodSearching: Sendable {
     func searchFoodCatalog(query: String) async throws -> [FoodCatalogItem]
-    func searchExternalFoods(query: String) async throws -> [ExternalFoodResult]
 }
 
 extension APIClient: DietFoodSearching {
     func searchFoodCatalog(query: String) async throws -> [FoodCatalogItem] {
         try await request(.getFoodCatalog(query: query))
-    }
-    func searchExternalFoods(query: String) async throws -> [ExternalFoodResult] {
-        try await request(.searchExternalFoods(query: query, source: "ALL", page: 0, size: 20))
     }
 }
 

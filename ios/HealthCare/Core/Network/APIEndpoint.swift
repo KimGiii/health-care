@@ -49,6 +49,13 @@ enum APIEndpoint {
     // Diet - External Foods
     case searchExternalFoods(query: String, source: String, page: Int, size: Int)
     case importExternalFood(body: Data)
+    // Diet - Restrictions
+    case listDietRestrictions
+    case createDietRestriction(body: Data)
+    case deleteDietRestriction(id: Int)
+    // Diet - Recommendation
+    case getDailyRecommendation(body: Data)
+    case postRecommendationFeedback(snapshotId: Int, body: Data)
 
     // Body Measurement
     case createBodyMeasurement(body: Data)
@@ -116,6 +123,12 @@ extension APIEndpoint {
         case .getFoodCatalog, .createCustomFood: return "/api/v1/diet/catalog"
         case .searchExternalFoods:               return "/api/v1/diet/external-foods/search"
         case .importExternalFood:                return "/api/v1/diet/external-foods/import"
+        case .listDietRestrictions, .createDietRestriction:
+                                                 return "/api/v1/diet/restrictions"
+        case .deleteDietRestriction(let id):     return "/api/v1/diet/restrictions/\(id)"
+        case .getDailyRecommendation:            return "/api/v1/diet/recommendations/daily"
+        case .postRecommendationFeedback(let snapshotId, _):
+                                                 return "/api/v1/diet/recommendations/\(snapshotId)/feedback"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
@@ -148,9 +161,11 @@ extension APIEndpoint {
         switch self {
         case .register, .login, .socialLogin, .socialLoginCheck, .socialLoginCommit, .refreshToken, .logout,
              .createExerciseSession, .createDietLog, .initiateMealPhotoAnalysis,
-             .analyzeMealPhoto, .confirmMealPhotoAnalysis, .importExternalFood,
+             .analyzeMealPhoto, .confirmMealPhotoAnalysis,
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
-             .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise:
+             .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise,
+             .createDietRestriction, .getDailyRecommendation,
+             .postRecommendationFeedback:
             return .POST
         case .updateProfile, .updateGoal,
              .markNotificationRead, .markAllNotificationsRead:
@@ -159,7 +174,7 @@ extension APIEndpoint {
             return .PUT
         case .deleteAccount, .deleteExerciseSession, .deleteDietLog,
              .deleteGoal, .deleteBodyMeasurement, .deleteProgressPhoto,
-             .deleteNotification:
+             .deleteNotification, .deleteDietRestriction:
             return .DELETE
         default:
             return .GET
@@ -174,11 +189,12 @@ extension APIEndpoint {
              .createExerciseSession(let b),
              .createDietLog(let b), .updateDietLog(_, let b), .initiateMealPhotoAnalysis(let b),
              .analyzeMealPhoto(_, let b), .confirmMealPhotoAnalysis(_, let b),
-             .importExternalFood(let b),
              .createBodyMeasurement(let b), .initiatePhotoUpload(let b), .registerProgressPhoto(let b),
              .createGoal(let b), .updateGoal(_, let b),
              .aiEstimateFood(let b), .aiEstimateExercise(let b),
-             .createCustomFood(let b), .createCustomExercise(let b):
+             .createCustomFood(let b), .createCustomExercise(let b),
+             .createDietRestriction(let b), .getDailyRecommendation(let b),
+             .postRecommendationFeedback(_, let b):
             return b
         default:
             return nil
@@ -210,13 +226,6 @@ extension APIEndpoint {
             if let from { items.append(.init(name: "from", value: from)) }
             if let to   { items.append(.init(name: "to",   value: to))   }
             return items
-        case .searchExternalFoods(let q, let source, let page, let size):
-            return [
-                .init(name: "q",      value: q),
-                .init(name: "source", value: source),
-                .init(name: "page",   value: "\(page)"),
-                .init(name: "size",   value: "\(size)")
-            ]
         case .getBodyMeasurements(let page, let size):
             return [
                 .init(name: "page", value: "\(page)"),

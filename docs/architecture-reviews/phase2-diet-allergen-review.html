@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phase 2 아키텍처 리뷰 — Gainsy 식단 추천</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --brand: #6366f1;
+    --brand-light: #e0e7ff;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --ok: #10b981;
+    --muted: #6b7280;
+  }
+  body { background: #f8fafc; font-family: 'Inter', system-ui, sans-serif; }
+  .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04); }
+  .badge-strong   { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+  .badge-explore  { background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
+  .badge-spec     { background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; }
+  .before-box { background: #fff7f7; border: 1.5px solid #fecaca; border-radius:10px; }
+  .after-box  { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius:10px; }
+  pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.78rem; line-height:1.6; }
+  .depth-bar-bg { background: #e5e7eb; border-radius: 99px; }
+  .depth-bar    { border-radius: 99px; height: 8px; }
+  .mermaid svg { max-width:100%; }
+  .toc-item:hover { background: #f5f3ff; }
+  details summary { cursor:pointer; }
+  details summary::-webkit-details-marker { display:none; }
+</style>
+</head>
+<body class="p-6 md:p-10">
+
+<!-- Header -->
+<div class="max-w-4xl mx-auto mb-10">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style="background:var(--brand-light)">🍱</div>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Phase 2 아키텍처 리뷰</h1>
+      <p class="text-sm text-gray-500">Gainsy 식단 추천 · allergen / candidate / policy · 2026-06-19</p>
+    </div>
+  </div>
+  <p class="mt-3 text-gray-600 text-sm max-w-2xl">
+    이 리뷰는 Phase 2에서 추가된 <strong>AllergenSafetyGate · CandidatePool · DataFreshnessPolicy · NutrientCompletenessPolicy · VerificationPriorityService</strong> 를 대상으로 아키텍처 마찰점과 심화(deepening) 기회를 제시합니다.
+    각 후보는 <em>deletion test</em>(모듈을 삭제하면 복잡도가 분산되는가 집중되는가?)를 통해 평가했습니다.
+  </p>
+</div>
+
+<!-- TOC -->
+<div class="max-w-4xl mx-auto mb-8 card p-5">
+  <p class="text-xs uppercase font-semibold text-gray-400 mb-3">후보 목록</p>
+  <div class="space-y-1">
+    <a href="#c1" class="toc-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+      <span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span>
+      <span>① NutrientCompletenessPolicy — 병적으로 얕은 모듈</span>
+    </a>
+    <a href="#c2" class="toc-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+      <span class="badge-strong px-2 py-0.5 rounded text-xs font-semibold">Strong</span>
+      <span>② VerificationPriorityService — 인라인 공식과 분산된 매크로 완전성 검사</span>
+    </a>
+    <a href="#c3" class="toc-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+      <span class="badge-explore px-2 py-0.5 rounded text-xs font-semibold">Worth exploring</span>
+      <span>③ DietRecommendationCandidatePool — 숨겨진 CandidateRestrictions 솔기</span>
+    </a>
+    <a href="#c4" class="toc-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors">
+      <span class="badge-spec px-2 py-0.5 rounded text-xs font-semibold">Speculative</span>
+      <span>④ DataFreshnessPolicy — 외부 확장 준비도</span>
+    </a>
+  </div>
+</div>
+
+<!-- Candidate 1 -->
+<div id="c1" class="max-w-4xl mx-auto mb-8 card p-7">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <span class="badge-strong px-2.5 py-1 rounded-full text-xs font-bold">Strong</span>
+      <h2 class="mt-2 text-xl font-bold text-gray-900">① NutrientCompletenessPolicy</h2>
+      <p class="text-sm text-gray-500 mt-0.5">병적으로 얕은 모듈 + 역방향 패키지 의존성</p>
+    </div>
+    <!-- Depth meter -->
+    <div class="text-right min-w-[100px]">
+      <p class="text-xs text-gray-400 mb-1">인터페이스 복잡도</p>
+      <div class="depth-bar-bg w-24 mb-1"><div class="depth-bar" style="width:75%;background:#ef4444"></div></div>
+      <p class="text-xs text-gray-400 mb-1">구현 복잡도</p>
+      <div class="depth-bar-bg w-24 mb-1"><div class="depth-bar" style="width:15%;background:#10b981"></div></div>
+      <p class="text-xs text-red-500 font-semibold">Shallow</p>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="mb-4">
+    <p class="text-xs uppercase font-semibold text-gray-400 mb-1">관련 파일</p>
+    <div class="flex flex-wrap gap-2">
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">domain/nutrition/policy/NutrientCompletenessPolicy.java</code>
+    </div>
+  </div>
+
+  <!-- Problem -->
+  <div class="mb-5 p-4 rounded-xl" style="background:#fff7ed;border:1px solid #fed7aa">
+    <p class="text-sm font-semibold text-orange-800 mb-1">⚠ 문제</p>
+    <p class="text-sm text-orange-900">
+      <code>isComplete(GoalType goalType, DietRecommendationCandidate candidate)</code>는
+      <code>goalType</code> 파라미터를 완전히 무시하고 <code>candidate.macroDataComplete()</code>만 반환합니다.
+      인터페이스(2개 파라미터, GoalType enum + 후보 객체)가 구현(1줄 불리언 위임)보다 훨씬 복잡합니다.
+      <strong>Deletion test</strong>: 이 클래스를 삭제하고 호출부에서 <code>candidate.macroDataComplete()</code>를 직접 쓰면
+      복잡도가 줄어들고 코드가 오히려 명확해집니다 — 전형적인 pass-through 징후.
+    </p>
+    <p class="text-sm text-orange-900 mt-2">
+      추가 마찰: <code>nutrition.policy</code> 패키지가 <code>diet.recommendation.candidate.DietRecommendationCandidate</code>를
+      import합니다. 상위(nutrition) → 하위(diet candidate) 역방향 의존성입니다.
+    </p>
+  </div>
+
+  <!-- Before / After -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+    <div class="before-box p-4">
+      <p class="text-xs font-bold text-red-600 mb-2">⛔ Before</p>
+      <pre class="text-gray-700">// nutrition/policy/
+class NutrientCompletenessPolicy {
+  boolean isComplete(
+    Goal.GoalType goalType,   // 사용 안 됨
+    DietRecommendationCandidate candidate
+  ) {
+    return candidate.macroDataComplete(); // 그게 전부
+  }
+}
+
+// 호출부
+if (policy.isComplete(goal.getGoalType(), candidate)) {
+  ...
+}</pre>
+    </div>
+    <div class="after-box p-4">
+      <p class="text-xs font-bold text-green-700 mb-2">✅ After (Option A — 인라인)</p>
+      <pre class="text-gray-700">// NutrientCompletenessPolicy 삭제
+
+// 호출부에서 직접 표현
+if (candidate.macroDataComplete()) {
+  ...
+}
+
+// 또는 GoalType 분기가 실제로 생길 때
+// 다시 추출 (YAGNI 원칙)</pre>
+      <p class="text-xs font-bold text-green-700 mt-3 mb-2">✅ After (Option B — 타입 경량화)</p>
+      <pre class="text-gray-700">// GoalType별 차이가 정말 필요하다면:
+sealed interface MacroRequirement {
+  boolean isSatisfiedBy(boolean macroComplete,
+                         double proteinRatio);
+  record Standard() implements MacroRequirement { ... }
+  record HighProtein() implements MacroRequirement { ... }
+}
+// GoalType → MacroRequirement 팩토리만 필요</pre>
+    </div>
+  </div>
+
+  <!-- Benefits -->
+  <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+    <p class="text-sm font-semibold text-indigo-800 mb-1">📈 기대 효과</p>
+    <ul class="text-sm text-indigo-900 list-disc list-inside space-y-1">
+      <li><strong>지역성(Locality)</strong>: 매크로 완전성 판단이 <code>DietRecommendationCandidate</code>에 집중됩니다</li>
+      <li><strong>역방향 의존성 제거</strong>: nutrition 패키지가 diet candidate 세부를 알 필요 없음</li>
+      <li><strong>테스트 단순화</strong>: 별도 정책 클래스 mock 없이 <code>macroDataComplete()</code> 단위 테스트로 충분</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Candidate 2 -->
+<div id="c2" class="max-w-4xl mx-auto mb-8 card p-7">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <span class="badge-strong px-2.5 py-1 rounded-full text-xs font-bold">Strong</span>
+      <h2 class="mt-2 text-xl font-bold text-gray-900">② VerificationPriorityService</h2>
+      <p class="text-sm text-gray-500 mt-0.5">인라인 우선순위 공식 + 매크로 완전성 검사 이중 정의</p>
+    </div>
+    <div class="text-right min-w-[100px]">
+      <p class="text-xs text-gray-400 mb-1">로직 집중도</p>
+      <div class="depth-bar-bg w-24 mb-1"><div class="depth-bar" style="width:40%;background:#f59e0b"></div></div>
+      <p class="text-xs text-yellow-600 font-semibold">Scattered</p>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <p class="text-xs uppercase font-semibold text-gray-400 mb-1">관련 파일</p>
+    <div class="flex flex-wrap gap-2">
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">domain/diet/admin/VerificationPriorityService.java</code>
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">domain/diet/entity/FoodCatalog.java (4-null check)</code>
+    </div>
+  </div>
+
+  <div class="mb-5 p-4 rounded-xl" style="background:#fff7ed;border:1px solid #fed7aa">
+    <p class="text-sm font-semibold text-orange-800 mb-1">⚠ 문제 1 — isMacroComplete() 이중 정의</p>
+    <p class="text-sm text-orange-900">
+      <code>VerificationPriorityService.isMacroComplete(FoodCatalog food)</code>는
+      calories · protein · carbs · fat 모두 null 아닌지 직접 검사합니다.
+      같은 판단이 <code>DietRecommendationCandidate.from()</code> 내 <code>macroDataComplete()</code> 필드 계산에서도 이미 수행됩니다.
+      두 곳이 독립적으로 변경될 경우 불일치가 발생합니다.
+    </p>
+    <p class="text-sm font-semibold text-orange-800 mt-3 mb-1">⚠ 문제 2 — 이름 없는 우선순위 공식</p>
+    <p class="text-sm text-orange-900">
+      <code>score = usageCount × macroWeight × allergenWeight</code>는 서비스 메서드 내에 하드코딩되어 있습니다.
+      "우선순위"라는 도메인 개념이 없어 가중치를 조정하려면 서비스를 직접 편집해야 하고,
+      점수 계산 로직을 단독으로 테스트할 방법이 없습니다.
+    </p>
+  </div>
+
+  <!-- Before / After Diagram -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+    <div class="before-box p-4">
+      <p class="text-xs font-bold text-red-600 mb-2">⛔ Before — 분산된 책임</p>
+      <div class="mermaid text-xs">
+graph TD
+  VS[VerificationPriorityService] -->|isMacroComplete 직접 구현| FC[FoodCatalog<br/>4-null check]
+  DR[DietRecommendationCandidate.from] -->|macroDataComplete 또 계산| FC
+  VS -->|score 공식 인라인| INLINE["usageCount × macro × allergen<br/>(이름 없음, 테스트 불가)"]
+  style INLINE fill:#fecaca,stroke:#f87171
+  style FC fill:#fef3c7,stroke:#fbbf24
+      </div>
+    </div>
+    <div class="after-box p-4">
+      <p class="text-xs font-bold text-green-700 mb-2">✅ After — 지역성 회복</p>
+      <div class="mermaid text-xs">
+graph TD
+  VS[VerificationPriorityService] -->|FoodCatalog.isMacroComplete 위임| FC[FoodCatalog<br/>단일 정의]
+  DR[DietRecommendationCandidate.from] -->|동일 메서드 사용| FC
+  VS -->|score 공식 위임| PS[VerificationPriorityScore<br/>record / value object]
+  PS -->|score 계산 + 테스트 가능| CALC["priorityScore()"]
+  style PS fill:#bbf7d0,stroke:#34d399
+  style FC fill:#d1fae5,stroke:#34d399
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+    <div class="before-box p-4">
+      <p class="text-xs font-bold text-red-600 mb-2">⛔ Before 코드</p>
+      <pre class="text-gray-700">// VerificationPriorityService
+private boolean isMacroComplete(FoodCatalog food) {
+  return food.getCaloriesPer100g() != null  // ← 중복
+      && food.getProteinPer100g() != null
+      && food.getCarbsPer100g() != null
+      && food.getFatPer100g() != null;
+}
+
+double score = food.getUsageCount()
+    * (isMacroComplete(food) ? 1.0 : 2.0)  // 이름 없음
+    * (tagged ? 1.0 : 2.0);</pre>
+    </div>
+    <div class="after-box p-4">
+      <p class="text-xs font-bold text-green-700 mb-2">✅ After 코드</p>
+      <pre class="text-gray-700">// FoodCatalog에 단일 정의
+public boolean isMacroComplete() {
+  return caloriesPer100g != null
+      && proteinPer100g != null
+      && carbsPer100g != null
+      && fatPer100g != null;
+}
+
+// VerificationPriorityScore (새 record)
+record VerificationPriorityScore(
+  long usageCount, boolean macroComplete, boolean tagged
+) {
+  double value() {
+    return usageCount
+        * (macroComplete ? 1.0 : 2.0)
+        * (tagged ? 1.0 : 2.0);
+  }
+}
+// 서비스는 record 생성 + value() 호출만</pre>
+    </div>
+  </div>
+
+  <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+    <p class="text-sm font-semibold text-indigo-800 mb-1">📈 기대 효과</p>
+    <ul class="text-sm text-indigo-900 list-disc list-inside space-y-1">
+      <li><strong>지역성</strong>: 매크로 완전성 판단이 FoodCatalog 한 곳으로 집중</li>
+      <li><strong>테스트 표면</strong>: <code>VerificationPriorityScore</code>를 독립적으로 단위테스트 가능</li>
+      <li><strong>가중치 튜닝</strong>: 서비스를 편집하지 않고 record 생성자 또는 설정으로 조정 가능</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Candidate 3 -->
+<div id="c3" class="max-w-4xl mx-auto mb-8 card p-7">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <span class="badge-explore px-2.5 py-1 rounded-full text-xs font-bold">Worth exploring</span>
+      <h2 class="mt-2 text-xl font-bold text-gray-900">③ DietRecommendationCandidatePool</h2>
+      <p class="text-sm text-gray-500 mt-0.5">숨겨진 CandidateRestrictions 솔기(Seam)</p>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <p class="text-xs uppercase font-semibold text-gray-400 mb-1">관련 파일</p>
+    <div class="flex flex-wrap gap-2">
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">recommendation/candidate/DietRecommendationCandidatePool.java</code>
+    </div>
+  </div>
+
+  <div class="mb-5 p-4 rounded-xl" style="background:#fff7ed;border:1px solid #fed7aa">
+    <p class="text-sm font-semibold text-orange-800 mb-1">⚠ 문제</p>
+    <p class="text-sm text-orange-900">
+      <code>CandidateRestrictions</code>는 <code>DietRecommendationCandidatePool</code>의 private inner record입니다.
+      이 레코드는 <code>List&lt;DietRestriction&gt;</code>을 4가지 TargetType으로 파싱·정규화하는 의미 있는 책임을 집니다.
+      하지만 <code>DietRecommendationCandidatePool</code> 테스트 없이는 이 파싱 로직을 직접 테스트할 방법이 없습니다.
+    </p>
+    <p class="text-sm text-orange-900 mt-2">
+      <strong>단, 현재는 가설적 솔기(1개 어댑터)</strong>입니다. 다른 서비스가 같은 파싱을 필요로 할 때
+      실제 솔기가 됩니다(2개 어댑터 기준). 지금 당장의 추출은 과도한 추상화일 수 있습니다.
+    </p>
+  </div>
+
+  <!-- Diagram -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+    <div class="before-box p-4">
+      <p class="text-xs font-bold text-red-600 mb-2">⛔ Before — 숨겨진 파싱 로직</p>
+      <pre class="text-gray-700">class DietRecommendationCandidatePool {
+
+  public DietRecommendationCandidates load(
+      List&lt;DietRestriction&gt; restrictions,
+      boolean strictAllergyMode
+  ) {
+    // 파싱 — private, 테스트 불가
+    CandidateRestrictions parsed =
+        CandidateRestrictions.from(restrictions, ...);
+
+    // 로드 + 필터 + 게이트 + 구성
+    // 모두 load() 안에
+  }
+
+  private record CandidateRestrictions(...) {
+    static CandidateRestrictions from(...) { ... }
+  }
+}</pre>
+    </div>
+    <div class="after-box p-4">
+      <p class="text-xs font-bold text-green-700 mb-2">✅ After — 파싱 솔기 노출 (조건부)</p>
+      <pre class="text-gray-700">// 패키지 가시성으로 승격 (아직 공개 API 아님)
+record CandidateRestrictions(
+    Set&lt;Long&gt; foodIds,
+    Set&lt;FoodCategory&gt; categories,
+    List&lt;String&gt; keywords,
+    Set&lt;AllergenTag&gt; allergenTags,
+    boolean strictAllergyMode
+) {
+  static CandidateRestrictions from(
+      List&lt;DietRestriction&gt; list,
+      boolean strictMode
+  ) { ... }
+}
+
+// 테스트에서 직접:
+var r = CandidateRestrictions.from(
+    List.of(allergenRestriction), true);
+assertThat(r.allergenTags()).contains(PEANUT);</pre>
+    </div>
+  </div>
+
+  <!-- Warning about ADR -->
+  <div class="p-4 rounded-xl bg-yellow-50 border border-yellow-200 mb-4">
+    <p class="text-sm text-yellow-800">
+      <strong>조건</strong>: 두 번째 호출자(<code>AllergenAwareRecommendationService</code> 또는 어드민 미리보기 등)가
+      같은 파싱을 필요로 할 때 추출을 고려하세요. 현재 1개 어댑터 = 가설적 솔기입니다.
+    </p>
+  </div>
+
+  <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+    <p class="text-sm font-semibold text-indigo-800 mb-1">📈 기대 효과</p>
+    <ul class="text-sm text-indigo-900 list-disc list-inside space-y-1">
+      <li><strong>테스트 표면</strong>: 파싱 로직을 <code>DietRecommendationCandidatePool</code> 없이 단위테스트 가능</li>
+      <li><strong>지역성</strong>: DietRestriction → 4가지 집합으로의 변환 로직이 명시적인 타입을 가짐</li>
+      <li><strong>재사용</strong>: 두 번째 호출자 등장 시 즉시 공유 가능</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Candidate 4 -->
+<div id="c4" class="max-w-4xl mx-auto mb-8 card p-7">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <span class="badge-spec px-2.5 py-1 rounded-full text-xs font-bold">Speculative</span>
+      <h2 class="mt-2 text-xl font-bold text-gray-900">④ DataFreshnessPolicy</h2>
+      <p class="text-sm text-gray-500 mt-0.5">소스별 만료 창의 외부 확장 준비도</p>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <p class="text-xs uppercase font-semibold text-gray-400 mb-1">관련 파일</p>
+    <div class="flex flex-wrap gap-2">
+      <code class="text-xs bg-gray-100 px-2 py-1 rounded">domain/diet/policy/DataFreshnessPolicy.java</code>
+    </div>
+  </div>
+
+  <div class="mb-5 p-4 rounded-xl" style="background:#f0f9ff;border:1px solid #bae6fd">
+    <p class="text-sm font-semibold text-sky-800 mb-1">💡 관찰</p>
+    <p class="text-sm text-sky-900">
+      <code>DataFreshnessPolicy</code>는 현재 잘 설계된 깊은 모듈입니다 — Clock 주입 가능, 소스별 명시적 만료 규칙,
+      NEVER_EXPIRES 분기 명확. 테스트도 <code>DataFreshnessPolicyTest</code>에서 경계값을 커버합니다.
+    </p>
+    <p class="text-sm text-sky-900 mt-2">
+      <strong>투기적 마찰점</strong>: 만료 창(730일, 365일)이 하드코딩되어 있습니다.
+      새 소스가 추가될 때마다 switch 분기를 편집해야 합니다. 이것은 현재는 감수할 만하지만,
+      소스 종류가 늘어나면 enum → 설정 맵 또는 policy record 패턴이 유용해질 수 있습니다.
+    </p>
+    <p class="text-sm text-sky-900 mt-2">
+      <strong>현재 권장사항</strong>: 변경하지 마세요. 마찰이 실제로 느껴질 때 다시 검토하세요.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="before-box p-4">
+      <p class="text-xs font-bold text-red-600 mb-2">현재 (지금은 괜찮음)</p>
+      <pre class="text-gray-700">switch (food.getSource()) {
+  case SEED, USER_CUSTOM ->
+    { return true; }           // ∞
+  case MFDS_STANDARD_PROCESSED,
+       MFDS_STANDARD_DISH,
+       MFDS_FOOD_NUTRIENT_DB  ->
+    maxAge = Duration.ofDays(730); // 하드코딩
+  case BRAND_OFFICIAL         ->
+    maxAge = Duration.ofDays(365);
+  ...
+}</pre>
+    </div>
+    <div class="after-box p-4">
+      <p class="text-xs font-bold text-green-700 mb-2">소스 증가 시 고려 (미래)</p>
+      <pre class="text-gray-700">// FoodCatalogSource enum에 만료 창 보유
+enum FoodCatalogSource {
+  SEED(null),
+  MFDS_STANDARD_PROCESSED(730),
+  BRAND_OFFICIAL(365),
+  ...;
+
+  final Integer maxAgeDays; // null = 영구
+}
+
+// Policy는 단순해짐
+boolean isCurrent(FoodCatalog food) {
+  var src = food.getSource();
+  if (src.maxAgeDays == null) return true;
+  ...
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- Top Recommendation -->
+<div class="max-w-4xl mx-auto mb-12 card p-7" style="border-left:4px solid var(--brand)">
+  <p class="text-xs uppercase font-semibold text-indigo-400 mb-2">🏆 최우선 추천</p>
+  <h2 class="text-xl font-bold text-gray-900 mb-3">① NutrientCompletenessPolicy 제거</h2>
+  <p class="text-gray-700 text-sm mb-4">
+    가장 명확한 ROI입니다. 이 클래스는 <em>지금 당장</em> 제거해도 동작이 전혀 바뀌지 않습니다.
+    GoalType 파라미터는 이미 거짓 약속이고, 역방향 패키지 의존성(<code>nutrition → diet.candidate</code>)까지 있습니다.
+    제거하면 호출부가 더 명확해지고 의존성 방향이 정상화됩니다.
+  </p>
+  <p class="text-gray-700 text-sm mb-4">
+    <strong>② VerificationPriorityService</strong>는 두 번째로 처리하세요.
+    <code>FoodCatalog.isMacroComplete()</code> 단일 정의로 수렴하면
+    불일치 가능성이 없어지고 서비스 로직이 훨씬 읽기 쉬워집니다.
+  </p>
+  <div class="flex items-center gap-3 p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+    <span class="text-2xl">🔍</span>
+    <p class="text-sm text-indigo-900">
+      탐색을 원하는 후보가 있으시면 말씀해주세요. 해당 모듈의 심화 인터페이스 설계로
+      대화를 이어가겠습니다.
+    </p>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="max-w-4xl mx-auto text-center text-xs text-gray-400 pb-8">
+  Phase 2 Architecture Review · Gainsy health-care · 2026-06-19 · <a href="https://github.com/KimGiii/Gainsy" class="underline">KimGiii/Gainsy</a>
+</div>
+
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral', fontSize: 12 });</script>
+</body>
+</html>

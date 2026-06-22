@@ -77,14 +77,19 @@ class DietRecommendationControllerTest {
                 List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER),
                 false
         );
-        DailyDietRecommendationResponse response = new DailyDietRecommendationResponse(
+        NutritionTargets targets = new NutritionTargets(2000, 150, 230, 67);
+        DailyDietRecommendationResponse response = DailyDietRecommendationResponse.of(
                 LocalDate.now(),
-                new NutritionTargets(2000, 150, 230, 67),
+                targets,
+                targets,
                 List.of(),
                 List.of(),
                 new NutrientSummary(1800.0, 130.0, 210.0, 60.0),
+                null,
+                null,
                 false,
-                "이 추천은 참고용입니다."
+                List.of(),
+                1L
         );
         given(dailyDietRecommendationUseCases.recommend(eq(USER_ID), any())).willReturn(response);
 
@@ -92,8 +97,9 @@ class DietRecommendationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.targets.calorieTarget").value(2000))
-                .andExpect(jsonPath("$.disclaimer").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.targets.calorieTarget").value(2000))
+                .andExpect(jsonPath("$.data.disclaimer").exists());
     }
 
     @Test

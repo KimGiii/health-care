@@ -1,0 +1,4362 @@
+{
+  "brandName": "버거킹",
+  "collectedAt": "2026-06-09",
+  "source": {
+    "menuListTransaction": "BKR0632",
+    "metadataTransaction": "BKR0347",
+    "endpoint": "https://www.burgerking.co.kr/burgerking/{trcode}.json"
+  },
+  "menuCount": 210,
+  "nutritionCount": 188,
+  "allergyCount": 188,
+  "originInfoList": [
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산과 태국산 섞음 : 닭고기패티[몬스터와퍼,몬스터주니어,치킨버거,치킨치즈마요버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음/호주산 : 쇠고기패티[버거류(주니어포함)]"
+    },
+    {
+      "pattiDivNm": "돼지고기",
+      "pattiDiv": "2",
+      "pattiNote": "외국산 : [오리지널스뉴욕스테이크,몬스터와퍼,베이컨치즈와퍼,치킨킹BLT,BLT오믈렛킹모닝,더크리스퍼베이컨&치즈,스모크베이컨와퍼, 오리지널스엘파소치폴레]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산 : 비프립[스모크비프립 와퍼,스모크비프립 샌드위치버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음 : 쇠고기패티 [오리지널스엘파소치폴레/오리지널스뉴욕스테이크]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "태국산과 국내산 섞음 : 닭고기패티 [(불고기)롱치킨버거]"
+    },
+    {
+      "pattiDivNm": "쇠고기",
+      "pattiDiv": "1",
+      "pattiNote": "호주산과 뉴질랜드산 섞음/호주산 : 쇠고기패티[와퍼류,더오치맥시멈2,갈릭불고기맥시멈2/3/원파운더]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "외국산 : 바삭킹"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 너겟킹"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "외국산 : 닭고기패티[치킨킹(BLT)]"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 크리스퍼텐더,크리스퍼랩"
+    },
+    {
+      "pattiDivNm": "닭고기",
+      "pattiDiv": "3",
+      "pattiNote": "국내산 : 닭고기패티 [더크리스퍼(베이컨&치즈)]"
+    }
+  ],
+  "menus": [
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714192",
+      "menuName": "오리지널스 엘파소 치폴레 세트",
+      "components": "오리지널스 엘파소 치폴레 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/f6c58af9-ad7d-4d67-81c1-5aa5e0280d38.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/a837997a-a380-47ff-b239-f356d01d31ea.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714193",
+      "menuName": "오리지널스 엘파소 치폴레 라지세트",
+      "components": "오리지널스 엘파소 치폴레 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/a8160642-3abb-4c3d-9fd8-1a552b26715e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/f3953ee0-059d-492c-8e46-c2d5295287c2.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100826",
+      "menuName": "오리지널스 엘파소 치폴레",
+      "components": "오리지널스 엘파소 치폴레",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/ea8f8fca-c784-4795-ab83-cad5bb16ad0b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/c48c37c2-dcb1-44d0-b32a-07351b28b320.png",
+      "nutrition": {
+        "weight": "291",
+        "caloriesKcal": "911",
+        "proteinG": "44(80)",
+        "sodiumMg": "1338(67)",
+        "sugarsG": "9(9)",
+        "saturatedFatG": "25(169)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100730",
+      "menuName": "오리지널스 뉴욕 스테이크",
+      "components": "오리지널스 뉴욕 스테이크",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/de79cfd1-e414-4bf7-9e5f-c7a5afcd80c5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/c01498d2-ca38-413b-aa89-b68319e03c55.png",
+      "nutrition": {
+        "weight": "307",
+        "caloriesKcal": "826",
+        "proteinG": "51(92)",
+        "sodiumMg": "1762(88)",
+        "sugarsG": "10",
+        "saturatedFatG": "22(148)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 대두, 밀, 돼지고기, 난류, 조개류, 쇠고기, 토마토"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713419",
+      "menuName": "오리지널스 뉴욕 스테이크 세트",
+      "components": "오리지널스 뉴욕 스테이크 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/d31d01b0-bba2-471e-8e28-74609d7f23a3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/d74d2f0a-0cf4-450d-99f7-9a74f86a001c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713420",
+      "menuName": "오리지널스 뉴욕 스테이크 라지세트",
+      "components": "오리지널스 뉴욕 스테이크 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/e2256d3f-666e-4943-a1a7-f3b248471221.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/c8f2e1e0-0314-4ef2-bab9-39f326d265ac.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714066",
+      "menuName": "스모크 비프립 와퍼 세트",
+      "components": "스모크 비프립 와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/c77931f3-ccb2-4c11-800a-661c46ea89ba.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/bd6749b0-eee9-4728-9930-769a55418596.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714067",
+      "menuName": "스모크 비프립 와퍼 라지세트",
+      "components": "스모크 비프립 와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/c055cfee-bb6a-42ee-a737-b2ba9d9fab2f.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/cec38971-6af0-4778-81c2-583dbf5d4885.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100809",
+      "menuName": "스모크 비프립 와퍼",
+      "components": "스모크 비프립 와퍼",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b6f4b216-8e21-47b8-8707-3d80f1d1f6a0.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/f32b8cf6-70b8-4fb7-8d12-becd174bc488.png",
+      "nutrition": {
+        "weight": "300",
+        "caloriesKcal": "811",
+        "proteinG": "37(68)",
+        "sodiumMg": "1417(71)",
+        "sugarsG": "17",
+        "saturatedFatG": "14(91)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100810",
+      "menuName": "스모크 베이컨 와퍼",
+      "components": "스모크 베이컨 와퍼",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b1fd7764-f5f2-40d2-8a42-b7b6935c4763.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/cda9e98d-7ce6-4b9b-8f34-e5a3172a3a46.png",
+      "nutrition": {
+        "weight": "288",
+        "caloriesKcal": "870",
+        "proteinG": "40(72)",
+        "sodiumMg": "1287(64)",
+        "sugarsG": "15",
+        "saturatedFatG": "15(99)",
+        "caffeineMg": "-"
+      },
+      "allergens": "난류, 쇠고기, 토마토, 밀, 대두, 돼지고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714069",
+      "menuName": "스모크 베이컨 와퍼 라지세트",
+      "components": "스모크 베이컨 와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b4c2bb1d-7405-4059-984a-80cf606f5618.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/fff6dd55-f441-43e7-a8c7-f0a57b0765cd.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7714068",
+      "menuName": "스모크 베이컨 와퍼 세트",
+      "components": "스모크 베이컨 와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b4df4525-9059-4d55-a31e-f748cbf726ae.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/de087469-0ef6-418e-936a-8f8a3731897e.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713905",
+      "menuName": "더 크리스퍼 라지세트",
+      "components": "더 크리스퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/a37954f8-611e-4673-90dd-46aa981f08d8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/a6a24be8-1438-498a-87ec-2685dbc6725a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1115480",
+      "menuName": "더 크리스퍼",
+      "components": "더 크리스퍼",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/d895878b-82cf-4563-8b0e-ae369eabd10f.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/d9839ce9-730c-4c02-8b99-fd680b6c44e1.png",
+      "nutrition": {
+        "weight": "225",
+        "caloriesKcal": "696",
+        "proteinG": "26(48)",
+        "sodiumMg": "1392(70)",
+        "sugarsG": "5",
+        "saturatedFatG": "9(62)",
+        "caffeineMg": "-"
+      },
+      "allergens": "토마토, 난류, 쇠고기, 닭고기, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713904",
+      "menuName": "더 크리스퍼 세트",
+      "components": "더 크리스퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/ae467654-f62b-4d5b-9c9a-6cd11a7b0c8c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/ef7925dd-7df8-4935-86d0-885deade9ea1.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713979",
+      "menuName": "갈릭불고기 맥시멈2 세트",
+      "components": "갈릭불고기 맥시멈2 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/accb8b56-47b4-4f1d-9e03-18758c41d7aa.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/d92518f1-f85c-4ff2-a4f1-909c0b6d874c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713980",
+      "menuName": "갈릭불고기 맥시멈2 라지세트",
+      "components": "갈릭불고기 맥시멈2 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/a921abb3-dfb8-411a-8ea8-5fd2543062cb.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/a3da9ad0-6594-4b00-9ddc-2bec09ee4530.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100797",
+      "menuName": "갈릭불고기 맥시멈2",
+      "components": "갈릭불고기 맥시멈2",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/b8891d42-e66e-4187-85db-fab09ebbdfcc.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/fbed8256-8b01-4ad7-bee4-3a83f4d7e46c.png",
+      "nutrition": {
+        "weight": "358",
+        "caloriesKcal": "1076",
+        "proteinG": "54(99)",
+        "sodiumMg": "1710(85)",
+        "sugarsG": "7",
+        "saturatedFatG": "24(162)",
+        "caffeineMg": "-"
+      },
+      "allergens": "밀, 대두, 우유, 쇠고기, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7713517",
+      "menuName": "더오치 맥시멈2 세트",
+      "components": "더오치 맥시멈2 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/08/06/f82eb595-9db1-450f-88da-50b2825ae2c9.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/08/06/abc7c932-eba3-44c1-8065-143d9b50cd44.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100739",
+      "menuName": "더오치 맥시멈2",
+      "components": "더오치 맥시멈2",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/08/07/d426a52d-4137-4406-9e9c-a7d8b252c281.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/08/07/b5c662c1-92e4-4c9f-ab22-5cb4b8ad1b8f.png",
+      "nutrition": {
+        "weight": "375",
+        "caloriesKcal": "1018",
+        "proteinG": "53(97)",
+        "sodiumMg": "2045(102)",
+        "sugarsG": "9",
+        "saturatedFatG": "29(191)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 밀, 난류, 대두, 쇠고기, 토마토"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1080121",
+      "menuName": "통새우와퍼",
+      "components": "통새우와퍼",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b29489df-fafb-43f1-b0e1-21ab7b0c19e3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b3b26016-b426-423d-8e98-f6370404a2e3.png",
+      "nutrition": {
+        "weight": "309",
+        "caloriesKcal": "714",
+        "proteinG": "34(61)",
+        "sodiumMg": "1258(63)",
+        "sugarsG": "9",
+        "saturatedFatG": "12(81)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 우유, 토마토, 쇠고기, 새우, 난류, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7111245",
+      "menuName": "통새우와퍼 세트",
+      "components": "통새우와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c484db78-3534-44ea-a24c-99ab3341a368.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d6f89ef1-936e-4dc4-967e-68cfb8be1410.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7111683",
+      "menuName": "통새우와퍼 라지세트",
+      "components": "통새우와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f8c05a16-9be0-45bc-ad17-706e9a11a647.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d6fd811d-fc6f-419c-b567-48bab2be5762.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "4020034",
+      "menuName": "밀크 선데",
+      "components": "밀크 선데",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/e4c9587f-7cde-4915-b7df-2899f07cb763.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/e01036bb-c6b0-4849-b467-71e27ac3fedc.png",
+      "nutrition": {
+        "weight": "140",
+        "caloriesKcal": "165",
+        "proteinG": "1(2)",
+        "sodiumMg": "116(6)",
+        "sugarsG": "27",
+        "saturatedFatG": "3(18)",
+        "caffeineMg": "-"
+      },
+      "allergens": "우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "4020035",
+      "menuName": "초코 선데",
+      "components": "초코 선데",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/c3a36287-7c00-4bd3-9d0c-1269126b14de.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/a37e89c0-6583-4e0b-aecf-44fac8416d86.png",
+      "nutrition": {
+        "weight": "165",
+        "caloriesKcal": "232",
+        "proteinG": "2(3)",
+        "sodiumMg": "147(7)",
+        "sugarsG": "38",
+        "saturatedFatG": "3(21)",
+        "caffeineMg": "-"
+      },
+      "allergens": "대두, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100528",
+      "menuName": "BLT오믈렛킹모닝",
+      "components": "BLT오믈렛킹모닝",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f233336e-3807-4206-b95a-f53ed079fbe3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b2ec5620-28f4-405f-a191-dbd1df118fa3.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7700621",
+      "menuName": "BLT오믈렛킹모닝 콤보",
+      "components": "BLT오믈렛킹모닝 + 아메리카노",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a7c3cfbf-dfe8-4098-b976-7eabcfc279f4.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ae1add19-0a0c-41b9-bed4-0e6bdf1b174b.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "1100527",
+      "menuName": "오믈렛킹모닝",
+      "components": "오믈렛킹모닝",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/cd116165-b98c-4f40-8539-c54b2c61a9ab.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ff4f6698-d5c6-4b77-b527-73bc5dc6b696.png",
+      "nutrition": {
+        "weight": "180",
+        "caloriesKcal": "496",
+        "proteinG": "15(28)",
+        "sodiumMg": "952(48)",
+        "sugarsG": "5",
+        "saturatedFatG": "8(51)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류, 우유, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200001",
+      "categoryName": "추천메뉴",
+      "categorySeq": "1",
+      "menuCode": "7700619",
+      "menuName": "오믈렛킹모닝 콤보",
+      "components": "오믈렛킹모닝 + 아메리카노",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f7d80b58-298e-4e64-a85c-a21cecc194da.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a47123d6-349e-49c0-859e-e03ca54c9506.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100826",
+      "menuName": "오리지널스 엘파소 치폴레",
+      "components": "오리지널스 엘파소 치폴레",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/ea8f8fca-c784-4795-ab83-cad5bb16ad0b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/c48c37c2-dcb1-44d0-b32a-07351b28b320.png",
+      "nutrition": {
+        "weight": "291",
+        "caloriesKcal": "911",
+        "proteinG": "44(80)",
+        "sodiumMg": "1338(67)",
+        "sugarsG": "9(9)",
+        "saturatedFatG": "25(169)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7714192",
+      "menuName": "오리지널스 엘파소 치폴레 세트",
+      "components": "오리지널스 엘파소 치폴레 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/f6c58af9-ad7d-4d67-81c1-5aa5e0280d38.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/a837997a-a380-47ff-b239-f356d01d31ea.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7714193",
+      "menuName": "오리지널스 엘파소 치폴레 라지세트",
+      "components": "오리지널스 엘파소 치폴레 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/05/20/a8160642-3abb-4c3d-9fd8-1a552b26715e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/05/20/f3953ee0-059d-492c-8e46-c2d5295287c2.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100730",
+      "menuName": "오리지널스 뉴욕 스테이크",
+      "components": "오리지널스 뉴욕 스테이크",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/de79cfd1-e414-4bf7-9e5f-c7a5afcd80c5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/c01498d2-ca38-413b-aa89-b68319e03c55.png",
+      "nutrition": {
+        "weight": "307",
+        "caloriesKcal": "826",
+        "proteinG": "51(92)",
+        "sodiumMg": "1762(88)",
+        "sugarsG": "10",
+        "saturatedFatG": "22(148)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 대두, 밀, 돼지고기, 난류, 조개류, 쇠고기, 토마토"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713419",
+      "menuName": "오리지널스 뉴욕 스테이크 세트",
+      "components": "오리지널스 뉴욕 스테이크 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/d31d01b0-bba2-471e-8e28-74609d7f23a3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/d74d2f0a-0cf4-450d-99f7-9a74f86a001c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713420",
+      "menuName": "오리지널스 뉴욕 스테이크 라지세트",
+      "components": "오리지널스 뉴욕 스테이크 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/e2256d3f-666e-4943-a1a7-f3b248471221.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/c8f2e1e0-0314-4ef2-bab9-39f326d265ac.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713980",
+      "menuName": "갈릭불고기 맥시멈2 라지세트",
+      "components": "갈릭불고기 맥시멈2 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/a921abb3-dfb8-411a-8ea8-5fd2543062cb.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/a3da9ad0-6594-4b00-9ddc-2bec09ee4530.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100797",
+      "menuName": "갈릭불고기 맥시멈2",
+      "components": "갈릭불고기 맥시멈2",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/b8891d42-e66e-4187-85db-fab09ebbdfcc.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/fbed8256-8b01-4ad7-bee4-3a83f4d7e46c.png",
+      "nutrition": {
+        "weight": "358",
+        "caloriesKcal": "1076",
+        "proteinG": "54(99)",
+        "sodiumMg": "1710(85)",
+        "sugarsG": "7",
+        "saturatedFatG": "24(162)",
+        "caffeineMg": "-"
+      },
+      "allergens": "밀, 대두, 우유, 쇠고기, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713979",
+      "menuName": "갈릭불고기 맥시멈2 세트",
+      "components": "갈릭불고기 맥시멈2 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/accb8b56-47b4-4f1d-9e03-18758c41d7aa.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/d92518f1-f85c-4ff2-a4f1-909c0b6d874c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713982",
+      "menuName": "갈릭불고기 맥시멈3 라지세트",
+      "components": "갈릭불고기 맥시멈3 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/a43b9d12-8984-4521-8c8c-f8e65a87aa9b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/e184dd65-5a1f-4667-a528-45fc6bd5284f.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713981",
+      "menuName": "갈릭불고기 맥시멈3 세트",
+      "components": "갈릭불고기 맥시멈3 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/bf00f44e-0c7c-44d0-b126-2c168734d7e5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/e2a8ae2e-d612-4f70-bd16-528d49483432.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100798",
+      "menuName": "갈릭불고기 맥시멈3",
+      "components": "갈릭불고기 맥시멈3",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/cd0ede20-337d-47a1-8980-62f06626737e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/dc99ee0f-061c-40a4-b71f-d4bb78ce2d34.png",
+      "nutrition": {
+        "weight": "468",
+        "caloriesKcal": "1347",
+        "proteinG": "77(140)",
+        "sodiumMg": "1902(95)",
+        "sugarsG": "15",
+        "saturatedFatG": "28(189)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 우유, 대두, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100799",
+      "menuName": "갈릭불고기 맥시멈 원파운더",
+      "components": "갈릭불고기 맥시멈 원파운더",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/ca29b03d-8a94-44eb-a397-2e1869f37485.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/f70dbaf3-f5c0-4880-a040-34741d3de7e9.png",
+      "nutrition": {
+        "weight": "573",
+        "caloriesKcal": "1694",
+        "proteinG": "93(169)",
+        "sodiumMg": "2262(113)",
+        "sugarsG": "18",
+        "saturatedFatG": "45(299)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 우유, 대두, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713983",
+      "menuName": "갈릭불고기 맥시멈 원파운더 세트",
+      "components": "갈릭불고기 맥시멈 원파운더 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/ddee9116-4c76-476f-9097-addc5cb99863.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/fd1bfe48-3b59-48a4-982e-f4df2a5b041a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713984",
+      "menuName": "갈릭불고기맥시멈 원파운더 라지세트",
+      "components": "갈릭불고기 맥시멈 원파운더 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/02/24/f003d631-d278-4575-b3d1-9a1d4bc023e3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/02/24/f738e86b-7605-4602-a6be-f45f3b6ea88a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "7713517",
+      "menuName": "더오치 맥시멈2 세트",
+      "components": "더오치 맥시멈2 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/08/06/f82eb595-9db1-450f-88da-50b2825ae2c9.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/08/06/abc7c932-eba3-44c1-8065-143d9b50cd44.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200002",
+      "categoryName": "오리지널스&맥시멈",
+      "categorySeq": "2",
+      "menuCode": "1100739",
+      "menuName": "더오치 맥시멈2",
+      "components": "더오치 맥시멈2",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/08/07/d426a52d-4137-4406-9e9c-a7d8b252c281.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/08/07/b5c662c1-92e4-4c9f-ab22-5cb4b8ad1b8f.png",
+      "nutrition": {
+        "weight": "375",
+        "caloriesKcal": "1018",
+        "proteinG": "53(97)",
+        "sodiumMg": "2045(102)",
+        "sugarsG": "9",
+        "saturatedFatG": "29(191)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 밀, 난류, 대두, 쇠고기, 토마토"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714067",
+      "menuName": "스모크 비프립 와퍼 라지세트",
+      "components": "스모크 비프립 와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/c055cfee-bb6a-42ee-a737-b2ba9d9fab2f.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/cec38971-6af0-4778-81c2-583dbf5d4885.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714066",
+      "menuName": "스모크 비프립 와퍼 세트",
+      "components": "스모크 비프립 와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/c77931f3-ccb2-4c11-800a-661c46ea89ba.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/bd6749b0-eee9-4728-9930-769a55418596.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1100809",
+      "menuName": "스모크 비프립 와퍼",
+      "components": "스모크 비프립 와퍼",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b6f4b216-8e21-47b8-8707-3d80f1d1f6a0.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/f32b8cf6-70b8-4fb7-8d12-becd174bc488.png",
+      "nutrition": {
+        "weight": "300",
+        "caloriesKcal": "811",
+        "proteinG": "37(68)",
+        "sodiumMg": "1417(71)",
+        "sugarsG": "17",
+        "saturatedFatG": "14(91)",
+        "caffeineMg": "-"
+      },
+      "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714068",
+      "menuName": "스모크 베이컨 와퍼 세트",
+      "components": "스모크 베이컨 와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b4df4525-9059-4d55-a31e-f748cbf726ae.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/de087469-0ef6-418e-936a-8f8a3731897e.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1100810",
+      "menuName": "스모크 베이컨 와퍼",
+      "components": "스모크 베이컨 와퍼",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b1fd7764-f5f2-40d2-8a42-b7b6935c4763.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/cda9e98d-7ce6-4b9b-8f34-e5a3172a3a46.png",
+      "nutrition": {
+        "weight": "288",
+        "caloriesKcal": "870",
+        "proteinG": "40(72)",
+        "sodiumMg": "1287(64)",
+        "sugarsG": "15",
+        "saturatedFatG": "15(99)",
+        "caffeineMg": "-"
+      },
+      "allergens": "난류, 쇠고기, 토마토, 밀, 대두, 돼지고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714069",
+      "menuName": "스모크 베이컨 와퍼 라지세트",
+      "components": "스모크 베이컨 와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/b4c2bb1d-7405-4059-984a-80cf606f5618.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/fff6dd55-f441-43e7-a8c7-f0a57b0765cd.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714070",
+      "menuName": "스모크 비프립 샌드위치 버거 세트",
+      "components": "스모크 비프립 샌드위치 버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/a58cb353-a160-42cd-a2d4-476137bbb561.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/e18418e9-4e87-4c75-8b33-194d382713e9.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1100811",
+      "menuName": "스모크 비프립 샌드위치 버거",
+      "components": "스모크 비프립 샌드위치 버거",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/a5536f1b-b619-46d1-8ce3-682169e5b72a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/f63f830f-e4eb-4bf6-9069-b4ddc3c3c459.png",
+      "nutrition": {
+        "weight": "286",
+        "caloriesKcal": "595",
+        "proteinG": "25(46)",
+        "sodiumMg": "1192(60)",
+        "sugarsG": "24",
+        "saturatedFatG": "7(48)",
+        "caffeineMg": "-"
+      },
+      "allergens": "난류, 쇠고기, 토마토, 우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7714071",
+      "menuName": "스모크 샌드위치 버거 라지세트",
+      "components": "스모크 비프립 샌드위치 버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/03/25/a3ae7e93-4630-4c0f-a91b-5b260de27d4e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/03/25/ad7e6397-e4ce-463c-82d7-3b17bfed66f0.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7713767",
+      "menuName": "베이비 버거",
+      "components": "베이비 콰트로치즈 + 베이비 통새우 + 베이비 불고기",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/10/28/f550bedc-a598-414a-b0a2-ce2b52409640.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/10/28/f46439dc-ae26-4263-95ef-d68ea176786f.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7713769",
+      "menuName": "베이비 버거 라지세트",
+      "components": "베이비 콰트로치즈 + 베이비 통새우 + 베이비 불고기 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/10/28/b73acfa1-07bb-4aa3-9f03-73092bb2740c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/10/28/e0400411-ae06-4992-be87-2d581643d253.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7713768",
+      "menuName": "베이비 버거 세트",
+      "components": "베이비 콰트로치즈 + 베이비 통새우 + 베이비 불고기 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/10/28/ac89fcbc-fd42-4b6a-b198-268682935dc7.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/10/28/c443e22d-502d-4392-a64c-f598663e9502.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111501",
+      "menuName": "몬스터와퍼 세트",
+      "components": "몬스터와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b3c29c13-6070-4865-819c-8dc1d19d95bd.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ac6846e3-e417-4583-8da1-6bbd30917437.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1080215",
+      "menuName": "몬스터와퍼",
+      "components": "몬스터와퍼",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ffefc938-62f3-4bc0-8a54-bad31db5d63a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a1110d1d-3127-4ec2-bcec-82d4e508d86c.png",
+      "nutrition": {
+        "weight": "403",
+        "caloriesKcal": "1094",
+        "proteinG": "52(94)",
+        "sodiumMg": "2146(107)",
+        "sugarsG": "8",
+        "saturatedFatG": "21(143)",
+        "caffeineMg": "0"
+      },
+      "allergens": "돼지고기, 난류, 쇠고기, 닭고기, 토마토, 우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111679",
+      "menuName": "몬스터와퍼 라지세트",
+      "components": "몬스터와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/be70cb0d-199f-4fc2-b323-9581f24be1d1.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c7b28c89-6bf9-4f6b-a313-b4e0f356c5e5.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111048",
+      "menuName": "베이컨치즈와퍼 세트",
+      "components": "베이컨치즈와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c20c768a-0583-43b1-83ce-929c918bae8a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e157342f-7834-49b6-aaac-5740aa9d9f8d.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111689",
+      "menuName": "베이컨치즈와퍼 라지세트",
+      "components": "베이컨치즈와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/de472dfd-16c6-46b3-92f6-1594bc4e594e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a26abccd-c0e6-465c-93d3-dc73c1b71631.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1080009",
+      "menuName": "베이컨치즈와퍼",
+      "components": "베이컨치즈와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/cafd8a5d-fbed-42c6-946d-c2f9cf009446.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bda1916f-1a73-41b1-95d5-9e27298b0664.png",
+      "nutrition": {
+        "weight": "320",
+        "caloriesKcal": "844",
+        "proteinG": "37(68)",
+        "sodiumMg": "1654(83)",
+        "sugarsG": "8",
+        "saturatedFatG": "19(124)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 돼지고기, 밀, 토마토, 쇠고기, 난류, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7710550",
+      "menuName": "콰트로치즈와퍼 라지세트",
+      "components": "콰트로치즈와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ded8948d-5d31-4c10-b0f8-0d3552fc154d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ac889e84-fa6b-4168-bc1b-88335f117b83.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1100197",
+      "menuName": "콰트로치즈와퍼",
+      "components": "콰트로치즈와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/fe3b84c2-1e1c-47c1-aea2-a8a7f6d5a069.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c3bb5198-4c06-4256-8b57-1796f516b90a.png",
+      "nutrition": {
+        "weight": "331",
+        "caloriesKcal": "887",
+        "proteinG": "43(77)",
+        "sodiumMg": "1647(82)",
+        "sugarsG": "6",
+        "saturatedFatG": "21(141)",
+        "caffeineMg": "0"
+      },
+      "allergens": "토마토, 쇠고기, 밀, 난류, 대두, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7710549",
+      "menuName": "콰트로치즈와퍼 세트",
+      "components": "콰트로치즈와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ee7b0008-093c-43c5-8250-85efdee9c898.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b41e43dc-8b8b-407f-9c54-63dd342dc9a3.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "1080121",
+      "menuName": "통새우와퍼",
+      "components": "통새우와퍼",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b29489df-fafb-43f1-b0e1-21ab7b0c19e3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b3b26016-b426-423d-8e98-f6370404a2e3.png",
+      "nutrition": {
+        "weight": "309",
+        "caloriesKcal": "714",
+        "proteinG": "34(61)",
+        "sodiumMg": "1258(63)",
+        "sugarsG": "9",
+        "saturatedFatG": "12(81)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 우유, 토마토, 쇠고기, 새우, 난류, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111245",
+      "menuName": "통새우와퍼 세트",
+      "components": "통새우와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c484db78-3534-44ea-a24c-99ab3341a368.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d6f89ef1-936e-4dc4-967e-68cfb8be1410.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200003",
+      "categoryName": "프리미엄",
+      "categorySeq": "3",
+      "menuCode": "7111683",
+      "menuName": "통새우와퍼 라지세트",
+      "components": "통새우와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f8c05a16-9be0-45bc-ad17-706e9a11a647.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d6fd811d-fc6f-419c-b567-48bab2be5762.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7111691",
+      "menuName": "와퍼 라지세트",
+      "components": "와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c8784db1-69ae-4a4a-b655-aebd88ef98f4.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e12e652f-99f1-4827-9866-3a06864d718d.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1080013",
+      "menuName": "와퍼",
+      "components": "와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c9811022-3678-4988-9fa4-1d3fc6a69bf5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b654b144-1c6d-410f-adee-639931c9f800.png",
+      "nutrition": {
+        "weight": "286",
+        "caloriesKcal": "706",
+        "proteinG": "30(55)",
+        "sodiumMg": "1098(55)",
+        "sugarsG": "10",
+        "saturatedFatG": "12(83)",
+        "caffeineMg": "0"
+      },
+      "allergens": "쇠고기, 토마토, 대두, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7111052",
+      "menuName": "와퍼 세트",
+      "components": "와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ff0da2b6-ec36-4f37-ad92-c39eeb0eeec3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e1d9fdf4-3ea2-4ec7-bfbe-521617585c61.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7111049",
+      "menuName": "치즈와퍼 세트",
+      "components": "치즈와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e7fce9d0-6095-4d01-b258-ad9abc563ea6.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ea565fa0-983c-47c8-9eaf-a7166a490f7a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7111693",
+      "menuName": "치즈와퍼 라지세트",
+      "components": "치즈와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b1eccdb8-91b8-49fc-b74a-663139fcd582.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a0277a0f-55e2-4802-a6f6-769b1edfe229.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1080010",
+      "menuName": "치즈와퍼",
+      "components": "치즈와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d14c3a22-568d-41f8-ba30-02ee39bfe647.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ca6ae749-2a23-498f-b99f-875fc7ac62a3.png",
+      "nutrition": {
+        "weight": "310",
+        "caloriesKcal": "799",
+        "proteinG": "35(64)",
+        "sodiumMg": "1571(79)",
+        "sugarsG": "7",
+        "saturatedFatG": "18(117)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 우유, 토마토, 난류, 쇠고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711336",
+      "menuName": "불고기와퍼 라지세트",
+      "components": "불고기와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d86004c8-6eb0-4db2-92f9-b96324cef898.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b3e44a70-7c59-47fc-9458-0639befdb72c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711335",
+      "menuName": "불고기와퍼 세트",
+      "components": "불고기와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c8bd99f7-0ce8-457c-8824-4360d6b08d82.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bd03b6f6-04e3-429e-aa6f-cc28f8dbb5d8.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1100385",
+      "menuName": "불고기와퍼",
+      "components": "불고기와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/fc969a33-3281-4601-91bb-b3aa789afc11.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a31e5bd5-ceab-4548-976f-5fc168965779.png",
+      "nutrition": {
+        "weight": "293",
+        "caloriesKcal": "738",
+        "proteinG": "31(57)",
+        "sodiumMg": "1137(57)",
+        "sugarsG": "10",
+        "saturatedFatG": "13(86)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 난류, 쇠고기, 토마토"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711481",
+      "menuName": "갈릭불고기와퍼 세트",
+      "components": "갈릭불고기와퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bfc0ce9a-7601-4dc0-8e59-8884b581b61c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fc5e5cfa-2a7d-426a-85ea-f7ec9cc82be5.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711482",
+      "menuName": "갈릭불고기와퍼 라지세트",
+      "components": "갈릭불고기와퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a68d270d-65e3-499d-9c33-099d5021833c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a2fa2110-e6ce-4c63-82e2-ee9c260ba0f9.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1100412",
+      "menuName": "갈릭불고기와퍼",
+      "components": "갈릭불고기와퍼",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c84d6cc7-298a-440f-8328-1839031ef46e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ba1e5306-20e6-4bda-b130-9fcad0087ca0.png",
+      "nutrition": {
+        "weight": "293",
+        "caloriesKcal": "768",
+        "proteinG": "31(57)",
+        "sodiumMg": "1007(50)",
+        "sugarsG": "9",
+        "saturatedFatG": "12(83)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 토마토, 쇠고기, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130311",
+      "menuName": "콰트로치즈와퍼주니어 라지세트",
+      "components": "콰트로치즈 와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bb116b3b-c6ee-460f-94ec-337d7d0ef146.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bab71031-2e95-493d-a520-a69ccb4dfb31.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130060",
+      "menuName": "콰트로치즈와퍼주니어 세트",
+      "components": "콰트로치즈 와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c91e39fa-5990-456a-a0c3-563ad164ff00.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bb371892-c1b6-4e02-839b-ec752879dc86.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1090031",
+      "menuName": "콰트로치즈 와퍼주니어",
+      "components": "콰트로치즈 와퍼주니어",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c46f1544-d3a5-4d68-8692-737c2cbb3da5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ac194f07-9503-4296-adba-cae1cea81e28.png",
+      "nutrition": {
+        "weight": "179",
+        "caloriesKcal": "470",
+        "proteinG": "21(38)",
+        "sodiumMg": "833(42)",
+        "sugarsG": "4",
+        "saturatedFatG": "10(66)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 우유, 토마토, 쇠고기, 난류, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1090178",
+      "menuName": "통새우와퍼주니어",
+      "components": "통새우와퍼주니어",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/04/f9899937-0f95-4d89-9a9a-5fef132a7346.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/04/ea0e3d30-a916-46cf-9a1a-75097a6b89a4.png",
+      "nutrition": {
+        "weight": "168",
+        "caloriesKcal": "414",
+        "proteinG": "17(31)",
+        "sodiumMg": "658(33)",
+        "sugarsG": "5",
+        "saturatedFatG": "7(46)",
+        "caffeineMg": "0"
+      },
+      "allergens": "새우, 대두, 우유, 토마토, 쇠고기, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130309",
+      "menuName": "통새우와퍼주니어 라지세트",
+      "components": "통새우와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d5028e0f-7e8f-4a3f-9e55-079e20cc76ed.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b2d7403f-5e9f-4185-adde-2747ce420e97.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130286",
+      "menuName": "통새우와퍼주니어 세트",
+      "components": "통새우와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f5d10d84-e8a2-4272-bbaa-b8f25b60dc08.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c6890d82-f010-4d42-8a1f-986832a15522.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7712305",
+      "menuName": "더블비프불고기버거세트",
+      "components": "더블비프불고기버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b1ab032a-4d0a-4c05-9c5c-c5a6735aeb5a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a0479ced-0f44-493a-8801-7e94861bdf76.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7712306",
+      "menuName": "더블비프불고기버거라지세트",
+      "components": "더블비프불고기버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a9ae5aa3-811b-4665-8c8c-37d74bbc990d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c837172a-4af8-4c68-a9ac-f26f9ef54da0.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1100562",
+      "menuName": "더블비프불고기버거",
+      "components": "더블비프불고기버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d8688732-ccfa-41b1-8afa-ff3646d45c2a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ff8551b4-c8c1-4cab-8dd7-bca67a3c1c2a.png",
+      "nutrition": {
+        "weight": "190",
+        "caloriesKcal": "565",
+        "proteinG": "26(48)",
+        "sodiumMg": "796(40)",
+        "sugarsG": "6",
+        "saturatedFatG": "12(80)",
+        "caffeineMg": "0"
+      },
+      "allergens": "난류, 쇠고기, 우유, 밀, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1090015",
+      "menuName": "와퍼주니어",
+      "components": "와퍼주니어",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/04/da324f38-2864-4382-ae9a-a97faf5bd265.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/04/c1c68ea4-deb3-4bb1-8387-2138bc706e2f.png",
+      "nutrition": {
+        "weight": "156",
+        "caloriesKcal": "376",
+        "proteinG": "17(30)",
+        "sodiumMg": "556(28)",
+        "sugarsG": "4",
+        "saturatedFatG": "5(33)",
+        "caffeineMg": "0"
+      },
+      "allergens": "쇠고기, 밀, 대두, 토마토, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130025",
+      "menuName": "와퍼주니어 세트",
+      "components": "와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b95a5a1f-cb58-4642-8629-4e61d39af6da.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d6d77468-74fd-4f33-9ea9-471b16442349.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130313",
+      "menuName": "와퍼주니어 라지세트 ",
+      "components": "와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ba2e1ba8-931a-4f4b-85ff-67a5c1b1416d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f74738df-41a5-40a0-99ba-2fef269a055f.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1090013",
+      "menuName": "치즈와퍼주니어",
+      "components": "치즈와퍼주니어",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b1b8de28-8b85-450a-9c58-c40a9a2fad3d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d46e8c75-9f62-47ba-9978-ad5210a437ad.png",
+      "nutrition": {
+        "weight": "168",
+        "caloriesKcal": "422",
+        "proteinG": "18(32)",
+        "sodiumMg": "778(39)",
+        "sugarsG": "4",
+        "saturatedFatG": "7(49)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 우유, 토마토, 난류, 쇠고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130023",
+      "menuName": "치즈와퍼주니어 세트",
+      "components": "치즈와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a936aaf3-2d5a-46c1-b6b7-d7f0cdb1e689.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ce67c697-99b9-4c8b-ad1e-15cafa2922d8.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7130315",
+      "menuName": "치즈와퍼주니어 라지세트 ",
+      "components": "치즈와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f02b7eb2-f397-4191-89c6-4fdb22b71e73.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d0399599-9cbc-43ed-abb2-c602b3ffb52b.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711338",
+      "menuName": "불고기와퍼주니어라지세트",
+      "components": "불고기와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/cd60455e-ff67-4994-a4fc-5bae639a2a29.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ed686f52-1f31-4f15-9b57-ae5bf566b5b5.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711337",
+      "menuName": "불고기와퍼주니어세트",
+      "components": "불고기와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/edf07603-faa2-4f03-a06f-c89664e3c346.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/aac078b7-9fa0-4b42-80d7-7a37896e0131.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1100386",
+      "menuName": "불고기와퍼주니어",
+      "components": "불고기와퍼주니어",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b3cc4d6e-7a84-472a-ae04-061151ba70d1.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f70e1959-95e1-4580-88cc-361dde80b21b.png",
+      "nutrition": {
+        "weight": "160",
+        "caloriesKcal": "413",
+        "proteinG": "16(29)",
+        "sodiumMg": "617(31)",
+        "sugarsG": "5",
+        "saturatedFatG": "6(38)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류, 쇠고기, 토마토, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7711949",
+      "menuName": "비프불고기버거 라지세트",
+      "components": "비프불고기버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/fe9bfda0-7ad0-4119-92d9-114930612eb0.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ae400287-4dec-45cd-a9a6-8628bc1c9b4e.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1100518",
+      "menuName": "비프불고기버거",
+      "components": "비프불고기버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e8510c49-b02b-4f6f-97e3-e0f5b7ed649c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fba6ff6d-d2e7-4a52-82d4-a7fd4153ca7a.png",
+      "nutrition": {
+        "weight": "0",
+        "caloriesKcal": "0",
+        "proteinG": "0",
+        "sodiumMg": "0",
+        "sugarsG": "0",
+        "saturatedFatG": "0",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 밀, 난류, 우유, 쇠고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7700612",
+      "menuName": "비프불고기버거 세트",
+      "components": "비프불고기버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a2587d34-f7e5-4f36-be7c-f96e7b7c2d2d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f179e791-1886-4472-b528-667c7b61b3e7.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "1050006",
+      "menuName": "치즈버거",
+      "components": "치즈버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d7977b8b-93c0-403f-834b-d9164f06cad6.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ebf95041-e665-4685-b0e4-b92239b2a351.png",
+      "nutrition": {
+        "weight": "130",
+        "caloriesKcal": "380",
+        "proteinG": "16(29)",
+        "sodiumMg": "766(38)",
+        "sugarsG": "6",
+        "saturatedFatG": "7(45)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류, 토마토, 쇠고기, 밀, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7060007",
+      "menuName": "치즈버거 세트",
+      "components": "치즈버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e8b2003f-2d7d-451d-ad9a-672f65a51df1.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fbdb4833-fd98-4109-bffb-43c7e995c22d.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200004",
+      "categoryName": "와퍼&주니어",
+      "categorySeq": "4",
+      "menuCode": "7060131",
+      "menuName": "치즈버거 라지세트",
+      "components": "치즈버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ed677902-f5c8-4762-b00d-2b011213bcb4.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f82dc728-33df-42d2-812a-f21f6b8ccf03.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713905",
+      "menuName": "더 크리스퍼 라지세트",
+      "components": "더 크리스퍼 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/a37954f8-611e-4673-90dd-46aa981f08d8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/a6a24be8-1438-498a-87ec-2685dbc6725a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713904",
+      "menuName": "더 크리스퍼 세트",
+      "components": "더 크리스퍼 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/ae467654-f62b-4d5b-9c9a-6cd11a7b0c8c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/ef7925dd-7df8-4935-86d0-885deade9ea1.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115480",
+      "menuName": "더 크리스퍼",
+      "components": "더 크리스퍼",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "02",
+          "menuFlagNm": "BEST"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/d895878b-82cf-4563-8b0e-ae369eabd10f.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/d9839ce9-730c-4c02-8b99-fd680b6c44e1.png",
+      "nutrition": {
+        "weight": "225",
+        "caloriesKcal": "696",
+        "proteinG": "26(48)",
+        "sodiumMg": "1392(70)",
+        "sugarsG": "5",
+        "saturatedFatG": "9(62)",
+        "caffeineMg": "-"
+      },
+      "allergens": "토마토, 난류, 쇠고기, 닭고기, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115481",
+      "menuName": "더 크리스퍼 베이컨&치즈",
+      "components": "더 크리스퍼 베이컨&치즈",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/e7067ea7-1992-4fae-bb9e-8ab039e5d72e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/f203621b-10ac-4b8e-a9e9-db1da43c0257.png",
+      "nutrition": {
+        "weight": "231",
+        "caloriesKcal": "727",
+        "proteinG": "28(51)",
+        "sodiumMg": "1553(78)",
+        "sugarsG": "6",
+        "saturatedFatG": "10(66)",
+        "caffeineMg": "-"
+      },
+      "allergens": "밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713907",
+      "menuName": "더 크리스퍼 베이컨&치즈 라지세트",
+      "components": "더 크리스퍼 베이컨&치즈 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/a7be123a-539c-4dbe-852c-ae074cef5167.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/d17c2ed7-1c45-44d4-ab1e-ee0d5b4ff000.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713906",
+      "menuName": "더 크리스퍼 베이컨&치즈 세트",
+      "components": "더 크리스퍼 베이컨&치즈 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/01/13/cde40b8c-c5da-43f7-ba75-8acb6428052e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/01/13/d7f977c3-61fc-40b4-b574-cd5bbd345002.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7712050",
+      "menuName": "치킨킹BLT 라지세트",
+      "components": "치킨킹BLT + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e1fa59fd-7360-4380-b285-67633b035dfe.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c3e23fa1-73af-46b0-a49b-80b3fb23894e.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115460",
+      "menuName": "치킨킹BLT",
+      "components": "치킨킹BLT",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/fd99206f-4072-4c2f-955c-12386291073a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/aa818c68-fbba-4ad8-a8ad-73f45a6b8cf1.png",
+      "nutrition": {
+        "weight": "269",
+        "caloriesKcal": "739",
+        "proteinG": "25(45)",
+        "sodiumMg": "1065(53)",
+        "sugarsG": "12",
+        "saturatedFatG": "11(75)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 난류, 쇠고기, 닭고기, 토마토, 돼지고기, 우유, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7712049",
+      "menuName": "치킨킹BLT 세트",
+      "components": "치킨킹BLT + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/eaa10f94-8e9a-4051-8092-e658a2ae78c2.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c7f46da5-9cf6-4865-8fe7-fc49bcf488b7.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115459",
+      "menuName": "치킨킹",
+      "components": "치킨킹",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b24d04e3-96d6-4cc1-b07d-fc171a7fc6b8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f7bd76e0-5183-46f0-8ff7-f74b5cc8c2f1.png",
+      "nutrition": {
+        "weight": "224",
+        "caloriesKcal": "673",
+        "proteinG": "24(43)",
+        "sodiumMg": "1037(52)",
+        "sugarsG": "8",
+        "saturatedFatG": "10(64)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 우유, 닭고기, 쇠고기, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7712047",
+      "menuName": "치킨킹 세트",
+      "components": "치킨킹 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ad445cd0-130b-492a-b040-442e9ebb88e9.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e6825e98-5de6-4bed-8ccb-761787c97af0.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7712048",
+      "menuName": "치킨킹 라지세트",
+      "components": "치킨킹 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a30de8d3-6676-4ccf-bbc2-75e16c1e8156.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f88f8187-8944-4ba0-9e20-ecfa4e08e01f.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7700585",
+      "menuName": "통새우슈림프버거 세트",
+      "components": "통새우슈림프버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a55a5727-dbdb-483c-a304-8f4a3bea361e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f8f0c940-d19d-4a0f-9b54-b461c3ce5d4f.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1100456",
+      "menuName": "통새우슈림프버거",
+      "components": "통새우슈림프버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b14f9d55-6932-4b58-8bfe-2a21ed63f376.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fdb3e46a-c352-4149-aeaa-5b3019b57e32.png",
+      "nutrition": {
+        "weight": "190",
+        "caloriesKcal": "512",
+        "proteinG": "16(29)",
+        "sodiumMg": "1077(54)",
+        "sugarsG": "8",
+        "saturatedFatG": "5(36)",
+        "caffeineMg": "0"
+      },
+      "allergens": "새우, 난류, 우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7700586",
+      "menuName": "통새우슈림프버거 라지세트",
+      "components": "통새우슈림프버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e4227ae3-e858-497a-9d55-c74074692e37.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a6f7bb79-2417-448f-b45d-412fdc340636.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115242",
+      "menuName": "치킨버거",
+      "components": "치킨버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/eea3248f-3d79-4618-a87d-c9e07b61c432.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f2ea7073-4d5d-45c8-a587-d18fb59b2ae1.png",
+      "nutrition": {
+        "weight": "179",
+        "caloriesKcal": "532",
+        "proteinG": "18(32)",
+        "sodiumMg": "840(42)",
+        "sugarsG": "4",
+        "saturatedFatG": "7(47)",
+        "caffeineMg": "0"
+      },
+      "allergens": "닭고기, 밀, 대두, 우유, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7710046",
+      "menuName": "치킨버거 라지세트",
+      "components": "치킨버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d80425be-89b3-4cf6-b449-cf8031af0344.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bd38f3f5-6456-48b7-8127-dd2e2d7a3b09.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7710040",
+      "menuName": "치킨버거 세트",
+      "components": "치킨버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f6bc7f46-fca2-44a7-b015-d379f044eac7.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c1bc74e4-8917-44cf-b9ec-220e589d7a22.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713511",
+      "menuName": "치킨 치즈 마요 버거 세트",
+      "components": "치킨 치즈 마요 버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/22/a3252c25-e5b6-4f04-ac13-be27807f8b59.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/22/d68853d2-28bd-4936-85f5-809631877e33.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "7713512",
+      "menuName": "치킨 치즈 마요 버거 라지세트",
+      "components": "치킨 치즈 마요 버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/22/c997d0ba-6db8-4641-88e4-24e510fea7b6.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/22/e92fd47f-ffac-4520-a349-dc9fa0dcceae.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200005",
+      "categoryName": "치킨&슈림프버거",
+      "categorySeq": "5",
+      "menuCode": "1115473",
+      "menuName": "치킨 치즈 마요 버거",
+      "components": "치킨 치즈 마요 버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/22/bed42084-4793-41bc-b89f-9cae7bc211d7.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/22/dc180108-c04f-4d3d-8c14-a9ef4680151b.png",
+      "nutrition": {
+        "weight": "195",
+        "caloriesKcal": "640",
+        "proteinG": "20(35)",
+        "sodiumMg": "1122(56)",
+        "sugarsG": "4",
+        "saturatedFatG": "10(66)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 밀, 닭고기, 난류, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7714205",
+      "menuName": "롱치킨버거 세트",
+      "components": "롱치킨버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/d9483b3f-e91d-45a9-b7d2-43375dbd84c7.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/e86f3846-d619-4b71-89aa-52b934547c37.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1115484",
+      "menuName": "롱치킨버거",
+      "components": "롱치킨버거",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/db0cc305-f7e3-4feb-a5e3-740ded880c2a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/f141fd6e-33d5-419d-b3e0-8457342621ab.png",
+      "nutrition": {
+        "weight": "206",
+        "caloriesKcal": "621",
+        "proteinG": "23(41)",
+        "sodiumMg": "1235(62)",
+        "sugarsG": "7",
+        "saturatedFatG": "7(45)",
+        "caffeineMg": "-"
+      },
+      "allergens": "밀, 닭고기, 난류, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7714206",
+      "menuName": "롱치킨버거 라지세트",
+      "components": "롱치킨버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/bd68e383-9bd3-4c53-839e-99bbcb71a4c5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/f1ffc401-6637-489c-9638-16265ba3dabb.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7714208",
+      "menuName": "불고기 롱치킨버거 라지세트",
+      "components": "불고기 롱치킨버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/f43a9f4f-14a9-438f-96ef-f3a1bfe54eaf.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/ee134c24-4464-40d7-96b4-d05637162fa9.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7714207",
+      "menuName": "불고기 롱치킨버거 세트",
+      "components": "불고기 롱치킨버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/ee26c4ee-46e7-4337-8079-bcca0edb45a3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/f675d777-92ee-4aaa-b5d1-4c6b57def8fa.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1115485",
+      "menuName": "불고기 롱치킨버거",
+      "components": "불고기 롱치킨버거",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/a1ee1a78-7098-496d-bdf5-bfc1120e6fa4.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/c54dc7d5-9844-4572-819e-03e5b9d31a6d.png",
+      "nutrition": {
+        "weight": "234",
+        "caloriesKcal": "691",
+        "proteinG": "23 (42)",
+        "sodiumMg": "1434(72)",
+        "sugarsG": "7",
+        "saturatedFatG": "7(46)",
+        "caffeineMg": "-"
+      },
+      "allergens": "밀, 난류, 닭고기, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7713514",
+      "menuName": "치킨 치즈 마요 버거 라지세트",
+      "components": "치킨 치즈 마요 버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/22/ab6aebea-3c7a-4116-ae02-7276fc55c0f2.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/22/e5d965ff-f08d-4ad3-8c39-197ab09c0178.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7713513",
+      "menuName": "치킨 치즈 마요 버거세트",
+      "components": "치킨 치즈 마요 버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/22/a10e121d-e47d-4f10-b511-5114fd1fec21.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/22/fe65beca-1b30-4652-aa34-47581c5a1f61.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1115474",
+      "menuName": "치킨 치즈 마요 버거",
+      "components": "치킨 치즈 마요 버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/28/cf9402e0-615e-4d0f-a5ca-af1a2485ee75.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/28/ca200948-a8be-4c60-a2ce-f3f96019b030.png",
+      "nutrition": {
+        "weight": "195",
+        "caloriesKcal": "640",
+        "proteinG": "20(35)",
+        "sodiumMg": "1122(56)",
+        "sugarsG": "4",
+        "saturatedFatG": "10(66)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 밀, 닭고기, 난류, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7713062",
+      "menuName": "몬스터 주니어 라지세트",
+      "components": "몬스터 주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/c76cba50-f03a-412e-8b09-b100a535aa0e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/f7744db8-ea91-4bdb-b1e8-46b2e4a08b75.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1100667",
+      "menuName": "몬스터 주니어",
+      "components": "몬스터 주니어",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/aa9ef4a9-ec10-4664-9080-d9b07f368867.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/dbeb4327-e613-4f59-ba28-da929739b18e.png",
+      "nutrition": {
+        "weight": "243",
+        "caloriesKcal": "687",
+        "proteinG": "30(54)",
+        "sodiumMg": "1293(65)",
+        "sugarsG": "7",
+        "saturatedFatG": "13(87)",
+        "caffeineMg": "0"
+      },
+      "allergens": "쇠고기, 난류, 토마토, 우유, 대두, 밀, 닭고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7713061",
+      "menuName": "몬스터 주니어 세트",
+      "components": "몬스터 주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/bf50f220-e089-47c2-aeeb-2d00125ad345.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/f8e56385-f426-4e66-a7b4-7a6cdead8954.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7712300",
+      "menuName": "더블비프불고기버거 세트",
+      "components": "더블비프불고기버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/aed657f4-b119-42c4-a0a0-0c42d43f4846.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/b7ee551d-d66d-4d32-ae87-b70148a88a66.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7712301",
+      "menuName": "더블비프불고기버거 라지세트 ",
+      "components": "더블비프불고기버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/d1798b43-5521-4167-ba7f-56ff6d071e24.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/d9a1db6a-de13-494f-abfc-a400f9d639d1.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1100654",
+      "menuName": "더블비프불고기버거",
+      "components": "더블비프불고기버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/a7ef8412-4a9f-4bd5-8f73-1184a7333d64.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/b017aef6-f3cd-4ee2-afd4-2df2d1622bf8.png",
+      "nutrition": {
+        "weight": "190",
+        "caloriesKcal": "565",
+        "proteinG": "26(48)",
+        "sodiumMg": "796(40)",
+        "sugarsG": "6",
+        "saturatedFatG": "12(80)",
+        "caffeineMg": "0"
+      },
+      "allergens": "난류, 쇠고기, 우유, 밀, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1100652",
+      "menuName": "콰트로치즈와퍼주니어",
+      "components": "콰트로치즈와퍼주니어",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/b39dd6c8-3296-44d6-a253-42dd255ca6ea.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/ee7997d1-4d04-42ae-b55e-8bfab5f6e2c5.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7130282",
+      "menuName": "콰트로치즈와퍼주니어 세트",
+      "components": "콰트로치즈 와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/be851444-cb44-445e-b4d5-4071f19d2aa2.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/d43f0e89-613a-4dc2-bf89-3684c6af7021.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7130318",
+      "menuName": "콰트로치즈와퍼주니어 라지세트",
+      "components": "콰트로치즈 와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/daf7de99-81c1-4432-bc8f-750087d52a48.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/f3069e99-0e30-4e59-b97c-346ef9dfcbc6.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7120029",
+      "menuName": "통새우와퍼주니어 세트",
+      "components": "통새우와퍼주니어 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/e7c9fc70-7fd0-4c96-a6a0-b78742e76726.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/e1fce976-6598-48e0-8db4-33422d1607f3.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1100653",
+      "menuName": "통새우와퍼주니어",
+      "components": "통새우와퍼주니어",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/a2910c14-96f9-4b5a-9265-9b34a3e12c7b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/b3d9982c-0a60-4441-95af-121de819c41b.png",
+      "nutrition": {
+        "weight": "168",
+        "caloriesKcal": "414",
+        "proteinG": "17(31)",
+        "sodiumMg": "658(33)",
+        "sugarsG": "5",
+        "saturatedFatG": "7(46)",
+        "caffeineMg": "0"
+      },
+      "allergens": "새우, 대두, 우유, 토마토, 쇠고기, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7130398",
+      "menuName": "통새우와퍼주니어 라지세트",
+      "components": "통새우와퍼주니어 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/c2afdcd5-91a8-4fb6-ad6d-291c1437154a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/e7ae97c5-ebb3-49fb-b3c7-ff0279556c20.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7700647",
+      "menuName": "비프불고기버거 세트",
+      "components": "비프불고기버거 + 프렌치프라이(R) + 코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/b5eae4bf-7e69-4076-8f0d-0882d8c02b9e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/ec8805a2-6e26-4a02-becf-1188c42e487d.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "7700648",
+      "menuName": "비프불고기버거 라지세트",
+      "components": "비프불고기버거 + 프렌치프라이(L) + 코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "06",
+          "menuFlagNm": "ADK"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/cb986023-6ff1-4227-a338-ce6f3fe5866d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/e661dfdb-9c3b-408a-9c31-ac1750bdeab5.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "1100650",
+      "menuName": "비프불고기버거",
+      "components": "비프불고기버거",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/06/11/fcf0d5d5-1fd7-4e74-9121-a74401774be6.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/06/11/f0329ccc-fe8d-4b20-ac61-77f15ab4c374.png",
+      "nutrition": {
+        "weight": "0",
+        "caloriesKcal": "0",
+        "proteinG": "0",
+        "sodiumMg": "0",
+        "sugarsG": "0",
+        "saturatedFatG": "0",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 밀, 난류, 우유, 쇠고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2030349",
+      "menuName": "코코넛슈림프(6조각)+스위트칠리소스",
+      "components": "코코넛슈림프(6조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a818c1a2-db9c-4a33-b009-e3c82eab4bb5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a7c333b2-4a35-466c-92c1-277934d12bd5.png",
+      "nutrition": {
+        "weight": "139",
+        "caloriesKcal": "382",
+        "proteinG": "10(18)",
+        "sodiumMg": "804(40)",
+        "sugarsG": "12",
+        "saturatedFatG": "7(48)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 난류, 새우, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2030348",
+      "menuName": "코코넛슈림프(3조각)+스위트칠리소스",
+      "components": "코코넛슈림프(3조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b0eb0ebd-7603-4a03-ab2e-dcb2bb7506d1.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a2818496-b3db-44e9-be77-21c06ef709e4.png",
+      "nutrition": {
+        "weight": "82",
+        "caloriesKcal": "216",
+        "proteinG": "5(9)",
+        "sodiumMg": "505(25)",
+        "sugarsG": "11",
+        "saturatedFatG": "4(24)",
+        "caffeineMg": "0"
+      },
+      "allergens": "난류, 대두, 밀, 새우"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2030350",
+      "menuName": "코코넛슈림프(9조각)+스위트칠리소스",
+      "components": "코코넛슈림프(9조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d91abb3b-01c5-4f37-a222-8482a8eb0d12.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e16e873e-7290-4cb3-a92a-2615cda475d3.png",
+      "nutrition": {
+        "weight": "196",
+        "caloriesKcal": "548",
+        "proteinG": "15(27)",
+        "sodiumMg": "1104(55)",
+        "sugarsG": "13",
+        "saturatedFatG": "11(73)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류, 새우, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2200284",
+      "menuName": "크리스퍼 랩",
+      "components": "크리스퍼 랩",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/21/f8a73788-9144-41dd-959f-9d45779373eb.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/21/ff5c1f79-d39b-4b64-83bb-6248c46beb61.png",
+      "nutrition": {
+        "weight": "133",
+        "caloriesKcal": "359",
+        "proteinG": "12(21)",
+        "sodiumMg": "651(33)",
+        "sugarsG": "4",
+        "saturatedFatG": "3(21)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 닭고기, 우유, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2200285",
+      "menuName": "리얼어니언링(R)",
+      "components": "리얼어니언링(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/08/d5c11ba6-9247-4bce-91e4-b845300130d8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/08/dcd7d58c-efae-4b71-939e-3788ea22c296.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "2030261",
+      "menuName": "21치즈스틱",
+      "components": "21치즈스틱",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b9b45861-8b06-4342-a3ef-ed6405f5457a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a42579b2-254b-426b-abbd-ae22eab8ea06.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "4020035",
+      "menuName": "초코 선데",
+      "components": "초코 선데",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/c3a36287-7c00-4bd3-9d0c-1269126b14de.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/a37e89c0-6583-4e0b-aecf-44fac8416d86.png",
+      "nutrition": {
+        "weight": "165",
+        "caloriesKcal": "232",
+        "proteinG": "2(3)",
+        "sodiumMg": "147(7)",
+        "sugarsG": "38",
+        "saturatedFatG": "3(21)",
+        "caffeineMg": "-"
+      },
+      "allergens": "대두, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "4020034",
+      "menuName": "밀크 선데",
+      "components": "밀크 선데",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/e4c9587f-7cde-4915-b7df-2899f07cb763.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/e01036bb-c6b0-4849-b467-71e27ac3fedc.png",
+      "nutrition": {
+        "weight": "140",
+        "caloriesKcal": "165",
+        "proteinG": "1(2)",
+        "sodiumMg": "116(6)",
+        "sugarsG": "27",
+        "saturatedFatG": "3(18)",
+        "caffeineMg": "-"
+      },
+      "allergens": "우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "4400062",
+      "menuName": "킹플로트(닥터페퍼 제로)",
+      "components": "킹플로트(닥터페퍼 제로)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/22/bec2c132-481a-43fe-a4cc-1d97cd20d12c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/22/f5aba7bc-cfd4-422e-8f54-1531d4526759.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "3300347",
+      "menuName": "코카콜라 제로(L)",
+      "components": "코카콜라 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/08/cd076f7f-e50a-4b25-a89b-eaad8aa78b8d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/08/e99c0e35-4a79-429c-a471-a9a56b8b0240.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "3300348",
+      "menuName": "스프라이트 제로(L)",
+      "components": "스프라이트 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/08/ad779e88-ea8f-40d6-b3ef-97be1514d129.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/08/e426f113-939c-47bb-b999-287dfc6e9ded.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200006",
+      "categoryName": "올데이스낵&올데이킹",
+      "categorySeq": "6",
+      "menuCode": "3300349",
+      "menuName": "닥터페퍼 제로(L)",
+      "components": "닥터페퍼 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/08/dc9f0dd6-8b95-457e-b94b-f90765a04231.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/08/d222e0dd-1e7b-4653-a025-29756a62f4b1.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200282",
+      "menuName": "크리스퍼 텐더",
+      "components": "크리스퍼 텐더",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/21/ae5df265-3f21-4e94-9565-6ad44ad45cf8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/21/b054b0aa-491a-42aa-a80c-67c2af712f53.png",
+      "nutrition": {
+        "weight": "80",
+        "caloriesKcal": "176",
+        "proteinG": "11(21)",
+        "sodiumMg": "361(18)",
+        "sugarsG": "1",
+        "saturatedFatG": "1(5)",
+        "caffeineMg": "0"
+      },
+      "allergens": "닭고기, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200284",
+      "menuName": "크리스퍼 랩",
+      "components": "크리스퍼 랩",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/07/21/f8a73788-9144-41dd-959f-9d45779373eb.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/07/21/ff5c1f79-d39b-4b64-83bb-6248c46beb61.png",
+      "nutrition": {
+        "weight": "133",
+        "caloriesKcal": "359",
+        "proteinG": "12(21)",
+        "sodiumMg": "651(33)",
+        "sugarsG": "4",
+        "saturatedFatG": "3(21)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 닭고기, 우유, 밀, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030420",
+      "menuName": "바삭킹2조각",
+      "components": "바삭킹2조각",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/f3792d8c-339f-47fd-bb5b-f40733991c1f.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b593f902-6fcf-41d1-9337-1406bbfb58af.png",
+      "nutrition": {
+        "weight": "99",
+        "caloriesKcal": "272",
+        "proteinG": "15(27)",
+        "sodiumMg": "497(25)",
+        "sugarsG": "1.7",
+        "saturatedFatG": "5(34.4)",
+        "caffeineMg": "0"
+      },
+      "allergens": "쇠고기, 대두, 밀, 닭고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030421",
+      "menuName": "바삭킹4조각",
+      "components": "바삭킹4조각",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ab34a753-5337-4f98-a3ef-3b82f56a8a6b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d17bab94-eb7b-435a-bdf2-74f92b043875.png",
+      "nutrition": {
+        "weight": "198",
+        "caloriesKcal": "544",
+        "proteinG": "29(54)",
+        "sodiumMg": "993(50)",
+        "sugarsG": "3.4",
+        "saturatedFatG": "10(66.9)",
+        "caffeineMg": "0"
+      },
+      "allergens": "닭고기, 대두, 밀, 쇠고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200251",
+      "menuName": "리얼 어니언링(L)",
+      "components": "리얼 어니언링(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bfef1373-5221-43a9-a89e-cde77f384208.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b849ad87-ea12-469b-bb5a-75f3b2410e24.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200247",
+      "menuName": "리얼 어니언링(R)",
+      "components": "리얼 어니언링(R)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ad192026-f0d0-45c7-bcad-1ffc043c8d02.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f8555d03-d9ea-4b28-b282-fb10d7dab97c.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030056",
+      "menuName": "너겟킹 10조각",
+      "components": "너겟킹 10조각",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e0890014-66be-4f39-826b-74a428d6e410.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ccfda430-aadf-4162-a211-e51a283638e9.png",
+      "nutrition": {
+        "weight": "165",
+        "caloriesKcal": "368",
+        "proteinG": "22(39)",
+        "sodiumMg": "1054(53)",
+        "sugarsG": "0.9",
+        "saturatedFatG": "5(35)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 닭고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200233",
+      "menuName": "너겟킹 8조각",
+      "components": "너겟킹 8조각",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/05/aabaf89c-0ebf-4629-8667-9ed5ce5c4be8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/05/b48dd9f8-b944-42a9-a8f4-7b6925220ea6.png",
+      "nutrition": {
+        "weight": "132",
+        "caloriesKcal": "294",
+        "proteinG": "17(31)",
+        "sodiumMg": "843(42)",
+        "sugarsG": "0.7",
+        "saturatedFatG": "4(28)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 대두, 닭고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030054",
+      "menuName": "너겟킹 4조각",
+      "components": "너겟킹 4조각",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/dfc0294f-d53b-4dfc-b2eb-eaf313d4f77b.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d1661d07-40ed-40cc-94a9-8f40990645b6.png",
+      "nutrition": {
+        "weight": "66",
+        "caloriesKcal": "147",
+        "proteinG": "9(16)",
+        "sodiumMg": "422(21)",
+        "sugarsG": "0.4",
+        "saturatedFatG": "2(14)",
+        "caffeineMg": "-"
+      },
+      "allergens": "대두, 밀, 닭고기"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030424",
+      "menuName": "바삭킹8조각+디아블로소스",
+      "components": "바삭킹8조각+디아블로소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b2cb8dd5-4af2-450a-a34e-d8ae0fefaf06.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/d5f8c3aa-1e2a-4d39-8969-6f2f5a1a61ac.png",
+      "nutrition": {
+        "weight": "421",
+        "caloriesKcal": "1127",
+        "proteinG": "59(108)",
+        "sodiumMg": "2279(114)",
+        "sugarsG": "14.1",
+        "saturatedFatG": "20.1(133.9)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 토마토, 닭고기, 쇠고기, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030422",
+      "menuName": "바삭킹8조각+스위트칠리소스",
+      "components": "바삭킹8조각+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e8d72647-0aad-4fa0-9113-881e50d34e45.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c3ed666f-a0a2-4ed9-a926-df9d557fe72a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030348",
+      "menuName": "코코넛슈림프(3조각)+스위트칠리소스",
+      "components": "코코넛슈림프(3조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b0eb0ebd-7603-4a03-ab2e-dcb2bb7506d1.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a2818496-b3db-44e9-be77-21c06ef709e4.png",
+      "nutrition": {
+        "weight": "82",
+        "caloriesKcal": "216",
+        "proteinG": "5(9)",
+        "sodiumMg": "505(25)",
+        "sugarsG": "11",
+        "saturatedFatG": "4(24)",
+        "caffeineMg": "0"
+      },
+      "allergens": "난류, 대두, 밀, 새우"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030350",
+      "menuName": "코코넛슈림프(9조각)+스위트칠리소스",
+      "components": "코코넛슈림프(9조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d91abb3b-01c5-4f37-a222-8482a8eb0d12.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/e16e873e-7290-4cb3-a92a-2615cda475d3.png",
+      "nutrition": {
+        "weight": "196",
+        "caloriesKcal": "548",
+        "proteinG": "15(27)",
+        "sodiumMg": "1104(55)",
+        "sugarsG": "13",
+        "saturatedFatG": "11(73)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류, 새우, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030349",
+      "menuName": "코코넛슈림프(6조각)+스위트칠리소스",
+      "components": "코코넛슈림프(6조각)+스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/a818c1a2-db9c-4a33-b009-e3c82eab4bb5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a7c333b2-4a35-466c-92c1-277934d12bd5.png",
+      "nutrition": {
+        "weight": "139",
+        "caloriesKcal": "382",
+        "proteinG": "10(18)",
+        "sodiumMg": "804(40)",
+        "sugarsG": "12",
+        "saturatedFatG": "7(48)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀, 난류, 새우, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030261",
+      "menuName": "21치즈스틱",
+      "components": "21치즈스틱",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b9b45861-8b06-4342-a3ef-ed6405f5457a.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a42579b2-254b-426b-abbd-ae22eab8ea06.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200051",
+      "menuName": "쉐이킹프라이 매콤치즈",
+      "components": "쉐이킹프라이 매콤치즈",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/d0a70146-03b3-4069-8494-71bd4f0dbe0d.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/c891e778-a975-4e59-8c35-dd768dd672ed.png",
+      "nutrition": {
+        "weight": "105",
+        "caloriesKcal": "287",
+        "proteinG": "4(7)",
+        "sodiumMg": "687(34)",
+        "sugarsG": "0.6",
+        "saturatedFatG": "3.1(21)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유, 대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200052",
+      "menuName": "쉐이킹프라이 스윗어니언",
+      "components": "쉐이킹프라이 스윗어니언",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/b00b84bf-5db1-421f-945c-519771706719.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/a490e7da-aa32-49b0-8833-2c4845f2ca11.png",
+      "nutrition": {
+        "weight": "105",
+        "caloriesKcal": "297",
+        "proteinG": "4(8)",
+        "sodiumMg": "486(24)",
+        "sugarsG": "1.29",
+        "saturatedFatG": "3.0(20)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2200050",
+      "menuName": "쉐이킹프라이 구운갈릭",
+      "components": "쉐이킹프라이 구운갈릭",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/de724408-8d82-4417-8a0e-beb0b8baa149.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/db436fb1-13fe-464f-96f8-5101492b6ae1.png",
+      "nutrition": {
+        "weight": "105",
+        "caloriesKcal": "292",
+        "proteinG": "4(7)",
+        "sodiumMg": "634(32)",
+        "sugarsG": "0.5",
+        "saturatedFatG": "3.1(21)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 우유, 토마토, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030015",
+      "menuName": "프렌치프라이(L)",
+      "components": "프렌치프라이(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/05/bb859c97-0a00-4082-8fb7-0a8e67fe0ab5.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/05/f8f2467d-1b18-4b48-abd5-cd65cbdca4dd.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "2030018",
+      "menuName": "프렌치프라이(R)",
+      "components": "프렌치프라이(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/05/d601acd4-19ac-4462-9fdc-0d170e4d04e4.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/05/fdec8bd8-ff3d-497d-8a35-8ab202471b0b.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "4020001",
+      "menuName": "콘샐러드",
+      "components": "콘샐러드",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/05/ddaf5550-6e96-4b86-9798-150571843d34.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/05/cc9e3b9f-3910-4643-8ad2-f90a9f1ac5ce.png",
+      "nutrition": {
+        "weight": "95",
+        "caloriesKcal": "127",
+        "proteinG": "2(4)",
+        "sodiumMg": "230(12)",
+        "sugarsG": "4",
+        "saturatedFatG": "1(7)",
+        "caffeineMg": "-"
+      },
+      "allergens": "대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "4020014",
+      "menuName": "코울슬로",
+      "components": "코울슬로",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d5da97e1-c516-4ebc-bbae-a41502e2b4d9.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ab43ac1b-4fdb-4772-a6e4-ee2e793b19f0.png",
+      "nutrition": {
+        "weight": "95",
+        "caloriesKcal": "155",
+        "proteinG": "1(2)",
+        "sodiumMg": "210(11)",
+        "sugarsG": "9",
+        "saturatedFatG": "0.9(6)",
+        "caffeineMg": "-"
+      },
+      "allergens": "난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6600705",
+      "menuName": "빅 딥 체다치즈",
+      "components": "빅 딥 체다치즈",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "01",
+          "menuFlagNm": "NEW"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2026/06/01/fefc1187-09bd-4ae2-ab18-f54f13e4f2fb.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2026/06/01/f62b59bb-559d-431b-aa20-8f41f04a6793.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6080072",
+      "menuName": "디아블로소스",
+      "components": "디아블로소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/e97ab984-e2f0-48e8-8a28-47bb41e1fa7e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f73041f4-05d1-4902-b918-c1b6498d394d.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6020002",
+      "menuName": "허니머스타드소스",
+      "components": "허니머스타드소스",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/d2bf7ed3-88c8-42c3-9aaa-e099e38ed1c8.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c6f49a74-7714-4bf9-9c2f-7d71ec443025.png",
+      "nutrition": {
+        "weight": "9",
+        "caloriesKcal": "30",
+        "proteinG": "0(0)",
+        "sodiumMg": "60(3)",
+        "sugarsG": "2(2)",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두, 난류"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6080070",
+      "menuName": "스위트칠리소스",
+      "components": "스위트칠리소스",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b12dd03a-50ed-466b-add8-3db86f92594e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/aebe9ec3-22da-470b-9db8-319113ca1dd3.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6600186",
+      "menuName": "매콤치즈 시즈닝",
+      "components": "매콤치즈 시즈닝",
+      "spicyYn": "1",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/c2d77a28-6269-4746-bb6c-98bc79de5738.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/d507a84a-38ed-4a1b-b6f4-de19d47c83dd.png",
+      "nutrition": {
+        "weight": "3",
+        "caloriesKcal": "9",
+        "proteinG": "0(0)",
+        "sodiumMg": "250(13)",
+        "sugarsG": "1",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "0"
+      },
+      "allergens": "대두"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6600185",
+      "menuName": "구운갈릭 시즈닝",
+      "components": "구운갈릭 시즈닝",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/d4cabc5d-fd72-4158-bc6c-5aa904911f58.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/c7a95b27-dcea-4658-9c03-e746688ff1e2.png",
+      "nutrition": {
+        "weight": "3",
+        "caloriesKcal": "8",
+        "proteinG": "0(0)",
+        "sodiumMg": "150(8)",
+        "sugarsG": "2",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "0"
+      },
+      "allergens": "밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200010",
+      "categoryName": "사이드",
+      "categorySeq": "7",
+      "menuCode": "6600187",
+      "menuName": "스윗어니언 시즈닝",
+      "components": "스윗어니언 시즈닝",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/02/05/f615f685-dc58-4d39-aa14-2b73edf40c13.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/02/05/f5da5592-1754-4291-8a8e-e1fccc54199d.png",
+      "nutrition": {
+        "weight": "3",
+        "caloriesKcal": "8",
+        "proteinG": "0(0)",
+        "sodiumMg": "140(7)",
+        "sugarsG": "2",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "0"
+      },
+      "allergens": "우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "4400069",
+      "menuName": "고구마 크림치즈 파이 로얄",
+      "components": "고구마 크림치즈 파이 로얄",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/12/12/b102c0d3-69b8-4ba7-8273-7822fc091673.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/12/12/a547a13f-e21e-4c60-8b40-e78136ee2793.png",
+      "nutrition": {
+        "weight": "62",
+        "caloriesKcal": "240",
+        "proteinG": "3(5)",
+        "sodiumMg": "94(5)",
+        "sugarsG": "8",
+        "saturatedFatG": "7(49)",
+        "caffeineMg": "-"
+      },
+      "allergens": "우유, 대두, 밀"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "4400062",
+      "menuName": "킹플로트(닥터페퍼 제로)",
+      "components": "킹플로트(닥터페퍼 제로)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/22/bec2c132-481a-43fe-a4cc-1d97cd20d12c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/22/f5aba7bc-cfd4-422e-8f54-1531d4526759.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "4020035",
+      "menuName": "초코 선데",
+      "components": "초코 선데",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/c3a36287-7c00-4bd3-9d0c-1269126b14de.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/a37e89c0-6583-4e0b-aecf-44fac8416d86.png",
+      "nutrition": {
+        "weight": "165",
+        "caloriesKcal": "232",
+        "proteinG": "2(3)",
+        "sodiumMg": "147(7)",
+        "sugarsG": "38",
+        "saturatedFatG": "3(21)",
+        "caffeineMg": "-"
+      },
+      "allergens": "대두, 우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "4020034",
+      "menuName": "밀크 선데",
+      "components": "밀크 선데",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/04/28/e4c9587f-7cde-4915-b7df-2899f07cb763.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/04/28/e01036bb-c6b0-4849-b467-71e27ac3fedc.png",
+      "nutrition": {
+        "weight": "140",
+        "caloriesKcal": "165",
+        "proteinG": "1(2)",
+        "sodiumMg": "116(6)",
+        "sugarsG": "27",
+        "saturatedFatG": "3(18)",
+        "caffeineMg": "-"
+      },
+      "allergens": "우유"
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3030086",
+      "menuName": "아메리카노",
+      "components": "아메리카노",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c77ae44c-30a2-4b09-9438-4a072ce7299e.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fdb94c35-0d24-41d4-b3ed-408fd2640bbb.png",
+      "nutrition": {
+        "weight": "249",
+        "caloriesKcal": "7",
+        "proteinG": "0(0)",
+        "sodiumMg": "3(0)",
+        "sugarsG": "0",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "112"
+      },
+      "allergens": ""
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3030087",
+      "menuName": "아이스아메리카노",
+      "components": "아이스아메리카노",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ca880124-cf85-4412-a939-4ea32c9ab70c.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/bdf3b729-be05-4fe3-ab89-9943a48ae2a9.png",
+      "nutrition": {
+        "weight": "271",
+        "caloriesKcal": "8",
+        "proteinG": "0(0)",
+        "sodiumMg": "0(0)",
+        "sugarsG": "0",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "120"
+      },
+      "allergens": ""
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3300312",
+      "menuName": "닥터페퍼 제로(R)",
+      "components": "닥터페퍼 제로(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/16/edcc6fb6-5524-4ae5-948b-c8db24c87ace.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/16/a6a69b92-66e9-494c-94e0-611515b0b884.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3300313",
+      "menuName": "닥터페퍼 제로(L)",
+      "components": "닥터페퍼 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/05/20/ca906aa0-3a0f-4deb-8083-e195cc1de2f3.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/05/20/fbd944d4-267e-4a0b-9e4b-7c374f699591.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040012",
+      "menuName": "코카콜라(L)",
+      "components": "코카콜라(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/be1dfb8d-4ca6-4c23-a46e-b9ffc70999c0.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/fe4990c7-ecb1-44e5-837f-0917a0be6234.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040016",
+      "menuName": "코카콜라(R)",
+      "components": "코카콜라(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bd5158be-277d-483e-a5af-b3827feaf821.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c86a9b22-445c-4ea7-95ac-8fa21cf717bc.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040017",
+      "menuName": "코카콜라 제로(R)",
+      "components": "코카콜라 제로(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bd7340ae-59d5-4b43-a638-e41fe1d77717.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/ebb009bb-09cb-44cb-be21-9a5a606169a7.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040015",
+      "menuName": "코카콜라 제로(L)",
+      "components": "코카콜라 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/c4c1d0d8-7445-4673-9925-e2d5c16574b2.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f0104b0f-c148-48a7-adf3-a2f161034e53.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040014",
+      "menuName": "스프라이트(L)",
+      "components": "스프라이트(L)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/ce899031-ae52-43d2-9bdd-e8572eed1051.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b1d8cc33-3fee-4e39-9f04-9001881031b8.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3040019",
+      "menuName": "스프라이트(R)",
+      "components": "스프라이트(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bd460290-b640-47a8-8e26-0351951a1f80.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/f8e419a1-1c06-4a30-bfee-67f2b39ac848.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3300226",
+      "menuName": "스프라이트 제로(R)",
+      "components": "스프라이트 제로(R)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/bd2f513d-848c-4c7a-ac48-bc891c090aca.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/b086d102-6752-4c4d-ba9d-d390287b7e1a.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3300227",
+      "menuName": "스프라이트 제로(L)",
+      "components": "스프라이트 제로(L)",
+      "spicyYn": "0",
+      "flags": [
+        {
+          "menuFlagPk": "09",
+          "menuFlagNm": "ADKS"
+        }
+      ],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/b94500b2-628f-451b-af87-75580eb15567.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/a5eef516-24e8-4930-936c-b52efd823890.png",
+      "nutrition": null,
+      "allergens": null
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3020011",
+      "menuName": "미닛메이드 오렌지",
+      "components": "미닛메이드 오렌지",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2025/01/06/fc7f243f-afa2-4315-a1b4-e53e83e855ec.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2025/01/06/c7a44203-22f8-4c80-8f37-1fbf4d193073.png",
+      "nutrition": {
+        "weight": "350",
+        "caloriesKcal": "112",
+        "proteinG": "1.9(3)",
+        "sodiumMg": "95(5)",
+        "sugarsG": "22",
+        "saturatedFatG": "0(0)",
+        "caffeineMg": "-"
+      },
+      "allergens": ""
+    },
+    {
+      "brandName": "버거킹",
+      "categoryCode": "K200020",
+      "categoryName": "음료&디저트",
+      "categorySeq": "8",
+      "menuCode": "3020033",
+      "menuName": "순수(미네랄워터)",
+      "components": "순수(미네랄워터)",
+      "spicyYn": "0",
+      "flags": [],
+      "imageUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/main/2024/12/05/e8a25b53-a554-4869-bc92-0184f1ede143.png",
+      "thumbnailUrl": "https://mob-prd.burgerking.co.kr/images/menu/web/thumb/2024/12/05/c5832568-5e20-478b-a90b-d77dd72fa88c.png",
+      "nutrition": null,
+      "allergens": null
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — DIET_RECOMMENDATION_OPTIMIZATION Phase 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 4 4; }
+      body { font-feature-settings: "kern"; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+      <header class="space-y-4 border-b border-slate-200 pb-8">
+        <p class="text-xs uppercase tracking-widest text-slate-500">Architecture review</p>
+        <h1 class="text-4xl font-serif">식단 추천 최적화 — Phase 1 정책·benchmark</h1>
+        <p class="text-sm text-slate-600">health-care · 2026-06-18 · 대상: <span class="font-mono">domain/nutrition/policy</span>, <span class="font-mono">domain/goals/policy</span>, <span class="font-mono">diet/recommendation/benchmark</span></p>
+
+        <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-sm space-y-1">
+          <p class="font-semibold text-emerald-900">Phase 1 검증 결과 — 완료 확인</p>
+          <ul class="text-emerald-800 space-y-0.5">
+            <li>· 정책 계약 3개 모듈 구현됨: 목표별 <span class="font-mono">NutritionPolicy</span>, 남은 영양량, 목표 기간 projection</li>
+            <li>· 고정 benchmark fixture(목표 5종 · 6 시나리오)와 배포 차단 gate 구축됨</li>
+            <li>· <span class="font-mono">./gradlew test</span> 강제 재실행 통과 (policy · goals/policy · benchmark)</li>
+            <li>· greedy baseline 수치가 <span class="font-mono">RecommendationBenchmarkReport(6,5,8,1,1,15,0)</span> 으로 재현됨 — 문서와 일치</li>
+            <li>· 현행 엔진 운영 동작 미변경 (계약·측정만 추가) — 계획 §12 Phase 1 범위 준수</li>
+          </ul>
+        </div>
+
+        <div class="flex flex-wrap gap-4 text-xs text-slate-600 pt-2">
+          <span class="flex items-center gap-2"><span class="inline-block w-5 h-3 border-2 border-slate-700"></span>module</span>
+          <span class="flex items-center gap-2"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#475569" stroke-width="2" class="seam"/></svg>seam</span>
+          <span class="flex items-center gap-2"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#dc2626" stroke-width="2"/></svg>leakage</span>
+          <span class="flex items-center gap-2"><span class="inline-block w-5 h-3 bg-slate-900"></span>deep module</span>
+        </div>
+        <p class="text-sm text-slate-500 pt-2">Phase 1은 의도적으로 계약과 측정만 추가했다. 아래는 Phase 2~5가 같은 코드를 계속 확장하기 전에 깊게 만들 여지가 있는 지점이다.</p>
+      </header>
+
+      <section id="candidates" class="space-y-12">
+
+        <!-- ===================== Candidate A ===================== -->
+        <article class="space-y-5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-serif">A. benchmark 측정 결과를 깊은 모듈로 모은다</h2>
+            <div class="flex gap-2">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-600 text-white">Strong</span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-200 text-slate-700">in-process</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>diet/recommendation/benchmark/RecommendationBenchmarkRunner.java</li>
+            <li>diet/recommendation/benchmark/RecommendationBenchmarkReport.java</li>
+            <li>diet/recommendation/benchmark/GreedyRecommendationBaselineTest.java</li>
+            <li>diet/recommendation/benchmark/RecommendationBenchmarkGateTest.java</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">Before — 6개 병렬 카운터 + 위치 기반 7-int</p>
+              <pre class="mermaid">
+flowchart TB
+  S[scenarios] --> R[Runner.run]
+  R --> D["per-scenario:<br/>위반 탐지 4종 + 재현성"]
+  D --> C["int 6개 누적<br/>blocking/nutrition/allergen<br/>incomplete/serving/determinism"]
+  C --> P["Report(6,5,8,1,1,15,0)<br/>위치 기반 7-int"]
+  P -.leak.-> T["test: new Report(6,5,8,1,1,15,0)<br/>의미 없는 매직 튜플"]
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#dc2626;
+  class P,T leak
+              </pre>
+            </div>
+            <div class="rounded-lg border border-slate-300 bg-white p-4">
+              <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">After — 시나리오 결과를 fold</p>
+              <pre class="mermaid">
+flowchart TB
+  S[scenarios] --> R["Runner.run"]
+  R --> O["ScenarioOutcome<br/>(시나리오당 명명된 위반)"]
+  O --> F["Report = outcomes.fold()"]
+  F --> T["test: outcome.nutritionViolations()<br/>이름으로 단언"]
+  classDef deep fill:#0f172a,color:#fff,stroke:#0f172a;
+  class O deep
+              </pre>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <p><span class="font-semibold">Problem.</span> 위반 탐지와 6개 지표 누적이 runner 한 루프에 엉켜 있고, report는 위치 기반 7-int라 호출부가 <span class="font-mono">new Report(6,5,8,1,1,15,0)</span> 매직 튜플이 된다.</p>
+            <p><span class="font-semibold">Solution.</span> runner가 시나리오마다 <span class="font-mono">ScenarioOutcome</span>(명명된 위반)을 내고, report는 outcome 목록의 fold로 만든다.</p>
+            <ul class="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-slate-700">
+              <li>· locality: 위반 규칙이 한 모듈에 모임</li>
+              <li>· interface는 시나리오 1건의 outcome</li>
+              <li>· 매직 7-int 튜플 제거</li>
+              <li>· Phase 3 새 엔진도 같은 outcome 재사용</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ===================== Candidate B ===================== -->
+        <article class="space-y-5 border-t border-slate-200 pt-10">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-serif">B. <span class="font-mono text-xl">RemainingNutrient/Nutrition</span> 이름 충돌 해소</h2>
+            <div class="flex gap-2">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white">Worth exploring</span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-200 text-slate-700">in-process</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>nutrition/policy/RemainingNutrientBudget.java</li>
+            <li>nutrition/policy/RemainingNutritionBudget.java</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4 items-stretch">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">Before — 한 음절 차이</p>
+              <div class="space-y-2 text-sm font-mono">
+                <div class="border-2 border-red-300 rounded p-2 bg-red-50">RemainingNutri<b>ent</b>Budget<br/><span class="text-xs text-slate-500">min · max · feasible (영양소 1종)</span></div>
+                <div class="border-2 border-red-300 rounded p-2 bg-red-50">RemainingNutri<b>tion</b>Budget<br/><span class="text-xs text-slate-500">calories · protein · carbs · fat 4종 묶음</span></div>
+                <p class="text-xs text-red-600 font-sans pt-1">읽는 사람·AI 모두 두 타입을 뒤섞기 쉽다.</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-300 bg-white p-4">
+              <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">After — 포함 관계가 이름에 드러남</p>
+              <div class="space-y-2 text-sm font-mono">
+                <div class="border-2 border-slate-800 rounded p-2 bg-slate-900 text-white">RemainingNutritionBudget
+                  <div class="mt-2 ml-2 space-y-1 text-xs text-slate-200">
+                    <div class="border border-slate-500 rounded p-1">NutrientBudget calories</div>
+                    <div class="border border-slate-500 rounded p-1">NutrientBudget protein …</div>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-600 font-sans pt-1">per-nutrient는 <span class="font-mono">NutrientBudget</span>, 묶음은 <span class="font-mono">RemainingNutritionBudget</span>.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <p><span class="font-semibold">Problem.</span> 두 record가 한 음절(<span class="font-mono">Nutrient</span>/<span class="font-mono">Nutrition</span>)만 다르고 역할은 "1종 vs 4종 묶음"이라 navigability가 떨어진다.</p>
+            <p><span class="font-semibold">Solution.</span> per-nutrient를 <span class="font-mono">NutrientBudget</span>로 바꾸고 묶음 record 안에 중첩한다. CONTEXT.md "남은 영양량" 정의와도 일치.</p>
+            <ul class="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-slate-700">
+              <li>· 이름이 포함 관계를 표현</li>
+              <li>· 호출부 혼동 제거</li>
+              <li>· 사용처 적어 비용 낮음 (2 파일)</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ===================== Candidate C ===================== -->
+        <article class="space-y-5 border-t border-slate-200 pt-10">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-serif">C. 영양소 4-tuple 개념이 두 번 존재한다</h2>
+            <div class="flex gap-2">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white">Worth exploring</span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-200 text-slate-700">in-process</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>nutrition/dto/NutritionTargets.java <span class="text-slate-400">(int cal/protein/carb/fat)</span></li>
+            <li>nutrition/policy/NutritionVector.java <span class="text-slate-400">(double cal/protein/carb/fat)</span></li>
+            <li>diet/recommendation/benchmark/RecommendationBenchmarkRunner.java <span class="text-slate-400">(수동 변환)</span></li>
+          </ul>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <pre class="mermaid">
+flowchart LR
+  subgraph now["지금 — 같은 개념, 두 타입"]
+    NT["NutritionTargets<br/>int × 4"]
+    NV["NutritionVector<br/>double × 4"]
+    RN["Runner: meals→NutritionVector<br/>수동 합산·환산"]
+    NT -.->|primitive mismatch| RN
+    NV --> RN
+  end
+            </pre>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <p><span class="font-semibold">Problem.</span> 칼로리·단백질·탄수·지방 4-tuple이 <span class="font-mono">NutritionTargets</span>(int)와 <span class="font-mono">NutritionVector</span>(double) 두 곳에 있고, runner가 둘 사이를 손으로 환산한다.</p>
+            <p><span class="font-semibold">Solution.</span> 목표·섭취·정책이 함께 표현할 공유 <span class="font-mono">Nutrients</span> 값을 두되, <span class="font-mono">NutritionTargets</span>는 기존 영양 목표 도메인에서 널리 쓰이므로 Phase 2 데이터 계약 작업과 함께 신중히 수렴시킨다.</p>
+            <ul class="grid sm:grid-cols-2 gap-x-6 gap-y-1 pt-1 text-slate-700">
+              <li>· leverage: 한 4-tuple, 여러 호출부</li>
+              <li>· int/double 환산 leakage 제거</li>
+              <li>· 단, 기존 dto 파급 범위 큼 → Phase 2와 병행</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ===================== Candidate D ===================== -->
+        <article class="space-y-5 border-t border-slate-200 pt-10">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-serif">D. 정책 "버전"이 라벨일 뿐 seam이 아니다</h2>
+            <div class="flex gap-2">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-500 text-white">Speculative</span>
+              <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-200 text-slate-700">strategy seam</span>
+            </div>
+          </div>
+
+          <ul class="font-mono text-sm text-slate-600 space-y-0.5">
+            <li>nutrition/policy/GoalAwareNutritionPolicy.java</li>
+          </ul>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-xs uppercase tracking-wider text-slate-500 mb-3">지금 — 비율은 private 상수, 버전은 문자열 1개, 분기는 in-place switch</p>
+            <div class="font-mono text-xs space-y-1 text-slate-700">
+              <div class="border-l-4 border-slate-400 pl-2 py-1">CURRENT_VERSION = "2026-06-18.v1"</div>
+              <div class="border-l-4 border-red-300 pl-2 py-1 bg-red-50">VERIFIED_CALORIE_UPPER_RATIO = 0.98 … (private static final ×6)</div>
+              <div class="border-l-4 border-slate-400 pl-2 py-1">resolve(): switch(goalType){ … } ← v2는 이 자리를 직접 수정</div>
+            </div>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 p-3 text-sm text-amber-900">
+            ⚠ <b>ADR-0002 §2 / 계획 §3와 긴장.</b> 문서는 "비율은 코드 상수가 아니라 <b>버전이 있는 정책</b>으로 관리한다"고 명시했지만, 현재는 비율이 클래스 private 상수로 흩어져 있고 버전은 문자열 라벨뿐이다. 다만 지금은 버전이 v1 하나뿐 — <b>adapter 1개는 가설적 seam</b>이라 registry를 미리 만들 필요는 없다. <b>v2를 추가하는 순간</b> 같은 switch를 in-place 수정하게 되므로, 그때 버전을 데이터 seam으로 분리하는 것을 권한다.</div>
+
+          <div class="space-y-1 text-sm">
+            <p><span class="font-semibold">권장.</span> 지금 구조 변경은 YAGNI. v2 정책 추가 시점에 "정책 버전 = 비율 데이터"로 분리하면 두 번째 adapter가 seam을 정당화한다.</p>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- ===================== Top recommendation ===================== -->
+      <section id="top-recommendation" class="border-t border-slate-200 pt-10">
+        <div class="rounded-xl deep bg-slate-900 text-white p-8 space-y-3" style="background:linear-gradient(135deg,#0f172a,#1e293b)">
+          <p class="text-xs uppercase tracking-widest text-slate-400">Top recommendation</p>
+          <h2 class="text-2xl font-serif">A — benchmark 측정 결과를 깊은 모듈로 모은다</h2>
+          <p class="text-sm text-slate-200 max-w-2xl">benchmark는 Phase 1~5 전체 추천 작업의 <b>test surface</b>다. 지금도 호출부가 <span class="font-mono">new Report(6,5,8,1,1,15,0)</span> 매직 튜플이라는 점이 friction을 증명한다. 시나리오당 <span class="font-mono">ScenarioOutcome</span>으로 깊게 만들면 위반 규칙의 locality가 생기고, Phase 3 새 엔진이 같은 interface를 그대로 재사용한다.</p>
+          <a href="#candidates" class="inline-block text-sm text-emerald-300 underline">→ 후보 A로</a>
+        </div>
+      </section>
+
+      <footer class="text-xs text-slate-400 pt-6 border-t border-slate-200">
+        improve-codebase-architecture · LANGUAGE.md 어휘(module/interface/seam/depth) + backend/CONTEXT.md 도메인 어휘 사용
+      </footer>
+
+    </main>
+  </body>
+</html>

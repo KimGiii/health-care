@@ -7,6 +7,8 @@ public enum AllergenDataSource {
     KHANES_RECIPE,
     /** 푸드QR 라벨 기반 (v2+) */
     FOODQR,
+    /** 브랜드 공식 영양·알러젠 고지 */
+    BRAND_OFFICIAL,
     /** Open Food Facts */
     OPEN_FOOD_FACTS,
     /** 사용자 직접 입력 */

@@ -15,4 +15,6 @@ public class ExternalApiProperties {
     private String publicApiKey        = "";
     private String processedFoodApiUrl = "https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api";
     private String generalFoodApiUrl   = "https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api";
+    private String foodNutrientDbApiUrl = "https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02";
+    private long importPageDelayMillis = 0L;
 }

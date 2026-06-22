@@ -5,7 +5,10 @@ import com.healthcare.domain.diet.dto.FoodCatalogResponse;
 import com.healthcare.domain.diet.dto.FoodSearchParams;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import com.healthcare.domain.diet.repository.FoodServingOptionRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +36,9 @@ class FoodCatalogServiceTest {
 
     @Mock
     private FoodCatalogRepository foodCatalogRepository;
+
+    @Mock
+    private FoodServingOptionRepository foodServingOptionRepository;
 
     @InjectMocks
     private FoodCatalogService foodCatalogService;
@@ -149,6 +155,8 @@ class FoodCatalogServiceTest {
         assertThat(result.getId()).isEqualTo(99L);
         assertThat(result.getName()).isEqualTo("Greek Yogurt");
         assertThat(result.isCustom()).isTrue();
+        assertThat(result.getSource()).isEqualTo(FoodCatalogSource.USER_CUSTOM);
+        assertThat(result.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
         assertThat(result.getCreatedByUserId()).isEqualTo(userId);
 
         // 저장되는 엔티티가 isCustom=true, createdByUserId=userId 인지 확인
@@ -156,6 +164,8 @@ class FoodCatalogServiceTest {
         verify(foodCatalogRepository).save(captor.capture());
         FoodCatalog capturedEntity = captor.getValue();
         assertThat(capturedEntity.getIsCustom()).isTrue();
+        assertThat(capturedEntity.getSource()).isEqualTo(FoodCatalogSource.USER_CUSTOM);
+        assertThat(capturedEntity.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
         assertThat(capturedEntity.getCreatedByUserId()).isEqualTo(userId);
     }
 
@@ -219,6 +229,8 @@ class FoodCatalogServiceTest {
                 .id(id).name(name).nameKo(nameKo).category(category)
                 .caloriesPer100g(caloriesPer100g).proteinPer100g(proteinPer100g)
                 .carbsPer100g(carbsPer100g).fatPer100g(fatPer100g)
+                .source(FoodCatalogSource.SEED)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
                 .isCustom(false).createdByUserId(null)
                 .build();
     }
@@ -228,6 +240,8 @@ class FoodCatalogServiceTest {
                 .id(id).name(name).category(category)
                 .caloriesPer100g(100.0).proteinPer100g(10.0)
                 .carbsPer100g(10.0).fatPer100g(3.0)
+                .source(FoodCatalogSource.USER_CUSTOM)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                 .isCustom(true).createdByUserId(createdByUserId)
                 .build();
     }

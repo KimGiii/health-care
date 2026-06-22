@@ -141,6 +141,7 @@ jobs:
               -e REDIS_HOST="redis" \
               -e REDIS_PORT="6379" \
               -e JWT_SECRET="${{ secrets.DEV_JWT_SECRET }}" \
+              -e ADMIN_OPERATION_TOKEN="${{ secrets.DEV_ADMIN_OPERATION_TOKEN }}" \
               -e S3_BUCKET="${{ secrets.DEV_S3_BUCKET }}" \
               -e FCM_CREDENTIALS_PATH="/app/fcm-credentials.json" \
               -e OPENAI_API_KEY="${{ secrets.DEV_OPENAI_API_KEY }}" \

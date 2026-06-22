@@ -11,7 +11,7 @@ final class HealthCareUITests: XCTestCase {
     func testOnboardingAppears() throws {
         launchApp()
         XCTAssertTrue(app.staticTexts["Gainsy"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["로그인"].exists)
+        XCTAssertTrue(app.buttons["로그인하기"].exists)
     }
 
     func testLoginScreenAppears() throws {
@@ -22,13 +22,13 @@ final class HealthCareUITests: XCTestCase {
     }
 
     func testMainTabsAppearWhenAuthenticated() throws {
-        launchApp(arguments: ["UI_TEST_AUTHENTICATED"])
+        launchApp(arguments: ["UI_TEST_AUTHENTICATED", "UI_TEST_STUB_NETWORK"])
 
         XCTAssertTrue(app.tabBars.buttons["대시보드"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.tabBars.buttons["다이어리"].exists)
         XCTAssertTrue(app.tabBars.buttons["기록"].exists)
         XCTAssertTrue(app.tabBars.buttons["탐색"].exists)
-        XCTAssertTrue(app.tabBars.buttons["프로필"].exists)
+        XCTAssertTrue(app.tabBars.buttons["마이"].exists)
     }
 
     private func launchApp(arguments: [String] = []) {

@@ -4,14 +4,20 @@ import com.healthcare.domain.diet.dto.CreateCustomFoodRequest;
 import com.healthcare.domain.diet.dto.FoodCatalogResponse;
 import com.healthcare.domain.diet.dto.FoodSearchParams;
 import com.healthcare.domain.diet.entity.FoodCatalog;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.FoodServingOption;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
+import com.healthcare.domain.diet.identity.FoodCatalogIdentity;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
+import com.healthcare.domain.diet.repository.FoodServingOptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Normalizer;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +25,27 @@ import java.util.List;
 public class FoodCatalogService {
 
     private final FoodCatalogRepository foodCatalogRepository;
+    private final FoodServingOptionRepository foodServingOptionRepository;
 
     public List<FoodCatalogResponse> searchFoods(FoodSearchParams params) {
         String normalizedQuery = normalizeQuery(params.getQuery());
-        return foodCatalogRepository
-                .searchAll(normalizedQuery, params.getCategory(), params.isCustomOnly())
-                .stream()
-                .map(FoodCatalogResponse::from)
+        List<FoodCatalog> foods = foodCatalogRepository
+                .searchAll(normalizedQuery, params.getCategory(), params.isCustomOnly());
+
+        List<Long> foodIds = foods.stream()
+                .map(FoodCatalog::getId)
+                .filter(id -> id != null)
+                .toList();
+        Map<Long, List<FoodServingOption>> optionsByFoodId = foodIds.isEmpty()
+                ? Map.of()
+                : foodServingOptionRepository.findByFoodCatalogIdIn(foodIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(FoodServingOption::getFoodCatalogId));
+
+        return foods.stream()
+                .map(food -> FoodCatalogResponse.from(
+                        food,
+                        optionsByFoodId.getOrDefault(food.getId(), List.of())))
                 .toList();
     }
 
@@ -54,6 +74,8 @@ public class FoodCatalogService {
                     .transFatPer100g(request.getTransFatPer100g())
                     .cholesterolPer100gMg(request.getCholesterolPer100gMg())
                     .sodiumPer100gMg(request.getSodiumPer100gMg())
+                    .source(FoodCatalogSource.USER_CUSTOM)
+                    .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                     .isCustom(true)
                     .createdByUserId(userId)
                     .build();
@@ -76,8 +98,6 @@ public class FoodCatalogService {
 
     /** NFC 정규화 + 연속 공백 축약 + 앞뒤 공백 제거 */
     private String normalizeName(String name) {
-        if (name == null) return null;
-        String nfc = Normalizer.normalize(name, Normalizer.Form.NFC);
-        return nfc.trim().replaceAll("\\s+", " ");
+        return FoodCatalogIdentity.normalizeDisplayName(name);
     }
 }

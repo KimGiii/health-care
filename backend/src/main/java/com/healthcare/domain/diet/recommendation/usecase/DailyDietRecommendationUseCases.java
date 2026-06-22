@@ -1,61 +1,84 @@
 package com.healthcare.domain.diet.recommendation.usecase;
 
 import com.healthcare.common.exception.BusinessRuleViolationException;
-import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
-import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
-import com.healthcare.domain.diet.entity.FoodCatalog;
-import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.DietLog;
+import com.healthcare.domain.diet.recommendation.candidate.CandidatePoolDiagnostics;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationRequest;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse;
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
-import com.healthcare.domain.diet.recommendation.engine.DietRecommendationEngine;
-import com.healthcare.domain.diet.repository.FoodCatalogRepository;
-import com.healthcare.domain.diet.repository.FoodCatalogSpecs;
+import com.healthcare.domain.diet.recommendation.engine.ConstraintRecommendationEngine;
+import com.healthcare.domain.diet.recommendation.engine.OnlinePreferencePolicy;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationFailureReason;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
+import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
+import com.healthcare.domain.diet.recommendation.engine.UserRepetitionPolicy;
+import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
+import com.healthcare.domain.diet.repository.DietLogRepository;
+import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.restriction.dto.DietRestrictionResponse;
 import com.healthcare.domain.diet.restriction.entity.DietRestriction;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.diet.restriction.repository.DietRestrictionRepository;
 import com.healthcare.domain.goals.entity.Goal;
 import com.healthcare.domain.goals.repository.GoalRepository;
+import com.healthcare.domain.nutrition.dto.ConsumedNutrients;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
+import com.healthcare.domain.nutrition.policy.GoalAwareNutritionPolicy;
+import com.healthcare.domain.nutrition.policy.NutritionEstimate;
+import com.healthcare.domain.nutrition.policy.NutritionPolicy;
+import com.healthcare.domain.nutrition.policy.NutritionVector;
+import com.healthcare.domain.nutrition.policy.RemainingNutritionBudget;
+import com.healthcare.domain.nutrition.policy.RemainingNutritionCalculator;
 import com.healthcare.domain.nutrition.service.NutritionCalculator;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DailyDietRecommendationUseCases {
 
-    private static final String DISCLAIMER =
-            "이 추천은 영양 정보 기반의 참고용 제안입니다. " +
-            "알러젠 정보는 완전하지 않을 수 있으니, 식품 라벨을 반드시 확인하세요.";
+    private static final int REPETITION_LOOKBACK_DAYS = 7;
+    private static final NutritionTargets ZERO_TARGETS = new NutritionTargets(0, 0, 0, 0);
 
     private final UserRepository userRepository;
     private final GoalRepository goalRepository;
     private final DietRestrictionRepository dietRestrictionRepository;
-    private final FoodCatalogRepository foodCatalogRepository;
-    private final FoodAllergenTagRepository foodAllergenTagRepository;
-    private final DietRecommendationEngine engine;
+    private final DietLogRepository dietLogRepository;
+    private final DietRecommendationCandidatePool candidatePool;
+    private final ConstraintRecommendationEngine engine;
+    private final RecommendationSnapshotStore snapshotStore;
+    private final FoodEntryRepository foodEntryRepository;
 
+    // 무상태 정책 객체 — 빈 등록 없이 직접 보유한다.
+    private final GoalAwareNutritionPolicy policies = new GoalAwareNutritionPolicy();
+    private final RemainingNutritionCalculator remainingCalculator = new RemainingNutritionCalculator();
+
+    // 추천 생성 시 스냅샷·이벤트를 저장하므로 클래스 기본 readOnly 트랜잭션을 쓰기 트랜잭션으로 오버라이드한다.
+    @Transactional
     public DailyDietRecommendationResponse recommend(Long userId, DailyDietRecommendationRequest request) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessRuleViolationException("사용자를 찾을 수 없습니다."));
 
+        List<DietRestriction> restrictions = dietRestrictionRepository
+                .findByUserIdAndDeletedAtIsNull(userId);
+        List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
+                .map(DietRestrictionResponse::from)
+                .toList();
+
         if (!NutritionCalculator.canCalculate(user)) {
-            throw new BusinessRuleViolationException(
-                    "추천에 필요한 프로필 정보가 부족합니다. 성별/생년월일/키/체중/활동 수준을 모두 입력해 주세요.");
+            return failureResponse(request, ZERO_TARGETS, ZERO_TARGETS, appliedRestrictions,
+                    RecommendationFailureReason.TARGET_PROFILE_MISSING);
         }
 
         Goal.GoalType goalType = goalRepository.findActiveGoalByUserId(userId)
@@ -63,63 +86,93 @@ public class DailyDietRecommendationUseCases {
                 .orElse(null);
         NutritionTargets targets = NutritionCalculator.computeFor(user, goalType);
 
-        List<DietRestriction> restrictions = dietRestrictionRepository
-                .findByUserIdAndDeletedAtIsNull(userId);
+        List<DietLog> todayLogs = dietLogRepository.findByUserIdAndLogDate(userId, request.date());
+        ConsumedNutrients consumed = ConsumedNutrients.from(todayLogs);
+        NutritionTargets remainingTargets = targets.minus(consumed);
 
-        List<FoodCatalog> candidates = loadCandidates(restrictions);
-        List<Long> foodIds = candidates.stream().map(FoodCatalog::getId).toList();
+        if (remainingTargets.calorieTarget() <= 0) {
+            return DailyDietRecommendationResponse.alreadyMet(
+                    request.date(), targets, remainingTargets, appliedRestrictions,
+                    request.strictAllergyMode(),
+                    "오늘 칼로리 목표를 이미 달성했습니다. 추가 추천이 필요하지 않습니다.");
+        }
 
-        Map<Long, List<FoodAllergenTag>> tagsByFoodId = foodAllergenTagRepository
-                .findByFoodCatalogIdIn(foodIds)
-                .stream()
-                .collect(Collectors.groupingBy(FoodAllergenTag::getFoodCatalogId));
-
-        List<FoodCatalog> filtered = engine.filterCandidates(
-                candidates, restrictions, tagsByFoodId, request.strictAllergyMode());
-
-        List<RecommendedMeal> meals = engine.recommend(
-                targets, request.mealTypes(), filtered, tagsByFoodId, request.strictAllergyMode());
-
-        NutrientSummary summary = buildSummary(meals);
-        List<DietRestrictionResponse> appliedRestrictions = restrictions.stream()
-                .map(DietRestrictionResponse::from)
+        DietRecommendationCandidates candidates = candidatePool.load(restrictions, request.strictAllergyMode());
+        // 추천 후보는 영양 완전성과 검증된 1회 제공량 옵션을 모두 갖춰야 한다(§7.1).
+        // 제공량 근거가 없는 식품은 비현실적 분량으로 이어지므로 추천에서 제외한다.
+        List<DietRecommendationCandidate> eligible = candidates.foods().stream()
+                .filter(DietRecommendationCandidate::macroDataComplete)
+                .filter(DietRecommendationCandidate::hasVerifiedServingOptions)
                 .toList();
+        if (eligible.isEmpty()) {
+            return failureResponse(request, targets, remainingTargets, appliedRestrictions,
+                    classifyEmptyEligible(candidates));
+        }
 
-        return new DailyDietRecommendationResponse(
-                request.date(),
-                targets,
-                appliedRestrictions,
-                meals,
-                summary,
-                request.strictAllergyMode(),
-                DISCLAIMER
-        );
+        // 정책은 전체 일일 목표에 적용한 뒤 확정 섭취를 차감한다(리뷰 P0-1).
+        NutritionPolicy policy = policies.resolve(goalType, targets);
+        NutritionVector consumedVector = new NutritionVector(
+                consumed.calories(), consumed.proteinG(), consumed.carbsG(), consumed.fatG());
+        RemainingNutritionBudget budget = remainingCalculator.calculate(
+                policy, List.of(NutritionEstimate.confirmed(consumedVector)));
+
+        Set<Long> recentIds = foodEntryRepository.findRecentFoodCatalogIds(
+                userId, request.date().minusDays(REPETITION_LOOKBACK_DAYS));
+        UserRepetitionPolicy repetitionPolicy = new UserRepetitionPolicy(recentIds);
+
+        int maxSolutions = 1 + Math.max(0, request.alternativeCount());
+        RecommendationResult result = engine.recommend(
+                request.date(), budget, request.mealTypes(), eligible,
+                repetitionPolicy, OnlinePreferencePolicy.noSignals(),
+                maxSolutions, GoalAwareNutritionPolicy.CURRENT_VERSION);
+
+        if (result instanceof RecommendationResult.Failure failure) {
+            return failureResponse(request, targets, remainingTargets, appliedRestrictions,
+                    failure.reason());
+        }
+
+        RecommendationResult.Success success = (RecommendationResult.Success) result;
+        RecommendationSolution primary = success.primary();
+        List<RecommendedMeal> meals = primary.meals();
+        NutrientSummary summary = buildSummary(meals);
+
+        String mealsJson = snapshotStore.serializeMeals(meals);
+        Long snapshotId = snapshotStore.save(userId, request.date(), mealsJson, goalType,
+                request.strictAllergyMode());
+
+        return DailyDietRecommendationResponse.of(
+                request.date(), targets, remainingTargets, appliedRestrictions, meals,
+                summary, null, primary.rationale(), request.strictAllergyMode(),
+                success.alternatives(), snapshotId);
     }
 
-    /**
-     * FOOD 타입 제한(food_catalog_id 목록)과 CATEGORY 타입 제한을 DB WHERE 절로 밀어 넣어
-     * 추천 후보를 로드한다. 칼로리 정보 없는 식품도 DB 레벨에서 제외된다.
-     */
-    private List<FoodCatalog> loadCandidates(List<DietRestriction> restrictions) {
-        Set<Long> excludedFoodIds = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.FOOD)
-                .map(DietRestriction::getFoodCatalogId)
-                .collect(Collectors.toSet());
-
-        Set<FoodCategory> excludedCategories = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.CATEGORY)
-                .map(DietRestriction::getCategory)
-                .collect(Collectors.toSet());
-
-        Specification<FoodCatalog> spec = FoodCatalogSpecs.hasCalories();
-        if (!excludedFoodIds.isEmpty()) {
-            spec = spec.and(FoodCatalogSpecs.idNotIn(excludedFoodIds));
+    /** 통과 후보가 비었을 때 후보 풀 진단으로 실패 사유를 판정한다(리뷰 P0-3). */
+    private RecommendationFailureReason classifyEmptyEligible(DietRecommendationCandidates candidates) {
+        // 통과 후보는 있으나 전부 macro 결측 → 데이터 결측
+        if (!candidates.foods().isEmpty()) {
+            return RecommendationFailureReason.NUTRIENT_DATA_INCOMPLETE;
         }
-        if (!excludedCategories.isEmpty()) {
-            spec = spec.and(FoodCatalogSpecs.categoryNotIn(excludedCategories));
+        CandidatePoolDiagnostics.DominantDropCause cause = candidates.diagnostics().dominantDropCause();
+        if (cause == null) {
+            return RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE;
         }
+        return switch (cause) {
+            case ALLERGEN -> RecommendationFailureReason.ALLERGEN_VERIFIED_POOL_INSUFFICIENT;
+            case INCOMPLETE_MACRO -> RecommendationFailureReason.NUTRIENT_DATA_INCOMPLETE;
+            case RESTRICTION, FRESHNESS, NONE -> RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE;
+        };
+    }
 
-        return foodCatalogRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "usageCount"));
+    private DailyDietRecommendationResponse failureResponse(
+            DailyDietRecommendationRequest request,
+            NutritionTargets targets,
+            NutritionTargets remainingTargets,
+            List<DietRestrictionResponse> appliedRestrictions,
+            RecommendationFailureReason reason
+    ) {
+        return DailyDietRecommendationResponse.failure(
+                request.date(), targets, remainingTargets, appliedRestrictions,
+                request.strictAllergyMode(), reason.name(), reason.userMessage());
     }
 
     private NutrientSummary buildSummary(List<RecommendedMeal> meals) {

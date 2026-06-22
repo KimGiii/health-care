@@ -10,5 +10,10 @@ import java.util.List;
 public record DailyDietRecommendationRequest(
         @NotNull LocalDate date,
         @NotEmpty List<MealType> mealTypes,
-        boolean strictAllergyMode
-) {}
+        boolean strictAllergyMode,
+        int alternativeCount
+) {
+    public DailyDietRecommendationRequest(LocalDate date, List<MealType> mealTypes, boolean strictAllergyMode) {
+        this(date, mealTypes, strictAllergyMode, 0);
+    }
+}

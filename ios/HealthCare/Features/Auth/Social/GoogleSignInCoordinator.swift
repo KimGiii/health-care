@@ -5,9 +5,9 @@ import UIKit
 /// Google 로그인 흐름을 `SocialIdentityTokenProvider` 추상화에 맞춰 캡슐화한 코디네이터.
 ///
 /// 백엔드 검증 규칙(중요):
-///   - Google 은 nonce 를 `id_token` 의 `nonce` 클레임에 **원본 그대로** 담는다(Apple 처럼 SHA256 해시 X).
-///   - 따라서 본 코디네이터는 SHA256 변환 없이 원본 nonce 를 그대로 SDK 에 넘기고, `SocialIdentityToken.rawNonce`
-///     에도 동일 값을 담아 백엔드의 `case GOOGLE -> rawNonce` 비교 분기와 매칭시킨다.
+///   - GoogleSignIn 7.1.0 의 iOS sign-in API 는 nonce 파라미터를 노출하지 않는다.
+///   - 따라서 Google 로그인은 `SocialIdentityToken.rawNonce == nil` 로 전달하며, 백엔드는 하위호환 규칙에 따라
+///     nonce 검증을 건너뛴다. nonce 지원 SDK 로 올리면 이 경계를 다시 좁힌다.
 ///
 /// 요구사항:
 ///   - `Info.plist` 의 `GIDClientID` = GCP 콘솔에서 발급한 iOS OAuth Client ID
@@ -45,14 +45,10 @@ final class GoogleSignInCoordinator: NSObject, SocialIdentityTokenProvider {
             return
         }
 
-        // 재생 공격 방지용 원본 nonce. Google 은 SHA256 해시 없이 그대로 토큰에 실어 돌려준다.
-        let rawNonce = Self.randomNonceString()
-
         GIDSignIn.sharedInstance.signIn(
             withPresenting: presenter,
             hint: nil,
-            additionalScopes: nil,
-            nonce: rawNonce
+            additionalScopes: nil
         ) { result, error in
             if let error {
                 // 사용자가 시트를 닫은 경우 SDK 는 GIDSignInError.canceled 를 던진다 → CancellationError 로 매핑.
@@ -67,7 +63,7 @@ final class GoogleSignInCoordinator: NSObject, SocialIdentityTokenProvider {
                 continuation.resume(throwing: GoogleSignInError.missingIdentityToken)
                 return
             }
-            continuation.resume(returning: SocialIdentityToken(idToken: idToken, rawNonce: rawNonce))
+            continuation.resume(returning: SocialIdentityToken(idToken: idToken, rawNonce: nil))
         }
     }
 
@@ -85,22 +81,4 @@ final class GoogleSignInCoordinator: NSObject, SocialIdentityTokenProvider {
         return top
     }
 
-    /// 암호학적으로 안전한 난수 기반 nonce 문자열.
-    private static func randomNonceString(length: Int = 32) -> String {
-        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
-        var result = ""
-        var remaining = length
-        while remaining > 0 {
-            var random: UInt8 = 0
-            let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
-            guard status == errSecSuccess else {
-                fatalError("Unable to generate secure nonce: \(status)")
-            }
-            if random < charset.count {
-                result.append(charset[Int(random)])
-                remaining -= 1
-            }
-        }
-        return result
-    }
 }

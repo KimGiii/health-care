@@ -1,0 +1,377 @@
+brand_name,menu_name,category,nutrition_basis,serving_size_g,calories,protein,carbs,fat,sodium,sugar,saturated_fat,source_url,last_verified_at,recommendation_status,recommendation_reason,allergen_tags,allergen_profile_verified
+버거킹,갈릭메이플소스,OTHER,PER_SERVING,10.5,30,0.1,,,40.3,6.1,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 돼지고기, 대두",true
+버거킹,갈릭불고기 맥시멈 원파운더,PROCESSED,PER_SERVING,573,1694,93,,,2262,18,45,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 우유, 대두, 밀, 난류",true
+버거킹,갈릭불고기 맥시멈2,PROCESSED,PER_SERVING,358,1076,54,,,1710,7,24,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 쇠고기, 난류",true
+버거킹,갈릭불고기 맥시멈3,PROCESSED,PER_SERVING,468,1347,77,,,1902,15,28,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 우유, 대두, 밀, 난류",true
+버거킹,갈릭불고기와퍼,PROCESSED,PER_SERVING,293,768,31,,,1007,9,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 토마토, 쇠고기, 난류",true
+버거킹,고구마 크림치즈 파이 로얄,PROCESSED,PER_SERVING,62,240,3,,,94,8,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+버거킹,구운갈릭 시즈닝,PROCESSED,PER_SERVING,3,8,0,,,150,2,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,밀,true
+버거킹,너겟킹 10조각,PROTEIN_SOURCE,PER_SERVING,165,368,22,,,1054,0.9,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 닭고기",true
+버거킹,너겟킹 4조각,PROTEIN_SOURCE,PER_SERVING,66,147,9,,,422,0.4,2,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 닭고기",true
+버거킹,너겟킹 8조각,PROTEIN_SOURCE,PER_SERVING,132,294,17,,,843,0.7,4,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 닭고기",true
+버거킹,대~호 버거,PROCESSED,PER_SERVING,254,788,36,,,1129,10,19,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 난류, 쇠고기, 우유",true
+버거킹,더 크리스퍼,PROCESSED,PER_SERVING,225,696,26,,,1392,5,9,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 난류, 쇠고기, 닭고기, 대두, 밀",true
+버거킹,더 크리스퍼 베이컨&치즈,PROCESSED,PER_SERVING,231,727,28,,,1553,6,10,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류",true
+버거킹,더블비프불고기버거,PROCESSED,PER_SERVING,190,565,26,,,796,6,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 우유, 밀, 대두",true
+버거킹,더블오리지널치즈버거,PROCESSED,PER_SERVING,192,533,27,,,728,5,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 토마토, 쇠고기, 우유, 대두, 밀",true
+버거킹,더블통모짜와퍼,PROCESSED,PER_SERVING,500,1277,65,,,1740,7,26,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 토마토, 밀, 쇠고기, 난류, 대두",true
+버거킹,더블트러플머쉬룸와퍼,PROCESSED,PER_SERVING,414,960,54,,,1269,15,22,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 대두, 돼지고기, 우유, 토마토, 밀, 난류",true
+버거킹,더오치 맥시멈 원파운더,PROCESSED,PER_SERVING,606,1789,106,,,3351,17,58,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 우유, 대두, 밀",true
+버거킹,더오치 맥시멈2,PROCESSED,PER_SERVING,375,1018,53,,,2045,9,29,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 밀, 난류, 대두, 쇠고기, 토마토",true
+버거킹,더오치 맥시멈3,PROCESSED,PER_SERVING,501,1499,81,,,3094,11,44,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 토마토, 쇠고기, 난류, 밀",true
+버거킹,두툼버거,PROCESSED,PER_SERVING,362,986,52,,,1923,14,18,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 오징어, 밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기",true
+버거킹,두툼버거 더블,PROCESSED,PER_SERVING,443,1269,73,,,2157,14,24,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 닭고기, 토마토, 오징어, 우유, 대두, 밀, 돼지고기",true
+버거킹,딥 크런치 아포가토,PROCESSED,PER_SERVING,151,182,5,,,150,29,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+버거킹,딥 트러플 머쉬룸 더블,PROCESSED,PER_SERVING,357,996,52,,,1258,5,24,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 우유, 대두, 밀",true
+버거킹,딥 트러플 프라이,PROCESSED,PER_SERVING,130,384,4,,,529,2,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 난류, 우유, 대두",true
+버거킹,랠리쉬 소스,OTHER,PER_SERVING,10.5,21,0.2,,,46,3.4,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,롱베이컨,PROCESSED,PER_SERVING,5,22,1,,,42,0,0.6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,돼지고기,true
+버거킹,롱베이컨 2장,PROCESSED,PER_SERVING,10,44,3,,,83,0,1.3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,돼지고기,true
+버거킹,롱치킨버거,PROTEIN_SOURCE,PER_SERVING,206,621,23,,,1235,7,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 닭고기, 난류, 대두",true
+버거킹,리치브라운소스,OTHER,PER_SERVING,11,39,0,,,0,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 난류, 대두, 우유",true
+버거킹,망고 선데,PROCESSED,PER_SERVING,150,179,2,,,61,34,2,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"복숭아, 우유",true
+버거킹,매콤치즈 시즈닝,PROCESSED,PER_SERVING,3,9,0,,,250,1,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,대두,true
+버거킹,머스타드,PROCESSED,PER_SERVING,9,30,0,,,60,2,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두",true
+버거킹,몬스터 주니어,PROCESSED,PER_SERVING,243,687,30,,,1293,7,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 난류, 토마토, 우유, 대두, 밀, 닭고기",true
+버거킹,몬스터와퍼,PROCESSED,PER_SERVING,403,1094,52,,,2146,8,21,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"돼지고기, 난류, 쇠고기, 닭고기, 토마토, 우유, 대두, 밀",true
+버거킹,몬스터X,PROCESSED,PER_SERVING,398,1010,47,,,1906,16,20,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"조개류, 쇠고기, 난류, 밀, 닭고기, 우유, 돼지고기, 토마토, 대두",true
+버거킹,미닛메이드 오렌지,PROCESSED,PER_SERVING,350,112,1.9,,,95,22,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,미닛메이드 포도,PROCESSED,PER_SERVING,350,126,1,,,16,28,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,밀크 선데,BEVERAGE,PER_SERVING,140,165,1,,,116,27,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+버거킹,바비큐치킨버거,PROTEIN_SOURCE,PER_SERVING,171,479,18,,,792,7,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 밀, 우유, 대두, 닭고기, 난류",true
+버거킹,바삭킹2조각,PROCESSED,PER_SERVING,99,272,15,,,497,1.7,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 대두, 밀, 닭고기",true
+버거킹,바삭킹4조각,PROCESSED,PER_SERVING,198,544,29,,,993,3.4,10,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 대두, 밀, 쇠고기",true
+버거킹,바삭킹8조각,PROCESSED,PER_SERVING,396,1088,59,,,1986,6.7,20.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 쇠고기, 밀, 대두",true
+버거킹,바삭킹8조각+디아블로소스,OTHER,PER_SERVING,421,1127,59,,,2279,14.1,20.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 토마토, 닭고기, 쇠고기, 대두",true
+버거킹,버거패티,PROCESSED,PER_SERVING,42,114,8,,,199,0,3.7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,쇠고기,true
+버거킹,베이비 불고기,PROCESSED,PER_SERVING,132,333,14,,,368,5,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 대두, 밀, 난류",true
+버거킹,베이비 콰트로치즈,PROCESSED,PER_SERVING,148,406,19,,,621,4,11,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 토마토, 쇠고기, 밀, 대두, 난류",true
+버거킹,베이비 통새우,PROCESSED,PER_SERVING,142,332,15,,,497,3,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 새우, 난류, 쇠고기, 토마토, 대두, 밀",true
+버거킹,베이컨치즈와퍼,PROCESSED,PER_SERVING,320,844,37,,,1654,8,19,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 돼지고기, 밀, 토마토, 쇠고기, 난류, 대두",true
+버거킹,불고기 롱치킨버거,PROTEIN_SOURCE,PER_SERVING,234,691,23,,,1434,7,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 난류, 닭고기, 대두",true
+버거킹,불고기몬스터,PROCESSED,PER_SERVING,245,661,29,,,1260,12,11,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 대두, 토마토, 우유, 난류, 닭고기, 밀",true
+버거킹,불고기와퍼,PROCESSED,PER_SERVING,293,738,31,,,1137,10,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 난류, 쇠고기, 토마토",true
+버거킹,불고기와퍼주니어,PROCESSED,PER_SERVING,160,413,16,,,617,5,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 난류, 쇠고기, 토마토, 밀",true
+버거킹,불끈버거 맥시멈,PROCESSED,PER_SERVING,432,1023,48,,,2760,12,20,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 새우, 난류, 쇠고기, 토마토, 우유, 대두",true
+버거킹,불끈버거 맥시멈 더블,PROCESSED,PER_SERVING,513,1278,66,,,2980,13,30,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 우유, 대두, 밀, 새우",true
+버거킹,불닭소스,OTHER,PER_SERVING,11,31,0.4,,,124,2.5,0.6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 밀, 대두, 우유, 닭고기",true
+버거킹,불맛 더블치즈버거,PROCESSED,PER_SERVING,339,940,59,,,2140,10,29,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 우유, 토마토, 쇠고기, 대두",true
+버거킹,불맛 더블치즈베이컨버거,PROCESSED,PER_SERVING,349,977,59,,,2295,11,28,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 쇠고기, 우유, 돼지고기, 밀, 토마토",true
+버거킹,브라우니큐브,PROCESSED,PER_SERVING,15,64,0.5,,,17,5.8,2.8,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 밀",true
+버거킹,브라운 페퍼콘 소스,OTHER,PER_SERVING,11,40,0.2,,,103,1.2,0.6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 대두, 밀",true
+버거킹,블랙바비큐와퍼,PROCESSED,PER_SERVING,287,783,39,,,1300,16,15,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"오징어, 난류, 쇠고기, 돼지고기, 우유, 대두, 밀, 토마토",true
+버거킹,블랙바비큐콰트로치즈와퍼,PROCESSED,PER_SERVING,323,981,46,,,1601,10,24,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 돼지고기, 우유, 대두, 밀, 오징어",true
+버거킹,블랙페퍼 치즈 소스,OTHER,PER_SERVING,11,61,0.1,,,103,0.7,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 우유",true
+버거킹,비프&슈림프버거,PROCESSED,PER_SERVING,247,640,24,,,1122,6,9,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 우유, 토마토, 쇠고기, 새우, 대두, 난류",true
+버거킹,비프불고기버거,PROCESSED,PER_SERVING,136,384,15,,,492,5,5,https://www.burgerking.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"대두, 밀, 난류, 우유, 쇠고기",true
+버거킹,소불고기패티,PROCESSED,PER_SERVING,60,181,8,,,214,2.1,5.5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 난류, 쇠고기",true
+버거킹,쉐이킹프라이 구운갈릭,PROCESSED,PER_SERVING,105,292,4,,,634,0.5,3.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 토마토, 밀",true
+버거킹,쉐이킹프라이 매콤치즈,PROCESSED,PER_SERVING,105,287,4,,,687,0.6,3.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+버거킹,쉐이킹프라이 스윗어니언,PROCESSED,PER_SERVING,105,297,4,,,486,1.29,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유",true
+버거킹,슈림프버거,PROCESSED,PER_SERVING,178,516,14,,,1080,6,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"새우, 난류, 우유, 밀, 대두",true
+버거킹,스모크 바베큐 소스,OTHER,PER_SERVING,11,17.5,0.2,,,81,3.1,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 토마토",true
+버거킹,스모크 베이컨 와퍼,PROCESSED,PER_SERVING,288,870,40,,,1287,15,15,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 밀, 대두, 돼지고기",true
+버거킹,스모크 비프립 샌드위치 버거,PROCESSED,PER_SERVING,286,595,25,,,1192,24,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 우유, 대두, 밀",true
+버거킹,스모크 비프립 와퍼,PROCESSED,PER_SERVING,300,811,37,,,1417,17,14,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 대두, 밀, 난류",true
+버거킹,스위트 칠리소스,OTHER,PER_SERVING,10.5,22,0,,,0,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 대두",true
+버거킹,스윗어니언 시즈닝,PROCESSED,PER_SERVING,3,8,0,,,140,2,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+버거킹,스태커2와퍼,PROCESSED,PER_SERVING,424,1080,58,,,1828,8.9,29.3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 토마토, 우유, 대두, 밀, 쇠고기",true
+버거킹,스태커3와퍼,PROCESSED,PER_SERVING,544,1421,84,,,2559,11.4,42.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 쇠고기, 밀, 대두, 우유, 난류",true
+버거킹,스태커4와퍼,PROCESSED,PER_SERVING,650,1707,105,,,3067,11.9,51.8,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 토마토, 쇠고기, 난류, 밀, 대두",true
+버거킹,스테이크패티,PROCESSED,PER_SERVING,98,309,19,,,425,0.7,11.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 쇠고기, 조개류",true
+버거킹,스파이시 풀드비프 와퍼,PROCESSED,PER_SERVING,340,781,39,,,1594,21,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 토마토, 쇠고기, 난류",true
+버거킹,슬라이스치즈,PROCESSED,PER_SERVING,12,43,2,,,152,0,2.4,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+버거킹,슬라이스치즈 2장,PROCESSED,PER_SERVING,24,87,4,,,304,1,4.9,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+버거킹,아메리카노,BEVERAGE,PER_SERVING,249,7,0,,,3,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,아이스아메리카노,BEVERAGE,PER_SERVING,271,8,0,,,0,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,아이스초코,PROCESSED,PER_SERVING,294,305,3,,,172,40,2,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+버거킹,앵그리 너겟킹 10조각,PROTEIN_SOURCE,PER_SERVING,195,545,31,,,1398,1,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 대두, 밀",true
+버거킹,앵그리 너겟킹 4조각,PROTEIN_SOURCE,PER_SERVING,78,218,12,,,559,0.4,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 닭고기, 대두",true
+버거킹,앵그리너겟킹 8조각,PROTEIN_SOURCE,PER_SERVING,156,436,25,,,1119,0.8,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 밀, 대두",true
+버거킹,양념소스,OTHER,PER_SERVING,17,42,0.2,,,101,7,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 토마토, 밀",true
+버거킹,어니언링,PROCESSED,PER_SERVING,96,306,5,,,333,6,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀",true
+버거킹,엘파소 치폴레 소스,OTHER,PER_SERVING,11,24,0,,,142,1,0.3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"돼지고기, 난류, 우유, 대두, 밀, 토마토",true
+버거킹,오리지널스 뉴욕 스테이크,PROCESSED,PER_SERVING,307,826,51,,,1762,10,22,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 돼지고기, 난류, 조개류, 쇠고기, 토마토",true
+버거킹,오리지널스 메이플 갈릭,PROCESSED,PER_SERVING,324,873,42,,,1081,17,21,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 난류, 돼지고기, 토마토, 밀, 쇠고기",true
+버거킹,오리지널스 엘파소 치폴레,PROCESSED,PER_SERVING,291,911,44,,,1338,9,25,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 난류, 토마토, 돼지고기, 우유, 대두, 밀",true
+버거킹,오믈렛킹모닝,PROCESSED,PER_SERVING,180,496,15,,,952,5,8,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 난류, 우유, 밀",true
+버거킹,와퍼,PROCESSED,PER_SERVING,286,706,30,,,1098,10,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 대두, 밀, 난류",true
+버거킹,와퍼주니어,PROCESSED,PER_SERVING,156,376,17,,,556,4,5,https://www.burgerking.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"쇠고기, 밀, 대두, 토마토, 난류",true
+버거킹,와퍼패티,PROCESSED,PER_SERVING,81,227,14,,,47,0,8,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,쇠고기,true
+버거킹,초코 망고 선데,PROCESSED,PER_SERVING,175,246,3,,,92,45,2,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 복숭아",true
+버거킹,초코 브라우니 킹퓨전,PROCESSED,PER_SERVING,177,325,6,,,195,45,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 난류",true
+버거킹,초코 선데,PROCESSED,PER_SERVING,165,232,2,,,147,38,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유",true
+버거킹,치즈버거,PROCESSED,PER_SERVING,130,380,16,,,766,6,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 난류, 토마토, 쇠고기, 밀, 우유",true
+버거킹,치즈와퍼,PROCESSED,PER_SERVING,310,799,35,,,1571,7,18,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 토마토, 난류, 쇠고기",true
+버거킹,치즈와퍼주니어,PROCESSED,PER_SERVING,168,422,18,,,778,4,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 토마토, 난류, 쇠고기",true
+버거킹,치즈프라이,PROCESSED,PER_SERVING,138,376,10,,,558,1.2,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+버거킹,치킨 치즈 마요 버거,PROTEIN_SOURCE,PER_SERVING,195,640,20,,,1122,4,10,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 밀, 닭고기, 난류, 대두",true
+버거킹,치킨버거,PROTEIN_SOURCE,PER_SERVING,179,532,18,,,840,4,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 밀, 대두, 우유, 난류",true
+버거킹,치킨킹,PROTEIN_SOURCE,PER_SERVING,224,673,24,,,1037,8,10,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 닭고기, 쇠고기, 난류",true
+버거킹,치킨킹BLT,PROTEIN_SOURCE,PER_SERVING,269,739,25,,,1065,12,11,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 난류, 쇠고기, 닭고기, 토마토, 돼지고기, 우유, 대두",true
+버거킹,치폴레 소스,OTHER,PER_SERVING,10.5,21,0.2,,,138,3.2,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"돼지고기, 토마토, 대두",true
+버거킹,치폴레 할라피뇨 파퍼,PROCESSED,PER_SERVING,309,895,32,,,1316,15,19,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 돼지고기, 토마토, 쇠고기, 난류, 우유",true
+버거킹,카라멜 버터쿠키 킹퓨전,PROCESSED,PER_SERVING,177,299,6,,,321,42,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 밀",true
+버거킹,코울슬로,PROCESSED,PER_SERVING,95,155,1,,,210,9,0.9,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,난류,true
+버거킹,코코넛슈림프(3조각)+스위트칠리소스,OTHER,PER_SERVING,82,216,5,,,505,11,4,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 밀, 새우",true
+버거킹,코코넛슈림프(6조각)+스위트칠리소스,OTHER,PER_SERVING,139,382,10,,,804,12,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 난류, 새우, 대두",true
+버거킹,코코넛슈림프(9조각)+스위트칠리소스,OTHER,PER_SERVING,196,548,15,,,1104,13,11,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 난류, 새우, 밀",true
+버거킹,콘 아이스크림,PROCESSED,PER_SERVING,95,133,3,,,74,12.6,2.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,밀,true
+버거킹,콘샐러드,PROCESSED,PER_SERVING,95,127,2,,,230,4,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,대두,true
+버거킹,콰트로치즈 와퍼주니어,PROCESSED,PER_SERVING,179,470,21,,,833,4,10,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 토마토, 쇠고기, 난류, 밀",true
+버거킹,콰트로치즈 풀드비프 와퍼,PROCESSED,PER_SERVING,324,904,40,,,1794,9,22,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 토마토, 쇠고기, 난류, 오징어, 우유, 대두",true
+버거킹,콰트로치즈와퍼,PROCESSED,PER_SERVING,331,887,43,,,1647,6,21,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 쇠고기, 밀, 난류, 대두, 우유",true
+버거킹,콰트로치즈X,PROCESSED,PER_SERVING,338,820,35,,,1625,9.4,21.1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 조개류, 쇠고기, 토마토, 닭고기, 우유, 대두, 밀",true
+버거킹,콰트로페퍼 큐브스테이크 와퍼,PROCESSED,PER_SERVING,303,773,43,,,1714,9,15,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 난류, 토마토, 쇠고기, 우유",true
+버거킹,콰트로X콰트로 큐브스테이크,PROCESSED,PER_SERVING,277,833,42,,,1540,9,18,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 우유, 대두, 밀, 난류",true
+버거킹,크리미 할라피뇨 파퍼,PROCESSED,PER_SERVING,309,884,30,,,1125,17,18,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 돼지고기, 우유, 대두, 밀, 난류",true
+버거킹,크리미모짜볼(10조각),PROCESSED,PER_SERVING,140,395,14,,,248,9,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 우유, 난류, 대두",true
+버거킹,크리미모짜볼(5조각),PROCESSED,PER_SERVING,70,198,7,,,124,4,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 밀, 난류",true
+버거킹,크리스퍼 랩,PROCESSED,PER_SERVING,133,359,12,,,651,4,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 닭고기, 우유, 밀, 난류",true
+버거킹,크리스퍼 랩 불닭 치킨,PROTEIN_SOURCE,PER_SERVING,123,299,13,,,775,4,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 닭고기, 우유, 대두, 밀, 난류",true
+버거킹,크리스퍼 랩 양념 치킨,PROTEIN_SOURCE,PER_SERVING,123,342,12,,,682,6,3,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 토마토, 닭고기, 난류, 우유",true
+버거킹,크리스퍼 마늘 치킨,PROTEIN_SOURCE,PER_SERVING,255,661,25,,,1579,12,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류",true
+버거킹,크리스퍼 마요 소스,OTHER,PER_SERVING,11,51,0.1,,,89,1.3,0.7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 닭고기, 난류",true
+버거킹,크리스퍼 불닭 치킨,PROTEIN_SOURCE,PER_SERVING,208,494,25,,,1442,7,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 쇠고기, 난류, 닭고기",true
+버거킹,크리스퍼 양념 치킨,PROTEIN_SOURCE,PER_SERVING,249,662,27,,,1611,16,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 토마토, 난류, 닭고기, 밀, 쇠고기",true
+버거킹,크리스퍼 치폴레,PROCESSED,PER_SERVING,239,529,26,,,1611,6,4,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류",true
+버거킹,크리스퍼 클래식,PROCESSED,PER_SERVING,221,569,25,,,1390,9,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 닭고기, 쇠고기, 난류, 우유",true
+버거킹,크리스퍼 클래식 BLT,PROCESSED,PER_SERVING,246,591,28,,,1568,7,6,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 돼지고기, 토마토, 닭고기, 쇠고기, 난류",true
+버거킹,크리스퍼 텐더,PROTEIN_SOURCE,PER_SERVING,80,176,11,,,361,1,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 대두, 밀",true
+버거킹,터프페퍼 치즈프라이,PROCESSED,PER_SERVING,141,414,8,,,482,3,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 난류, 우유, 토마토, 쇠고기",true
+버거킹,터프페퍼 큐브스테이크,PROCESSED,PER_SERVING,246,680,40,,,1154,11,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 돼지고기, 우유, 대두, 밀, 난류",true
+버거킹,통모짜와퍼,PROCESSED,PER_SERVING,400,1039,46,,,2064,6,20,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 밀, 대두, 우유, 토마토, 난류",true
+버거킹,통모짜와퍼주니어,PROCESSED,PER_SERVING,286,791,31,,,1302,7,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 토마토, 쇠고기, 난류, 우유",true
+버거킹,통새우맥시멈2,PROCESSED,PER_SERVING,426,1093,62,,,1551,10,26,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 새우, 토마토, 쇠고기, 밀, 난류",true
+버거킹,통새우맥시멈3,PROCESSED,PER_SERVING,527,1325,79,,,1864,13,32,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 새우, 난류, 쇠고기, 토마토, 대두, 밀",true
+버거킹,통새우맥시멈4,PROCESSED,PER_SERVING,607,1555,98,,,1877,11,41,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 우유, 대두, 밀, 새우",true
+버거킹,통새우슈림프버거,PROCESSED,PER_SERVING,190,512,16,,,1077,8,5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"새우, 난류, 우유, 대두, 밀",true
+버거킹,통새우와퍼,PROCESSED,PER_SERVING,309,714,34,,,1258,9,12,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 토마토, 쇠고기, 새우, 난류, 밀",true
+버거킹,통새우와퍼주니어,PROCESSED,PER_SERVING,168,414,17,,,658,5,7,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"새우, 대두, 우유, 토마토, 쇠고기, 밀, 난류",true
+버거킹,통새우추가,PROCESSED,PER_SERVING,6,5,1,,,46,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 새우",true
+버거킹,통새우추가2,PROCESSED,PER_SERVING,12,10,2,,,92,0,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"새우, 대두",true
+버거킹,트러플머쉬룸와퍼,PROCESSED,PER_SERVING,332,735,37,,,1191,13,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"돼지고기, 우유, 대두, 밀, 쇠고기, 난류, 토마토",true
+버거킹,트러플머쉬룸와퍼주니어,PROCESSED,PER_SERVING,179,399,18,,,711,8,6,https://www.burgerking.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"토마토, 대두, 밀, 돼지고기, 우유, 난류, 쇠고기",true
+버거킹,트러플소스,OTHER,PER_SERVING,11,35,0.2,,,80,1.2,1.2,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 우유, 난류, 밀",true
+버거킹,트러플치즈프라이,PROCESSED,PER_SERVING,138,403,8,,,608,1.9,8,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 난류",true
+버거킹,풀드비프 와퍼,PROCESSED,PER_SERVING,340,837,38,,,1362,17,14,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 대두, 우유, 토마토, 쇠고기, 난류",true
+버거킹,피스타치오 베이컨잼,PROCESSED,PER_SERVING,11,31,0.2,,,56,5.4,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"토마토, 대두, 돼지고기",true
+버거킹,할라피뇨 파퍼 몬스터,PROCESSED,PER_SERVING,393,1009,44,,,1644,10,18,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"밀, 쇠고기, 닭고기, 토마토, 돼지고기, 우유, 난류, 대두",true
+버거킹,할라피뇨2 추가,PROCESSED,PER_SERVING,10,3,0.04,,,54,0.5,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,할라피뇨4 추가,PROCESSED,PER_SERVING,20,6,0.08,,,108,1,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,,
+버거킹,할라피뇨와퍼,PROCESSED,PER_SERVING,298,625,29,,,917,11.5,13,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 토마토, 대두, 밀, 난류",true
+버거킹,핫 트러플 머쉬룸 와퍼,PROCESSED,PER_SERVING,285,724,35,,,1278,7,14,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 밀, 토마토, 돼지고기, 우유, 대두, 난류",true
+버거킹,핫초코,PROCESSED,PER_SERVING,240,214,3,,,161,38,1,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+버거킹,핫트러플소스,OTHER,PER_SERVING,11,57,0,,,113,1,0.9,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 쇠고기, 토마토, 대두",true
+버거킹,해쉬브라운,PROCESSED,PER_SERVING,58,182,1.3,,,382,0.2,2.5,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,대두,true
+버거킹,햄버거,PROCESSED,PER_SERVING,122,353,15,,,540,4,5.2,https://www.burgerking.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"대두, 쇠고기, 토마토, 난류, 밀",true
+버거킹,허니머스타드소스,OTHER,PER_SERVING,9,30,0,,,60,2,0,https://www.burgerking.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 난류",true
+맥도날드,에그 맥머핀,PROCESSED,PER_SERVING,140,306,19,,,712,3,5,https://www.mcdonalds.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,베이컨 에그 맥머핀,PROCESSED,PER_SERVING,137,327,19,,,687,3,6,https://www.mcdonalds.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,베이컨 토마토 에그 머핀,PROCESSED,PER_SERVING,196,341,17,,,666,5,3.6,https://www.mcdonalds.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"난류, 대두, 밀, 돼지고기, 토마토",true
+맥도날드,소시지 에그 맥머핀,PROCESSED,PER_SERVING,168,432,23,,,835,3,9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,디럭스 브렉퍼스트,PROCESSED,PER_SERVING,312,768,29,,,1365,11,9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,핫케익 2조각,PROCESSED,PER_SERVING,100,223,6,,,342,8,1.1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀",true
+맥도날드,핫케익 3조각,PROCESSED,PER_SERVING,150,335,9,,,513,12,1.7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀",true
+맥도날드,치킨 치즈 머핀,PROTEIN_SOURCE,PER_SERVING,178,498,23,,,1277,3,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 닭고기",true
+맥도날드,베이컨 에그 맥그리들,PROCESSED,PER_SERVING,172,400,17,,,1032,14,7.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,소시지 에그 맥그리들,PROCESSED,PER_SERVING,203,505,22,,,1181,14,11.1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기",true
+맥도날드,골든 모짜렐라 치즈스틱 4조각,PROCESSED,PER_SERVING,94,330,16,,,577,2,8.4,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,골든 모짜렐라 치즈스틱 2조각,PROCESSED,PER_SERVING,47,165,8,,,288,1,4.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,해쉬 브라운,PROCESSED,PER_SERVING,57,162,2,,,345,0,0.8,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,대두,true
+맥도날드,코울슬로,PROCESSED,PER_SERVING,100,179,1,,,307,18,1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 조개류, 굴",true
+맥도날드,상하이 치킨 스낵랩,PROTEIN_SOURCE,PER_SERVING,112,300,11,,,823,3,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 밀, 돼지고기, 닭고기",true
+맥도날드,게살 크림 크로켓 스낵랩,PROCESSED,PER_SERVING,101,285,7,,,640,6,3.8,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 땅콩, 게, 조개류, 굴",true
+맥도날드,맥너겟® 4조각,PROTEIN_SOURCE,PER_SERVING,64,163,10,,,369,0,1.1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 닭고기, 토마토, 아황산류, 난류, 굴",true
+맥도날드,맥너겟® 6조각,PROTEIN_SOURCE,PER_SERVING,96,244,15,,,553,0,1.6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 닭고기, 토마토, 아황산류, 난류, 굴",true
+맥도날드,맥스파이시® 치킨텐더 2조각,PROTEIN_SOURCE,PER_SERVING,79,190,14,,,763,0,1.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 닭고기, 토마토, 아황산류, 난류, 굴",true
+맥도날드,후렌치 후라이 스몰,PROCESSED,PER_SERVING,74,210,4,,,183,0,0.7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 토마토",true
+맥도날드,후렌치 후라이 미디엄,PROCESSED,PER_SERVING,114,324,5,,,282,0,1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 토마토",true
+맥도날드,후렌치 후라이 라지,PROCESSED,PER_SERVING,140,397,7,,,346,0,1.3,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 토마토",true
+맥도날드,디핑 소스 스위트 앤 사워,PROCESSED,PER_SERVING,25,40,0,,,138,8,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 아황산류",true
+맥도날드,디핑 소스 스위트 칠리,PROCESSED,PER_SERVING,25,52,0,,,204,9,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,토마토,true
+맥도날드,디핑 소스 케이준,PROCESSED,PER_SERVING,22,79,0,,,124,2,1.1,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 굴",true
+맥도날드,맥윙 2조각,PROTEIN_SOURCE,PER_SERVING,84,228,14,,,602,0,3,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 난류, 대두, 밀, 토마토, 아황산류, 굴",true
+맥도날드,맥윙 4조각,PROTEIN_SOURCE,PER_SERVING,168,455,28,,,1204,1,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 난류, 대두, 밀, 토마토, 아황산류, 굴",true
+맥도날드,맥윙 8조각,PROTEIN_SOURCE,PER_SERVING,336,910,56,,,2408,1,12,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 난류, 대두, 밀, 토마토, 아황산류, 굴",true
+맥도날드,오레오 맥플러리,PROCESSED,PER_SERVING,168,334,6,,,179,36,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,딸기 오레오 맥플러리,PROCESSED,PER_SERVING,174,305,5,,,138,38,4.7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,초코 오레오 맥플러리,PROCESSED,PER_SERVING,189,390,7,,,218,45,8,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,베리 스트로베리 맥플러리,PROCESSED,PER_SERVING,168,327,5,,,228,38,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀",true
+맥도날드,스트로베리콘,PROCESSED,PER_SERVING,90,142,3,,,96,16,2.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 밀",true
+맥도날드,아이스크림콘,PROCESSED,PER_SERVING,90,146,3,,,67,15,2.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 밀",true
+맥도날드,초코 선데이 아이스크림,PROCESSED,PER_SERVING,175,323,6,,,170,39,8,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+맥도날드,딸기 선데이 아이스크림,PROCESSED,PER_SERVING,179,277,5,,,96,41,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,바닐라 선데이 아이스크림,PROCESSED,PER_SERVING,140,201,4,,,83,24,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,카라멜 팝콘 맥플러리,PROCESSED,PER_SERVING,180,361,5,,,278,44,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+맥도날드,스트로베리 카라멜 팝콘 맥플러리,PROCESSED,PER_SERVING,180,355,5,,,327,46,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+맥도날드,솔티드 카라멜 츄러스 3조각,PROCESSED,PER_SERVING,69,260,3,,,365,9,2.4,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 난류, 우유, 대두, 밀",true
+맥도날드,빅맥®,PROCESSED,PER_SERVING,223,582,27,,,902,8,11,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 쇠고기",true
+맥도날드,맥스파이시® 상하이버거,PROCESSED,PER_SERVING,246,528,22,,,952,9,3.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 밀, 토마토, 닭고기",true
+맥도날드,1955® 버거,PROCESSED,PER_SERVING,264,572,29,,,930,15,10,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기, 토마토, 쇠고기",true
+맥도날드,맥치킨® 모짜렐라,PROTEIN_SOURCE,PER_SERVING,293,735,29,,,1807,18,7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 토마토, 닭고기",true
+맥도날드,맥치킨®,PROTEIN_SOURCE,PER_SERVING,206,515,19,,,1148,7,3.6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 밀, 닭고기",true
+맥도날드,더블 불고기버거,PROCESSED,PER_SERVING,237,635,26,,,997,15,13,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기, 조개류, 굴",true
+맥도날드,불고기버거,PROCESSED,PER_SERVING,167,408,14,,,670,14,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 대두, 밀, 돼지고기, 조개류, 굴",true
+맥도날드,슈슈버거,PROCESSED,PER_SERVING,225,431,13,,,758,13,1.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 토마토, 새우, 쇠고기, 굴",true
+맥도날드,슈비버거,PROCESSED,PER_SERVING,269,573,22,,,951,15,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 토마토, 새우, 쇠고기, 굴",true
+맥도날드,더블 쿼터파운더® 치즈,PROCESSED,PER_SERVING,275,770,50,,,1151,10,20,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 토마토, 쇠고기",true
+맥도날드,베이컨 토마토 디럭스,PROCESSED,PER_SERVING,247,570,29,,,933,14,11,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"난류, 우유, 대두, 밀, 돼지고기, 토마토, 쇠고기",true
+맥도날드,쿼터파운더®치즈,PROCESSED,PER_SERVING,198,536,31,,,966,10,13,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 토마토, 쇠고기",true
+맥도날드,치즈버거,PROCESSED,PER_SERVING,115,318,16,,,612,7,6,https://www.mcdonalds.co.kr/,2026-06-09,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"우유, 대두, 밀, 토마토, 쇠고기",true
+맥도날드,더블 치즈버거,PROCESSED,PER_SERVING,167,479,27,,,896,8,12,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 토마토, 쇠고기",true
+맥도날드,햄버거,PROCESSED,PER_SERVING,101,266,13,,,450,7,3.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"대두, 밀, 토마토, 쇠고기",true
+맥도날드,트리플 치즈버거,PROCESSED,PER_SERVING,216,640,38,,,1152,8,18,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두, 밀, 토마토, 쇠고기",true
+맥도날드,토마토 치즈 비프 버거,PROCESSED,PER_SERVING,200,402,18,,,682,11,7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 난류, 우유, 대두, 토마토, 밀",true
+맥도날드,더블 맥스파이시® 상하이 버거,PROCESSED,PER_SERVING,362,867,38,,,1640,10,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 난류, 대두, 토마토, 밀",true
+맥도날드,맥크리스피™ 치킨 디럭스,PROTEIN_SOURCE,PER_SERVING,275,578,23,,,1297,13,4.7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 닭고기, 난류, 우유, 대두, 토마토, 밀",true
+맥도날드,맥크리스피™ 치킨 클래식,PROTEIN_SOURCE,PER_SERVING,209,567,23,,,1295,11,4.7,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 닭고기, 난류, 우유, 대두, 토마토, 밀",true
+맥도날드,맥앤치즈 더블 비프,PROCESSED,PER_SERVING,227,588,26,,,1168,12,11,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"쇠고기, 난류, 우유, 돼지고기, 대두, 토마토, 밀",true
+맥도날드,맥앤치즈 스파이시 치킨,PROTEIN_SOURCE,PER_SERVING,244,631,25,,,1555,12,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"닭고기, 난류, 우유, 돼지고기, 대두, 토마토, 밀",true
+맥도날드,후룻볼 파인애플,PROCESSED,PER_SERVING,113,75,1,,,0,14,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,오렌지 주스 캔,PROCESSED,PER_SERVING,175,56,0.9,,,47,11,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,코카 콜라® 미디엄,BEVERAGE,PER_SERVING,425,133,0,,,9,33,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,코카 콜라® 라지,BEVERAGE,PER_SERVING,610,185,0,,,13,46,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,코카 콜라® 제로 미디엄,BEVERAGE,PER_SERVING,425,0,0,,,34,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,코카 콜라® 제로 라지,BEVERAGE,PER_SERVING,610,0,0,,,47,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,환타® 미디엄,BEVERAGE,PER_SERVING,425,62,0,,,16,16,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,환타® 라지,BEVERAGE,PER_SERVING,610,86,0,,,22,22,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,스프라이트® 미디엄,BEVERAGE,PER_SERVING,425,140,0,,,28,35,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,스프라이트® 라지,BEVERAGE,PER_SERVING,610,194,0,,,39,49,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,스프라이트® 제로 미디엄,BEVERAGE,PER_SERVING,425,0,0,,,16,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,스프라이트® 제로 라지,BEVERAGE,PER_SERVING,610,0,0,,,22,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,카페라떼 미디엄,BEVERAGE,PER_SERVING,330,149,8,,,79,10,4.6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,카페라떼 라지,BEVERAGE,PER_SERVING,420,194,10,,,105,14,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,카푸치노 미디엄,BEVERAGE,PER_SERVING,330,93,5,,,49,6,2.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,카푸치노 라지,BEVERAGE,PER_SERVING,420,120,7,,,62,8,3.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,아메리카노 미디엄,BEVERAGE,PER_SERVING,330,12,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아메리카노 라지,BEVERAGE,PER_SERVING,420,15,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,드립 커피 미디엄,BEVERAGE,PER_SERVING,330,10,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,드립 커피 라지,BEVERAGE,PER_SERVING,420,12,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아이스 드립 커피 (시럽없음) 미디엄,BEVERAGE,PER_SERVING,400,10,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아이스 드립 커피 (시럽없음) 라지,BEVERAGE,PER_SERVING,600,14,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아이스 아메리카노(시럽없음) 미디엄,BEVERAGE,PER_SERVING,400,9,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아이스 아메리카노(시럽없음) 라지,BEVERAGE,PER_SERVING,600,10,0,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,아이스 카페라떼(시럽없음) 미디엄,BEVERAGE,PER_SERVING,400,109,6,,,50,7,3.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,아이스 카페라떼(시럽없음) 라지,BEVERAGE,PER_SERVING,600,134,6,,,63,8,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,딸기 쉐이크 미디엄,BEVERAGE,PER_SERVING,425,367,9,,,180,56,5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,초코 쉐이크 미디엄,BEVERAGE,PER_SERVING,425,375,9,,,236,55,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,"우유, 대두",true
+맥도날드,바닐라 쉐이크 미디엄,BEVERAGE,PER_SERVING,425,366,9,,,206,55,5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,바닐라 라떼 미디엄,BEVERAGE,PER_SERVING,330,227,8,,,79,28,4.6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,바닐라 라떼 라지,BEVERAGE,PER_SERVING,420,323,10,,,105,45,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,아이스 바닐라 라떼 미디엄,BEVERAGE,PER_SERVING,400,186,6,,,50,25,3.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,아이스 바닐라 라떼 라지,BEVERAGE,PER_SERVING,600,263,6,,,63,39,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,피치 아이스티 M,BEVERAGE,PER_SERVING,400,162,0,,,8,34,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,복숭아,true
+맥도날드,피치 아이스티 L,BEVERAGE,PER_SERVING,600,229,1,,,11,48,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,복숭아,true
+맥도날드,망고 피치 아이스티 M,BEVERAGE,PER_SERVING,400,216,0,,,23,46,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,복숭아,true
+맥도날드,망고 피치 아이스티 L,BEVERAGE,PER_SERVING,600,342,1,,,43,74,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,복숭아,true
+맥도날드,디카페인 아메리카노 미디움,BEVERAGE,PER_SERVING,330,12,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,디카페인 아메리카노 라지,BEVERAGE,PER_SERVING,420,12,1,,,4,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,디카페인 아이스 아메리카노 미디움,BEVERAGE,PER_SERVING,400,8,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,디카페인 아이스 아메리카노 라지,BEVERAGE,PER_SERVING,600,10,1,,,0,0,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,디카페인 카페 라떼 미디움,BEVERAGE,PER_SERVING,330,150,8,,,85,10,4.4,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 카페 라떼 라지,BEVERAGE,PER_SERVING,420,190,10,,,107,13,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 아이스 카페 라떼 미디움,BEVERAGE,PER_SERVING,400,114,6,,,54,7,3.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 아이스 카페 라떼 라지,BEVERAGE,PER_SERVING,600,133,7,,,65,8,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 카푸치노 미디움,BEVERAGE,PER_SERVING,330,89,5,,,49,6,2.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 카푸치노 라지,BEVERAGE,PER_SERVING,420,120,6,,,65,7,3.5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 바닐라 라떼 M,BEVERAGE,PER_SERVING,330,227,8,,,85,29,4.4,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 바닐라 라떼 L,BEVERAGE,PER_SERVING,420,319,10,,,107,43,6,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 아이스 바닐라 라떼 M,BEVERAGE,PER_SERVING,400,191,6,,,54,26,3.2,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,디카페인 아이스 바닐라 라떼 L,BEVERAGE,PER_SERVING,600,263,7,,,65,39,3.9,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+맥도날드,망고 맥피즈 - 스프라이트 M,BEVERAGE,PER_SERVING,400,165,0,,,36,40,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,망고 맥피즈 - 스프라이트 L,BEVERAGE,PER_SERVING,600,271,0,,,61,65,0,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,,
+맥도날드,그리머스 쉐이크,BEVERAGE,PER_SERVING,425,366,9,,,180,57,5,https://www.mcdonalds.co.kr/,2026-06-09,SEARCH_ONLY,,우유,true
+롯데리아,번트비프버거,PROCESSED,PER_SERVING,198,602,26,,,1070,17,17,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 돼지고기, 오징어, 아황산류",true
+롯데리아,한우불고기버거,PROCESSED,PER_SERVING,263,572,23,,,800,15,12,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 토마토",true
+롯데리아,더블한우불고기버거,PROCESSED,PER_SERVING,352,802,39,,,1150,18,20,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 토마토",true
+롯데리아,리아 불고기,PROCESSED,PER_SERVING,192,462,21,,,880,11,11,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두, 달걀, 우유, 쇠고기, 토마토, 돼지고기, 닭고기",true
+롯데리아,리아 불고기 베이컨,PROCESSED,PER_SERVING,224,508,23,,,940,11,13,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 토마토, 돼지고기",true
+롯데리아,리아 불고기 더블 (빅불),PROCESSED,PER_SERVING,274,721,38,,,1480,12,24,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두, 달걀, 우유, 쇠고기, 토마토, 돼지고기, 닭고기",true
+롯데리아,리아 새우,PROCESSED,PER_SERVING,179,473,15,,,900,5,3.8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 토마토, 새우",true
+롯데리아,리아 새우 베이컨,PROCESSED,PER_SERVING,211,519,18,,,960,6,5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 토마토, 돼지고기, 새우",true
+롯데리아,리아 사각새우 더블,PROCESSED,PER_SERVING,208,534,18,,,1050,6,4.2,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 토마토, 새우",true
+롯데리아,모짜렐라 인 더 버거 베이컨,PROCESSED,PER_SERVING,223,696,30,,,1000,6,16,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 돼지고기",true
+롯데리아,전주비빔라이스버거,PROCESSED,PER_SERVING,285,574,14,,,1290,8,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 쇠고기",true
+롯데리아,더블엑스투버거,PROCESSED,PER_SERVING,228,703,26,,,1040,6,23,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 토마토",true
+롯데리아,핫크리스피치킨버거,PROCESSED,PER_SERVING,190,454,22,,,900,4,5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 닭고기, 토마토",true
+롯데리아,미라클버거,PROCESSED,PER_SERVING,181,382,15,,,600,7,4.6,https://www.lotteria.com/,2026-06-08,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"밀, 대두, 토마토",true
+롯데리아,더블 미라클버거,PROCESSED,PER_SERVING,245,551,25,,,920,10,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두, 토마토",true
+롯데리아,클래식치즈버거,PROCESSED,PER_SERVING,146,482,16,,,710,5,13,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기",true
+롯데리아,더블 클래식치즈버거,PROCESSED,PER_SERVING,213,717,26,,,1030,6,23,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기",true
+롯데리아,치킨버거,PROCESSED,PER_SERVING,141,355,15,,,620,8,3.8,https://www.lotteria.com/,2026-06-08,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"달걀, 밀, 대두, 우유, 닭고기, 땅콩, 조개류",true
+롯데리아,더블 치킨버거,PROCESSED,PER_SERVING,205,478,24,,,950,11,5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 닭고기, 땅콩, 조개류",true
+롯데리아,데리버거,PROCESSED,PER_SERVING,134,348,12,,,590,10,4.9,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 조개류",true
+롯데리아,더블 데리버거,PROCESSED,PER_SERVING,170,446,19,,,740,10,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 조개류",true
+롯데리아,모짜렐라버거 토마토바질,PROCESSED,PER_SERVING,240,733,27,,,1080,10,18,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 토마토",true
+롯데리아,모짜렐라버거 발사믹바질,PROCESSED,PER_SERVING,250,733,27,,,1040,10,18,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 토마토, 아황산류",true
+롯데리아,통다리 크리스피치킨버거(그릭랜치),PROCESSED,PER_SERVING,231,618,25,,,1050,8,5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 조개류",true
+롯데리아,통다리 크리스피치킨버거(파이어핫),PROCESSED,PER_SERVING,231,594,25,,,1040,10,4.4,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 조개류",true
+롯데리아,치즈토핑,OTHER,PER_SERVING,18,64,3,,,160,0,3.9,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,토마토토핑,OTHER,PER_SERVING,20,4,0,,,0,1,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,토마토,true
+롯데리아,베이컨토핑,OTHER,PER_SERVING,12,42,2,,,60,0,1.7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,돼지고기,true
+롯데리아,비프패티토핑,OTHER,PER_SERVING,49,172,7,,,160,0,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,쇠고기,true
+롯데리아,반숙계란 토핑,OTHER,PER_SERVING,45,43,1,,,35,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두",true
+롯데리아,화이어윙2조각,PROTEIN_SOURCE,PER_SERVING,85,178,9,,,270,0,2.5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"닭고기, 밀, 대두, 땅콩, 달걀",true
+롯데리아,화이어윙4조각,PROTEIN_SOURCE,PER_SERVING,170,357,17,,,550,0,5,https://www.lotteria.com/,2026-06-08,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"닭고기, 밀, 대두, 땅콩, 달걀",true
+롯데리아,치킨다리 1조각,PROTEIN_SOURCE,PER_SERVING,82,151,11,,,330,0,1.8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 닭고기, 땅콩",true
+롯데리아,치킨다리 하프팩(코울슬로) (소스미포함),PROTEIN_SOURCE,PER_SERVING,428,717,45,,,1460,13,8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"닭고기, 밀, 대두, 땅콩, 달걀, 우유",true
+롯데리아,치킨다리 하프팩(포테이토) (소스미포함),PROTEIN_SOURCE,PER_SERVING,426,888,48,,,1830,3,10,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"닭고기, 밀, 대두, 땅콩, 달걀, 토마토",true
+롯데리아,순살치킨 하프팩 (소스 미포함),PROTEIN_SOURCE,PER_SERVING,244,659,39,,,1170,2,6,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두, 밀, 닭고기, 쇠고기",true
+롯데리아,순살치킨 풀팩 (소스 미포함),PROTEIN_SOURCE,PER_SERVING,487,1319,77,,,2350,4,12,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두, 밀, 닭고기, 쇠고기",true
+롯데리아,후라이드 순살치킨 (R) (소스 미포함),PROTEIN_SOURCE,PER_SERVING,292,862,49,,,1520,1,10,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 쇠고기, 닭고기, 조개류",true
+롯데리아,후라이드 순살치킨 (L) (소스 미포함),PROTEIN_SOURCE,PER_SERVING,584,1725,197,,,3040,1,19,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 쇠고기, 닭고기, 조개류",true
+롯데리아,치킨휠레2조각 (소스미포함),PROTEIN_SOURCE,PER_SERVING,77,183,15,,,370,0,1.9,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"닭고기, 달걀, 밀, 대두, 우유, 땅콩, 새우, 조개류",true
+롯데리아,치킨휠레4조각 (소스미포함),PROTEIN_SOURCE,PER_SERVING,153,366,29,,,740,0,3.8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"닭고기, 달걀, 밀, 대두, 우유, 땅콩, 새우, 조개류",true
+롯데리아,아메리카노,PROTEIN_SOURCE,PER_SERVING,290,8,0,,,5,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,아이스아메리카노,PROTEIN_SOURCE,PER_SERVING,340,5,0,,,0,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,아이스아메리카노(L),PROTEIN_SOURCE,PER_SERVING,530,9,0,,,0,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,카페라떼(살균우유),PROTEIN_SOURCE,PER_SERVING,300,145,7,,,80,7,4.5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,아이스카페라떼(살균우유),PROTEIN_SOURCE,PER_SERVING,325,60,3,,,30,3,1.7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,레몬에이드(R),PROTEIN_SOURCE,PER_SERVING,380,180,0,,,10,41,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,레몬에이드(L),PROTEIN_SOURCE,PER_SERVING,515,246,0,,,11,56,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,아이스티(R),PROTEIN_SOURCE,PER_SERVING,380,191,0,,,0,47,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,복숭아,true
+롯데리아,아이스티(L),PROTEIN_SOURCE,PER_SERVING,515,263,0,,,0,64,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,복숭아,true
+롯데리아,제로슈거콜라(R),PROTEIN_SOURCE,PER_SERVING,420,0,0,,,55,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,제로슈거콜라(L),PROTEIN_SOURCE,PER_SERVING,570,0,0,,,75,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,펩시콜라(R),PROTEIN_SOURCE,PER_SERVING,420,128,0,,,15,31,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,펩시콜라(L),PROTEIN_SOURCE,PER_SERVING,570,174,0,,,20,42,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,사이다(R),PROTEIN_SOURCE,PER_SERVING,420,133,0,,,5,31,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,사이다(L),PROTEIN_SOURCE,PER_SERVING,570,182,0,,,10,42,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,캐모마일 티,PROTEIN_SOURCE,PER_SERVING,241,2,0,,,0,0,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,,
+롯데리아,말차빙수(보냉백 포함),PROCESSED,PER_SERVING,440,634,9,,,220,82,3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,말차빙수(보냉백 미포함),PROCESSED,PER_SERVING,440,634,9,,,220,82,3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,팥빙수(보냉백 포함),PROCESSED,PER_SERVING,511,601,10,,,140,99,3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,팥빙수(보냉백 미포함),PROCESSED,PER_SERVING,511,601,10,,,140,99,3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,토네이도 말차쿠키,PROCESSED,PER_SERVING,190,341,5,,,160,40,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두, 우유",true
+롯데리아,토네이도 스트로베리,PROCESSED,PER_SERVING,177,263,4,,,65,36,6,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,토네이도 망고젤리,PROCESSED,PER_SERVING,190,280,4,,,75,40,6,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,우유,true
+롯데리아,토네이도 초코쿠키,PROCESSED,PER_SERVING,175,300,5,,,160,32,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"우유, 밀, 대두",true
+롯데리아,토네이도 더블초코,PROCESSED,PER_SERVING,190,338,5,,,160,39,7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"우유, 밀, 대두",true
+롯데리아,허니머스타드,PROCESSED,PER_SERVING,11,25,0,,,70,2,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두",true
+롯데리아,스위트앤사워,PROCESSED,PER_SERVING,11,20,0,,,60,5,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"대두, 밀, 조개류",true
+롯데리아,크리미마늘소스,PROCESSED,PER_SERVING,40,112,0,,,230,8,1.4,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두",true
+롯데리아,크리미양념소스,PROCESSED,PER_SERVING,40,99,0,,,360,9,0.7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 대두, 토마토",true
+롯데리아,롯데리아 잠발라야소스,PROCESSED,PER_SERVING,20,33,0,,,120,7,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,토마토,true
+롯데리아,어니언 시즈닝,PROCESSED,PER_SERVING,4.8,18,0,,,125,1,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"대두, 우유",true
+롯데리아,치즈시즈닝,PROCESSED,PER_SERVING,3.7,15,0,,,130,2,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"대두, 우유",true
+롯데리아,칠리 시즈닝,PROCESSED,PER_SERVING,2.6,9,0,,,160,1,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두, 우유, 쇠고기, 토마토",true
+롯데리아,양념치킨소스,PROCESSED,PER_SERVING,40,92,1,,,200,14,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 토마토",true
+롯데리아,소이허니소스,PROCESSED,PER_SERVING,40,85,1,,,340,16,0,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"밀, 대두",true
+롯데리아,포테이토(L),PROCESSED,PER_SERVING,148,420,5,,,800,5,4.1,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"대두, 토마토",true
+롯데리아,치즈스틱,PROCESSED,PER_SERVING,49,158,8,,,270,1,3.7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유",true
+롯데리아,롱치즈스틱,PROCESSED,PER_SERVING,49,158,8,,,230,0,4,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유",true
+롯데리아,통오징어링,PROCESSED,PER_SERVING,97,166,8,,,420,8,0.5,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"오징어, 밀, 달걀, 대두, 토마토",true
+롯데리아,지파이 고소한맛(S),PROCESSED,PER_SERVING,128,397,18,,,620,1,6,https://www.lotteria.com/,2026-06-08,RECOMMENDABLE_WITH_CAUTION,공식 영양정보 기준 단백질 15g 이상이나 탄수화물·총지방 미공개 및 나트륨/포화지방 주의,"달걀, 밀, 대두, 닭고기, 땅콩",true
+롯데리아,지파이 하바네로(L),PROCESSED,PER_SERVING,160,566,26,,,1370,1,4.2,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 닭고기",true
+롯데리아,양념감자(시즈닝미포함),PROCESSED,PER_SERVING,117,360,4,,,510,0,3.7,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,대두,true
+롯데리아,양념너겟(시즈닝미포함),PROCESSED,PER_SERVING,114,270,19,,,490,1,3.3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"쇠고기, 닭고기, 대두, 밀, 우유",true
+롯데리아,치킨너겟(소스미포함),PROCESSED,PER_SERVING,114,270,19,,,490,1,3.3,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"쇠고기, 닭고기, 대두, 밀, 우유",true
+롯데리아,코울슬로,PROCESSED,PER_SERVING,100,112,1,,,130,12,1,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"대두, 달걀, 우유",true
+롯데리아,디지게 매운 돈까스(양념맛),PROCESSED,PER_SERVING,112,290,15,,,670,15,2,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 토마토, 돼지고기",true
+롯데리아,디지게 매운 돈까스(디진다맛),PROCESSED,PER_SERVING,112,280,15,,,520,13,2.1,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 토마토, 돼지고기, 조개류",true
+롯데리아,야채라이스 불고기,PROCESSED,PER_SERVING,221,520,18,,,900,5,6,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 닭고기, 토마토, 돼지고기",true
+롯데리아,야채라이스 새우,PROCESSED,PER_SERVING,205,434,11,,,890,3,2.2,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 쇠고기, 토마토, 새우",true
+롯데리아,베이컨에그번,PROCESSED,PER_SERVING,159,386,14,,,510,5,8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 돼지고기, 조개류",true
+롯데리아,에그샐러드번,PROCESSED,PER_SERVING,180,446,14,,,590,6,9,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 토마토, 조개류",true
+롯데리아,새우 + 치킨버거,PROCESSED,PER_SERVING,321,825,30,,,1520,13,8,https://www.lotteria.com/,2026-06-08,SEARCH_ONLY,,"달걀, 밀, 대두, 우유, 닭고기, 토마토, 새우, 땅콩, 조개류",true

@@ -1,8 +1,8 @@
 package com.healthcare.domain.diet.recommendation.dto;
 
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
-import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 
 public record RecommendedFoodEntry(
         Long foodCatalogId,
@@ -14,26 +14,25 @@ public record RecommendedFoodEntry(
         double proteinG,
         double carbsG,
         double fatG,
-        AllergenConfidenceLevel allergenConfidenceLevel
+        AllergenConfidenceLevel allergenConfidenceLevel,
+        /** RECOMMENDABLE_WITH_CAUTION 상태 식품의 주의 사유. 일반 추천 식품은 null. */
+        String caution
 ) {
-    public static RecommendedFoodEntry from(FoodCatalog food, double servingG, AllergenConfidenceLevel confidence) {
+    public static RecommendedFoodEntry from(DietRecommendationCandidate food, double servingG) {
         double factor = servingG / 100.0;
         return new RecommendedFoodEntry(
-                food.getId(),
-                food.getName(),
-                food.getNameKo(),
-                food.getCategory(),
+                food.foodCatalogId(),
+                food.name(),
+                food.nameKo(),
+                food.category(),
                 round(servingG),
-                round(food.getCaloriesPer100g() * factor),
-                round(orZero(food.getProteinPer100g()) * factor),
-                round(orZero(food.getCarbsPer100g()) * factor),
-                round(orZero(food.getFatPer100g()) * factor),
-                confidence
+                round(food.caloriesPer100g() * factor),
+                round(food.proteinPer100g() * factor),
+                round(food.carbsPer100g() * factor),
+                round(food.fatPer100g() * factor),
+                food.allergenConfidenceLevel(),
+                food.caution()
         );
-    }
-
-    private static double orZero(Double value) {
-        return value != null ? value : 0.0;
     }
 
     private static double round(double value) {

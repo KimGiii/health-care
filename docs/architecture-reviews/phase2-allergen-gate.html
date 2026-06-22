@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 2 아키텍처 검토 — 알러젠 추천 게이트</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { background: #0f1117; color: #e2e8f0; font-family: 'Pretendard', system-ui, sans-serif; }
+  .card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; }
+  .badge-strong { background: #7c3aed; color: #fff; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+  .badge-explore { background: #0e7490; color: #fff; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+  .badge-spec { background: #065f46; color: #fff; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+  .badge-critical { background: #991b1b; color: #fff; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+  .warn-box { background: #422006; border: 1px solid #92400e; border-radius: 8px; padding: 12px 16px; }
+  code { background: #0d1117; border-radius: 4px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #93c5fd; }
+  pre code { background: transparent; padding: 0; color: #e2e8f0; font-size: 12.5px; line-height: 1.7; }
+  pre { background: #0d1117; border-radius: 8px; padding: 16px; overflow-x: auto; border: 1px solid #1e293b; }
+  .arrow { color: #6366f1; font-weight: bold; }
+  .mermaid { background: #0d1117; border-radius: 8px; padding: 12px; }
+  .depth-bar-before { height: 8px; background: linear-gradient(to right, #ef4444, #f97316); border-radius: 4px; }
+  .depth-bar-after  { height: 8px; background: linear-gradient(to right, #22c55e, #10b981); border-radius: 4px; }
+
+  /* Diagram styles */
+  .box { border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600; text-align: center; }
+  .box-pool  { background: #1e3a5f; border: 2px solid #3b82f6; color: #93c5fd; }
+  .box-gate1 { background: #3b1f2b; border: 2px solid #ec4899; color: #f9a8d4; }
+  .box-gate2 { background: #2d1f3b; border: 2px solid #a855f7; color: #d8b4fe; }
+  .box-entity { background: #1a2e1a; border: 2px solid #22c55e; color: #86efac; }
+  .box-repo  { background: #1f2a20; border: 2px dashed #4ade80; color: #86efac; }
+  .box-use   { background: #1e2941; border: 2px solid #6366f1; color: #a5b4fc; }
+  .box-merged{ background: #1e2e1a; border: 2px solid #10b981; color: #6ee7b7; }
+  .box-warn  { background: #2e1a1a; border: 2px solid #ef4444; color: #fca5a5; }
+  .conn { color: #64748b; font-size: 11px; text-align: center; margin: 2px 0; }
+
+  .section-title { font-size: 22px; font-weight: 800; color: #c7d2fe; margin-bottom: 4px; }
+  .file-tag { background: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #94a3b8; font-family: monospace; }
+</style>
+</head>
+<body class="p-6 max-w-5xl mx-auto">
+
+<!-- Header -->
+<div class="mb-8">
+  <div class="text-xs text-indigo-400 font-mono mb-1">feat/allegen-recommendation — 2026-06-18</div>
+  <h1 class="text-3xl font-black text-white mb-2">Phase 2 아키텍처 검토</h1>
+  <p class="text-slate-400 text-sm">알러젠 추천 게이트 · 후보 풀 · 신뢰도 해석 경로</p>
+</div>
+
+<!-- Summary bar -->
+<div class="card p-4 mb-8 flex gap-6 flex-wrap">
+  <div class="text-center">
+    <div class="text-2xl font-black text-red-400">1</div>
+    <div class="text-xs text-slate-400">Silent Drop (버그)</div>
+  </div>
+  <div class="text-center">
+    <div class="text-2xl font-black text-violet-400">2</div>
+    <div class="text-xs text-slate-400">얕은 심(Seam)</div>
+  </div>
+  <div class="text-center">
+    <div class="text-2xl font-black text-cyan-400">1</div>
+    <div class="text-xs text-slate-400">탐색 가치</div>
+  </div>
+  <div class="ml-auto self-center text-xs text-slate-500">분석 대상: 9개 파일 · 3개 주요 후보</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Candidate 1: strictAllergyMode silent drop -->
+<!-- ================================================================ -->
+<div class="card p-6 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="text-lg font-black text-white">#1</span>
+    <span class="section-title">strictAllergyMode — 묵음으로 사라지는 파라미터</span>
+    <span class="badge-critical">Strong</span>
+    <span class="badge-critical">버그 수준</span>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    <span class="file-tag">DietRecommendationCandidatePool.java</span>
+    <span class="file-tag">AllergenConfidenceGate.java</span>
+    <span class="file-tag">FoodAllergenProfileGate.java</span>
+  </div>
+
+  <!-- Problem -->
+  <div class="mb-5">
+    <div class="text-sm font-bold text-red-400 mb-2">문제</div>
+    <p class="text-sm text-slate-300 leading-relaxed">
+      <code>DietRecommendationCandidatePool.load(restrictions, strictAllergyMode)</code>는
+      <code>strictAllergyMode</code>를 파라미터로 받지만,
+      내부 <code>CandidateRestrictions</code> 레코드에는 저장하지 않고
+      <code>applyRuntimeGate()</code>에도 전달하지 않는다.
+      결과적으로 Strict 모드가 켜져 있어도 게이트는 항상 동일하게 동작한다.
+      <code>AllergenConfidenceGate.passesGate()</code>는 <code>strictMode</code>
+      파라미터를 받지만 이 메서드 자체가 아예 호출되지 않는다.
+    </p>
+    <div class="warn-box mt-3">
+      <div class="text-xs font-bold text-amber-400 mb-1">⚠ Deletion Test</div>
+      <div class="text-xs text-slate-300">
+        <code>strictAllergyMode</code> 파라미터를 삭제해도 동작이 바뀌지 않는다.
+        이 파라미터는 현재 패스-스루(pass-through)다 — 인터페이스 계약이 구현과 분리되어 있다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Before diagram -->
+  <div class="grid grid-cols-2 gap-4 mb-5">
+    <div>
+      <div class="text-xs text-red-400 font-bold mb-2">BEFORE — 의도된 흐름 vs 실제 흐름</div>
+      <pre><code>// 의도
+load(restrictions, strictAllergyMode=true)
+  → applyRuntimeGate(... strictMode=true)
+    → allergenGate.passesGate(..., true) ← 태그 신뢰도 게이트
+    → profileGate.passesGate(...)        ← 프로필 게이트
+
+// 실제 (strictAllergyMode가 어디에도 안 감)
+load(restrictions, strictAllergyMode=true)
+  → applyRuntimeGate(...)
+    → allergenGate.containsAllergen(...)  ← 항상
+    → profileGate.passesGate(...)         ← 항상
+    // passesGate(strictMode) 호출 없음!</code></pre>
+    </div>
+    <div>
+      <div class="text-xs text-green-400 font-bold mb-2">AFTER — 파라미터가 실제로 흐르는 구조</div>
+      <pre><code>// CandidateRestrictions에 strictMode 포함
+private record CandidateRestrictions(
+    Set&lt;Long&gt; foodIds,
+    Set&lt;FoodCategory&gt; categories,
+    List&lt;String&gt; keywords,
+    Set&lt;AllergenTag&gt; allergenTags,
+    boolean strictAllergyMode    // ← 추가
+) { ... }
+
+// applyRuntimeGate에서 사용
+.filter(food -&gt; allergenGate.passesGate(
+    food.getId(),
+    restrictions.allergenTags(),
+    tagsByFoodId,
+    restrictions.strictAllergyMode()  // ← 흘려보냄
+))</code></pre>
+    </div>
+  </div>
+
+  <!-- Visual diagram -->
+  <div class="text-xs text-slate-500 mb-2">실제 파라미터 흐름 (현재)</div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <div class="box box-use" style="min-width:180px">DailyDietRecommendationUseCases<br><span style="font-size:11px;opacity:.7">strictAllergyMode=true 전달</span></div>
+    <div style="font-size:20px;color:#6366f1">→</div>
+    <div class="box box-pool" style="min-width:180px">CandidatePool.load()<br><span style="font-size:11px;opacity:.7">파라미터 수신 ✓</span></div>
+    <div style="font-size:20px;color:#6366f1">→</div>
+    <div class="box box-warn" style="min-width:180px">CandidateRestrictions<br><span style="font-size:11px;opacity:.7">strictMode 저장 ✗</span></div>
+    <div style="font-size:20px;color:#ef4444">→</div>
+    <div class="box box-warn" style="min-width:180px">applyRuntimeGate()<br><span style="font-size:11px;opacity:.7">strictMode 미사용 ✗</span></div>
+  </div>
+
+  <div class="text-sm text-slate-400">
+    <span class="font-bold text-green-400">해결:</span>
+    <code>CandidateRestrictions</code>에 <code>boolean strictAllergyMode</code> 필드를 추가하고,
+    <code>applyRuntimeGate()</code>에서 <code>allergenGate.passesGate(..., restrictions.strictAllergyMode())</code>를
+    호출하도록 연결한다. <code>AllergenConfidenceGate</code>의 <code>passesGate()</code>가 이미
+    <code>strictMode</code>를 받을 준비가 되어 있으므로 변경 범위가 좁다.
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Candidate 2: Dual-gate shallow seam -->
+<!-- ================================================================ -->
+<div class="card p-6 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="text-lg font-black text-white">#2</span>
+    <span class="section-title">두 알러젠 게이트 — 얕은 심(Seam)과 책임 분산</span>
+    <span class="badge-strong">Strong</span>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    <span class="file-tag">AllergenConfidenceGate.java</span>
+    <span class="file-tag">FoodAllergenProfileGate.java</span>
+    <span class="file-tag">DietRecommendationCandidatePool.java</span>
+    <span class="file-tag">FoodAllergenProfile.java</span>
+    <span class="file-tag">FoodAllergenTag.java</span>
+  </div>
+
+  <div class="mb-5">
+    <div class="text-sm font-bold text-red-400 mb-2">문제</div>
+    <p class="text-sm text-slate-300 leading-relaxed mb-3">
+      "식품이 알러지 사용자에게 안전한가?"라는 하나의 질문에 대해 두 개의 게이트
+      (<code>AllergenConfidenceGate</code>, <code>FoodAllergenProfileGate</code>)가 서로 다른
+      데이터 구조를 받아 독립적으로 판단하고, <code>CandidatePool</code>이 두 결과를 직접 조합한다.
+      게이트를 추가하거나 로직을 바꾸려면 <code>CandidatePool</code>을 함께 수정해야 한다.
+    </p>
+    <p class="text-sm text-slate-300 leading-relaxed mb-3">
+      더 구체적으로, <code>toRecommendationCandidates()</code>에서 후보의
+      <code>allergenConfidenceLevel</code>을 결정하는 로직이 두 번째로 분기된다:
+      <code>FoodAllergenProfile</code>이 있으면 Profile의 신뢰도를, 없으면
+      <code>allergenGate.resolveConfidence()</code>로 태그 신뢰도를 사용한다.
+      이 분기는 도메인 정책인데 Pool 구현 코드 안에 묻혀 있다.
+    </p>
+    <div class="warn-box">
+      <div class="text-xs font-bold text-amber-400 mb-1">Deletion Test</div>
+      <div class="text-xs text-slate-300">
+        <code>FoodAllergenProfileGate</code>를 삭제하면 복잡도가 <code>CandidatePool</code>의
+        <code>applyRuntimeGate()</code>에 모두 남는다. 즉 이 게이트는 로직을 은닉하지 않고
+        분산시킨다 — 깊은 모듈이 아니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Before/After diagrams side by side -->
+  <div class="grid grid-cols-2 gap-4 mb-5">
+    <!-- Before -->
+    <div>
+      <div class="text-xs text-red-400 font-bold mb-3">BEFORE — 두 게이트가 Pool에서 직접 조합</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="box box-pool">CandidatePool.applyRuntimeGate()</div>
+        <div class="conn">↓ Map&lt;Long,List&lt;FoodAllergenTag&gt;&gt; 직접 전달</div>
+        <div class="box box-gate1">AllergenConfidenceGate<br><span style="font-size:11px">.containsAllergen() → 포함 여부<br>.passesGate(strictMode) → ← 미사용<br>.resolveConfidence() → 표시용 레벨</span></div>
+        <div class="conn">↓ AND</div>
+        <div class="box box-gate2">FoodAllergenProfileGate<br><span style="font-size:11px">.passesGate() → 프로필 유효성</span></div>
+        <div class="conn">↓ 두 결과를 Pool이 직접 .filter() 체인에 연결</div>
+        <div class="box box-entity">filtered candidates</div>
+      </div>
+    </div>
+    <!-- After -->
+    <div>
+      <div class="text-xs text-green-400 font-bold mb-3">AFTER — 단일 AllergenSafetyDecision 심(Seam)</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="box box-pool">CandidatePool.applyRuntimeGate()</div>
+        <div class="conn">↓ AllergenContext(foodId, tags, profile, restrictions) 전달</div>
+        <div class="box box-merged">AllergenSafetyGate<br><span style="font-size:11px">.decide(AllergenContext) → SafetyDecision<br>{ passes: boolean, confidence: Level, caution: String }</span></div>
+        <div class="conn">↓ 하나의 SafetyDecision 반환</div>
+        <div class="box box-entity">filtered candidates<br><span style="font-size:11px">(confidence, caution 동시 생성)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Benefits -->
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <div class="text-xs text-slate-500 font-bold mb-1">현재 인터페이스 복잡도</div>
+      <div class="depth-bar-before mb-1" style="width:85%"></div>
+      <div class="text-xs text-slate-400">Pool이 3개 Map + 2개 게이트 + 분기 로직 관리</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500 font-bold mb-1">개선 후 인터페이스 복잡도</div>
+      <div class="depth-bar-after mb-1" style="width:30%"></div>
+      <div class="text-xs text-slate-400">Pool은 SafetyDecision 하나만 받음</div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <div class="text-xs font-bold text-green-400 mb-2">개선 후 테스트 구조</div>
+    <pre><code>// Before: CandidatePool 테스트에 3개 Mock 필요
+FoodCatalogRepository mockCatalog = mock(...);
+FoodAllergenTagRepository mockTags = mock(...);
+FoodAllergenProfileRepository mockProfiles = mock(...);
+AllergenConfidenceGate mockGate1 = mock(...);
+FoodAllergenProfileGate mockGate2 = mock(...);
+
+// After: AllergenSafetyGate는 독립적으로 테스트
+@Test void allergyUser_unknownConfidence_isBlocked() {
+    var decision = gate.decide(AllergenContext.of(foodId, tags, null, restrictions));
+    assertThat(decision.passes()).isFalse();
+}
+// Pool은 mock SafetyGate 하나만 주입받음</code></pre>
+  </div>
+
+  <div class="text-sm text-slate-400">
+    <span class="font-bold text-green-400">권장 해결:</span>
+    <code>AllergenSafetyGate</code>(인터페이스) + 구현 클래스로 두 게이트를 통합한다.
+    입력 <code>AllergenContext</code>는 데이터를 모두 담고, 출력 <code>SafetyDecision</code>은
+    <code>passes</code>, <code>confidence</code>, <code>caution</code>을 한 번에 반환한다.
+    <code>CandidatePool</code>은 조합 로직 대신 하나의 게이트 호출로 단순해진다.
+    <br><br>
+    <span class="font-bold text-slate-400">인터페이스가 구현보다 작아지면 깊은 모듈이다. 현재는 아직 얕다.</span>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Candidate 3: Redundant filtering -->
+<!-- ================================================================ -->
+<div class="card p-6 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="text-lg font-black text-white">#3</span>
+    <span class="section-title">applyRuntimeGate — DB 필터와 메모리 필터 중복</span>
+    <span class="badge-explore">탐색 가치</span>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    <span class="file-tag">DietRecommendationCandidatePool.java</span>
+    <span class="file-tag">FoodCatalogSpecs.java</span>
+  </div>
+
+  <div class="mb-5">
+    <div class="text-sm font-bold text-red-400 mb-2">문제</div>
+    <p class="text-sm text-slate-300 leading-relaxed mb-3">
+      <code>loadCatalogCandidates()</code>는 DB 레벨에서
+      <code>FoodCatalogSpecs.idNotIn()</code>, <code>FoodCatalogSpecs.categoryNotIn()</code>을
+      적용한다. 그런데 <code>applyRuntimeGate()</code>는 같은 조건을
+      (<code>!restrictions.foodIds().contains()</code>,
+      <code>!restrictions.categories().contains()</code>) 메모리에서 다시 필터링한다.
+    </p>
+    <p class="text-sm text-slate-300 leading-relaxed">
+      두 레이어 중 어느 쪽이 "진짜" 필터인지 읽는 사람이 판단해야 한다.
+      DB Spec을 제거하면 메모리 필터가 백업이 되고, 메모리 필터를 제거하면
+      DB Spec만 남는다. 현재 코드에서는 의도가 불명확하다.
+    </p>
+    <div class="warn-box mt-3">
+      <div class="text-xs font-bold text-amber-400 mb-1">명시적 의도가 없으면 유지보수 부담</div>
+      <div class="text-xs text-slate-300">
+        나중에 DB Spec 필터를 최적화 이유로 제거하면, 메모리 필터만 남아 있을 때 왜 있는지 알 수 없다.
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <div class="text-xs text-red-400 font-bold mb-2">현재 — 양쪽에 동일한 조건</div>
+      <pre><code>// DB에서 (loadCatalogCandidates)
+spec = spec.and(FoodCatalogSpecs.idNotIn(restrictions.foodIds()));
+spec = spec.and(FoodCatalogSpecs.categoryNotIn(restrictions.categories()));
+
+// 메모리에서 (applyRuntimeGate) ← 동일 조건 재적용
+.filter(food -&gt; !restrictions.foodIds().contains(food.getId()))
+.filter(food -&gt; !restrictions.categories().contains(food.getCategory()))</code></pre>
+    </div>
+    <div>
+      <div class="text-xs text-green-400 font-bold mb-2">개선 — 레이어 책임 명시</div>
+      <pre><code>// 선택 1: DB 필터만 (메모리 제거)
+// 대용량 카탈로그에서 성능 우선
+
+// 선택 2: 메모리 필터만 (DB Spec 제거)
+// Specification 사용 최소화
+
+// 선택 3: 명시적 주석으로 이중 방어선 선언
+// DB: 대량 제거 (성능)
+// 메모리: 안전망 (defensive)
+
+// 어느 쪽이든 의도를 코드 또는 주석으로 명시</code></pre>
+    </div>
+  </div>
+
+  <div class="text-sm text-slate-400">
+    <span class="font-bold text-green-400">권장:</span>
+    의도적 이중 방어선이라면 메모리 필터에 한 줄 설명을 추가한다
+    (<code>// defensive copy: DB spec 누락 시 안전망</code>).
+    아니라면 DB Spec에서 제거하고 메모리 필터만 남긴다.
+    이 후보는 #1, #2보다 우선순위가 낮다.
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Current flow diagram -->
+<!-- ================================================================ -->
+<div class="card p-6 mb-6">
+  <div class="text-sm font-bold text-slate-300 mb-4">현재 알러젠 판단 흐름 전체도</div>
+  <div class="mermaid">
+flowchart TD
+    A[DailyDietRecommendationUseCases] -->|"load(restrictions, strictAllergyMode)"| B[DietRecommendationCandidatePool]
+    B --> C[loadCatalogCandidates\n'DB Spec 필터']
+    B --> D[loadTags\n'FoodAllergenTagRepo']
+    B --> E["loadProfiles\n(allergenTags가 있을 때만)"]
+    C & D & E --> F[applyRuntimeGate]
+    F -->|"containsAllergen()"| G[AllergenConfidenceGate]
+    F -->|"passesGate()"| H[FoodAllergenProfileGate]
+    F --> I[filtered candidates]
+    I --> J["toRecommendationCandidates()\n(신뢰도 분기 로직)"]
+    J -->|"profile 있음"| K["FoodAllergenProfile.getConfidenceLevel()"]
+    J -->|"profile 없음"| L["allergenGate.resolveConfidence()"]
+
+    style B fill:#1e3a5f,stroke:#3b82f6,color:#93c5fd
+    style G fill:#3b1f2b,stroke:#ec4899,color:#f9a8d4
+    style H fill:#2d1f3b,stroke:#a855f7,color:#d8b4fe
+    style F fill:#1a1f2e,stroke:#64748b,color:#cbd5e1
+    style J fill:#2e1a1a,stroke:#ef4444,color:#fca5a5
+  </div>
+  <div class="mt-3 text-xs text-slate-500">
+    strictAllergyMode는 A→B 화살표에만 있고 이후 흐름에서 사라진다 (#1).
+    G와 H 두 게이트가 F에서 직접 조합된다 (#2).
+    신뢰도 분기가 J에 있다 (#2의 파생).
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- Top recommendation -->
+<!-- ================================================================ -->
+<div class="card p-6 mb-6" style="border-color: #7c3aed; background: linear-gradient(135deg, #1a1f2e 0%, #1e1a2e 100%);">
+  <div class="text-sm font-bold text-violet-400 mb-2">최우선 권장</div>
+  <div class="text-xl font-black text-white mb-3">#1 strictAllergyMode 연결부터 수정</div>
+  <p class="text-sm text-slate-300 leading-relaxed mb-4">
+    이 버그는 알러지 사용자의 추천 게이트 정책이 의도대로 작동하지 않는다는 것을 의미한다.
+    수정 범위는 좁다 — <code>CandidateRestrictions</code> 레코드에 <code>boolean strictAllergyMode</code>를
+    추가하고 <code>applyRuntimeGate()</code>에서 <code>allergenGate.passesGate(..., strictMode)</code>를
+    호출하면 된다. 이미 <code>AllergenConfidenceGate</code>는 준비되어 있다.
+  </p>
+  <p class="text-sm text-slate-300 leading-relaxed mb-4">
+    이 수정이 끝난 뒤 <strong>#2 알러젠 게이트 통합</strong>을 탐색할 것을 권장한다.
+    두 게이트를 <code>AllergenSafetyGate</code> 하나로 묶으면 <code>CandidatePool</code>의 테스트 복잡도가
+    크게 줄어들고, 향후 신뢰도 정책 변경(예: <code>RECIPE_DERIVED</code> 처리)을 한 곳에서 관리할 수 있다.
+  </p>
+  <div class="text-xs text-slate-500">
+    #3 (중복 필터)는 기능 오류가 아니므로 sprint 내 리팩터링 여유가 있을 때 처리.
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- ADR notice -->
+<!-- ================================================================ -->
+<div class="card p-4 mb-6" style="border-color:#1e293b">
+  <div class="text-xs text-slate-500 mb-1">기존 ADR과의 충돌 여부</div>
+  <p class="text-xs text-slate-400">
+    이 리포트의 후보들은 기존 ADR-0002 (목표별 영양 최적화)나 알러젠 관련 정책 결정과
+    충돌하지 않는다. #1은 기존 정책을 올바르게 구현하기 위한 버그 수정이고,
+    #2는 동일한 정책을 더 깊은 모듈 경계 안에 캡슐화하는 리팩터링이다.
+  </p>
+</div>
+
+<div class="text-xs text-slate-600 text-center pb-4">
+  Gainsy Architecture Review · Phase 2 · 2026-06-18
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { background: '#0d1117' } });
+</script>
+</body>
+</html>

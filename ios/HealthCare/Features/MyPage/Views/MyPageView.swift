@@ -179,6 +179,22 @@ struct MyPageView: View {
                 }
             }
 
+            MenuSection(title: String(localized: "mypage.section.diet")) {
+                NavigationLink {
+                    DietRestrictionView()
+                } label: {
+                    DietMenuRow(icon: "exclamationmark.shield", iconColor: Color.brandDanger,
+                                label: String(localized: "mypage.menu.dietRestriction"))
+                }
+                Divider().padding(.leading, 60) // design-lint:ignore — micro/hero spacing
+                NavigationLink {
+                    DietRecommendationView()
+                } label: {
+                    DietMenuRow(icon: "fork.knife", iconColor: Color.brandAccent,
+                                label: String(localized: "mypage.menu.dietRecommendation"))
+                }
+            }
+
             MenuSection(title: String(localized: "mypage.section.app")) {
                 ThemeMenuRow(selectedTheme: selectedTheme) { theme in
                     appThemeRawValue = theme.rawValue
@@ -395,6 +411,33 @@ private struct MenuSection<Content: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 2)
         }
+    }
+}
+
+private struct DietMenuRow: View {
+    let icon: String
+    let iconColor: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.bodyMedium).fontWeight(.medium)
+                .foregroundStyle(iconColor)
+                .frame(width: 30, height: 30)
+                .background(iconColor.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            Text(label)
+                .font(.bodyMedium)
+                .foregroundStyle(Color.textPrimary)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.captionBold)
+                .foregroundStyle(Color.textSecondary.opacity(0.6))
+        }
+        .padding(.horizontal, Spacing.lg) // design-lint:ignore — matches menu row gutter
+        .padding(.vertical, Spacing.lg) // design-lint:ignore — matches menu row height
+        .contentShape(Rectangle())
     }
 }
 

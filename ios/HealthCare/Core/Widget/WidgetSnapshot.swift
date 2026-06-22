@@ -105,9 +105,14 @@ public extension CalorieWidgetSnapshot {
 public struct GoalWidgetSnapshot: Codable, Equatable, Sendable {
     /// 활성 목표가 없으면 nil — 위젯이 "활성 목표 없음" 상태로 표시.
     public let goal: ActiveGoal?
-    /// 최근 7일 (또는 그 이내) 체중 측정 — 오름차순 정렬 권장.
-    public let recentWeights: [WeightPoint]
+    /// 활성 목표 타입에 맞는 최근 지표 포인트 — 오름차순 정렬 권장.
+    public let metricKind: MetricKind
+    public let metricPoints: [MetricPoint]
     public let updatedAt: Date
+
+    private enum CodingKeys: String, CodingKey {
+        case goal, metricKind, metricPoints, recentWeights, updatedAt
+    }
 
     public struct ActiveGoal: Codable, Equatable, Sendable {
         /// 백엔드 목표 ID — 위젯 탭 라우팅 시 GoalProgressView(goalId:)에 직접 사용.
@@ -143,17 +148,112 @@ public struct GoalWidgetSnapshot: Codable, Equatable, Sendable {
         }
     }
 
-    public init(goal: ActiveGoal?, recentWeights: [WeightPoint], updatedAt: Date = Date()) {
+    public enum MetricKind: String, Codable, Equatable, Sendable {
+        case weight
+        case muscleMass
+        case bodyFat
+        case enduranceMinutes
+
+        public var label: String {
+            switch self {
+            case .weight: return "체중"
+            case .muscleMass: return "골격근량"
+            case .bodyFat: return "체지방률"
+            case .enduranceMinutes: return "운동 시간"
+            }
+        }
+
+        public var unit: String {
+            switch self {
+            case .weight, .muscleMass: return "kg"
+            case .bodyFat: return "%"
+            case .enduranceMinutes: return "분"
+            }
+        }
+
+        public var emptyText: String {
+            switch self {
+            case .weight: return "체중 기록을 시작하세요"
+            case .muscleMass: return "골격근량 기록이 필요해요"
+            case .bodyFat: return "체지방률 기록이 필요해요"
+            case .enduranceMinutes: return "운동 기록을 시작하세요"
+            }
+        }
+
+        public var prefersLowerValue: Bool {
+            switch self {
+            case .weight, .bodyFat: return true
+            case .muscleMass, .enduranceMinutes: return false
+            }
+        }
+    }
+
+    public struct MetricPoint: Codable, Equatable, Sendable {
+        public let date: Date
+        public let value: Double
+
+        public init(date: Date, value: Double) {
+            self.date = date
+            self.value = value
+        }
+    }
+
+    public init(
+        goal: ActiveGoal?,
+        metricKind: MetricKind,
+        metricPoints: [MetricPoint],
+        updatedAt: Date = Date()
+    ) {
         self.goal = goal
-        self.recentWeights = recentWeights
+        self.metricKind = metricKind
+        self.metricPoints = metricPoints
         self.updatedAt = updatedAt
     }
 
-    /// 체중 변화량 (가장 오래된 → 가장 최근). 데이터 부족 시 nil.
-    public var weightDelta: Double? {
-        guard let first = recentWeights.first?.weightKg,
-              let last = recentWeights.last?.weightKg,
-              recentWeights.count >= 2 else { return nil }
+    public init(goal: ActiveGoal?, recentWeights: [WeightPoint], updatedAt: Date = Date()) {
+        self.init(
+            goal: goal,
+            metricKind: .weight,
+            metricPoints: recentWeights.map { MetricPoint(date: $0.date, value: $0.weightKg) },
+            updatedAt: updatedAt
+        )
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        goal = try container.decodeIfPresent(ActiveGoal.self, forKey: .goal)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
+
+        if let metricKind = try container.decodeIfPresent(MetricKind.self, forKey: .metricKind),
+           let metricPoints = try container.decodeIfPresent([MetricPoint].self, forKey: .metricPoints) {
+            self.metricKind = metricKind
+            self.metricPoints = metricPoints
+        } else {
+            let oldWeights = try container.decodeIfPresent([WeightPoint].self, forKey: .recentWeights) ?? []
+            (metricKind, metricPoints) = GoalWidgetSnapshot.migrate(from: oldWeights)
+        }
+    }
+
+    /// 구버전 `recentWeights` 포맷을 현행 `(MetricKind, [MetricPoint])` 쌍으로 변환한다.
+    /// 데이터 소스가 recentWeights 하나이므로 항상 `.weight` 를 반환한다.
+    public static func migrate(from legacy: [WeightPoint]) -> (MetricKind, [MetricPoint]) {
+        let points = legacy.map { MetricPoint(date: $0.date, value: $0.weightKg) }
+        return (.weight, points)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(goal, forKey: .goal)
+        try container.encode(metricKind, forKey: .metricKind)
+        try container.encode(metricPoints, forKey: .metricPoints)
+        try container.encode(updatedAt, forKey: .updatedAt)
+    }
+
+    /// 가장 오래된 → 가장 최근 지표 변화량. 데이터 부족 시 nil.
+    public var metricDelta: Double? {
+        guard let first = metricPoints.first?.value,
+              let last = metricPoints.last?.value,
+              metricPoints.count >= 2 else { return nil }
         return last - first
     }
 }
@@ -224,13 +324,14 @@ public extension GoalWidgetSnapshot {
             progress: 0.62,
             daysRemaining: 24
         ),
-        recentWeights: (0..<7).map { i in
+        metricKind: .weight,
+        metricPoints: (0..<7).map { i in
             let cal = Calendar.current
             let date = cal.date(byAdding: .day, value: -(6 - i), to: Date()) ?? Date()
-            return WeightPoint(date: date, weightKg: 70.4 - Double(i) * 0.18)
+            return MetricPoint(date: date, value: 70.4 - Double(i) * 0.18)
         }
     )
 
     /// 활성 목표 없음 상태.
-    static let empty = GoalWidgetSnapshot(goal: nil, recentWeights: [])
+    static let empty = GoalWidgetSnapshot(goal: nil, metricKind: .weight, metricPoints: [])
 }

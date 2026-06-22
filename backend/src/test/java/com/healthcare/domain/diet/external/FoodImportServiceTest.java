@@ -2,6 +2,8 @@ package com.healthcare.domain.diet.external;
 
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.external.dto.ExternalFoodResult;
 import com.healthcare.domain.diet.external.dto.ExternalFoodResult.FoodDataSource;
 import com.healthcare.domain.diet.external.dto.ImportFoodRequest;
@@ -57,6 +59,8 @@ class FoodImportServiceTest {
                 .category(FoodCategory.PROTEIN_SOURCE)
                 .caloriesPer100g(165.0).proteinPer100g(31.0)
                 .carbsPer100g(0.0).fatPer100g(3.6)
+                .source(FoodCatalogSource.USER_CUSTOM)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                 .isCustom(true).createdByUserId(userId)
                 .build();
 
@@ -69,6 +73,8 @@ class FoodImportServiceTest {
         assertThat(result.getId()).isEqualTo(999L);
         assertThat(result.getName()).isEqualTo("Chicken Breast");
         assertThat(result.isCustom()).isTrue();
+        assertThat(result.getSource()).isEqualTo(FoodCatalogSource.USER_CUSTOM);
+        assertThat(result.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
         assertThat(result.getCreatedByUserId()).isEqualTo(userId);
 
         // 저장 엔티티 검증
@@ -76,6 +82,9 @@ class FoodImportServiceTest {
         verify(foodCatalogRepository).save(captor.capture());
         FoodCatalog capturedEntity = captor.getValue();
         assertThat(capturedEntity.getIsCustom()).isTrue();
+        assertThat(capturedEntity.getSource()).isEqualTo(FoodCatalogSource.USER_CUSTOM);
+        assertThat(capturedEntity.getSourceDetail()).isEqualTo(FoodDataSource.PUBLIC_FOOD_API.name());
+        assertThat(capturedEntity.getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
         assertThat(capturedEntity.getCreatedByUserId()).isEqualTo(userId);
         assertThat(capturedEntity.getCaloriesPer100g()).isEqualTo(165.0);
         assertThat(capturedEntity.getProteinPer100g()).isEqualTo(31.0);
@@ -101,6 +110,8 @@ class FoodImportServiceTest {
                 .id(888L).name("Nutella").category(FoodCategory.PROCESSED)
                 .caloriesPer100g(541.0).proteinPer100g(6.3)
                 .carbsPer100g(57.5).fatPer100g(30.9)
+                .source(FoodCatalogSource.USER_CUSTOM)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                 .isCustom(true).createdByUserId(userId)
                 .build();
 
@@ -116,6 +127,8 @@ class FoodImportServiceTest {
         ArgumentCaptor<FoodCatalog> captor = ArgumentCaptor.forClass(FoodCatalog.class);
         verify(foodCatalogRepository).save(captor.capture());
         assertThat(captor.getValue().getCreatedByUserId()).isEqualTo(userId);
+        assertThat(captor.getValue().getSource()).isEqualTo(FoodCatalogSource.USER_CUSTOM);
+        assertThat(captor.getValue().getRecommendationStatus()).isEqualTo(RecommendationStatus.SEARCH_ONLY);
         assertThat(captor.getValue().getFatPer100g()).isEqualTo(30.9);
     }
 
@@ -139,6 +152,8 @@ class FoodImportServiceTest {
                 .id(777L).name("Oatmeal").nameKo(null).category(FoodCategory.GRAIN)
                 .caloriesPer100g(389.0).proteinPer100g(17.0)
                 .carbsPer100g(66.0).fatPer100g(7.0)
+                .source(FoodCatalogSource.USER_CUSTOM)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
                 .isCustom(true).createdByUserId(userId)
                 .build();
         given(foodCatalogRepository.save(any(FoodCatalog.class))).willReturn(saved);

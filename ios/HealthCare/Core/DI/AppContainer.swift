@@ -20,7 +20,17 @@ final class AppContainer: ObservableObject {
         NSLog("[AppContainer] env BASE_URL=\(environmentBaseURL ?? "<nil>")")
         NSLog("[AppContainer] resolved baseURL=\(baseURL.absoluteString)")
 
-        let apiClient = APIClient(baseURL: baseURL, tokenStore: tokenStore)
+        let apiClient: APIClient
+        #if DEBUG
+        if UITestNetworkStub.isEnabled {
+            NSLog("[AppContainer] UI test network stub enabled")
+            apiClient = APIClient(baseURL: baseURL, tokenStore: tokenStore, session: UITestNetworkStub.makeSession())
+        } else {
+            apiClient = APIClient(baseURL: baseURL, tokenStore: tokenStore)
+        }
+        #else
+        apiClient = APIClient(baseURL: baseURL, tokenStore: tokenStore)
+        #endif
         self.tokenStore = tokenStore
         self.apiClient  = apiClient
         self.fcmTokenUploader = FcmTokenUploader(apiClient: apiClient)

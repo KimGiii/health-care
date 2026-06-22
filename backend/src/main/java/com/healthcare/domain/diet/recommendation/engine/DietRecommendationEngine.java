@@ -1,23 +1,16 @@
 package com.healthcare.domain.diet.recommendation.engine;
 
-import com.healthcare.domain.diet.allergen.AllergenConfidenceGate;
-import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
-import com.healthcare.domain.diet.allergen.AllergenTag;
-import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
-import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedFoodEntry;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction;
-import com.healthcare.domain.diet.restriction.entity.DietRestriction.TargetType;
 import com.healthcare.domain.nutrition.dto.NutritionTargets;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 
 /**
@@ -25,10 +18,7 @@ import java.util.stream.Collectors;
  * 외부 API 호출 없이 내부 데이터만 사용.
  */
 @Component
-@RequiredArgsConstructor
 public class DietRecommendationEngine {
-
-    private final AllergenConfidenceGate allergenGate;
 
     private static final Map<MealType, Double> BASE_RATIOS = Map.of(
             MealType.BREAKFAST, 0.25,
@@ -66,63 +56,29 @@ public class DietRecommendationEngine {
     }
 
     /**
-     * 제한 조건과 알러젠 태그를 적용해 추천 후보를 필터링한다.
-     *
-     * @param candidates      전체 식품 카탈로그 후보
-     * @param restrictions    사용자 제한 조건 목록
-     * @param tagsByFoodId    식품 ID → 알러젠 태그 목록
-     * @param strictMode      Strict 모드 여부
+     * 전체 하루 식단 추천을 생성한다. 반복 페널티 없이 정렬한다.
      */
-    public List<FoodCatalog> filterCandidates(
-            List<FoodCatalog> candidates,
-            List<DietRestriction> restrictions,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId,
-            boolean strictMode
+    public List<RecommendedMeal> recommend(
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> filteredCandidates
     ) {
-        Set<Long> restrictedFoodIds = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.FOOD)
-                .map(DietRestriction::getFoodCatalogId)
-                .collect(Collectors.toSet());
-
-        Set<FoodCategory> restrictedCategories = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.CATEGORY)
-                .map(DietRestriction::getCategory)
-                .collect(Collectors.toSet());
-
-        List<String> restrictedKeywords = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.KEYWORD)
-                .map(DietRestriction::getKeyword)
-                .filter(Objects::nonNull)
-                .map(String::toLowerCase)
-                .toList();
-
-        Set<AllergenTag> restrictedAllergenTags = restrictions.stream()
-                .filter(r -> r.getTargetType() == TargetType.ALLERGEN_TAG)
-                .map(DietRestriction::getAllergenTag)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        // 칼로리 / FOOD / CATEGORY 필터는 UseCase의 FoodCatalogSpecs가 DB 레벨에서 처리한다.
-        // 여기서는 안전망으로 유지하되, 실질적으로는 no-op.
-        return candidates.stream()
-                .filter(food -> food.getCaloriesPer100g() != null)
-                .filter(food -> !restrictedFoodIds.contains(food.getId()))
-                .filter(food -> !restrictedCategories.contains(food.getCategory()))
-                .filter(food -> !matchesKeyword(food, restrictedKeywords))
-                .filter(food -> !allergenGate.containsAllergen(food.getId(), restrictedAllergenTags, tagsByFoodId))
-                .filter(food -> allergenGate.passesGate(food.getId(), restrictedAllergenTags, tagsByFoodId, strictMode))
-                .toList();
+        return recommend(date, targets, selectedMeals, filteredCandidates,
+                UserRepetitionPolicy.noRestrictions());
     }
 
     /**
      * 전체 하루 식단 추천을 생성한다.
+     * 후보 정렬은 한 곳({@link #sortByScore})에서 이루어지며, 최근 섭취 반복 페널티를
+     * soft objective로 함께 반영한다.
      */
     public List<RecommendedMeal> recommend(
+            LocalDate date,
             NutritionTargets targets,
             List<MealType> selectedMeals,
-            List<FoodCatalog> filteredCandidates,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId,
-            boolean strictMode
+            List<DietRecommendationCandidate> filteredCandidates,
+            UserRepetitionPolicy repetitionPolicy
     ) {
         Map<MealType, Double> calorieDistribution = distributeCalories(targets.calorieTarget(), selectedMeals);
         Set<Long> usedFoodIds = new HashSet<>();
@@ -130,11 +86,11 @@ public class DietRecommendationEngine {
         List<RecommendedMeal> meals = new ArrayList<>();
         for (MealType mealType : selectedMeals) {
             double targetCal = calorieDistribution.getOrDefault(mealType, 0.0);
-            double targetProtein = targets.proteinTargetG() * (targetCal / targets.calorieTarget());
 
-            List<FoodCatalog> mealCandidates = sortByScore(filteredCandidates, usedFoodIds);
+            List<DietRecommendationCandidate> mealCandidates =
+                    sortByScore(filteredCandidates, usedFoodIds, repetitionPolicy, date);
             List<RecommendedFoodEntry> items = selectItemsForMeal(
-                    mealType, mealCandidates, targetCal, tagsByFoodId);
+                    mealType, mealCandidates, targetCal);
 
             items.stream().map(RecommendedFoodEntry::foodCatalogId).forEach(usedFoodIds::add);
 
@@ -149,13 +105,88 @@ public class DietRecommendationEngine {
         return meals;
     }
 
+    public List<RecommendedMeal> recommend(
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> filteredCandidates
+    ) {
+        return recommend(LocalDate.now(), targets, selectedMeals, filteredCandidates);
+    }
+
+    /**
+     * 이전 대안에서 사용된 음식을 순차 제외하여 다양한 식단 대안을 N개 생성한다.
+     * 후보가 소진되면 전체 후보를 다시 허용한다.
+     */
+    public List<List<RecommendedMeal>> recommendAlternatives(
+            int count,
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> candidates
+    ) {
+        return recommendAlternatives(count, date, targets, selectedMeals, candidates,
+                UserRepetitionPolicy.noRestrictions());
+    }
+
+    public List<List<RecommendedMeal>> recommendAlternatives(
+            int count,
+            LocalDate date,
+            NutritionTargets targets,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> candidates,
+            UserRepetitionPolicy repetitionPolicy
+    ) {
+        List<List<RecommendedMeal>> results = new ArrayList<>();
+        Set<Long> excludedFoodIds = new HashSet<>();
+
+        for (int i = 0; i < count; i++) {
+            List<DietRecommendationCandidate> pool = candidates.stream()
+                    .filter(f -> !excludedFoodIds.contains(f.foodCatalogId()))
+                    .toList();
+            if (pool.isEmpty()) break;
+
+            List<RecommendedMeal> alt = recommend(date, targets, selectedMeals, pool, repetitionPolicy);
+            results.add(alt);
+
+            alt.stream()
+                    .flatMap(m -> m.items().stream())
+                    .map(RecommendedFoodEntry::foodCatalogId)
+                    .forEach(excludedFoodIds::add);
+        }
+        return results;
+    }
+
+    /**
+     * 대안 식단 목록을 1차 추천 대비 카테고리 다양성 점수 내림차순으로 정렬한다.
+     * 점수 = 1차 추천에 없는 새 카테고리 수.
+     */
+    public List<List<RecommendedMeal>> sortByDiversityFrom(
+            List<RecommendedMeal> primary,
+            List<List<RecommendedMeal>> alternatives
+    ) {
+        Set<FoodCategory> primaryCategories = extractCategories(primary);
+        return alternatives.stream()
+                .sorted(Comparator.comparingLong((List<RecommendedMeal> alt) ->
+                        extractCategories(alt).stream()
+                                .filter(c -> !primaryCategories.contains(c))
+                                .count())
+                        .reversed())
+                .toList();
+    }
+
+    private Set<FoodCategory> extractCategories(List<RecommendedMeal> meals) {
+        return meals.stream()
+                .flatMap(m -> m.items().stream())
+                .map(RecommendedFoodEntry::category)
+                .collect(Collectors.toSet());
+    }
+
     // ─── 내부 로직 ───
 
     private List<RecommendedFoodEntry> selectItemsForMeal(
             MealType mealType,
-            List<FoodCatalog> candidates,
-            double targetCalories,
-            Map<Long, List<FoodAllergenTag>> tagsByFoodId
+            List<DietRecommendationCandidate> candidates,
+            double targetCalories
     ) {
         if (candidates.isEmpty()) return List.of();
 
@@ -163,21 +194,30 @@ public class DietRecommendationEngine {
         List<FoodCategory> preferredCategories = PREFERRED_CATEGORIES.getOrDefault(mealType, List.of());
 
         // 선호 카테고리별로 1개씩 선택 (있는 경우)
-        List<FoodCatalog> selected = new ArrayList<>();
+        List<DietRecommendationCandidate> selected = new ArrayList<>();
         Set<FoodCategory> usedCategories = new HashSet<>();
 
         for (FoodCategory preferredCat : preferredCategories) {
             if (selected.size() >= maxItems) break;
             candidates.stream()
-                    .filter(f -> f.getCategory() == preferredCat && !usedCategories.contains(f.getCategory()))
+                    .filter(f -> f.category() == preferredCat && !usedCategories.contains(f.category()))
                     .findFirst()
                     .ifPresent(f -> {
                         selected.add(f);
-                        usedCategories.add(f.getCategory());
+                        usedCategories.add(f.category());
                     });
         }
 
-        // 선호 카테고리에서 maxItems 미달 시 나머지에서 보충
+        // 선호 카테고리에서 maxItems 미달 시: 새 카테고리 우선, 없으면 기존 카테고리에서 보충
+        if (selected.size() < maxItems) {
+            candidates.stream()
+                    .filter(f -> !selected.contains(f) && !usedCategories.contains(f.category()))
+                    .limit(maxItems - selected.size())
+                    .forEach(f -> {
+                        selected.add(f);
+                        usedCategories.add(f.category());
+                    });
+        }
         if (selected.size() < maxItems) {
             candidates.stream()
                     .filter(f -> !selected.contains(f))
@@ -190,40 +230,44 @@ public class DietRecommendationEngine {
         // 칼로리 분배: 각 식품에 균등 분배
         double perItemCalories = targetCalories / selected.size();
         List<RecommendedFoodEntry> items = new ArrayList<>();
-        for (FoodCatalog food : selected) {
-            double servingG = calculateServing(food, perItemCalories);
-            AllergenConfidenceLevel confidence = allergenGate.resolveConfidence(food.getId(), tagsByFoodId);
-            items.add(RecommendedFoodEntry.from(food, servingG, confidence));
+        for (DietRecommendationCandidate food : selected) {
+            double servingG = food.chooseServingGramsFor(perItemCalories);
+            items.add(RecommendedFoodEntry.from(food, servingG));
         }
         return items;
     }
 
-    /** 목표 칼로리에 맞는 제공량(g)을 계산한다. 25g 단위로 반올림. */
-    private double calculateServing(FoodCatalog food, double targetCalories) {
-        if (food.getCaloriesPer100g() <= 0) return 100.0;
-        double rawServing = targetCalories / food.getCaloriesPer100g() * 100.0;
-        // 25g 단위 반올림, 최소 25g 최대 500g
-        double rounded = Math.round(rawServing / 25.0) * 25.0;
-        return Math.max(25.0, Math.min(500.0, rounded));
-    }
-
-    /** 사용 빈도(usageCount) 내림차순 + 이미 사용된 식품 페널티 정렬 */
-    private List<FoodCatalog> sortByScore(List<FoodCatalog> candidates, Set<Long> usedFoodIds) {
+    /**
+     * 후보 점수화 seam — 모든 순위 규칙을 한 곳에 모은다.
+     * 1) 같은 추천 내 이미 사용된 식품을 뒤로, 2) 최근 섭취 반복 페널티(soft),
+     * 3) 날짜 기준 안정적 회전, 4) 사용 횟수, 5) 안정 key.
+     */
+    private List<DietRecommendationCandidate> sortByScore(
+            List<DietRecommendationCandidate> candidates,
+            Set<Long> usedFoodIds,
+            UserRepetitionPolicy repetitionPolicy,
+            LocalDate date
+    ) {
         return candidates.stream()
                 .sorted(Comparator
-                        .comparingLong((FoodCatalog f) -> usedFoodIds.contains(f.getId()) ? 0L : 1L)
-                        .reversed()
-                        .thenComparingLong(f -> f.getUsageCount() != null ? f.getUsageCount() : 0L)
-                        .reversed())
+                        .comparingInt((DietRecommendationCandidate f) ->
+                                usedFoodIds.contains(f.foodCatalogId()) ? 1 : 0)
+                        .thenComparingDouble(repetitionPolicy::penaltyScore)
+                        .thenComparingLong(f -> rotationKey(date, f))
+                        .thenComparing(Comparator.comparingLong(this::usageCount).reversed())
+                        .thenComparingLong(DietRecommendationCandidate::stableKey))
                 .toList();
     }
 
-    /** KEYWORD 제한: 식품명 또는 한국어명에 키워드가 포함되면 제외 */
-    private boolean matchesKeyword(FoodCatalog food, List<String> keywords) {
-        if (keywords.isEmpty()) return false;
-        String nameLower = food.getName() != null ? food.getName().toLowerCase() : "";
-        String nameKoLower = food.getNameKo() != null ? food.getNameKo().toLowerCase() : "";
-        return keywords.stream().anyMatch(kw -> nameLower.contains(kw) || nameKoLower.contains(kw));
+    private long usageCount(DietRecommendationCandidate food) {
+        return food.usageCount();
+    }
+
+    private long rotationKey(LocalDate date, DietRecommendationCandidate food) {
+        long value = date.toEpochDay() ^ (food.stableKey() * 0x9E3779B97F4A7C15L);
+        value = (value ^ (value >>> 30)) * 0xBF58476D1CE4E5B9L;
+        value = (value ^ (value >>> 27)) * 0x94D049BB133111EBL;
+        return value ^ (value >>> 31);
     }
 
     private double round(double value) {

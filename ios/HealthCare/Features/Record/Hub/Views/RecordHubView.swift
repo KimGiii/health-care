@@ -414,9 +414,14 @@ private struct BodyRouteCard: View {
                         Text(String(format: "%.1f", w))
                             .font(.numeralHero)
                             .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.58)
+                            .allowsTightening(true)
                         Text("kg")
                             .font(.labelSmall)
                             .foregroundStyle(.white.opacity(0.55))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                             .padding(.bottom, Spacing.sm) // design-lint:ignore — micro/hero spacing
                     } else {
                         Image(systemName: "scalemass.fill")

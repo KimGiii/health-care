@@ -475,7 +475,7 @@ struct FoodSearchSheet: View {
                     source.scheduleSearch(apiClient: container.apiClient)
                 }
 
-                if source.isSearching {
+                if source.state.isSearching {
                     Spacer()
                     ProgressView(String(localized: "diet.search.loading"))
                     Spacer()
@@ -494,12 +494,20 @@ struct FoodSearchSheet: View {
             .sheet(isPresented: $source.showCustomFoodForm) {
                 AddCustomFoodView(source: source)
             }
+            .alert(Text("오류"), isPresented: Binding(
+                get: { source.state.failureMessage != nil },
+                set: { if !$0 { source.dismissError() } }
+            )) {
+                Button(String(localized: "common.ok"), role: .cancel) {}
+            } message: {
+                Text(source.state.failureMessage ?? "")
+            }
         }
     }
 
     private var combinedList: some View {
         let hasQuery = !source.searchQuery.isEmpty
-        let hasAny = !source.catalogResults.isEmpty || !source.externalResults.isEmpty
+        let hasAny = !source.state.items.isEmpty
 
         return Group {
             if hasQuery && !hasAny {
@@ -513,19 +521,10 @@ struct FoodSearchSheet: View {
             } else {
                 VStack(spacing: 0) {
                     List {
-                        if !source.catalogResults.isEmpty {
+                        if !source.state.items.isEmpty {
                             Section(header: Text("내 카탈로그")) {
-                                ForEach(source.catalogResults) { item in
+                                ForEach(source.state.items) { item in
                                     CatalogFoodRow(item: item) { source.select(food: item) }
-                                }
-                            }
-                        }
-                        if !source.externalResults.isEmpty {
-                            Section(header: Text("외부 검색")) {
-                                ForEach(source.externalResults) { item in
-                                    ExternalFoodRow(item: item) {
-                                        Task { await source.importAndAdd(external: item, apiClient: container.apiClient) }
-                                    }
                                 }
                             }
                         }
@@ -557,7 +556,7 @@ struct FoodSearchSheet: View {
 
     @ViewBuilder
     private var aiActionSection: some View {
-        if let estimate = source.aiEstimateResult,
+        if let estimate = source.state.aiEstimate,
            estimate.isFood,
            let item = estimate.firstItem {
             VStack(alignment: .leading, spacing: 10) {
@@ -618,7 +617,7 @@ struct FoodSearchSheet: View {
                 Button {
                     Task { await source.estimateWithAI(apiClient: container.apiClient) }
                 } label: {
-                    if source.isAiEstimating {
+                    if source.state.isAiEstimating {
                         ProgressView().frame(maxWidth: .infinity)
                     } else {
                         Label(String(localized: "diet.ai.estimate"), systemImage: "sparkles")
@@ -628,7 +627,7 @@ struct FoodSearchSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.brandPrimary)
-                .disabled(source.isAiEstimating)
+                .disabled(source.state.isAiEstimating)
 
                 Button {
                     source.showCustomFoodForm = true
@@ -686,48 +685,9 @@ private struct CatalogFoodRow: View {
                             .clipShape(Capsule())
                     }
                 }
-                if let kcal = item.caloriesPer100g {
-                    Text(String(format: "%.0f kcal / 100g", kcal))
-                        .font(.caption)
-                        .foregroundColor(Color.textSecondary)
-                }
-            }
-            Spacer()
-            Button(action: onAdd) {
-                Image(systemName: "plus.circle.fill").font(.title2).foregroundColor(Color.brandAccent)
-            }
-        }
-        .padding(.vertical, Spacing.xs)
-    }
-}
-
-// MARK: - ExternalFoodRow
-
-private struct ExternalFoodRow: View {
-    let item: ExternalFoodResult
-    let onAdd: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: item.category?.sfSymbol ?? "magnifyingglass")
-                .font(.title2)
-                .frame(width: 40, height: 40)
-                .background(Color.backgroundPage)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(item.displayName).font(.subheadline.bold()).lineLimit(1)
-                HStack(spacing: 4) {
-                    Text(item.source.displayName)
-                        .font(.caption2.bold())
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, Spacing.xs)
-                        .background(Color.hairline)
-                        .clipShape(Capsule())
-                    Text(item.nutritionSummary)
-                        .font(.caption)
-                        .foregroundColor(Color.textSecondary)
-                        .lineLimit(1)
-                }
+                Text(item.catalogNutritionSummary)
+                    .font(.caption)
+                    .foregroundColor(Color.textSecondary)
             }
             Spacer()
             Button(action: onAdd) {

@@ -2,15 +2,21 @@
 
 **작성일**: 2026-05-04
 
-**개정일**: 2026-06-09
+**개정일**: 2026-06-10
 
-**상태**: MVP 구현 완료 / 카탈로그 강화 계획 확정
+**상태**: MVP 구현 완료 / Phase 1 스키마 + Phase 2 배치 파이프라인·중복 리포터·관리자 API + Phase 3 브랜드 CSV + Phase 4 추천 큐레이션 응답 구현 / staging 전량 적재 판단 근거 정리
+
+**작업 브랜치**: `feat/allegen-recommendation`
+
+알러젠 식단 추천과 식품 카탈로그 강화 작업은 `feat/allegen-recommendation` 브랜치에서만 진행합니다. `dev`에는 직접 커밋하지 않고, 검증된 변경을 PR/머지로 반영합니다.
 
 ## 개요
 
 HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용자 커스텀 식품의 조합으로 운영됩니다. 이 문서는 2026-05-04에 구현된 **사용 횟수 추적** 및 **사용자 직접 등록** 기능을 설명합니다.
 
-2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
+2026-06-09 기준으로 식품 카탈로그 강화 방향이 확정되었습니다. 2026-06-10에는 V23 스키마 보강과 추천 후보 필터(Phase 1)에 이어, 공공데이터 배치 적재 파이프라인, 동일 추정 중복 후보 리포터, 관리자 실행 API(Phase 2)가 완료되었습니다. 2026-06-17에는 버거킹·맥도날드·롯데리아 공식 메뉴 CSV 376행을 local DB에 적재하고, 브랜드별 4개씩 총 12개를 `RECOMMENDABLE_WITH_CAUTION` 출시 후보로 승격했습니다.
+
+앞으로 `food_catalog`는 **식단 기록 검색용 + 식단 기록 계산용 + 식단 추천 후보 풀**의 공통 기반으로 운영합니다. 다만 모든 카탈로그 항목이 추천 후보가 되는 것은 아니며, 추천 가능 여부는 메뉴/식품 단위의 추천 적합성 상태로 분리합니다.
 
 ## 카탈로그 운영 모델
 
@@ -52,7 +58,307 @@ HealthCare 앱의 식품 카탈로그는 공공 데이터(식품디비) + 사용
 - 추천은 `recommendation_status`, 카테고리, 제한 조건, 기본 영양 조건을 DB WHERE 절에서 먼저 적용합니다.
 - 추천 엔진에는 제한된 후보만 전달합니다.
 
+현재 추천 후보 조회는 `RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION` 상태만 포함합니다. `SEARCH_ONLY`, `DISABLED` 항목은 검색/기록 정책과 별개로 추천 후보에서는 제외됩니다.
+
+나트륨·당류·포화지방 기준값으로 추천 상태를 판정하는 작업은 런타임 추천 로직과 분리된 데이터 운영 작업입니다. v1에서는 CSV/관리자 검수로 `recommendation_status`를 명시하되, 브랜드 공식 메뉴 CSV 입력에서 아래 기준을 넘는 항목을 일반 `RECOMMENDABLE`로 넣으면 row를 거절합니다.
+
+추천 주의 기준값:
+
+| 영양소 | 1회 제공량 기준 | `RECOMMENDABLE_WITH_CAUTION` 사유 |
+|---|---:|---|
+| 나트륨 | 600mg 이상 | `나트륨 주의` |
+| 당류 | 15g 이상 | `당류 주의` |
+| 포화지방 | 4.5g 이상 | `포화지방 주의` |
+
+부여 기준:
+
+1. 위 기준 중 하나라도 넘고 추천 후보로 쓸 수 있는 메뉴는 `RECOMMENDABLE_WITH_CAUTION`으로만 승격합니다.
+2. 여러 기준을 넘으면 `나트륨/당류/포화지방 주의`처럼 고정 순서로 사유를 합칩니다.
+3. 기준을 넘는 항목을 `RECOMMENDABLE`로 입력하면 CSV row를 거절합니다.
+4. 기준을 넘더라도 메뉴 자체가 추천 목적과 맞지 않거나 세트/대용량/영양 결측이 크면 `SEARCH_ONLY`를 유지합니다.
+5. 이 기준은 개인별 의학적 권고가 아니라 카탈로그 추천 후보 운영 기준입니다.
+
+참고 근거:
+
+- [WHO Sodium reduction](https://www.who.int/news-room/fact-sheets/detail/sodium-reduction): 성인 나트륨 섭취 권고 상한 2000mg/day 미만
+- [WHO Sugars intake guideline](https://www.who.int/news/item/04-03-2015-who-calls-on-countries-to-reduce-sugars-intake-among-adults-and-children): free sugars를 총 에너지의 10% 미만으로 제한, 5% 미만이면 추가 이점
+- [WHO fats/carbohydrates guideline update](https://www.who.int/news/item/17-07-2023-who-updates-guidelines-on-fats-and-carbohydrates): 포화지방은 총 에너지의 10% 이하 권고
+- 국내 브랜드 공식 영양표의 포화지방 일일 기준치 표기는 15g/day 기준으로 해석됩니다.
+
+추천 다양성은 큐레이션 상태가 아니라 추천 엔진의 선택 전략에서 다룹니다. 같은 사용자/날짜/입력에서는 재현 가능한 결과를 주되, 날짜가 바뀌면 후보 우선순위가 회전하도록 deterministic rotation을 적용합니다. 최근 추천/최근 기록 기반 중복 억제는 v2 품질 개선으로 분리합니다.
+
 ## 주요 기능
+
+### 0. 카탈로그 강화 메타데이터 (V23)
+
+#### 데이터베이스 변경
+
+V23 마이그레이션에서 `food_catalog`에 다음 운영 메타데이터를 추가했습니다.
+
+```sql
+ALTER TABLE food_catalog
+    ADD COLUMN food_code             VARCHAR(60),
+    ADD COLUMN source                VARCHAR(40),
+    ADD COLUMN source_detail         VARCHAR(120),
+    ADD COLUMN brand_name            VARCHAR(150),
+    ADD COLUMN maker                 VARCHAR(150),
+    ADD COLUMN serving_size_g        DOUBLE PRECISION,
+    ADD COLUMN serving_reference     VARCHAR(80),
+    ADD COLUMN recommendation_status VARCHAR(40),
+    ADD COLUMN recommendation_reason VARCHAR(255),
+    ADD COLUMN data_version          VARCHAR(80),
+    ADD COLUMN last_verified_at      TIMESTAMPTZ;
+```
+
+백필/큐레이션 원칙:
+
+- 기존 시드 식품: `source = SEED`, 추천 상태는 명시 큐레이션 목록에 따라 결정
+- 기존 사용자 커스텀 식품: `source = USER_CUSTOM`, `recommendation_status = SEARCH_ONLY`
+- seed 전체를 자동 `RECOMMENDABLE`로 보지 않습니다. 컵라면, 주류, 설탕, 마요네즈, 튀김류, 고지방 가공육처럼 검색/기록에는 유용하지만 추천 후보로 부적합하거나 주의 표시가 필요한 항목이 섞여 있기 때문입니다.
+- seed allowlist는 전체 40~60개 이상을 목표로 하고, 단백질 10개 이상, 곡류/주식 8개 이상, 채소 10개 이상, 과일 6개 이상, 유제품/간식 대체 4개 이상을 최소 운영 기준으로 둡니다. 기준을 만족하지 못하면 추천 엔진을 임시로 넓히기보다 seed/브랜드 후보를 먼저 보강합니다.
+
+추가 인덱스:
+
+```sql
+CREATE UNIQUE INDEX uq_food_catalog_source_food_code
+  ON food_catalog (source, food_code)
+  WHERE food_code IS NOT NULL AND deleted_at IS NULL;
+
+CREATE INDEX idx_food_catalog_recommendation_status
+  ON food_catalog (recommendation_status)
+  WHERE deleted_at IS NULL;
+```
+
+#### 구현 위치
+
+```
+backend/src/main/java/com/healthcare/domain/diet/
+├── entity/FoodCatalog.java              # V23 필드 반영
+├── entity/FoodCatalogSource.java        # 출처 enum
+├── entity/RecommendationStatus.java     # 추천 상태 enum
+├── dto/FoodCatalogResponse.java         # 응답 메타데이터 확장
+├── repository/FoodCatalogRepository.java # source + foodCode 조회, usage_count 갱신
+├── repository/FoodCatalogSpecs.java     # 추천 후보 상태 Specification
+├── service/FoodCatalogService.java      # 커스텀 식품 기본값 USER_CUSTOM / SEARCH_ONLY
+├── recommendation/candidate/          # 추천 후보 풀과 Engine 입력 후보 값
+├── recommendation/usecase/DailyDietRecommendationUseCases.java # 후보 풀 로드 후 Engine 호출
+├── external/service/FoodImportService.java # 외부 import 기본값 USER_CUSTOM / SEARCH_ONLY
+└── external/importer/                  # 공공데이터 배치 적재
+    ├── StandardProcessedFoodImporter.java
+    ├── StandardDishFoodImporter.java
+    ├── MfdsFoodNutrientDbImporter.java
+    ├── StandardProcessedFoodPageFetcher.java
+    ├── StandardDishFoodPageFetcher.java
+    ├── MfdsFoodNutrientDbPageFetcher.java
+    ├── FoodCatalogImportBatchRunner.java
+    ├── JpaFoodCatalogImportCheckpointStore.java
+    └── FoodCatalogPublicDataImportService.java
+├── external/dedup/                     # 중복 후보 리포터
+│   ├── FoodCatalogDuplicateCandidateReporter.java
+│   ├── FoodCatalogDuplicateCandidateReport.java
+│   ├── FoodCatalogDuplicateGroup.java
+│   ├── FoodCatalogDuplicateReportService.java
+│   └── (Response DTOs)
+└── controller/FoodCatalogAdminController.java  # 관리자 API
+```
+
+#### API 응답 추가 필드
+
+`FoodCatalogResponse`는 다음 필드를 추가로 반환합니다.
+
+- `foodCode`
+- `source`
+- `sourceDetail`
+- `brandName`
+- `maker`
+- `servingSizeG`
+- `servingReference`
+- `recommendationStatus`
+- `recommendationReason`
+- `dataVersion`
+- `lastVerifiedAt`
+
+### 0.1 공공데이터 row importer
+
+Phase 2의 첫 구현으로 공공데이터 row를 내부 `food_catalog`로 적재하는 importer를 추가했습니다.
+
+| importer | 원본 | source | source_detail |
+|---|---|---|---|
+| `StandardProcessedFoodImporter` | 전국통합식품영양성분정보 가공식품 표준데이터 | `MFDS_STANDARD_PROCESSED` | `15100066` |
+| `StandardDishFoodImporter` | 전국통합식품영양성분정보 음식 표준데이터 | `MFDS_STANDARD_DISH` | `15100070` |
+| `MfdsFoodNutrientDbImporter` | 식품영양성분DB정보 `FoodNtrCpntDbInfo02` | `MFDS_FOOD_NUTRIENT_DB` | `FoodNtrCpntDbInfo02` |
+
+공통 적재 규칙:
+
+- `source + food_code` 기준으로 기존 항목을 찾고, 없으면 생성합니다.
+- 같은 `source + food_code`가 다시 들어오면 기존 항목의 원본 메타데이터와 영양값을 갱신합니다.
+- 공공데이터 재적재는 추천 검수 상태(`recommendation_status`, `recommendation_reason`)를 덮어쓰지 않습니다.
+- `food_code`, 식품명, 열량이 없거나 파싱할 수 없으면 skip 처리합니다.
+- 공공데이터로 들어온 항목은 기본 `SEARCH_ONLY`로 저장합니다. v1에서는 공공데이터 항목을 추천 후보로 대량 자동 승격하지 않고, 추천 후보는 기존 검수 seed와 `BRAND_OFFICIAL` CSV 검수 항목 중심으로 제한합니다.
+- 공공데이터 항목 승격이 필요해지면 개별 수정 API보다 `source + food_code` 기준 큐레이션 오버레이 CSV를 별도 운영 작업으로 검토합니다.
+- `last_verified_at`은 원본 기준일을 KST 자정 기준으로 저장합니다.
+
+### 0.2 공공데이터 page fetcher와 배치 runner
+
+Phase 2의 두 번째 구현으로 공공데이터 API 페이지 순회와 재시작 체크포인트를 추가했습니다.
+
+| 구성요소 | 역할 |
+|---|---|
+| `StandardProcessedFoodPageFetcher` | 15100066 가공식품 표준데이터 API 응답을 `StandardFoodImportRow`로 변환 |
+| `StandardDishFoodPageFetcher` | 15100070 음식 표준데이터 API 응답을 `StandardFoodImportRow`로 변환 |
+| `MfdsFoodNutrientDbPageFetcher` | `FoodNtrCpntDbInfo02` API 응답을 `MfdsFoodNutrientDbImportRow`로 변환 |
+| `FoodCatalogImportBatchRunner` | 체크포인트 다음 페이지부터 fetch/import/checkpoint 저장을 반복 |
+| `JpaFoodCatalogImportCheckpointStore` | source별 마지막 완료 페이지를 DB에 저장 |
+| `FixedDelayFoodCatalogImportPageThrottle` | 페이지 사이 rate limit 대기. 기본 0ms |
+| `FoodCatalogPublicDataImportService` | 공공데이터 3종 적재 진입점 |
+
+V24 마이그레이션에서 체크포인트 테이블을 추가했습니다.
+
+```sql
+CREATE TABLE food_catalog_import_checkpoints (
+    source              VARCHAR(40) PRIMARY KEY,
+    last_completed_page INTEGER NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+배치 runner는 페이지 fetch나 row import 중 예외가 발생하면 실패한 페이지를 완료 체크포인트로 저장하지 않습니다. 따라서 다음 실행은 마지막 완료 페이지 다음부터 재개합니다.
+
+관련 설정:
+
+```yaml
+app:
+  admin:
+    operation-token: ${ADMIN_OPERATION_TOKEN:}
+  food-api:
+    public-api-key: ${PUBLIC_FOOD_API_KEY:}
+    processed-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api
+    general-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api
+    food-nutrient-db-api-url: https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02
+    import-page-delay-millis: 0
+```
+
+### 0.3 중복 후보 리포터와 관리자 API
+
+#### 중복 후보 리포터
+
+`FoodCatalogDuplicateCandidateReporter`는 정규화 이름 기준으로 동일 추정 중복 그룹을 찾습니다. DB 의존 없이 `List<FoodCatalog>`를 받아 in-memory로 동작합니다.
+
+정규화 규칙:
+- `nameKo`(없으면 `name`) 기준
+- 소문자 변환 후 `[공백, -, _, /, (), （）]` 제거
+
+자동 병합은 하지 않습니다. 그룹 정보(`normalizedKey`, 항목 목록), source priority 기준 대표 후보(`suggestedCanonicalId`), entry별 `sourcePriorityRank`만 반환하며, 병합 여부는 운영자가 직접 판단합니다.
+
+source priority:
+
+| 순위 | source | 판단 |
+|---:|---|---|
+| 1 | `BRAND_OFFICIAL` | 브랜드 공식 자료와 수동 검수일이 있어 같은 브랜드 메뉴의 대표 후보로 우선 |
+| 2 | `MFDS_STANDARD_DISH` | 외식/일반 음식 커버리지와 음식명 맥락이 좋음 |
+| 3 | `MFDS_STANDARD_PROCESSED` | 제조사/품목 식별에 강한 가공식품 기본 소스 |
+| 4 | `MFDS_FOOD_NUTRIENT_DB` | 기존 2종의 보강/비교 소스 |
+| 5 | `SEED` | 초기 추천 후보 유지용. 공공/공식 소스가 있으면 대표성 낮음 |
+| 6 | `USER_CUSTOM` | 사용자 기록용. 비커스텀 dedup 리포트에는 기본 포함하지 않음 |
+
+수동 병합 기준:
+
+1. 같은 `normalizedKey`라도 자동 병합하지 않습니다.
+2. 브랜드명이 다르면 같은 메뉴명이어도 병합하지 않습니다.
+3. 같은 브랜드/메뉴 또는 동일 제품이라고 판단하려면 원문명, 제조사/브랜드, 제공량, 열량, 단백질, 나트륨, 당류, 포화지방을 함께 비교합니다.
+4. 대표 후보는 source priority와 최신 검수일을 기준으로 제안할 뿐, 운영자가 원문 source URL 또는 공공데이터 식별자를 확인한 뒤 확정합니다.
+5. 병합 실행은 v1에서 삭제가 아니라 `SEARCH_ONLY` 하향, 표시명 교정, alias 보강, 후속 migration/API 설계 중 하나로 처리합니다.
+
+#### 관리자 API 엔드포인트
+
+`FoodCatalogAdminController` — `/api/v1/admin/diet/catalog`
+
+모든 관리자 카탈로그 작업은 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` 헤더가 필요합니다. 서버의 `app.admin.operation-token`이 비어 있거나 요청 헤더가 일치하지 않으면 403으로 거부됩니다.
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| `POST` | `/import/processed-foods` | 가공식품 표준데이터(15100066) 배치 적재 |
+| `POST` | `/import/dish-foods` | 음식 표준데이터(15100070) 배치 적재 |
+| `POST` | `/import/nutrient-db` | 식품영양성분DB(`FoodNtrCpntDbInfo02`) 배치 적재 |
+| `POST` | `/import/brand-csv` | 브랜드 공식 메뉴 CSV 수동 검수 적재 |
+| `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트 |
+
+import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, fetchedPageCount, created/updated/skipped 수, `attemptedCount`, `skippedRatio`, exhausted 여부)를 포함합니다.
+
+#### 공공데이터 전량 적재 운영 순서
+
+2026-06-18 기준 운영 전량 적재는 즉시 실행하지 않고, staging 전량 적재와 데이터 재사용 조건 확인을 먼저 통과해야 합니다. 결정 근거와 운영 기록 양식은 `docs/references/FOOD_CATALOG_DATA_REUSE_AND_STAGING_VERIFICATION_2026-06-18.md`를 기준으로 합니다.
+
+공공데이터 전량 적재는 source별 체크포인트를 사용하는 반복 실행 작업입니다. 한 번의 관리자 API 호출이 전체 데이터 적재를 보장하지 않으므로, 각 source의 응답 summary에서 `exhausted=true`가 나올 때까지 같은 source를 반복 실행합니다. 이 절차는 staging/운영 DB 기준 runbook이며, local DB에서는 smoke, 제한 배치, 대표 장애 케이스 검증까지만 수행해도 충분합니다.
+
+| 순서 | 작업 | 호출/확인 |
+|---:|---|---|
+| 0 | 사전 조건 확인 | DB 백업, Flyway V23/V24/V25 적용, `PUBLIC_FOOD_API_KEY`, `ADMIN_OPERATION_TOKEN`, `app.food-api.import-page-delay-millis` 설정 |
+| 1 | 실제 API smoke | 각 source를 `pageSize=100&maxPages=1`로 1페이지 호출 |
+| 2 | 제한 배치 | `processed-foods` → `dish-foods` → `nutrient-db` 순서로, smoke와 같은 `pageSize=100`을 유지해 `maxPages=2~5` 실행 |
+| 3 | rate limit 확정 | timeout/429 여부를 보고 `import-page-delay-millis` 조정 |
+| 4 | 가공식품 전량 적재 | smoke/제한 배치와 같은 `pageSize`로 `/import/processed-foods` 반복 실행, `exhausted=true`까지 |
+| 5 | 음식 전량 적재 | 같은 `pageSize`로 `/import/dish-foods` 반복 실행, `exhausted=true`까지 |
+| 6 | 식품영양성분DB 전량 적재 | 같은 `pageSize`로 `/import/nutrient-db` 반복 실행, `exhausted=true`까지 |
+| 7 | 적재 검증 | source별 row count, 체크포인트, skipped 비율, 대표 검색어 조회 확인 |
+| 8 | 중복 후보 점검 | `/dedup/report` 실행 후 운영 검수 목록 생성. 자동 병합 금지 |
+| 9 | 후속 큐레이션 | local 기준 브랜드 CSV 보강과 추천 후보 12개 승격 완료. staging/운영에서는 동일 CSV 재적재 후 source/status count와 caution 노출을 검증 |
+
+주의: 체크포인트는 source별 마지막 완료 페이지 번호만 저장하고 `pageSize`는 저장하지 않습니다. 같은 source를 이어서 적재하는 동안 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있습니다. smoke 후 다른 `pageSize`로 전환해야 한다면 해당 source의 smoke row와 체크포인트를 초기화한 뒤 다시 시작합니다.
+
+권장 호출 예시:
+
+```bash
+curl -X POST "$BASE_URL/api/v1/admin/diet/catalog/import/processed-foods?pageSize=100&maxPages=500" \
+  -H "X-Admin-Token: $ADMIN_OPERATION_TOKEN"
+```
+
+local에서 추가 적재를 이어 실행해야 한다면 이미 smoke/제한 배치에 사용한 `pageSize=100`을 유지합니다. 다만 local에 모든 공공데이터 row를 끝까지 적재하는 것은 필수 작업이 아닙니다.
+
+전량 적재 완료 기준:
+
+- `processed-foods`, `dish-foods`, `nutrient-db` 마지막 실행 응답이 모두 `exhausted=true`
+- `food_catalog_import_checkpoints`에 source별 마지막 완료 페이지 기록 존재
+- 마지막 실행 응답의 `attemptedCount`, `skippedCount`, `skippedRatio`를 source별 운영 기록으로 보존
+- 신규 공공데이터 항목의 `recommendation_status` 기본값이 `SEARCH_ONLY`
+- 대표 검색어가 내부 `food_catalog`에서 조회됨
+- dedup 리포트를 실행했고 자동 병합 없이 검수 목록으로 분리함
+
+dedup 리포트 응답 예시:
+
+```json
+{
+  "totalGroups": 3,
+  "totalCandidates": 7,
+  "groups": [
+    {
+      "normalizedKey": "닭가슴살",
+      "count": 3,
+      "suggestedCanonicalId": 42,
+      "entries": [
+        { "id": 1, "name": "닭가슴살", "source": "SEED", "sourcePriorityRank": 5, "caloriesPer100g": 165.0, ... },
+        { "id": 42, "name": "닭 가슴살", "source": "MFDS_FOOD_NUTRIENT_DB", "sourcePriorityRank": 4, ... },
+        { "id": 87, "name": "닭가슴살(구운)", "source": "MFDS_STANDARD_PROCESSED", "sourcePriorityRank": 3, ... }
+      ]
+    }
+  ]
+}
+```
+
+#### 브랜드 공식 메뉴 CSV 계약
+
+브랜드 공식 메뉴 CSV는 입력 영양값의 기준을 `nutrition_basis`로 명시합니다.
+
+| `nutrition_basis` | 입력 영양값 기준 | `serving_size_g` | 처리 |
+|---|---|---|---|
+| `PER_SERVING` | 1회 제공량 전체 기준 | 필수 | 100g당 값으로 환산 저장 |
+| `PER_100G` | 100g당 기준 | 선택 | 그대로 100g당 값으로 저장, 공식 전체 제공량이 있으면 기본 기록량으로 보존 |
+
+CSV 헤더가 템플릿과 다르면 파일 전체를 거절합니다. 개별 row의 필수값, 숫자 형식, 제공량 기준이 잘못되면 해당 row만 저장하지 않고 `rejectedRows`에 row 번호, 필드, 사유를 반환합니다.
+
+`recommendation_reason`은 `recommendation_status = RECOMMENDABLE_WITH_CAUTION`일 때만 저장되는 주의 사유입니다. 이 상태에서는 사유가 필수이며, 다른 상태의 사유 입력은 저장하지 않습니다.
+
+v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재를 기준 경로로 둡니다. 개별 식품의 추천 상태를 직접 수정하는 관리자 API는 원본 CSV와 DB 상태가 갈라질 수 있으므로 즉시 제공하지 않습니다. 운영 중 CSV 재적재가 과하게 무겁다는 근거가 쌓이면 변경 이력과 원본 충돌 정책을 함께 설계한 뒤 후속으로 검토합니다.
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
 
@@ -306,6 +612,34 @@ NavigationStack(path: $recordTabPath) {
 ### 백엔드 단위 테스트
 
 ```java
+// V23 카탈로그 메타데이터
+- FoodCatalogServiceTest: createCustomFood_success_returnsCreatedFood()
+- FoodImportServiceTest: importFood_fromPublicApi_savesAsUserCustomFood()
+- RecommendationStatusTest: recommendationCandidateStatuses_includeRecommendableAndWithCaution()
+- FoodCatalogSpecsTest: hasRecommendationCandidateStatus_includesOnlyCandidateStatuses()
+- DietRecommendationCandidatePoolTest: load_alwaysAppliesRecommendationStatusFilter()
+- StandardProcessedFoodImporterTest: importRows_createsProcessedFoodCatalogItem()
+- StandardProcessedFoodImporterTest: importRows_updatesExistingFoodCatalogItem()
+- StandardDishFoodImporterTest: importRows_createsDishFoodCatalogItem()
+- MfdsFoodNutrientDbImporterTest: importRows_createsFoodNutrientDbCatalogItem()
+
+// Phase 2 배치 파이프라인
+- FoodCatalogImportBatchRunnerTest: importPages_resumesFromNextCheckpointAndMarksCompletedPages()
+- FoodCatalogImportBatchRunnerTest: importPages_doesNotAdvanceCheckpointWhenPageFails()
+- FoodCatalogPublicDataImportServiceTest: importStandardProcessedFoods_routesToProcessedFetcherAndImporter()
+- JpaFoodCatalogImportCheckpointStoreTest: 체크포인트 저장/조회 E2E
+
+// Phase 2 중복 후보 리포터
+- FoodCatalogDuplicateCandidateReporterTest: report_emptyInput_returnsEmptyReport()
+- FoodCatalogDuplicateCandidateReporterTest: report_singleEntry_noGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_sameNormalizedName_formsGroup()
+- FoodCatalogDuplicateCandidateReporterTest: report_differentNames_noGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_threeEntriesSameName_allInOneGroup()
+- FoodCatalogDuplicateCandidateReporterTest: report_multipleNameGroups_separateGroups()
+- FoodCatalogDuplicateCandidateReporterTest: report_nullNameKo_usesNameForNormalization()
+- FoodCatalogDuplicateCandidateReporterTest: report_groupHasNormalizedKey()
+- FoodCatalogDuplicateCandidateReporterTest: report_parenthesesDifference_normalizedToSameKey()
+
 // FoodCatalogServiceTest
 - createCustomFood_이미_존재하는_이름_카테고리_조합_중복_거절()
 - createCustomFood_NFC_정규화()
@@ -336,7 +670,22 @@ NavigationStack(path: $recordTabPath) {
    docker compose up -d postgres redis
    ```
 
-2. **초기 usage_count 계산 (선택 사항)**
+2. **V23 마이그레이션 실행**
+   - Flyway가 `V23__food_catalog_source_recommendation_fields.sql`을 자동 적용합니다.
+   - 기존 사용자 커스텀 식품은 검증 전 추천 제외를 위해 `SEARCH_ONLY`로 백필됩니다.
+
+3. **V24 마이그레이션 실행**
+   - Flyway가 `V24__food_catalog_import_checkpoints.sql`을 자동 적용합니다.
+   - 공공데이터 배치 적재 시 source별 마지막 완료 페이지를 추적하는 `food_catalog_import_checkpoints` 테이블이 생성됩니다.
+
+4. **V25 seed 큐레이션 보정 마이그레이션 실행**
+   - V23은 이미 적용됐을 수 있으므로 직접 수정하지 않습니다.
+   - V25에서 기존 seed 전체를 `SEARCH_ONLY`로 낮춘 뒤, 명시 큐레이션 allowlist만 `RECOMMENDABLE`로 승격합니다.
+   - V25 seed 보정에서는 `RECOMMENDABLE_WITH_CAUTION`을 사용하지 않습니다. 주의 추천은 출처와 사유가 더 명확한 브랜드 CSV 등 운영 검수 데이터에 우선 적용합니다.
+   - V25는 마이그레이션 SQL 내부의 inline `VALUES` allowlist로 처리합니다. 현재 seed는 V4/V12 시점에 생성되어 `food_code`가 없으므로 `source = 'SEED' AND name_ko AND category` 조합으로 매칭합니다.
+   - 이번 V25에는 seed synthetic `food_code` 백필을 포함하지 않습니다. seed identity 체계가 필요해지면 별도 마이그레이션에서 `seed:<normalized-name>` 같은 규칙을 설계합니다.
+
+5. **초기 usage_count 계산 (선택 사항)**
    ```sql
    -- 기존 식단 기록을 기반으로 usage_count 초기화
    -- (현재는 0부터 시작, 향후 히스토리 분석 시 필요)
@@ -352,9 +701,16 @@ NavigationStack(path: $recordTabPath) {
    - AI로 추정된 영양성분 표시 UI 미구현
    - 향후: "AI 추정값" 배지 + disclaimer 텍스트 추가
 
-3. **공공데이터 사전 적재 미완료**
-   - 현재 외부 공공데이터를 사용자 경로에서 직접 조회하는 흐름이 남아 있음
-   - 향후: 배치/관리자 적재로 내부 `food_catalog`를 보강하고, 사용자 검색/추천은 내부 DB 기준으로 고정
+3. **공공데이터 사전 적재 파이프라인 구현 완료, local 검증 충분**
+   - 배치 파이프라인(importer, fetcher, runner, checkpoint) 구현 완료
+   - `POST /api/v1/admin/diet/catalog/import/*` 관리자 API로 실행 가능
+   - local에서는 smoke/제한 배치와 대표 대량 적재 장애 케이스를 확인했으므로 모든 row를 끝까지 적재하지 않음
+   - staging/운영 전량 적재가 필요하면 `processed-foods` → `dish-foods` → `nutrient-db` 순서로 진행하고, source별 `exhausted=true`가 나올 때까지 반복 실행
+   - 신규 공공데이터 항목은 기본 `SEARCH_ONLY`로 유지하며 추천 후보 승격은 별도 큐레이션 작업으로 분리
+
+4. **주의 상태 iOS 표시 후속 작업**
+   - 백엔드 응답 모델은 확정됨: `RECOMMENDABLE_WITH_CAUTION`은 추천 후보에 포함되며, `RecommendedFoodEntry.caution`에 `recommendation_reason`을 담아 노출합니다.
+   - 일반 `RECOMMENDABLE` 식품의 `caution`은 `null`입니다. iOS 화면 표시는 후속 UI 작업에서 처리합니다.
 
 ## 성능 고려사항
 
@@ -362,13 +718,16 @@ NavigationStack(path: $recordTabPath) {
 
 ```sql
 -- V13 마이그레이션에 포함
-CREATE INDEX idx_food_catalog_name ON food_catalog(name);
-CREATE UNIQUE INDEX idx_food_catalog_name_category 
-  ON food_catalog(name, category) 
-  WHERE source = 'CUSTOM';
+CREATE INDEX idx_food_catalog_usage
+  ON food_catalog (usage_count DESC, name_ko ASC)
+  WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX uq_food_catalog_custom_name_category
+  ON food_catalog (LOWER(name_ko), category)
+  WHERE deleted_at IS NULL AND is_custom = TRUE;
 ```
 
-카탈로그 강화 시 추가 검토:
+V23 마이그레이션에 포함:
 
 ```sql
 CREATE INDEX idx_food_catalog_recommendation_status

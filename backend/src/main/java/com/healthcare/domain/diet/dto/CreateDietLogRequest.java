@@ -26,4 +26,6 @@ public class CreateDietLogRequest {
     private List<CreateFoodEntryRequest> entries;
 
     private String notes;
+
+    private Long recommendationSnapshotId;
 }

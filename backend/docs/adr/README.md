@@ -5,6 +5,9 @@
 ## Current ADRs
 
 - [0001. 식단 기록 규칙을 유스케이스 모듈에 둔다](0001-diet-log-use-case-module.md)
+- [0002. 식단 추천 후보 정책을 후보 풀 모듈에 둔다](0002-diet-recommendation-candidate-pool-module.md)
+- [0003. 추천 큐레이션 불변 조건을 값 객체 모듈에 둔다](0003-recommendation-curation-module.md)
+- [0004. 식단 추천 엔진은 후보 값 객체만 입력으로 받는다](0004-diet-recommendation-engine-candidate-interface.md)
 
 ## When To Add One
 

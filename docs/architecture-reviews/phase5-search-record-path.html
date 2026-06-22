@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Architecture Review — health-care Phase 5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+  <style>
+    .seam { stroke-dasharray: 5 4; }
+    .leak { stroke: #dc2626; stroke-width: 2px; }
+    .deep-box { background: linear-gradient(135deg, #0f172a, #1e293b); }
+    body { font-family: 'Georgia', serif; }
+    .mono { font-family: 'Menlo', 'Monaco', monospace; }
+    .module-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-900">
+<main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 pb-8">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-slate-400 mb-1">Architecture Review</p>
+        <h1 class="text-3xl font-bold text-slate-900">health-care · Phase 5</h1>
+        <p class="text-slate-500 mt-1">검색/기록 경로 외부 API 의존 제거 이후 아키텍처 마찰 분석</p>
+      </div>
+      <div class="text-right text-xs text-slate-400">
+        <p>2026-06-15</p>
+        <p class="mt-3 space-y-1">
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 border border-slate-400 inline-block"></span> 모듈</span><br>
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 border border-dashed border-slate-400 inline-block"></span> 심</span><br>
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-3 border border-red-500 inline-block"></span> 누수</span><br>
+          <span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-slate-900 inline-block"></span> 깊은 모듈</span>
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Candidates -->
+  <section class="space-y-14">
+
+    <!-- Candidate 1 -->
+    <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-8 pt-7 pb-5 border-b border-slate-100">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">Strong</span>
+          <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">in-process</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">1. FoodCatalogPublicDataImportService — 얕은 통과 모듈 제거</h2>
+        <p class="mono text-xs text-slate-400 mt-2">
+          external/importer/FoodCatalogPublicDataImportService.java ·
+          admin/FoodCatalogAdminOperations.java
+        </p>
+      </div>
+
+      <div class="px-8 py-6">
+        <!-- Before / After -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <!-- Before -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">Before</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:280px; position:relative; overflow:hidden;">
+              <!-- AdminOperations -->
+              <div class="absolute top-4 left-4 right-4 border border-slate-300 rounded bg-white px-3 py-2">
+                <p class="module-label text-slate-500">FoodCatalogAdminOperations</p>
+                <p class="text-xs text-slate-400 mt-0.5">importProcessedFoods(token, sz, max)</p>
+              </div>
+              <!-- Arrow down -->
+              <div class="absolute left-1/2 -translate-x-1/2" style="top:80px;">
+                <svg width="2" height="28" viewBox="0 0 2 28"><line x1="1" y1="0" x2="1" y2="22" stroke="#94a3b8" stroke-width="1.5"/><polygon points="1,28 -3,20 5,20" fill="#94a3b8"/></svg>
+              </div>
+              <!-- PublicDataImportService - shallow -->
+              <div class="absolute border-2 border-amber-300 rounded bg-amber-50 px-3 py-2" style="top:114px;left:16px;right:16px;">
+                <p class="module-label text-amber-700">FoodCatalogPublicDataImportService ← 얕음</p>
+                <p class="text-xs text-amber-600 mt-0.5">importStandardProcessedFoods(sz,max)</p>
+                <p class="text-xs text-amber-600">importStandardDishFoods(sz,max)</p>
+                <p class="text-xs text-amber-600">importFoodNutrientDb(sz,max)</p>
+                <p class="text-xs text-slate-400 mt-1">= BatchRunner에 fetcher/importer 쌍만 전달</p>
+              </div>
+              <!-- Arrow down -->
+              <div class="absolute left-1/2 -translate-x-1/2" style="top:196px;">
+                <svg width="2" height="28" viewBox="0 0 2 28"><line x1="1" y1="0" x2="1" y2="22" stroke="#94a3b8" stroke-width="1.5"/><polygon points="1,28 -3,20 5,20" fill="#94a3b8"/></svg>
+              </div>
+              <!-- BatchRunner -->
+              <div class="absolute border border-slate-300 rounded bg-white px-3 py-2" style="bottom:10px;left:16px;right:16px;">
+                <p class="module-label text-slate-500">FoodCatalogImportBatchRunner</p>
+              </div>
+            </div>
+          </div>
+          <!-- After -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">After</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:280px; position:relative; overflow:hidden;">
+              <!-- AdminOperations deep -->
+              <div class="absolute top-4 left-4 right-4 rounded px-3 py-2 deep-box text-white" style="bottom:10px;">
+                <p class="module-label text-slate-300 mb-2">FoodCatalogAdminOperations</p>
+                <p class="text-xs text-slate-300">importProcessedFoods(token, sz, max)</p>
+                <p class="text-xs text-slate-300">importDishFoods(token, sz, max)</p>
+                <p class="text-xs text-slate-300">importNutrientDb(token, sz, max)</p>
+                <p class="text-xs text-slate-300">importBrandMenuCsv(token, stream)</p>
+                <p class="text-xs text-slate-300">getDuplicateReport(token)</p>
+                <div class="mt-3 border-t border-slate-600 pt-2">
+                  <p class="text-xs text-slate-400">내부: BatchRunner + 소스별 fetcher/importer 쌍</p>
+                  <p class="text-xs text-slate-400 mt-0.5">PublicDataImportService 삭제됨</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mass diagram -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div class="bg-slate-50 rounded-lg p-4">
+            <p class="module-label text-slate-400 mb-2">인터페이스 면적 (Before)</p>
+            <div class="flex gap-3 items-end">
+              <div>
+                <div class="bg-amber-200 border border-amber-400 rounded" style="width:56px;height:72px;"></div>
+                <p class="text-xs text-center text-slate-500 mt-1">인터페이스</p>
+              </div>
+              <div>
+                <div class="bg-slate-200 border border-slate-400 rounded" style="width:56px;height:80px;"></div>
+                <p class="text-xs text-center text-slate-500 mt-1">구현</p>
+              </div>
+              <p class="text-xs text-amber-700 self-center">얕음 — 인터페이스 ≈ 구현</p>
+            </div>
+          </div>
+          <div class="bg-slate-50 rounded-lg p-4">
+            <p class="module-label text-slate-400 mb-2">인터페이스 면적 (After)</p>
+            <div class="flex gap-3 items-end">
+              <div>
+                <div class="bg-emerald-200 border border-emerald-400 rounded" style="width:56px;height:24px;"></div>
+                <p class="text-xs text-center text-slate-500 mt-1">인터페이스</p>
+              </div>
+              <div>
+                <div class="bg-slate-800 border border-slate-900 rounded" style="width:56px;height:130px;"></div>
+                <p class="text-xs text-center text-slate-500 mt-1">구현</p>
+              </div>
+              <p class="text-xs text-emerald-700 self-center">깊음 — AdminOperations 흡수</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">문제</p>
+            <p class="text-slate-600">삭제 테스트: <code class="mono text-xs bg-slate-100 px-1">PublicDataImportService</code>를 삭제하면 복잡도가 호출자에게 이동하지 않는다. BatchRunner 호출을 AdminOperations에 직접 인라인하면 동일하게 동작한다 — 이 모듈은 패스스루다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">해결</p>
+            <p class="text-slate-600"><code class="mono text-xs bg-slate-100 px-1">FoodCatalogPublicDataImportService</code> 삭제. BatchRunner 호출 3개를 <code class="mono text-xs bg-slate-100 px-1">FoodCatalogAdminOperations</code> 메서드 안으로 인라인.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">이점</p>
+            <ul class="text-slate-600 space-y-1">
+              <li>• locality: 배치 적재 진입점이 한 모듈에 집중</li>
+              <li>• 1개 파일 삭제</li>
+              <li>• AdminOperations 테스트가 BatchRunner 직접 커버</li>
+              <li>• 추가 소스 추가 시 파일 하나만 수정</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Candidate 2 -->
+    <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-8 pt-7 pb-5 border-b border-slate-100">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">Strong</span>
+          <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">ports &amp; adapters</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">2. ExternalFoodController 패키지 위치 — 어드민 심이 user 경로 패키지에 갇힘</h2>
+        <p class="mono text-xs text-slate-400 mt-2">
+          domain/diet/external/controller/ExternalFoodController.java ·
+          domain/diet/admin/FoodCatalogAdminController.java
+        </p>
+      </div>
+
+      <div class="px-8 py-6">
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <!-- Before -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">Before — 심 위치 혼재</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:280px;position:relative;">
+              <!-- User seam -->
+              <div class="absolute top-3 left-3" style="right: 50%;">
+                <div class="border-2 border-dashed border-blue-300 rounded p-2 mr-2">
+                  <p class="module-label text-blue-400 mb-1">사용자 경로</p>
+                  <div class="bg-blue-50 border border-blue-200 rounded p-1.5 mb-1">
+                    <p class="text-xs text-blue-700">FoodCatalogController</p>
+                    <p class="text-xs text-blue-500">/api/v1/diet/catalog</p>
+                  </div>
+                  <div class="bg-red-50 border border-red-300 rounded p-1.5">
+                    <p class="text-xs text-red-700">ExternalFoodController ⚠</p>
+                    <p class="text-xs text-red-500">/api/v1/diet/external-foods</p>
+                    <p class="text-xs text-red-400">domain/diet/external/controller/</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Admin seam -->
+              <div class="absolute top-3 right-3" style="left: 52%;">
+                <div class="border-2 border-dashed border-slate-300 rounded p-2">
+                  <p class="module-label text-slate-400 mb-1">어드민 경로</p>
+                  <div class="bg-slate-50 border border-slate-200 rounded p-1.5">
+                    <p class="text-xs text-slate-700">FoodCatalogAdminController</p>
+                    <p class="text-xs text-slate-500">/api/v1/admin/diet/catalog</p>
+                    <p class="text-xs text-slate-400">domain/diet/admin/</p>
+                  </div>
+                </div>
+              </div>
+              <div class="absolute bottom-3 left-3 right-3 bg-amber-50 border border-amber-200 rounded p-2">
+                <p class="text-xs text-amber-700">ExternalFoodController는 Phase 5 이후 어드민 전용이지만<br>패키지는 <span class="mono">diet/external/controller</span> — 사용자 경로와 같은 공간</p>
+              </div>
+            </div>
+          </div>
+          <!-- After -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">After — 심 단일화</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:280px;position:relative;">
+              <div class="absolute top-3 left-3" style="right: 50%;">
+                <div class="border-2 border-dashed border-blue-300 rounded p-2 mr-2" style="height:230px;">
+                  <p class="module-label text-blue-400 mb-2">사용자 경로</p>
+                  <div class="bg-blue-50 border border-blue-200 rounded p-1.5">
+                    <p class="text-xs text-blue-700">FoodCatalogController</p>
+                    <p class="text-xs text-blue-500">/api/v1/diet/catalog</p>
+                  </div>
+                  <div class="mt-3 p-1.5">
+                    <p class="text-xs text-slate-400 italic">외부 검색 없음</p>
+                  </div>
+                </div>
+              </div>
+              <div class="absolute top-3 right-3" style="left: 52%;">
+                <div class="border-2 border-dashed border-slate-400 rounded p-2 deep-box" style="height:230px;">
+                  <p class="module-label text-slate-300 mb-2">어드민 경로</p>
+                  <div class="border border-slate-600 rounded p-1.5 mb-1">
+                    <p class="text-xs text-slate-300">FoodCatalogAdminController</p>
+                    <p class="text-xs text-slate-400">/api/v1/admin/diet/catalog/*</p>
+                  </div>
+                  <div class="border border-slate-600 rounded p-1.5">
+                    <p class="text-xs text-slate-300">ExternalFoodAdminController</p>
+                    <p class="text-xs text-slate-400">/api/v1/admin/diet/external/*</p>
+                    <p class="text-xs text-slate-500">domain/diet/admin/ 이동</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">문제</p>
+            <p class="text-slate-600">Phase 5 이후 <code class="mono text-xs bg-slate-100 px-1">ExternalFoodController</code>는 어드민 전용이 됐지만, <code class="mono text-xs bg-slate-100 px-1">domain/diet/external/controller/</code>에 그대로 있다. 사용자 경로와 어드민 경로의 심이 패키지 구조상 구분되지 않아 새 개발자가 오인한다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">해결</p>
+            <p class="text-slate-600"><code class="mono text-xs bg-slate-100 px-1">ExternalFoodController</code>를 <code class="mono text-xs bg-slate-100 px-1">domain/diet/admin/</code>으로 이동하거나, URL prefix를 <code class="mono text-xs bg-slate-100 px-1">/api/v1/admin/diet/external/*</code>으로 변경해 어드민 심 안에 명시적으로 포함.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">이점</p>
+            <ul class="text-slate-600 space-y-1">
+              <li>• locality: 어드민 도구가 한 패키지에 집중</li>
+              <li>• 사용자 경로와 어드민 경로의 심이 패키지로 강제됨</li>
+              <li>• Spring Security 설정에서 <code class="mono text-xs">/api/v1/admin/**</code> 룰 하나로 커버 가능</li>
+              <li>• 오인 가능성 제거</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Candidate 3 -->
+    <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-8 pt-7 pb-5 border-b border-slate-100">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">Worth exploring</span>
+          <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">in-process</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">3. FoodCatalogPageImporter&lt;R&gt; / FoodCatalogImportPageFetcher&lt;R&gt; — 1메서드 얕은 인터페이스</h2>
+        <p class="mono text-xs text-slate-400 mt-2">
+          external/importer/FoodCatalogPageImporter.java ·
+          external/importer/FoodCatalogImportPageFetcher.java ·
+          external/importer/FoodCatalogImportBatchRunner.java
+        </p>
+      </div>
+
+      <div class="px-8 py-6">
+        <div class="mb-6">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <pre class="mermaid">
+flowchart LR
+  subgraph before["Before — 4개 어댑터, 1메서드 인터페이스"]
+    BR[BatchRunner]
+    BR -->|fetch| F1[StandardProcessedFoodPageFetcher]
+    BR -->|fetch| F2[StandardDishFoodPageFetcher]
+    BR -->|fetch| F3[MfdsFoodNutrientDbPageFetcher]
+    BR -->|importRows| I1[StandardProcessedFoodImporter]
+    BR -->|importRows| I2[StandardDishFoodImporter]
+    BR -->|importRows| I3[MfdsFoodNutrientDbImporter]
+    BR -->|importFromCsv| I4[BrandMenuCsvImporter]
+  end
+
+  classDef shallow fill:#fef3c7,stroke:#d97706,stroke-width:1px
+  class F1,F2,F3,I1,I2,I3,I4 shallow
+            </pre>
+          </div>
+        </div>
+
+        <!-- Cross-section diagram -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <p class="module-label text-slate-400 mb-2">Before — 호출 체인 단면</p>
+            <div class="space-y-1">
+              <div class="h-9 border-l-4 border-slate-400 bg-slate-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-600">FoodCatalogAdminOperations</p>
+              </div>
+              <div class="h-8 border-l-4 border-slate-300 bg-slate-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-500">FoodCatalogPublicDataImportService</p>
+              </div>
+              <div class="h-8 border-l-4 border-slate-300 bg-slate-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-500">FoodCatalogImportBatchRunner</p>
+              </div>
+              <div class="h-7 border-l-4 border-amber-300 bg-amber-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-amber-700">FoodCatalogImportPageFetcher&lt;R&gt; ← 1 메서드</p>
+              </div>
+              <div class="h-7 border-l-4 border-amber-300 bg-amber-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-amber-700">FoodCatalogPageImporter&lt;R&gt; ← 1 메서드</p>
+              </div>
+              <div class="h-9 border-l-4 border-slate-400 bg-slate-50 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-600">FoodCatalogIngestService</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="module-label text-slate-400 mb-2">After — 함수형 파라미터로 교체</p>
+            <div class="space-y-1">
+              <div class="h-9 border-l-4 border-slate-800 bg-slate-800 rounded-r flex items-center px-3">
+                <p class="text-xs text-white">FoodCatalogAdminOperations</p>
+              </div>
+              <div class="h-9 border-l-4 border-slate-700 bg-slate-700 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-200">FoodCatalogImportBatchRunner</p>
+                <p class="text-xs text-slate-400 ml-2">— fetcher: (int,int)→Page, importer: (List)→Result</p>
+              </div>
+              <div class="h-9 border-l-4 border-slate-600 bg-slate-600 rounded-r flex items-center px-3">
+                <p class="text-xs text-slate-200">FoodCatalogIngestService</p>
+              </div>
+              <p class="text-xs text-emerald-700 mt-1">인터페이스 파일 2개 삭제. 어댑터는 람다/메서드 레퍼런스로 인라인.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">문제</p>
+            <p class="text-slate-600"><code class="mono text-xs bg-slate-100 px-1">FoodCatalogPageImporter&lt;R&gt;</code>는 <code class="mono text-xs bg-slate-100 px-1">importRows(List&lt;R&gt;)</code> 1개 메서드 인터페이스다. <code class="mono text-xs bg-slate-100 px-1">FoodCatalogImportPageFetcher&lt;R&gt;</code>도 <code class="mono text-xs bg-slate-100 px-1">fetch(int,int)</code> 1개다. "one adapter = hypothetical seam" — 테스트에서 실제로 두 어댑터를 교체해 쓰는 시나리오가 없다면 인터페이스는 가상의 심이다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">해결</p>
+            <p class="text-slate-600">인터페이스를 <code class="mono text-xs bg-slate-100 px-1">@FunctionalInterface</code> 혹은 일반 함수 파라미터로 교체. BatchRunner 메서드 시그니처를 <code class="mono text-xs bg-slate-100 px-1">Function&lt;Integer, FoodCatalogImportPage&lt;R&gt;&gt;</code> 형태로 받으면 별도 인터페이스 파일이 불필요해진다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">이점</p>
+            <ul class="text-slate-600 space-y-1">
+              <li>• 인터페이스 파일 2개 삭제</li>
+              <li>• leverage: BatchRunner가 진짜 배치 로직을 가짐</li>
+              <li>• 테스트에서 람다로 즉시 주입 가능</li>
+              <li>• 새 소스 추가 시 별도 클래스 불필요</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Candidate 4 -->
+    <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-8 pt-7 pb-5 border-b border-slate-100">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">Strong</span>
+          <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">ports &amp; adapters</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">4. iOS FoodEntrySource — 3-in-1 상태 기계, 심이 없는 퍼블리시드 변수 더미</h2>
+        <p class="mono text-xs text-slate-400 mt-2">
+          Features/Record/Diet/ViewModels/FoodEntrySource.swift ·
+          Features/Record/Diet/ViewModels/AddDietLogViewModel.swift
+        </p>
+      </div>
+
+      <div class="px-8 py-6">
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <!-- Before -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">Before — @Published 산포</p>
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4" style="height:300px;position:relative;">
+              <p class="module-label text-red-400 mb-2">FoodEntrySource</p>
+              <div class="space-y-1">
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">@Published searchQuery: String</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">@Published catalogResults: [FoodCatalogItem]</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">@Published isSearching: Bool</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">@Published isEstimating: Bool</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">searchDebounceTask, searchTask (Task 2개)</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">scheduleSearch(), triggerImmediateSearch()</p>
+                </div>
+                <div class="bg-white border border-red-200 rounded px-2 py-1">
+                  <p class="text-xs text-red-700">estimateWithAI(), submitCustomFood()</p>
+                </div>
+              </div>
+              <div class="absolute bottom-3 left-3 right-3 bg-red-100 rounded p-1.5">
+                <p class="text-xs text-red-600">검색 / AI 추정 / 커스텀 등록 — 3가지 흐름이 같은 모듈에서 경쟁</p>
+              </div>
+            </div>
+          </div>
+          <!-- After -->
+          <div>
+            <p class="module-label text-slate-400 mb-3">After — sealed 상태 + 단일 진입점</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:300px;position:relative;">
+              <p class="module-label text-slate-500 mb-2">FoodEntryState (sealed/enum)</p>
+              <div class="space-y-1 mb-3">
+                <div class="bg-slate-100 border border-slate-300 rounded px-2 py-1">
+                  <p class="text-xs text-slate-600">case idle</p>
+                </div>
+                <div class="bg-slate-100 border border-slate-300 rounded px-2 py-1">
+                  <p class="text-xs text-slate-600">case searching(query: String)</p>
+                </div>
+                <div class="bg-slate-100 border border-slate-300 rounded px-2 py-1">
+                  <p class="text-xs text-slate-600">case aiEstimating(query: String)</p>
+                </div>
+                <div class="bg-slate-100 border border-slate-300 rounded px-2 py-1">
+                  <p class="text-xs text-slate-600">case registeringCustom(form: CustomFoodForm)</p>
+                </div>
+                <div class="bg-emerald-100 border border-emerald-300 rounded px-2 py-1">
+                  <p class="text-xs text-emerald-700">case completed(entry: DraftFoodEntry)</p>
+                </div>
+              </div>
+              <p class="module-label text-slate-400 mb-1">FoodEntrySource</p>
+              <div class="bg-slate-800 rounded px-2 py-1.5">
+                <p class="text-xs text-slate-200">@Published var state: FoodEntryState = .idle</p>
+                <p class="text-xs text-slate-400 mt-0.5">send(_ action: FoodEntryAction)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call-graph collapse -->
+        <div class="rounded-lg border border-slate-200 bg-white p-4 mb-6">
+          <pre class="mermaid">
+sequenceDiagram
+  participant View as AddDietLogView
+  participant Source as FoodEntrySource (Before)
+  participant API as APIClient
+
+  View->>Source: searchQuery = "닭가슴살"
+  Source->>Source: scheduleSearch() — debounce 500ms
+  Source->>Source: searchTask 취소 후 재생성
+  Source->>API: searchFoodCatalog(query:)
+  API-->>Source: [FoodCatalogItem]
+  Source->>Source: @Published catalogResults 갱신
+  Source->>Source: @Published isSearching = false
+  Note over View,Source: isSearching, catalogResults 두 변수 관찰 필요
+          </pre>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">문제</p>
+            <p class="text-slate-600"><code class="mono text-xs bg-slate-100 px-1">FoodEntrySource</code>는 검색·AI 추정·커스텀 등록을 하나의 <code class="mono text-xs bg-slate-100 px-1">ObservableObject</code>에서 처리한다. 인터페이스(퍼블리시드 변수 7개 + 메서드 6개)가 구현만큼 넓다 — 얕다. Task 취소 로직이 분산되어 인터리브 버그가 숨기 쉽다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">해결</p>
+            <p class="text-slate-600">sealed <code class="mono text-xs bg-slate-100 px-1">FoodEntryState</code> enum과 <code class="mono text-xs bg-slate-100 px-1">FoodEntryAction</code>을 도입. <code class="mono text-xs bg-slate-100 px-1">FoodEntrySource</code>가 <code class="mono text-xs bg-slate-100 px-1">@Published var state</code> 하나만 노출하고, 전이는 <code class="mono text-xs bg-slate-100 px-1">send(_ action:)</code>으로 직렬화.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">이점</p>
+            <ul class="text-slate-600 space-y-1">
+              <li>• interface 면적: 변수 7개+메서드 6개 → state 1개+send 1개</li>
+              <li>• locality: Task 취소·인터리브 버그가 send() 한 곳에 집중</li>
+              <li>• 테스트: state 전이를 단언 가능</li>
+              <li>• 불가능한 상태 컴파일 타임에 차단</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Candidate 5 -->
+    <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-8 pt-7 pb-5 border-b border-slate-100">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">Worth exploring</span>
+          <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full">ports &amp; adapters</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">5. iOS DietFoodSearching — 단일 어댑터 가상의 심 + CreateCustomFood 타입 안전성 누수</h2>
+        <p class="mono text-xs text-slate-400 mt-2">
+          Core/Network/APIEndpoint.swift ·
+          Features/Record/Diet/ViewModels/AddDietLogViewModel.swift ·
+          Features/Record/Diet/ViewModels/FoodEntrySource.swift
+        </p>
+      </div>
+
+      <div class="px-8 py-6">
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <p class="module-label text-slate-400 mb-3">Before — 단일 어댑터 프로토콜</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:240px;position:relative;">
+              <div class="border-2 border-dashed border-slate-300 rounded p-3 mb-2">
+                <p class="module-label text-slate-400 mb-1">DietFoodSearching (protocol)</p>
+                <p class="text-xs text-slate-500">searchFoodCatalog(query: String) async throws → [FoodCatalogItem]</p>
+              </div>
+              <div class="border border-slate-200 rounded p-2 mb-1 bg-white">
+                <p class="text-xs text-slate-600">APIClient (유일한 conformance)</p>
+              </div>
+              <p class="text-xs text-amber-700 mt-1">→ one adapter = hypothetical seam<br>테스트에서 MockDietFoodSearcher를 별도 정의해야 함</p>
+              <div class="absolute bottom-3 left-3 right-3 border border-red-200 bg-red-50 rounded p-2">
+                <p class="text-xs text-red-600">CreateCustomFood: <code class="mono text-xs">[String: Any]</code> 직렬화 — 컴파일 타임 계약 없음</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="module-label text-slate-400 mb-3">After — 타입 계약 + 테스트 어댑터 확보</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4" style="height:240px;position:relative;">
+              <div class="border-2 border-dashed border-slate-400 rounded p-3 mb-2 deep-box">
+                <p class="module-label text-slate-300 mb-1">DietFoodSearching (protocol)</p>
+                <p class="text-xs text-slate-400">searchFoods(query:) async throws → [FoodCatalogItem]</p>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="border border-slate-300 rounded p-1.5 bg-white">
+                  <p class="text-xs text-slate-600">APIClient</p>
+                  <p class="text-xs text-slate-400">프로덕션</p>
+                </div>
+                <div class="border border-emerald-300 rounded p-1.5 bg-emerald-50">
+                  <p class="text-xs text-emerald-700">MockFoodSearcher</p>
+                  <p class="text-xs text-emerald-500">테스트 — 두 번째 어댑터</p>
+                </div>
+              </div>
+              <div class="mt-2 border border-emerald-200 bg-emerald-50 rounded p-2">
+                <p class="text-xs text-emerald-700">CreateCustomFoodRequest: Encodable struct<br>컴파일 타임 계약, 직렬화 안전</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">문제</p>
+            <p class="text-slate-600"><code class="mono text-xs bg-slate-100 px-1">DietFoodSearching</code>은 conformance가 <code class="mono text-xs bg-slate-100 px-1">APIClient</code> 하나뿐이다. 프로토콜이 있어도 심이 실제로 쓰이지 않으면 가상의 심이다. 또한 <code class="mono text-xs bg-slate-100 px-1">createCustomFood</code>는 <code class="mono text-xs bg-slate-100 px-1">[String: Any]</code>를 JSON으로 수동 직렬화해 컴파일 타임 계약이 없다.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">해결</p>
+            <p class="text-slate-600">테스트에서 <code class="mono text-xs bg-slate-100 px-1">MockFoodSearcher</code>를 <code class="mono text-xs bg-slate-100 px-1">DietFoodSearching</code>으로 주입해 진짜 어댑터 2개를 만든다. <code class="mono text-xs bg-slate-100 px-1">CreateCustomFoodRequest: Encodable</code> struct를 도입해 타입 안전 직렬화로 전환.</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700 mb-1">이점</p>
+            <ul class="text-slate-600 space-y-1">
+              <li>• 심이 실제 심이 됨 (two adapters)</li>
+              <li>• 테스트에서 네트워크 없이 식품 검색 검증 가능</li>
+              <li>• locality: 커스텀 식품 필드 변경이 Request struct 한 곳에 집중</li>
+              <li>• 런타임 직렬화 오류 제거</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- Top recommendation -->
+  <section class="bg-slate-900 text-white rounded-xl p-8">
+    <p class="text-xs uppercase tracking-widest text-slate-400 mb-2">Top Recommendation</p>
+    <h2 class="text-2xl font-bold mb-3">
+      <a href="#" class="text-emerald-400 hover:underline">Candidate 4</a> — iOS FoodEntrySource sealed 상태 기계
+    </h2>
+    <p class="text-slate-300 text-sm leading-relaxed max-w-2xl">
+      <code class="mono text-xs bg-slate-800 px-1">FoodEntrySource</code>는 현재 Phase 5에서 가장 넓은 인터페이스를 가진 얕은 모듈이다.
+      퍼블리시드 변수 7개와 메서드 6개로 이뤄진 인터페이스는 구현과 거의 같은 크기라서 leverage가 없다.
+      검색·AI 추정·커스텀 등록이 경쟁하는 Task 취소 버그는 재현이 어렵고, 이 구조에서는 테스트로 잡기도 어렵다.
+      sealed <code class="mono text-xs bg-slate-800 px-1">FoodEntryState</code>로 인터페이스를 <code class="mono text-xs bg-slate-800 px-1">@Published var state</code> 하나로 줄이면,
+      상태 전이가 locality를 얻고 뷰 코드가 단일 관찰점을 갖는다.
+      Candidate 1(FoodCatalogPublicDataImportService 제거)은 더 단순하지만,
+      Phase 5 이후 실제 마찰이 더 크게 남아있는 곳은 iOS다.
+    </p>
+    <div class="mt-4 flex gap-3">
+      <span class="bg-emerald-800 text-emerald-200 text-xs px-3 py-1.5 rounded-full font-mono">FoodEntrySource.swift</span>
+      <span class="bg-emerald-800 text-emerald-200 text-xs px-3 py-1.5 rounded-full font-mono">AddDietLogViewModel.swift</span>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

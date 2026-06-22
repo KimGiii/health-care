@@ -15,7 +15,7 @@ struct StreakWidget: Widget {
             provider: StreakProvider()
         ) { entry in
             StreakWidgetView(entry: entry)
-                .containerBackground(.background, for: .widget)
+                .widgetContainerBackgroundIfAvailable()
         }
         .configurationDisplayName("기록 스트릭")
         .description("연속 기록 일수를 한눈에 확인하세요.")
@@ -24,6 +24,5 @@ struct StreakWidget: Widget {
             .accessoryCircular,
             .accessoryRectangular
         ])
-        .contentMarginsDisabled()
     }
 }
