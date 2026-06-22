@@ -155,9 +155,14 @@ struct DailyDietRecommendationResponse: Codable {
     let meals: [RecommendedMeal]
     let totalNutrients: NutrientSummary
     let failureReason: String?
+    /// 구조화된 실패 사유 코드(§8.3). 성공·이미달성 시 nil.
+    let failureCode: String?
+    /// 추천 근거(§10). primary 해 기준. 실패 시 nil.
+    let rationale: RecommendationRationale?
     let strictAllergyMode: Bool
     let disclaimer: String
-    let alternatives: [[RecommendedMeal]]
+    /// 대안 해 — 각자 끼니 구성과 근거를 함께 보유한다.
+    let alternatives: [RecommendationSolution]
     let snapshotId: Int?
 
     var succeeded: Bool { failureReason == nil }
@@ -168,6 +173,25 @@ struct DailyDietRecommendationResponse: Codable {
         let totalCarbsG: Double
         let totalFatG: Double
     }
+}
+
+/// 추천 근거(§10). raw 점수 대신 무엇을 얼마나 채웠는지, 상·하한과의 차이를 보여 준다.
+struct RecommendationRationale: Codable {
+    let filledCalories: Double
+    let filledProteinG: Double
+    let filledCarbsG: Double
+    /// 목표 열량 상한과의 여유. 상한이 없으면 nil.
+    let calorieHeadroom: Double?
+    /// 목표 단백질 하한과의 차이. 하한이 없으면 nil.
+    let proteinGap: Double?
+    let policyVersion: String
+    let note: String
+}
+
+/// 대안 해 하나. 끼니 구성과 그 해의 근거를 함께 묶는다.
+struct RecommendationSolution: Codable {
+    let meals: [RecommendedMeal]
+    let rationale: RecommendationRationale
 }
 
 struct NutritionTargets: Codable {

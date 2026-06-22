@@ -171,6 +171,9 @@ struct DietRecommendationView: View {
                 mealCard(meal)
             }
             totalsCard(result)
+            if let rationale = result.rationale {
+                rationaleCard(rationale)
+            }
         }
         if !result.alternatives.isEmpty {
             alternativesSection(result.alternatives)
@@ -362,7 +365,51 @@ struct DietRecommendationView: View {
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 
-    private func alternativesSection(_ alts: [[RecommendedMeal]]) -> some View {
+    private func rationaleCard(_ rationale: RecommendationRationale) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(Color.brandAccent)
+                    .font(.subheadline)
+                Text("recommend.rationale.title")
+                    .font(.subheadline).fontWeight(.semibold)
+                    .foregroundStyle(Color.textPrimary)
+            }
+            Text(rationale.note)
+                .font(.footnote)
+                .foregroundStyle(Color.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: Spacing.md) {
+                if let headroom = rationale.calorieHeadroom {
+                    rationaleStat(
+                        label: String(localized: "recommend.rationale.calorieHeadroom"),
+                        value: String(format: "%.0f kcal", headroom))
+                }
+                if let gap = rationale.proteinGap {
+                    rationaleStat(
+                        label: String(localized: "recommend.rationale.proteinGap"),
+                        value: String(format: "%+.0f g", gap))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14) // design-lint:ignore
+        .background(Color.brandAccent.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+    }
+
+    private func rationaleStat(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(Color.textSecondary)
+            Text(value)
+                .font(.caption).fontWeight(.semibold)
+                .foregroundStyle(Color.textPrimary)
+        }
+    }
+
+    private func alternativesSection(_ alts: [RecommendationSolution]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "arrow.triangle.2.circlepath")
@@ -371,8 +418,8 @@ struct DietRecommendationView: View {
                     .font(.subheadline).fontWeight(.semibold)
                     .foregroundStyle(Color.textPrimary)
             }
-            ForEach(Array(alts.enumerated()), id: \.offset) { index, altMeals in
-                alternativeCard(index: index + 1, meals: altMeals, altIndex: index)
+            ForEach(Array(alts.enumerated()), id: \.offset) { index, solution in
+                alternativeCard(index: index + 1, meals: solution.meals, altIndex: index)
             }
         }
     }

@@ -96,29 +96,29 @@ final class DietRecommendationViewModel: ObservableObject {
         }
     }
 
-    /// 백엔드 checkTargets와 동일한 목표 허용 범위 (UseCases와 일치).
-    private static let calorieLowerRatio = 0.90
-    private static let calorieUpperRatio = 1.10
-    private static let proteinLowerRatio = 0.90
-
-    /// 대안 식단을 상단 추천으로 적용하고, 기존 추천은 해당 대안 자리로 보낸다(swap).
-    /// 합계와 실패 사유를 새 식단 기준으로 재계산한다.
+    /// 대안 해를 상단 추천으로 적용하고, 기존 추천은 해당 대안 자리로 보낸다(swap).
+    /// 대안은 서버가 검증한 feasible 해이므로 실패 사유는 nil이며, 근거(rationale)도 함께 교체한다.
     func applyAlternative(at index: Int) {
         guard let current = result,
               index >= 0, index < current.alternatives.count else { return }
 
         let chosen = current.alternatives[index]
+        // 현재 추천을 대안 자리로 보낸다. rationale이 없으면 교체하지 않는다(안전).
+        guard let currentRationale = current.rationale else { return }
         var newAlternatives = current.alternatives
-        newAlternatives[index] = current.meals
+        newAlternatives[index] = RecommendationSolution(
+            meals: current.meals, rationale: currentRationale)
 
         result = DailyDietRecommendationResponse(
             date: current.date,
             targets: current.targets,
             remainingTargets: current.remainingTargets,
             appliedRestrictions: current.appliedRestrictions,
-            meals: chosen,
-            totalNutrients: Self.summarize(chosen),
-            failureReason: Self.evaluateFailureReason(meals: chosen, targets: current.targets),
+            meals: chosen.meals,
+            totalNutrients: Self.summarize(chosen.meals),
+            failureReason: nil,
+            failureCode: nil,
+            rationale: chosen.rationale,
             strictAllergyMode: current.strictAllergyMode,
             disclaimer: current.disclaimer,
             alternatives: newAlternatives,
@@ -135,19 +135,6 @@ final class DietRecommendationViewModel: ObservableObject {
             totalCarbsG: meals.reduce(0) { $0 + $1.totalCarbsG },
             totalFatG: meals.reduce(0) { $0 + $1.totalFatG }
         )
-    }
-
-    static func evaluateFailureReason(meals: [RecommendedMeal], targets: NutritionTargets) -> String? {
-        let totalCalories = meals.reduce(0) { $0 + $1.totalCalories }
-        let totalProtein = meals.reduce(0) { $0 + $1.totalProteinG }
-        if totalCalories < targets.calorieTarget * calorieLowerRatio
-            || totalCalories > targets.calorieTarget * calorieUpperRatio {
-            return String(localized: "recommend.failure.calorie")
-        }
-        if totalProtein < targets.proteinTargetG * proteinLowerRatio {
-            return String(localized: "recommend.failure.protein")
-        }
-        return nil
     }
 
     func toggleMeal(_ meal: MealType) {

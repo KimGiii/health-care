@@ -11617,6 +11617,74 @@
         }
       }
     },
+    "nutrition.carbs" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carbs"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "탄수화물"
+          }
+        }
+      }
+    },
+    "nutrition.fat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fat"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지방"
+          }
+        }
+      }
+    },
+    "nutrition.kcal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calories"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칼로리"
+          }
+        }
+      }
+    },
+    "nutrition.protein" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protein"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단백질"
+          }
+        }
+      }
+    },
     "onboarding.signup.button" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12123,6 +12191,22 @@
         }
       }
     },
+    "recommend.alternative.apply" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply this plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 식단 적용"
+          }
+        }
+      }
+    },
     "recommend.alternative.n" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12251,6 +12335,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "추천 식단을 기록하지 못했습니다."
+          }
+        }
+      }
+    },
+    "recommend.failure.calorie" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's hard to build a plan that meets your daily calorie target with the current candidate foods."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 후보 식품만으로 하루 칼로리 목표에 맞는 추천 식단을 만들기 어렵습니다."
+          }
+        }
+      }
+    },
+    "recommend.failure.protein" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's hard to build a plan that meets your protein target with the current candidate foods."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 후보 식품만으로 단백질 목표에 맞는 추천 식단을 만들기 어렵습니다."
           }
         }
       }
@@ -12434,6 +12552,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "식사 종류"
+          }
+        }
+      }
+    },
+    "recommend.rationale.calorieHeadroom" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Headroom to cap"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상한 여유"
+          }
+        }
+      }
+    },
+    "recommend.rationale.proteinGap" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protein vs goal"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단백질 대비 목표"
+          }
+        }
+      }
+    },
+    "recommend.rationale.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why this plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추천 근거"
           }
         }
       }
@@ -15385,118 +15553,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
-          }
-        }
-      }
-    },
-    "nutrition.kcal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Calories"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "칼로리"
-          }
-        }
-      }
-    },
-    "nutrition.protein" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protein"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "단백질"
-          }
-        }
-      }
-    },
-    "nutrition.carbs" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Carbs"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "탄수화물"
-          }
-        }
-      }
-    },
-    "nutrition.fat" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fat"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지방"
-          }
-        }
-      }
-    },
-    "recommend.failure.calorie" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It's hard to build a plan that meets your daily calorie target with the current candidate foods."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 후보 식품만으로 하루 칼로리 목표에 맞는 추천 식단을 만들기 어렵습니다."
-          }
-        }
-      }
-    },
-    "recommend.failure.protein" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It's hard to build a plan that meets your protein target with the current candidate foods."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 후보 식품만으로 단백질 목표에 맞는 추천 식단을 만들기 어렵습니다."
-          }
-        }
-      }
-    },
-    "recommend.alternative.apply" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apply this plan"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 식단 적용"
           }
         }
       }
