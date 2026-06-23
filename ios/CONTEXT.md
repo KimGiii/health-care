@@ -62,6 +62,36 @@ Terms used in this codebase. When naming modules, tests, issues, or PR descripti
 
 ---
 
+## 알러지 설정 (Allergy Settings)
+
+**Definition:** 사용자가 현재 지원되는 표준 알러젠 태그를 절대 제외 조건으로 등록·삭제하는 화면과 행동. 기피 식품 설정이나 사용자 선택형 안전 모드와 결합하지 않는다.
+
+**Avoid:** "알러지·기피 설정", "Strict 설정", "알러지 키워드" (서로 다른 제품 계약을 한 화면이나 자유 입력으로 섞음)
+
+**Where it is specified:** `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+
+---
+
+## 기피 식품 설정 (Avoidance Settings)
+
+**Definition:** 사용자가 먹고 싶지 않은 식품 조건을 관리하는 알러지와 별개의 설정. 현재 세부 정책은 유지하며 알러젠 태그 선택은 제공하지 않는다.
+
+**Avoid:** "알러지 타입", "기피 알러젠" (알러지 안전 계약으로 오해하게 함)
+
+**Where it is specified:** `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
+
+---
+
+## 추천 기록 전환 (Recommendation Conversion)
+
+**Definition:** 사용자가 추천 스냅샷의 특정 끼니를 실제 식단 기록으로 확정하는 행동. 일반 식단 기록하기와 달리 추천 이후 바뀐 제한 조건과 검증 근거를 다시 확인한다.
+
+**Avoid:** "추천 저장", "자동 기록" (추천 상태 보존이나 사용자 확인 없는 기록 생성과 혼동함)
+
+**Where it is specified:** `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
+
+---
+
 ## 정량 지표 갱신 규칙 (Quantified Progress)
 
 **Definition:** Gainsy의 외부 테스터 수, 테스트 사용자 수, App Store 심사 대응 수, iOS 출시 상태, AI 음식 분석 사용자 검증 결과처럼 숫자로 표현하는 프로젝트 변화 지표. 기준 문서는 `docs/product-specs/GAINSY_QUANTIFIED_PROGRESS.md`이다.

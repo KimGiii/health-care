@@ -13,7 +13,7 @@
 | **프로젝트 처음 파악** | [README](../README.md) → [ARCHITECTURE](../ARCHITECTURE.md) → [CONTEXT-MAP](../CONTEXT-MAP.md) |
 | **백엔드 작업 시작** | [CONTEXT-MAP](../CONTEXT-MAP.md) → [backend/CONTEXT](../backend/CONTEXT.md) → [Backend ADR](../backend/docs/adr/README.md) |
 | **iOS 작업 시작** | [CONTEXT-MAP](../CONTEXT-MAP.md) → [ios/CONTEXT](../ios/CONTEXT.md) → [iOS ADR](../ios/docs/adr/README.md) |
-| **식단 추천 작업** | [project-memory](agents/project-memory.md) → [추천 제약 PRD](product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md) → [ADR 0002](adr/0002-goal-aware-nutrition-optimization.md) → [추천 최적화 계획](exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md) |
+| **식단 추천 작업** | [project-memory](agents/project-memory.md) → [추천 제약 PRD](product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md) → [ADR 0005](adr/0005-versioned-allergen-evidence-fail-closed.md) → [ADR 0002](adr/0002-goal-aware-nutrition-optimization.md) → [알러지 강화 계획](exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md) → [추천 최적화 계획](exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md) |
 | **현재 진행 상황·지표** | [정량 변화 지표](product-specs/GAINSY_QUANTIFIED_PROGRESS.md) |
 
 ---
@@ -43,10 +43,11 @@
 | [iOS ADR](../ios/docs/adr/README.md) | iOS 앱 설계 결정 |
 
 **공통 ADR 목록**
-- [0001 — 식단 추천 알러젠 회피 모델과 Strict 모드](adr/0001-diet-allergen-strict-mode.md)
+- [0001 — 식단 추천 알러젠 회피 모델과 Strict 모드](adr/0001-diet-allergen-strict-mode.md) — ADR 0005로 대체
 - [0002 — 검증 후보로 목표별 남은 영양량 제약 최적화](adr/0002-goal-aware-nutrition-optimization.md)
 - [0003 — 식단 추천 제약 최적화를 순수 Java 결정적 탐색으로 구현](adr/0003-constraint-recommendation-engine.md)
 - [0004 — 완성요리(복합 식품)를 추천 후보로 도입](adr/0004-composite-dish-recommendation.md)
+- [0005 — 알러지 추천은 버전된 근거와 fail-closed 완결 프로필로 판정](adr/0005-versioned-allergen-evidence-fail-closed.md)
 
 **Backend ADR 목록**
 - [0001 — 식단 기록 규칙을 유스케이스 모듈에 둔다](../backend/docs/adr/0001-diet-log-use-case-module.md)
@@ -77,6 +78,7 @@
 ### 식단 추천
 | 문서 | 내용 |
 | --- | --- |
+| [DIET_ALLERGEN_VERIFIED_ONLY_HARDENING](exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md) | 버전된 알러젠 근거·완결 프로필 기반 fail-closed 전환 계획 |
 | [DIET_RECOMMENDATION_OPTIMIZATION](exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md) | 목표별 남은 영양량 식단 추천 최적화 실행 계획 |
 | [DIET_RECOMMENDATION_RESTRICTIONS](exec-plans/DIET_RECOMMENDATION_RESTRICTIONS.md) | 제외 식품·알러지 기반 하루 식단 추천 실행 계획 |
 | [DIET_RECOMMENDATION_ETM_ENHANCEMENTS](exec-plans/DIET_RECOMMENDATION_ETM_ENHANCEMENTS.md) | ETM 관찰 기반 식단 추천 보강 설계 |

@@ -124,13 +124,43 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ---
 
+## 알러지 제한 (Allergy Restriction)
+
+**Definition:** 사용자가 지원되는 표준 알러젠 태그로 등록하는 절대 제외 조건. 알러지 제한이 있으면 검토 범위가 완결된 유효 알러젠 프로필을 가진 식품만 추천 후보가 된다.
+
+**Avoid:** "Strict 모드", "알러지 키워드", "기피 알러젠" (사용자 토글·이름 검색·일반 기피와 다른 fail-closed 계약임)
+
+**Where it is specified:** `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+
+---
+
+## 알러젠 근거 (Allergen Evidence)
+
+**Definition:** 특정 식품이 표준 알러젠을 원재료로 포함하거나 교차접촉 가능성이 있음을 출처·버전과 함께 표현하는 검토 사실. 같은 식품에 대한 여러 출처의 근거는 덮어쓰지 않고 이력과 유효 상태를 보존한다.
+
+**Avoid:** "알러젠 태그 행", "안전 판정", "없음 태그" (원본 근거와 최종 추천 판정을 혼동함)
+
+**Where it is specified:** `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`, `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
+
+---
+
 ## 알러젠 프로필 (Allergen Profile)
 
-**Definition:** 식품 단위로 알러젠 검토 이력과 유효 기간을 관리하는 별도 레코드. `food_allergen_tags`의 포함 태그 행과 독립적으로 존재하며, 포함 태그가 0개인 "알러젠 없음 확인" 상태도 표현할 수 있다. 검토 표준 버전, 근거 source, source reference, 검토일, 만료·무효 사유를 보존한다. 알러지 등록 사용자의 추천 게이트(`FoodAllergenProfileGate`)는 이 레코드의 `isVerifiedAt()` 통과 여부만 판단한다.
+**Definition:** 식품별로 어떤 표준 알러젠 집합을 완결 검토했는지와 그 검토의 출처·버전·유효성을 나타내는 계약. 포함·교차접촉 근거가 0개인 검토 완료 상태도 표현하며, 알러지 제한 태그가 검토 범위에 들어 있어야 통과 근거가 된다.
 
-**Avoid:** "알러젠 태그 검증", "allergen_profile_verified 플래그" (태그 행과 분리된 독립 레코드임을 강조)
+**Avoid:** "알러젠 태그 검증", "allergen_profile_verified 플래그", "알러젠 없음" (근거 부재와 완결 검토를 혼동함)
 
-**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/allergen/entity/FoodAllergenProfile.java`, `backend/src/main/java/com/healthcare/domain/diet/allergen/FoodAllergenProfileGate.java`
+**Where it lives:** `backend/src/main/java/com/healthcare/domain/diet/allergen/entity/FoodAllergenProfile.java`, `backend/src/main/java/com/healthcare/domain/diet/allergen/AllergenSafetyGate.java`
+
+---
+
+## 식이 기준 (Dietary Requirement)
+
+**Definition:** 글루텐 프리처럼 검증된 식품 속성을 요구하는 사용자 조건. 알러지 제한이나 메뉴 정체성 기반 기피와 별개의 후속 제품 계약이다.
+
+**Avoid:** "알러젠 태그", "기피 키워드" (포함 위험이나 음식 취향과 검증 방식이 다름)
+
+**Where it is specified:** `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
 
 ---
 
@@ -201,6 +231,16 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 **Avoid:** "diet plan", "recommendation log" (영구 계획 도메인 또는 일반 애플리케이션 로그와 혼동)
 
 **Where it is specified:** `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+
+---
+
+## 추천 기록 전환 (Recommendation Conversion)
+
+**Definition:** 사용자가 추천 스냅샷의 특정 끼니를 실제 식단 기록으로 확정하는 행위. 일반 식단 기록과 달리 추천 이후 바뀐 제한 조건과 검증 근거를 다시 확인하는 경계다.
+
+**Avoid:** "추천 저장", "자동 기록" (추천 스냅샷 영속화나 사용자 확인 없는 기록 생성과 혼동함)
+
+**Where it is specified:** `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
 
 ---
 

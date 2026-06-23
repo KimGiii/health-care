@@ -1,16 +1,17 @@
 # 제외 식품·알러지 기반 하루 식단 추천 실행 계획
 
 작성일: 2026-06-02
-개정일: 2026-06-18
-상태: 현행 v1 구현 기록. 후속 목표별 최적화는 `DIET_RECOMMENDATION_OPTIMIZATION.md`에서 단계적으로 진행
+개정일: 2026-06-22
+상태: 현행 v1 구현 기록. 목표별 최적화는 `DIET_RECOMMENDATION_OPTIMIZATION.md`, 알러지 계약 전환은 `DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`를 따른다.
 대상: 백엔드, iOS, 제품 기획
 상위 문서: [DIET_RECOMMENDATION_RESTRICTIONS_PRD.md](../product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md) (제품 기획서)
-결정 기준: 제품 PRD와 후속 최적화 실행 계획의 합의 사항을 함께 따른다.
-전역 ADR: [0001. 식단 추천 알러젠 회피 모델과 Strict 모드](../adr/0001-diet-allergen-strict-mode.md), [0002. 검증된 후보로 목표별 남은 영양량을 제약 최적화한다](../adr/0002-goal-aware-nutrition-optimization.md)
+결정 기준: 제품 PRD와 후속 최적화·알러지 강화 실행 계획의 합의 사항을 함께 따른다.
+전역 ADR: [0002. 검증된 후보로 목표별 남은 영양량을 제약 최적화한다](../adr/0002-goal-aware-nutrition-optimization.md), [0005. 알러지 추천은 버전된 근거와 fail-closed 완결 프로필로 판정한다](../adr/0005-versioned-allergen-evidence-fail-closed.md)
 
 > 본 문서는 **구현 방법(How)**을 다룬다. 기능의 목적·범위·제품 결정(What/Why)은 위 결정 기준 문서를 따른다.
 > 2026-06-04 확정된 두 PRD 기준에 맞춰 v1 출시 범위, 안전 원칙, 데이터 운영 경계, iOS 진입점을 재정리함.
 > 2026-06-18 합의로 verified-only 알러지 기본 게이트, 목표별 남은 영양량, 현실적인 제공량, 제약 최적화, 추천 이벤트가 후속 방향으로 확정되었다. 본 문서의 기본/Strict 2모드, ±10% 공통 검증, greedy 엔진, 추천 미영속 정책은 **현행 구현 설명**이며 새 구현의 결정 기준이 아니다.
+> 2026-06-22 합의로 기본/Strict 2모드와 결합된 알러지·기피 UI를 폐기한다. 본 문서의 Strict 토글, 태그 행의 `allergen_profile_verified`, 추천 끼니의 일반 기록 API 직접 호출은 **역사적 구현 설명**이며 목표 계약은 [verified-only 알러지 강화 계획](DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md)이 우선한다.
 
 ## 0. 2026-06-17 작업 현황
 
@@ -56,11 +57,12 @@
 
 | 우선순위 | 작업 | 이유/완료 기준 |
 |---:|---|---|
+| P0 | verified-only 알러지 계약 강화 | ADR-0005와 `DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`에 따라 버전된 근거, 검토 범위 프로필, Strict 제거, 알러지·기피 UI 분리, 재검증 하위 큐, 추천 전환 재검증을 구현한다. |
 | 완료 | 출시 추천 후보 큐레이션 보강 | 브랜드 공식 메뉴 CSV 376행 중 12개를 `RECOMMENDABLE_WITH_CAUTION`으로 승격했다. 현재 로컬 DB 추천 후보는 seed 42개 + 브랜드 공식 주의 후보 12개 = 54개다. 브랜드 후보는 탄수화물·총지방 공식 미공개와 나트륨/포화지방 주의 사유를 응답 caution으로 남긴다. |
 | 완료 | iOS 테스트 추가 | 제한 조건 목록/추가/삭제, 추천 성공/실패, Strict 토글, 후보 부족 메시지, 의료 안전 단정 문구 부재를 ViewModel 단위 테스트로 확인했다. |
 | P2 | staging/운영 검증 | local DB에서는 Flyway, admin token fail-closed, 실제 공공 API smoke/제한 배치, `SEARCH_ONLY` 기본값, importer 길이 초과 보정을 확인했다. staging/운영에서는 전량 적재 실행 여부, rate limit, dedup 리포트, 출시 후보 추천 수를 별도 검증한다. |
 | P2 | 데이터 라이선스 근거 정리 | 국민건강영양조사 음식별 식품재료량 DB, 푸드QR/OFF, 브랜드 공식 자료의 사용 범위를 문서화한다. |
-| P2 | 카피/표시 정책 다듬기 | 알러젠 주의 문구, Strict 설명, `GLUTEN`의 의무표시 외 합성 태그 표현을 한국어/영어 로컬라이징 기준으로 고정한다. |
+| P2 | 카피/표시 정책 다듬기 | 검증 근거·검토일, 실제 라벨 확인 문구를 한국어/영어 로컬라이징 기준으로 고정한다. Strict 설명은 제거하고 글루텐 프리는 별도 `DIETARY_REQUIREMENT` 후속 범위로 분리한다. |
 | P2 | 브랜드 공식 메뉴 추가 커버리지 | 서브웨이 알러젠 이미지표 OCR/수동 검수와 버거킹 무영양 플래그십 21개 재수집은 v1 필수 CSV 완료 범위에서 분리한다. |
 
 ## 1. 기능 목표
@@ -385,7 +387,7 @@ normalizedRatio(meal) = baseRatio(meal) / Σ baseRatio(selectedMeals)
 
 **재추천 정책**: v1 필수 구현은 `다시 추천`으로 전체 하루 식단을 새로 계산하는 흐름이다. 규칙 기반이라 호출 비용이 낮으므로 횟수 제한은 두지 않는다. 끼니 단위 교체(Swap)는 경쟁 서비스에서 유효한 패턴이지만, PRD에서 아직 확정된 범위가 아니므로 v1.1 후보로 분리한다.
 
-추천 식단을 바로 저장할 때는 기존 `POST /api/v1/diet/logs`를 재사용한다.
+현행은 추천 식단을 바로 저장할 때 기존 `POST /api/v1/diet/logs`를 재사용한다. ADR-0005 전환 후에는 일반 기록 API를 유지하되 추천 끼니는 전용 멱등 전환 API에서 현재 제한과 근거를 다시 검증한다.
 
 ### 4.3 iOS 모델과 네트워크
 
@@ -472,9 +474,9 @@ iOS에서는 추천 결과를 장기 캐시하지 않는다. 화면 재진입 �
 - 활성 목표가 있으면 활성 목표의 영양 목표를 우선 사용한다.
 - 활성 목표가 없으면 사용자 프로필에 저장된 영양 목표를 사용한다.
 - 사용자 프로필과 영양 목표가 모두 부족하면 추천하지 않는다.
-- 현행 알러지 회피는 PRD 구버전 §6.6의 2모드로 구현되어 있다. 후속 전환에서는 알러지 등록 사용자의 verified-only 게이트가 기본이며, `strictAllergyMode`는 호환 기간 후 폐기한다.
+- 현행 알러지 회피는 PRD 구버전 §6.6의 2모드로 구현되어 있다. 후속 전환에서는 알러지 등록 사용자가 항상 verified-only이며, `strictAllergyMode`는 호환 기간 동안 수용하되 무시한 뒤 폐기한다.
 - 추천 결과는 사용자의 기록 편의를 돕는 식단 제안이며, 질병 치료나 의료 처방이 아니다. 후속 verified-only 정책도 검증된 데이터 계약 안의 회피이며 교차오염과 실제 제품 변경을 보장하지 않는다.
 - 외부 데이터는 이용허락 검토가 끝나기 전까지 필수 런칭 의존성으로 두지 않는다.
 - `RECIPE_DERIVED`는 국민건강영양조사 음식별 식품재료량 DB 상업 재사용 라이선스에 의존한다. 확인 전에는 사용하지 않으며 후속 verified-only 추천의 최종 통과 근거로도 사용하지 않는다.
 - 메뉴젠(공공누리 제4유형)·AllergieShield(영국·OFF래퍼·AI의존)는 폐기됨. 알러젠 회피 판정을 외부 AI/제3자에 위임하지 않는다.
-- 제품 PRD와 ADR-0002가 본 현행 구현 기록보다 우선한다. 후속 작업은 `DIET_RECOMMENDATION_OPTIMIZATION.md`를 따른다.
+- 제품 PRD, ADR-0002, ADR-0005가 본 현행 구현 기록보다 우선한다. 후속 작업은 `DIET_RECOMMENDATION_OPTIMIZATION.md`와 `DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`를 따른다.

@@ -25,10 +25,12 @@ Read shared ADRs when a change crosses backend/iOS boundaries, affects product b
 
 1. `docs/agents/project-memory.md`
 2. `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
-3. `docs/adr/0002-goal-aware-nutrition-optimization.md`
-4. `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
-5. `docs/exec-plans/FOOD_CATALOG_ENRICHMENT.md`
-6. `backend/CONTEXT.md`, `ios/CONTEXT.md`
+3. `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+4. `docs/adr/0002-goal-aware-nutrition-optimization.md`
+5. `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
+6. `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`
+7. `docs/exec-plans/FOOD_CATALOG_ENRICHMENT.md`
+8. `backend/CONTEXT.md`, `ios/CONTEXT.md`
 
 ## Shared Metrics
 

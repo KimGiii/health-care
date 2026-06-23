@@ -2,9 +2,9 @@
 
 ## Status
 
-Superseded in part by [ADR-0002](0002-goal-aware-nutrition-optimization.md)
+Superseded by [ADR-0005](0005-versioned-allergen-evidence-fail-closed.md)
 
-포함 태그의 의미와 프로필 완결성 모델은 유지한다. 기본 베스트에포트 모드가 미검토 후보를 통과시키는 결정은 ADR-0002가 대체한다.
+포함 태그와 프로필 완결성을 분리한 문제 인식은 유지한다. 기본/Strict 2모드, 사용자 Strict 토글, 태그 행의 `allergen_profile_verified`를 통과 근거로 사용하는 결정은 ADR-0005가 대체한다.
 
 ## Context
 

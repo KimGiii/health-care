@@ -1,5 +1,8 @@
 # iOS TODO — 2026년 5월 20일 기준
 
+> 최종 개정: 2026-06-22
+> 알러지·기피 UI 분리와 verified-only 계약은 설계가 확정됐으며, 현재는 구현 대기 상태다.
+
 ## 목적
 
 - 현재 iOS 앱 코드를 기준으로, MVP 완성에 직접 연결되는 작업만 우선순위대로 정리한다.
@@ -55,6 +58,21 @@
 ---
 
 ## 다음 순서
+
+### P0. 알러지·기피 UI 분리 및 근거 표시 — 설계 확정 / 구현 대기
+
+- [ ] 알러젠 선택 화면과 기피 식품 설정 화면을 별도 흐름으로 분리한다.
+- [ ] 알러젠 화면에서 `ALLERGY/AVOID` 유형 선택과 Strict 토글을 제거하고, 서버가 활성화한 알러젠 태그만 노출한다.
+- [ ] 사용자 선택이 일시 비활성화된 태그를 포함하면 설정은 보존하되 `ALLERGEN_POLICY_TEMPORARILY_UNAVAILABLE`를 별도로 안내한다.
+- [ ] 추천 항목에 근거 출처·검토일을 표시하고, 안전을 단정하는 표현 대신 라벨 재확인 안내를 제공한다.
+- [ ] 추천 스냅샷을 전용 멱등 API로 식단 기록으로 전환하고, 재검증 실패 사유를 화면에서 구분한다.
+- [ ] `strictAllergyMode`는 과도기 호환성을 위해 응답 모델에서 일시적으로 수용하되 UI에서는 사용하지 않는다.
+
+관련 문서:
+
+- `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+- `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
+- `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 
 ### 0. AI 추정 결과 View UI — 완료
 

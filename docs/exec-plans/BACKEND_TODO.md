@@ -1,5 +1,8 @@
 # 백엔드 TODO — 2026년 5월 4일 기준 (FCM 완료)
 
+> 최종 개정: 2026-06-22
+> 알러지 제외 강화의 현재 상태는 `설계 확정 / 구현 대기`이며, 상세 순서는 `DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`를 따른다.
+
 ## 목적
 
 - 현재 백엔드 코드를 기준으로, MVP 완성에 직접 연결되는 작업만 우선순위대로 정리한다.
@@ -59,6 +62,21 @@
 ---
 
 ## 다음 순서
+
+### 0. verified-only 알러지 제외 계약 강화 — 설계 확정 / 구현 대기
+
+- [ ] `ALLERGY + ALLERGEN_TAG`만 유효하도록 API·DB 제약을 추가하고 기존 무효 조합을 점검한다.
+- [ ] 알러젠 근거·프로필을 버전 관리하고, 유효 기간·무효화·충돌·대체 이력을 보존하는 통합 ingest 경로를 구현한다.
+- [ ] `CONTAINS`와 `MAY_CONTAIN`을 모두 차단하고, 사용자 제한 태그 전체를 유효한 프로필이 덟지 못하면 fail-closed로 제외한다.
+- [ ] 기존 운영 worklist를 영양/서빙·데이터 만료·알러젠 만료/무효화/충돌 하위 큐로 분리한다.
+- [ ] 스냅샷에 정책·제한·근거 버전과 판정을 저장하고, `snapshotId + mealType` 기준 멱등인 추천→식단 기록 API를 구현한다.
+- [ ] 태그별 데이터 커버리지·벤치마크·쉐도우 운영을 거친 후 조건을 통과한 태그만 순차 활성화한다.
+
+관련 문서:
+
+- `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+- `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
+- `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 
 ### 2. 컨트롤러/보안 통합 테스트 보강
 

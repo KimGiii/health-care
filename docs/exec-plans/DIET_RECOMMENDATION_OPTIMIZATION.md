@@ -1,10 +1,12 @@
 # 목표별 남은 영양량 식단 추천 최적화 실행 계획
 
-작성일: 2026-06-18
+작성일: 2026-06-18 (개정: 2026-06-22)
 상태: Phase 1~4 완료, Phase 5 메커니즘 완료 (온라인 가중치 튜닝은 운영 데이터 후속)
 대상: 백엔드, iOS, 데이터 운영, 제품 분석
 상위 문서: `docs/product-specs/DIET_RECOMMENDATION_RESTRICTIONS_PRD.md`
 전역 ADR: `docs/adr/0002-goal-aware-nutrition-optimization.md`
+알러지 계약 ADR: `docs/adr/0005-versioned-allergen-evidence-fail-closed.md`
+알러지 전환 계획: `docs/exec-plans/DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`
 
 ## 1. 목표
 
@@ -22,7 +24,7 @@
 
 | 영역 | 현재 | 목표 |
 |---|---|---|
-| 알러지 기본 게이트 | 매칭 포함 태그가 없으면 미검토 후보도 통과 | 알러지 등록 사용자는 완결 프로필 검증 후보만 통과 |
+| 알러지 기본 게이트 | 별도 프로필 게이트가 있으나 Strict legacy 플래그와 단일 출처 태그 모델이 공존 | 버전된 `CONTAINS/MAY_CONTAIN` 근거 + 검토 범위 완결 프로필의 fail-closed 판정 |
 | 영양 정책 | 모든 목표에 열량 90~110%, 단백질 90% 이상 | 목표 유형별 상·하한 hard constraint |
 | 추천 기준 | 하루 목표 전체 | 이미 섭취한 영양을 차감한 남은 목표 |
 | 엔진 | 카테고리 greedy 선택 후 사후 검증 | 후보 축소 후 제약 최적화로 feasible 해 생성 |
@@ -105,11 +107,12 @@ remaining target = policy target - confirmed intake
 
 - 공식 라벨·공식 메뉴 알러젠 표: `LABEL_DERIVED` 최종 근거 가능
 - 결정적인 단일 원재료 분류: `DIRECT_VERIFIED` 최종 근거 가능
-- 일반 레시피·음식명·AI 추론: 검수 큐 생성 전용
+- 일반 레시피: 포함 알러젠 발견·차단 근거로만 사용하고 부재·통과 근거로 사용하지 않음
+- 음식명·AI 추론: 검수 후보 생성 전용
 - 영양 API에 알러젠 근거가 없는 항목: 검색·기록 전용
-- 원재료·알러젠·제공량·영양값 변경 시 추천 자격을 회수하고 재검증한다.
+- 원재료·알러젠·제품 버전·제공량·영양값 변경 시 추천 자격과 관련 프로필을 회수하고 재검증한다.
 
-포함 알러젠이 0개인 완결 프로필도 표현하기 위해 `food_allergen_profiles` 성격의 별도 검토 레코드가 필요하다. 검토 표준 버전, 근거 source, source reference, 검토일, 만료/무효 사유를 보존한다.
+포함·교차접촉 근거가 0개인 완결 프로필도 표현한다. 프로필은 검토 태그 집합, 표준 버전, 근거 source, source reference, 검토일, 만료·무효 사유를 보존한다. 제한 태그와 일치하는 `CONTAINS/MAY_CONTAIN`은 모두 차단하며 여러 출처의 근거 충돌은 fail-closed로 처리한다. 상세 전환은 ADR-0005와 알러지 전환 계획을 따른다.
 
 ### 5.2 영양 완전성
 
@@ -298,7 +301,7 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `FoodAllergenProfile` JPA 엔티티 + `isVerifiedAt()` 도메인 메서드
   - `FoodAllergenProfileRepository` (findByFoodCatalogIdIn)
   - V33 Flyway 마이그레이션: `food_allergen_profiles` 테이블 + 기존 태그 백필
-  - `FoodAllergenProfileGate`: 알러지 등록 사용자는 별도 검토 레코드 필수 통과
+  - 당시 `FoodAllergenProfileGate`로 프로필 검증을 도입했고, 현재는 `AllergenSafetyGate`로 통합됐다. 향후 verified-only 근거 계약은 ADR-0005와 별도 강화 계획을 따른다.
 - [x] 영양 완전성 정책 (§5.2)
   - `DietRecommendationCandidate.macroDataComplete`: `from(FoodCatalog)` 시점에 4대 영양소 null 여부 자동 계산
   - `NutrientCompletenessPolicy`: 모든 목표 유형에 동일 정책 적용
@@ -322,6 +325,12 @@ Phase 1은 정책 계약과 측정 기반만 추가한다. 현행 `DailyDietReco
   - `FoodCatalog.canonicalGroupId` 필드 추가
   - `FoodCatalogSpecs.isCanonicalCandidate()`: `canonical_group_id IS NULL` predicate
   - `DietRecommendationCandidatePool`: Spec + 인메모리 dual-defense 필터 적용
+- [ ] ADR-0005 verified-only 알러지 계약 강화
+  - 출처별 `CONTAINS/MAY_CONTAIN` 근거와 버전·상태 이력
+  - 검토 태그 집합을 가진 완결 프로필과 무태그 완결 검토
+  - Strict 토글 폐기, 알러지·기피 UI 분리, 잘못된 제한 조합 차단
+  - 알러젠 만료·무효화·충돌 하위 큐와 추천 전환 재검증
+  - 상세 순서는 `DIET_ALLERGEN_VERIFIED_ONLY_HARDENING.md`를 따른다.
 - [x] 검증 우선순위 리포트 (운영자 조회)
   - `FoodAllergenTagRepository.findFoodIdsWithAnyAllergenTag()` 추가
   - `CandidatePoolSummary`: 카테고리별 후보 수·macro 완전성·미태깅 수·underrepresented 카테고리 집계
