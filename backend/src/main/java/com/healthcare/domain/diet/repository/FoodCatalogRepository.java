@@ -86,6 +86,23 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
     /** 검토 큐: 같은 코드·다른 이름 충돌로 표시된 대표 행을 조회한다(커스텀 제외). */
     List<FoodCatalog> findByDedupStateAndIsCustomFalse(FoodCatalog.DedupState dedupState);
 
+    /**
+     * dedup 백필용: dedup 대상(비커스텀·미삭제) 행을 id 커서 기준으로 조회한다.
+     * id 오름차순 + afterId 커서로 매 배치가 전진하므로 재처리/무한루프가 없다(재정규화 백필과 동일 패턴).
+     */
+    @Query(value = """
+            SELECT * FROM food_catalog
+            WHERE id > :afterId
+              AND is_custom = FALSE
+              AND deleted_at IS NULL
+            ORDER BY id
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<FoodCatalog> findDedupEligibleAfterId(@Param("afterId") long afterId, @Param("limit") int limit);
+
+    /** dedup 분포 검증용: 비커스텀 행의 dedup 상태별 개수를 센다. */
+    long countByIsCustomFalseAndDedupState(FoodCatalog.DedupState dedupState);
+
     /** 재검증 큐: 자동 자격 회수 등 특정 사유가 기록된 항목을 조회한다. */
     List<FoodCatalog> findByRecommendationReason(String recommendationReason);
 

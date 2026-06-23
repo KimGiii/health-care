@@ -3,6 +3,8 @@ package com.healthcare.domain.diet.admin;
 import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillService;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
 import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
@@ -46,6 +48,7 @@ public class FoodCatalogAdminOperations {
     private final BrandMenuCsvImporter brandMenuCsvImporter;
     private final FoodCatalogNameRenormalizationService nameRenormalizationService;
     private final FoodCatalogNameOverrideService nameOverrideService;
+    private final FoodCatalogCanonicalBackfillService canonicalBackfillService;
 
     public FoodCatalogBatchImportSummary importProcessedFoods(String adminToken, int pageSize, int maxPages) {
         assertBatchOperationAllowed(adminToken, "processed-foods", pageSize, maxPages);
@@ -133,6 +136,27 @@ public class FoodCatalogAdminOperations {
                 result.updatedRowCount()
         );
         return result;
+    }
+
+    /**
+     * 기존 DB의 dedup 미정규화 행을 출처 우선순위 canonical로 1회 수렴시킨다(설계 §7 백필 패스).
+     * V39 이후 각 출처가 독립 적재돼 모두 대표로 남은 행을 정규화하고, 패자 행의 제공량 옵션을 정리한다.
+     * resolver가 멱등 수렴하므로 재실행 안전하다.
+     */
+    public FoodCatalogCanonicalBackfillSummary backfillCanonicalDedup(String adminToken) {
+        adminOperationGuard.assertAllowed(adminToken);
+        log.info("관리자 카탈로그 작업 시작: operation=dedup-backfill");
+        FoodCatalogCanonicalBackfillSummary summary = canonicalBackfillService.backfill();
+        log.info(
+                "관리자 카탈로그 작업 완료: operation=dedup-backfill, processed={}, batches={}, canonical={}, superseded={}, collision={}, servingOptionsCleared={}",
+                summary.processedRows(),
+                summary.batchCount(),
+                summary.canonicalRows(),
+                summary.supersededRows(),
+                summary.collisionRows(),
+                summary.servingOptionsCleared()
+        );
+        return summary;
     }
 
     private void assertBatchOperationAllowed(String adminToken, String operation, int pageSize, int maxPages) {

@@ -3,6 +3,8 @@ package com.healthcare.domain.diet.admin;
 import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillService;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
 import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
@@ -40,6 +42,7 @@ class FoodCatalogAdminOperationsTest {
     private BrandMenuCsvImporter brandMenuCsvImporter;
     private FoodCatalogNameRenormalizationService nameRenormalizationService;
     private FoodCatalogNameOverrideService nameOverrideService;
+    private FoodCatalogCanonicalBackfillService canonicalBackfillService;
     private FoodCatalogAdminOperations operations;
 
     @BeforeEach
@@ -56,6 +59,7 @@ class FoodCatalogAdminOperationsTest {
         brandMenuCsvImporter = mock(BrandMenuCsvImporter.class);
         nameRenormalizationService = mock(FoodCatalogNameRenormalizationService.class);
         nameOverrideService = mock(FoodCatalogNameOverrideService.class);
+        canonicalBackfillService = mock(FoodCatalogCanonicalBackfillService.class);
         operations = new FoodCatalogAdminOperations(
                 adminOperationGuard,
                 batchRunner,
@@ -68,7 +72,8 @@ class FoodCatalogAdminOperationsTest {
                 duplicateReportService,
                 brandMenuCsvImporter,
                 nameRenormalizationService,
-                nameOverrideService
+                nameOverrideService,
+                canonicalBackfillService
         );
     }
 
@@ -197,6 +202,20 @@ class FoodCatalogAdminOperationsTest {
 
         verify(adminOperationGuard).assertAllowed("admin-token");
         verify(nameRenormalizationService).renormalizeAll();
+        org.assertj.core.api.Assertions.assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("canonical dedup 백필 — admin token 검증 후 백필 서비스를 실행한다")
+    void backfillCanonicalDedup_validatesTokenAndDelegates() {
+        FoodCatalogCanonicalBackfillSummary expected =
+                new FoodCatalogCanonicalBackfillSummary(30252, 61, 21000, 9252, 3961, 18000);
+        given(canonicalBackfillService.backfill()).willReturn(expected);
+
+        FoodCatalogCanonicalBackfillSummary result = operations.backfillCanonicalDedup("admin-token");
+
+        verify(adminOperationGuard).assertAllowed("admin-token");
+        verify(canonicalBackfillService).backfill();
         org.assertj.core.api.Assertions.assertThat(result).isEqualTo(expected);
     }
 }

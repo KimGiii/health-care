@@ -36,10 +36,10 @@ public class CanonicalDedupResolver {
             return; // 코드 없음 → 클러스터링 불가, 기존 대표 지위 유지
         }
         String nameKey = FoodCatalogIdentity.duplicateNameKey(displayName(row));
-        row.assignDedupKeys(group, nameKey);
         if (nameKey == null) {
+            row.assignDedupKeys(group, null);
             row.markCanonical();
-            foodCatalogRepository.save(row);
+            foodCatalogRepository.saveAndFlush(row);
             return; // 이름키 없음 → 신뢰할 클러스터 키 부재, standalone 대표
         }
 
@@ -47,26 +47,36 @@ public class CanonicalDedupResolver {
         detectCollision(canonical, group, nameKey);
     }
 
-    /** §4-2: 클러스터 대표를 우선순위로 결정하고, 결정된 대표 행을 반환한다. */
+    /**
+     * §4-2: 클러스터 대표를 우선순위로 결정하고, 결정된 대표 행을 반환한다.
+     *
+     * <p>dedup 키 부여는 반드시 대표/패자 확정과 같은 묶음에서 처리하고 즉시 flush 한다.
+     * 키를 먼저 부여하면 {@code findCanonical} 의 auto-flush 가 row 를
+     * (그룹·이름키 + {@code canonical_group_id IS NULL}) 중간 상태로 내보내, 같은 클러스터에 이미 대표가
+     * 있을 때 부분 유니크 인덱스 {@code uq_food_catalog_canonical} 를 위반한다(대량 백필에서 발현).
+     * 패자는 {@code canonical_group_id}가 NOT NULL 이라 부분 인덱스 대상에서 빠진다.
+     */
     private FoodCatalog decideCanonical(FoodCatalog row, String group, String nameKey) {
         FoodCatalog canonical = foodCatalogRepository.findCanonical(group, nameKey).orElse(null);
 
         if (canonical == null || canonical.getId().equals(row.getId())) {
+            row.assignDedupKeys(group, nameKey);
             row.markCanonical();
-            return foodCatalogRepository.save(row);
+            return foodCatalogRepository.saveAndFlush(row);
         }
 
         if (row.getSource().dedupPriority() > canonical.getSource().dedupPriority()) {
-            // 구 대표를 먼저 강등·flush 한 뒤 신규를 승격한다.
-            // (부분 유니크 인덱스 uq_food_catalog_canonical 의 일시적 중복 위반 방지)
+            // 구 대표를 먼저 강등·flush 한 뒤 신규를 승격한다(일시적 중복 위반 방지).
             canonical.supersedeBy(row);
             foodCatalogRepository.saveAndFlush(canonical);
+            row.assignDedupKeys(group, nameKey);
             row.markCanonical();
-            return foodCatalogRepository.save(row);
+            return foodCatalogRepository.saveAndFlush(row);
         }
 
+        row.assignDedupKeys(group, nameKey);
         row.supersedeBy(canonical);
-        foodCatalogRepository.save(row);
+        foodCatalogRepository.saveAndFlush(row);
         return canonical;
     }
 

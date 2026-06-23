@@ -5,6 +5,7 @@ import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
 import com.healthcare.domain.diet.admin.FoodCatalogNameOverrideService;
 import com.healthcare.domain.diet.admin.FoodCatalogNameRenormalizationService;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
@@ -91,5 +92,16 @@ public class FoodCatalogAdminController {
             @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken) {
         FoodCatalogDuplicateReportResponse report = adminOperations.getDuplicateReport(adminToken);
         return ResponseEntity.ok(ApiResponse.ok(report));
+    }
+
+    /**
+     * 기존 DB의 dedup 미정규화 행을 출처 우선순위 canonical로 1회 수렴시킨다(설계 §7 백필 패스).
+     * 전량 적재 전, V39 이후 각 출처가 독립 적재돼 모두 대표로 남은 행을 정규화한다(멱등·재실행 안전).
+     */
+    @PostMapping("/dedup/backfill")
+    public ResponseEntity<ApiResponse<FoodCatalogCanonicalBackfillSummary>> backfillCanonicalDedup(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken) {
+        FoodCatalogCanonicalBackfillSummary summary = adminOperations.backfillCanonicalDedup(adminToken);
+        return ResponseEntity.ok(ApiResponse.ok("canonical dedup 백필 완료", summary));
     }
 }

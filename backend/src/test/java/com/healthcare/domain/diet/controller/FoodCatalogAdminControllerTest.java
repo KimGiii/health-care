@@ -4,6 +4,7 @@ import com.healthcare.common.exception.GlobalExceptionHandler;
 import com.healthcare.common.response.ApiResponse;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
+import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,6 +92,32 @@ class FoodCatalogAdminControllerTest {
                 "file", "brand_menu.csv", "text/csv", "header\n".getBytes(StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/v1/admin/diet/catalog/import/brand-csv").file(file))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    @DisplayName("canonical dedup 백필을 요청하면 200과 백필 요약을 반환한다")
+    void backfillCanonicalDedup_returnsSummary() throws Exception {
+        given(adminOperations.backfillCanonicalDedup(any())).willReturn(
+                new FoodCatalogCanonicalBackfillSummary(30252, 61, 21000, 9252, 3961, 18000)
+        );
+
+        mockMvc.perform(post("/api/v1/admin/diet/catalog/dedup/backfill")
+                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.processedRows").value(30252))
+                .andExpect(jsonPath("$.data.supersededRows").value(9252))
+                .andExpect(jsonPath("$.data.collisionRows").value(3961));
+    }
+
+    @Test
+    @DisplayName("admin token 없이 백필을 요청하면 403을 반환한다")
+    void backfillCanonicalDedup_withoutAdminToken_returnsForbidden() throws Exception {
+        willThrow(new AccessDeniedException("관리자 작업 권한이 없습니다."))
+                .given(adminOperations).backfillCanonicalDedup(isNull());
+
+        mockMvc.perform(post("/api/v1/admin/diet/catalog/dedup/backfill"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
