@@ -114,20 +114,18 @@ docker compose -f docker-compose.monitoring.yml --env-file /etc/healthcare/monit
 - Nginx `/grafana/` 라우트는 `user_data.sh`에 포함되어 있다. 기존 인스턴스라면
   `/etc/nginx/sites-available/healthcare`에 동일 블록을 추가 후 `sudo nginx -t && sudo nginx -s reload`.
 
-### 메모리 주의 (현재 t3.medium, 4GB)
+### 메모리 주의 (t3.small, 2GB)
 
-현재 운영 인스턴스는 **t3.medium(4GB)** 이다(`terraform.tfvars`의 `ec2_instance_type = "t3.medium"`).
-모니터링 스택을 앱과 한 박스에 얹으면서 t3.small(2GB)이 빠듯해 승격했다(2026-W22 회고 참조).
-앱 1400m + Prometheus 250m + Grafana 350m + OS로 여유가 생겼지만 배포 후 확인은 유지한다:
+앱 1400m + Prometheus 250m + Grafana 180m + OS로 여유가 빠듯하다. 배포 후 반드시 확인:
 
 ```bash
-free -m              # total ~3.8GB가 t3.medium. ~1.9GB면 t3.small(미승격) 신호
+free -m
 docker stats --no-stream
 ```
 
-추가 압박 시 옵션:
+압박 시 옵션:
 1. Prometheus 보존 단축 — compose의 `--storage.tsdb.retention.time`/`size` 축소.
-2. 인스턴스 추가 승격 — `variables.tf`의 `ec2_instance_type`을 `t3.large`로(타입 변경은 stop→modify→start, EBS/EIP 보존).
+2. 인스턴스 승격 — `variables.tf`의 `ec2_instance_type`을 `t3.medium`으로.
 3. 모니터링을 별도 소형 인스턴스로 분리.
 
 ### 메트릭/대시보드/알림
