@@ -10083,13 +10083,29 @@
         }
       }
     },
+    "medical.nutrition.attribution" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source: Ministry of Food and Drug Safety, “National Integrated Food Nutrition Information (Processed Foods / Dishes) Standard Data” (data.go.kr). This data may include third-party copyrighted material."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "출처: 식품의약품안전처 『전국통합식품영양성분정보(가공식품/음식) 표준데이터』 (공공데이터포털, data.go.kr). 본 데이터에는 제3자의 저작권이 포함될 수 있습니다."
+          }
+        }
+      }
+    },
     "medical.nutrition.body" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Food nutrition data in this app is sourced from the public database below."
+            "value" : "Food nutrition data in this app is sourced from the public databases below."
           }
         },
         "ko" : {
@@ -10113,6 +10129,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "식품의약품안전처 – 식품영양성분 DB"
+          }
+        }
+      }
+    },
+    "medical.nutrition.link.mfdsDish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MFDS — Food Nutrition Info (Dishes) Standard Data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "식품의약품안전처 – 전국통합식품영양성분정보(음식) 표준데이터"
+          }
+        }
+      }
+    },
+    "medical.nutrition.link.mfdsProcessed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MFDS — Food Nutrition Info (Processed Foods) Standard Data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "식품의약품안전처 – 전국통합식품영양성분정보(가공식품) 표준데이터"
           }
         }
       }
