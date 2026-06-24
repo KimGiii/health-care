@@ -38,6 +38,7 @@ ios/HealthCare/App/GoogleService-Info.plist
 # XcodeGen 산출물 — project.yml info.properties 가 단일 소스. generate 가 매번 재생성하므로 추적하지 않는다.
 ios/HealthCare/Resources/Info.plist
 ios/HealthCareWidget/Info.plist
+ios/HealthCare.xcodeproj/project.pbxproj
 
 # Portfolio artifacts
 docs/portfolio/
