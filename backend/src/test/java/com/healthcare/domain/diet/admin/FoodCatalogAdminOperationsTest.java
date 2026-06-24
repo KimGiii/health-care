@@ -5,7 +5,6 @@ import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillService;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
-import com.healthcare.domain.diet.external.dedup.DedupCollisionQueueService;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportService;
 import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
@@ -40,7 +39,6 @@ class FoodCatalogAdminOperationsTest {
     private MfdsFoodNutrientDbPageFetcher foodNutrientDbPageFetcher;
     private MfdsFoodNutrientDbImporter foodNutrientDbImporter;
     private FoodCatalogDuplicateReportService duplicateReportService;
-    private DedupCollisionQueueService dedupCollisionQueueService;
     private BrandMenuCsvImporter brandMenuCsvImporter;
     private FoodCatalogNameRenormalizationService nameRenormalizationService;
     private FoodCatalogNameOverrideService nameOverrideService;
@@ -58,7 +56,6 @@ class FoodCatalogAdminOperationsTest {
         foodNutrientDbPageFetcher = mock(MfdsFoodNutrientDbPageFetcher.class);
         foodNutrientDbImporter = mock(MfdsFoodNutrientDbImporter.class);
         duplicateReportService = mock(FoodCatalogDuplicateReportService.class);
-        dedupCollisionQueueService = mock(DedupCollisionQueueService.class);
         brandMenuCsvImporter = mock(BrandMenuCsvImporter.class);
         nameRenormalizationService = mock(FoodCatalogNameRenormalizationService.class);
         nameOverrideService = mock(FoodCatalogNameOverrideService.class);
@@ -73,7 +70,6 @@ class FoodCatalogAdminOperationsTest {
                 foodNutrientDbPageFetcher,
                 foodNutrientDbImporter,
                 duplicateReportService,
-                dedupCollisionQueueService,
                 brandMenuCsvImporter,
                 nameRenormalizationService,
                 nameOverrideService,

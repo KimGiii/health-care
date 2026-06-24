@@ -5,7 +5,6 @@ import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
 import com.healthcare.domain.diet.admin.FoodCatalogNameOverrideService;
 import com.healthcare.domain.diet.admin.FoodCatalogNameRenormalizationService;
-import com.healthcare.domain.diet.external.dedup.DedupCollisionQueueResponse;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
@@ -93,20 +92,6 @@ public class FoodCatalogAdminController {
             @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken) {
         FoodCatalogDuplicateReportResponse report = adminOperations.getDuplicateReport(adminToken);
         return ResponseEntity.ok(ApiResponse.ok(report));
-    }
-
-    /**
-     * 같은 코드·다른 이름 충돌(COLLISION) 대표 행을 코드 단위 검토 큐로 조회한다(설계 §5·§9).
-     * {@code afterCode}(코드 커서)와 {@code limit}으로 페이지네이션한다 — 응답의 {@code nextCursor}로 다음 페이지를 잇는다.
-     */
-    @GetMapping("/dedup/collisions")
-    public ResponseEntity<ApiResponse<DedupCollisionQueueResponse>> getCollisionReviewQueue(
-            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
-            @RequestParam(value = "afterCode", required = false) String afterCode,
-            @RequestParam(value = "limit", defaultValue = "50") int limit) {
-        DedupCollisionQueueResponse response =
-                adminOperations.getCollisionReviewQueue(adminToken, afterCode, limit);
-        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     /**

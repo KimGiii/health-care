@@ -87,36 +87,6 @@ public interface FoodCatalogRepository extends JpaRepository<FoodCatalog, Long>,
     List<FoodCatalog> findByDedupStateAndIsCustomFalse(FoodCatalog.DedupState dedupState);
 
     /**
-     * 충돌 검토 큐 페이지네이션: COLLISION 대표 행이 있는 코드(dedup_group)를 커서 이후로 limit개 조회한다.
-     * 코드 기준 커서라 전체 후보를 메모리로 읽지 않고 일정 크기로 전진한다(설계 §5).
-     */
-    @Query(value = """
-            SELECT DISTINCT dedup_group FROM food_catalog
-            WHERE dedup_state = 'COLLISION'
-              AND canonical_group_id IS NULL
-              AND is_custom = FALSE
-              AND deleted_at IS NULL
-              AND dedup_group > :afterGroup
-            ORDER BY dedup_group
-            LIMIT :limit
-            """, nativeQuery = true)
-    List<String> findCollisionGroupsAfter(@Param("afterGroup") String afterGroup, @Param("limit") int limit);
-
-    /** 주어진 코드 집합의 대표 행을 상태로 필터해 코드·id 순으로 조회한다(충돌 큐 멤버 적재용). */
-    @Query("""
-            SELECT f FROM FoodCatalog f
-            WHERE f.dedupState = :state
-              AND f.canonicalGroupId IS NULL
-              AND f.isCustom = FALSE
-              AND f.dedupGroup IN :groups
-            ORDER BY f.dedupGroup, f.id
-            """)
-    List<FoodCatalog> findCanonicalsByDedupStateAndGroups(
-            @Param("state") FoodCatalog.DedupState state,
-            @Param("groups") Collection<String> groups
-    );
-
-    /**
      * dedup 백필용: dedup 대상(비커스텀·미삭제) 행을 id 커서 기준으로 조회한다.
      * id 오름차순 + afterId 커서로 매 배치가 전진하므로 재처리/무한루프가 없다(재정규화 백필과 동일 패턴).
      */

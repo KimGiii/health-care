@@ -4,10 +4,6 @@ import com.healthcare.common.exception.GlobalExceptionHandler;
 import com.healthcare.common.response.ApiResponse;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.FoodCatalogAdminOperations;
-import com.healthcare.domain.diet.entity.FoodCatalogSource;
-import com.healthcare.domain.diet.external.dedup.DedupCollisionGroup;
-import com.healthcare.domain.diet.external.dedup.DedupCollisionMember;
-import com.healthcare.domain.diet.external.dedup.DedupCollisionQueueResponse;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,15 +20,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -127,56 +118,6 @@ class FoodCatalogAdminControllerTest {
                 .given(adminOperations).backfillCanonicalDedup(isNull());
 
         mockMvc.perform(post("/api/v1/admin/diet/catalog/dedup/backfill"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
-    }
-
-    @Test
-    @DisplayName("충돌 검토 큐를 요청하면 200과 코드별 멤버·nextCursor를 반환한다")
-    void getCollisionReviewQueue_returnsQueue() throws Exception {
-        DedupCollisionQueueResponse queue = new DedupCollisionQueueResponse(
-                1,
-                List.of(new DedupCollisionGroup("X001", List.of(
-                        new DedupCollisionMember(1L, FoodCatalogSource.MFDS_STANDARD_PROCESSED.name(),
-                                "X001", "사과", "사과", 52.0),
-                        new DedupCollisionMember(2L, FoodCatalogSource.MFDS_STANDARD_DISH.name(),
-                                "X001", "배", "배", 57.0)
-                ))),
-                "X001");
-        given(adminOperations.getCollisionReviewQueue(any(), isNull(), eq(50))).willReturn(queue);
-
-        mockMvc.perform(get("/api/v1/admin/diet/catalog/dedup/collisions")
-                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.groupCount").value(1))
-                .andExpect(jsonPath("$.data.groups[0].foodCode").value("X001"))
-                .andExpect(jsonPath("$.data.groups[0].members[0].source")
-                        .value(FoodCatalogSource.MFDS_STANDARD_PROCESSED.name()))
-                .andExpect(jsonPath("$.data.groups[0].members[1].nameKo").value("배"))
-                .andExpect(jsonPath("$.data.nextCursor").value("X001"));
-    }
-
-    @Test
-    @DisplayName("afterCode·limit 쿼리 파라미터를 operation에 전달한다")
-    void getCollisionReviewQueue_passesPaginationParams() throws Exception {
-        given(adminOperations.getCollisionReviewQueue(any(), eq("X100"), eq(10)))
-                .willReturn(new DedupCollisionQueueResponse(0, List.of(), null));
-
-        mockMvc.perform(get("/api/v1/admin/diet/catalog/dedup/collisions")
-                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token")
-                        .param("afterCode", "X100")
-                        .param("limit", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.groupCount").value(0));
-    }
-
-    @Test
-    @DisplayName("admin token 없이 충돌 검토 큐를 요청하면 403을 반환한다")
-    void getCollisionReviewQueue_withoutAdminToken_returnsForbidden() throws Exception {
-        willThrow(new AccessDeniedException("관리자 작업 권한이 없습니다."))
-                .given(adminOperations).getCollisionReviewQueue(isNull(), any(), anyInt());
-
-        mockMvc.perform(get("/api/v1/admin/diet/catalog/dedup/collisions"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
