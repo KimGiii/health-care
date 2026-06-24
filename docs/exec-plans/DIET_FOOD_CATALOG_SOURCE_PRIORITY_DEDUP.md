@@ -114,7 +114,7 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 |---|---|
 | [FoodCatalogRepository.searchAll](../../backend/src/main/java/com/healthcare/domain/diet/repository/FoodCatalogRepository.java) | WHERE 에 `AND (f.isCustom = TRUE OR f.isCanonical = TRUE)` 추가 |
 | [DietRecommendationCandidatePool:127](../../backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java) | Specification 에 `isCanonical = true` 술어 추가 |
-| 검토 큐 API | 기존 `/api/v1/admin/diet/catalog/dedup/report` 확장: `dedup_state=COLLISION` + dup_key 교차후보(221,221) 노출 |
+| 검토 큐 API | **구현 완료**: `GET /api/v1/admin/diet/catalog/dedup/collisions?afterCode=&limit=` — `dedup_state=COLLISION` 대표 행을 코드 단위로 묶어 코드 커서 페이지네이션(`DedupCollisionQueueService`). 전체 메모리 적재 대신 일정 크기 응답(verified-only 강화 계획 §5 방향). dup_key 교차후보(221,221) 자동병합은 §9대로 보류. |
 
 ## 6. 영향 코드
 
