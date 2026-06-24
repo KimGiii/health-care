@@ -467,6 +467,178 @@ def build_report(sources, raw_rows, accepted_rows, code_by_source,
     return "\n".join(L)
 
 
+# --- canonical 적재 projection (전량 적재 검증 게이트) -------------------
+
+# 출처 → resolver dedupPriority (FoodCatalogSource.dedupPriority). 높을수록 대표 채택.
+# census 는 공공 3종만 다루므로 processed > nutrient_db > dish.
+SRC_DEDUP_PRIORITY = {"processed": 300, "nutrient_db": 200, "dish": 100}
+
+
+def project_canonical(out_path):
+    """캡처된 census TSV에 프로덕션 dedup 의미(CanonicalDedupResolver)를 그대로 재생해
+    전량 적재 시 기대 canonical/superseded/collision 수를 정확히 산출한다(설계 §8 통합 검증).
+
+    profile() 의 '고유 수 범위'는 food_code 단독 병합(U₁)이라 resolver 의 실제 클러스터
+    키((food_code, name_key))를 반영하지 못한다. 이 함수는 적재 경로를 2단계로 재현한다:
+
+      1) (source, food_code) upsert 병합 — FoodCatalogIngestService.findBySourceAndFoodCode.
+         가공식품 자체 2× 중복(census 지표 1)을 여기서 흡수해 출처당 코드 1행만 남긴다.
+      2) (food_code, name_key) canonical 클러스터링 — CanonicalDedupResolver.
+         클러스터당 대표 1개, 나머지는 superseded. 같은 코드·다른 name_key 는 COLLISION.
+
+    canonical 수 = 적재 후 검색·추천에 노출되는 행 수 = ServingOption 생성 대상 행 수.
+    이 수치가 전량 적재의 수용 기준(acceptance target)이다.
+    """
+    sources = [s for s in SOURCES if os.path.exists(tsv_path(s))]
+    if not sources:
+        print("projection 할 TSV가 없습니다. 먼저 fetch 를 실행하세요.")
+        return
+
+    # 1단계: (source, food_code) upsert 병합. value = name_key (last-wins, 사실 갱신 모사).
+    source_code_namekey = {}
+    accepted_raw = Counter()
+    for s in sources:
+        with open(tsv_path(s), encoding="utf-8") as f:
+            next(f)  # header
+            for line in f:
+                parts = line.rstrip("\n").split("\t")
+                if len(parts) < 9:
+                    continue
+                (src, code, _report, accepted, _disp, _brand, name_key, _dup, _sig) = parts[:9]
+                if accepted != "1":
+                    continue
+                accepted_raw[src] += 1
+                source_code_namekey[(src, code)] = name_key
+
+    # 2단계: 출처-코드 행 위에서 (code, name_key) canonical 클러스터링.
+    cluster_mask = {}        # (code, name_key) -> 출처 비트마스크
+    code_namekeys = {}       # code -> {name_key} (비공백만) — 충돌 판정용
+    rows_landed = Counter()  # 출처별 적재 행(=고유 source-code) 수
+    clusterable = 0          # name_key 보유 source-code 행 수
+    standalone = 0           # 코드 보유·name_key 공백 → 독립 대표(resolver 의 null name_key 분기)
+    for (src, code), name_key in source_code_namekey.items():
+        rows_landed[src] += 1
+        if not name_key:
+            standalone += 1
+            continue
+        clusterable += 1
+        key = (code, name_key)
+        cluster_mask[key] = cluster_mask.get(key, 0) | BIT[src]
+        code_namekeys.setdefault(code, set()).add(name_key)
+
+    distinct_clusters = len(cluster_mask)
+    canonical = distinct_clusters + standalone
+    superseded = clusterable - distinct_clusters
+    total_landed = sum(rows_landed.values())
+
+    # 클러스터별 대표 출처(최고 우선순위) 분포.
+    winner_by_source = Counter()
+    for mask in cluster_mask.values():
+        winner = max((s for s in BIT if mask & BIT[s]), key=lambda s: SRC_DEDUP_PRIORITY[s])
+        winner_by_source[winner] += 1
+
+    # 충돌: 같은 코드에 name_key 가 2개 이상 → 각 클러스터가 각자 대표 + COLLISION 표시.
+    # (resolver 의 COLLISION 은 name_key 차이 기준. 영양값만 다르고 이름 같은 건은 같은 클러스터로 병합되어
+    #  COLLISION 이 아니다 — census 지표 5 의 3,961 중 '이름 불일치' 부분집합만 해당.)
+    collision_codes = sum(1 for nks in code_namekeys.values() if len(nks) >= 2)
+    collision_canon_rows = sum(len(nks) for nks in code_namekeys.values() if len(nks) >= 2)
+
+    # 음식(dish) ⊂ 상위 출처 흡수: dish 를 포함한 클러스터 중 상위 출처(processed/nutrient_db)가 함께 있으면 흡수.
+    dish_clusters = sum(1 for mask in cluster_mask.values() if mask & BIT["dish"])
+    dish_absorbed = sum(
+        1 for mask in cluster_mask.values()
+        if (mask & BIT["dish"]) and (mask & (BIT["processed"] | BIT["nutrient_db"]))
+    )
+    dish_standalone = dish_clusters - dish_absorbed
+
+    report = build_projection_report(
+        sources, accepted_raw, rows_landed, total_landed,
+        clusterable, standalone, distinct_clusters, canonical, superseded,
+        winner_by_source, collision_codes, collision_canon_rows,
+        dish_clusters, dish_absorbed, dish_standalone)
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(report)
+    print(report)
+    print(f"\n리포트 저장: {out_path}")
+
+
+def build_projection_report(sources, accepted_raw, rows_landed, total_landed,
+                            clusterable, standalone, distinct_clusters, canonical,
+                            superseded, winner_by_source, collision_codes,
+                            collision_canon_rows, dish_clusters, dish_absorbed,
+                            dish_standalone):
+    total_acc = sum(accepted_raw.values())
+    is_sample = total_acc < 100_000
+    dedup_pct = (superseded / total_landed * 100) if total_landed else 0
+    kst = timezone(timedelta(hours=9))
+
+    L = []
+    L.append("# 식품 카탈로그 dedup 전량 적재 projection (acceptance target)\n")
+    L.append(f"- 생성: {datetime.now(kst).strftime('%Y-%m-%d %H:%M KST')}")
+    L.append(f"- 모드: {'표본(SAMPLE)' if is_sample else '전수(FULL)'} — 수용 raw {total_acc:,}행")
+    L.append("- 산출: 캡처 census TSV에 `CanonicalDedupResolver` 의미를 재생(read-only, DB 미적재).")
+    L.append("- 2단계 재현: ① (source, food_code) upsert 병합 → ② (food_code, name_key) canonical 클러스터링.\n")
+
+    L.append("## 적재 후 기대 규모 (전량 적재 수용 기준)\n")
+    L.append("| 지표 | 값 | 의미 |")
+    L.append("|---|---:|---|")
+    L.append(f"| 적재 행(food_catalog) | **{total_landed:,}** | (source, food_code) 병합 후 — 자체 2× 중복 흡수됨 |")
+    L.append(f"| canonical(대표) | **{canonical:,}** | 검색·추천 노출 + ServingOption 생성 대상 |")
+    L.append(f"| superseded(패자) | **{superseded:,}** | 숨김·옵션 미생성 (옵션 폭증 차단) |")
+    L.append(f"| COLLISION 코드 | **{collision_codes:,}** | 같은 코드·다른 이름 → 검토 큐 |")
+    L.append(f"| dedup 제거율 | **{dedup_pct:.1f}%** | superseded / 적재 행 |\n")
+
+    L.append("## 1. (source, food_code) 병합 — 적재 행 수\n")
+    L.append("가공식품 자체 2× 중복(census 지표 1)은 `findBySourceAndFoodCode` upsert로 흡수되어 출처당 코드 1행만 적재된다.\n")
+    L.append("| 출처 | 수용 raw 행 | 적재 행(고유 코드) | 자체중복 흡수 |")
+    L.append("|---|---:|---:|---:|")
+    for s in sources:
+        raw = accepted_raw[s]
+        landed = rows_landed[s]
+        L.append(f"| {SRC_LABEL[s]} | {raw:,} | {landed:,} | {raw - landed:,} |")
+    L.append(f"| **합계** | **{sum(accepted_raw.values()):,}** | **{total_landed:,}** | **{sum(accepted_raw.values()) - total_landed:,}** |\n")
+
+    L.append("## 2. canonical 클러스터링 — 출처 간 dedup\n")
+    L.append(f"- 클러스터링 대상(name_key 보유): **{clusterable:,}**행")
+    L.append(f"- 독립 대표(name_key 공백): **{standalone:,}**행")
+    L.append(f"- 고유 (code, name_key) 클러스터: **{distinct_clusters:,}**")
+    L.append(f"- → canonical 총계 = 클러스터 + 독립 = **{canonical:,}**")
+    L.append(f"- → superseded = 클러스터링 대상 − 클러스터 = **{superseded:,}**\n")
+    L.append("### 대표(canonical) 출처 분포\n")
+    L.append("| 대표 출처 | 클러스터 수 |")
+    L.append("|---|---:|")
+    for s in sorted(winner_by_source, key=lambda x: -SRC_DEDUP_PRIORITY[x]):
+        L.append(f"| {SRC_LABEL[s]} (우선순위 {SRC_DEDUP_PRIORITY[s]}) | {winner_by_source[s]:,} |")
+    L.append("")
+
+    L.append("## 3. 음식(dish) ⊂ 상위 출처 흡수\n")
+    L.append(f"- dish 포함 클러스터: **{dish_clusters:,}**")
+    L.append(f"  - 상위 출처(가공/영양DB)에 흡수(superseded): **{dish_absorbed:,}**")
+    L.append(f"  - dish 가 대표로 남음(상위 출처 없음·name_key 불일치): **{dish_standalone:,}**\n")
+    L.append("> census 결론 2(음식 코드 100% 가 영양DB와 겹침)는 코드 기준. 여기서는 (code, name_key) 기준이라"
+             " 이름 불일치분은 dish 가 별도 대표(COLLISION)로 남을 수 있다.\n")
+
+    L.append("## 4. COLLISION (검토 큐)\n")
+    L.append(f"- 같은 코드·다른 name_key 코드: **{collision_codes:,}개**")
+    L.append(f"- COLLISION 표시 canonical 행: **{collision_canon_rows:,}**")
+    L.append("- resolver COLLISION 은 **이름 차이** 기준이다. census 지표 5의 충돌(3,961) 중 '영양값만 다르고 이름 같음'"
+             " (1,360)은 같은 클러스터로 병합(우선순위 출처 영양값 채택)되어 COLLISION 이 아니다.\n")
+
+    L.append("## 5. 전량 적재 게이트 체크리스트\n")
+    L.append("- [x] 검색 `searchAll` 패자 제외: `isCustom OR canonicalGroupId IS NULL`")
+    L.append("- [x] 추천 후보 `isCanonicalCandidate()`: `canonicalGroupId IS NULL`")
+    L.append("- [x] 적재 시 옵션 게이트: 패자 행 옵션 삭제, 대표만 생성 (`syncServingOptions`)")
+    L.append("- [x] 강등 구대표 옵션 정리: `deleteOptionsForSupersededRows()` (백필 최종 패스)")
+    L.append("- [x] 적재 순서 무관 수렴: `CanonicalDedupResolver` 우선순위 승격/강등 (단위 테스트)")
+    L.append(f"- [ ] 전량 적재 실행 → 결과가 위 기대 규모(canonical≈{canonical:,}, superseded≈{superseded:,})와 일치 확인")
+    L.append("- [ ] 적재 후 ServingOption 행 수 ≤ canonical × 제공량 옵션 상한 확인 (옵션 폭증 0)\n")
+
+    if is_sample:
+        L.append("> ⚠️ 표본 모드 결과입니다. 전수 확정치는 `fetch --mode full` 후 `project` 재실행하세요.\n")
+    return "\n".join(L)
+
+
 # --- CLI -----------------------------------------------------------------
 
 def resolve_api_key(cli_key):
@@ -505,26 +677,36 @@ def cmd_run(args):
     cmd_profile(args)
 
 
+def cmd_project(args):
+    project_canonical(args.out)
+
+
 def main():
     default_out = os.path.normpath(os.path.join(
         HERE, "..", "..", "docs", "references", "FOOD_API_CENSUS_DEDUP_PROFILE.md"))
+    default_projection_out = os.path.normpath(os.path.join(
+        HERE, "..", "..", "docs", "references", "FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md"))
     p = argparse.ArgumentParser(description="식품 API 3종 전수 중복 프로파일링")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def add_common(sp):
+    def add_common(sp, out_default=default_out):
         sp.add_argument("--source", choices=list(SOURCES) + ["all"], default="all")
         sp.add_argument("--mode", choices=["sample", "full"], default="sample")
         sp.add_argument("--sample-pages", type=int, default=3)
         sp.add_argument("--delay", type=float, default=0.1)
         sp.add_argument("--api-key", default=None)
-        sp.add_argument("--out", default=default_out)
+        sp.add_argument("--out", default=out_default)
 
     for name in ("fetch", "profile", "run"):
         sp = sub.add_parser(name)
         add_common(sp)
 
+    # project: 캡처 TSV에 resolver 의미를 재생해 전량 적재 acceptance target 산출(read-only).
+    add_common(sub.add_parser("project"), out_default=default_projection_out)
+
     args = p.parse_args()
-    {"fetch": cmd_fetch, "profile": cmd_profile, "run": cmd_run}[args.cmd](args)
+    {"fetch": cmd_fetch, "profile": cmd_profile,
+     "run": cmd_run, "project": cmd_project}[args.cmd](args)
 
 
 if __name__ == "__main__":
