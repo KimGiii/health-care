@@ -44,6 +44,14 @@ struct MedicalSourcesView: View {
                         body: String(localized: "medical.nutrition.body"),
                         sources: [
                             SourceLink(
+                                label: String(localized: "medical.nutrition.link.mfdsProcessed"),
+                                url: "https://www.data.go.kr/data/15100066/standard.do"
+                            ),
+                            SourceLink(
+                                label: String(localized: "medical.nutrition.link.mfdsDish"),
+                                url: "https://www.data.go.kr/data/15100070/standard.do"
+                            ),
+                            SourceLink(
                                 label: String(localized: "medical.nutrition.link.mfds"),
                                 url: "https://various.foodsafetykorea.go.kr/nutrient/"
                             ),
@@ -51,7 +59,8 @@ struct MedicalSourcesView: View {
                                 label: "USDA FoodData Central",
                                 url: "https://fdc.nal.usda.gov/"
                             )
-                        ]
+                        ],
+                        footnote: String(localized: "medical.nutrition.attribution")
                     )
 
                     sourceSection(
@@ -124,7 +133,7 @@ struct MedicalSourcesView: View {
         .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
     }
 
-    private func sourceSection(title: String, body: String, sources: [SourceLink]) -> some View {
+    private func sourceSection(title: String, body: String, sources: [SourceLink], footnote: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.headingSmall)
@@ -152,6 +161,14 @@ struct MedicalSourcesView: View {
                 }
             }
             .padding(.top, 2) // design-lint:ignore — micro/hero spacing
+            if let footnote {
+                Text(footnote)
+                    .font(.captionXSmall)
+                    .foregroundStyle(Color.textSecondary)
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2) // design-lint:ignore — micro/hero spacing
+            }
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
         .frame(maxWidth: .infinity, alignment: .leading)
