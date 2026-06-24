@@ -286,7 +286,7 @@ Gainsy 백엔드에서 사용하는 도메인 용어입니다. 모듈, 테스트
 
 ## 관리자 카탈로그 작업 (Admin Catalog Operation)
 
-**Definition:** 공공 식품 데이터 배치 적재, 브랜드 공식 메뉴 CSV 적재, 식품 카탈로그 중복 후보 리포트처럼 운영자가 내부 카탈로그를 변경하거나 점검하는 작업. 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` operation token을 요구한다.
+**Definition:** 공공 식품 데이터 배치 적재, 브랜드 공식 메뉴 CSV 적재, 중복 후보 리포트, canonical dedup 백필(`/dedup/backfill`), 충돌 검토 큐(`/dedup/collisions`)처럼 운영자가 내부 카탈로그를 변경하거나 점검하는 작업. 일반 사용자 JWT 인증과 별도로 `X-Admin-Token` operation token을 요구한다.
 
 **Avoid:** "admin API" (HTTP 경로만 떠올라 operation 규칙과 데이터 변경 위험이 흐려짐)
 

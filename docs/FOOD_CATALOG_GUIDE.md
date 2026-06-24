@@ -281,7 +281,9 @@ source priority:
 | `POST` | `/import/dish-foods` | 음식 표준데이터(15100070) 배치 적재 |
 | `POST` | `/import/nutrient-db` | 식품영양성분DB(`FoodNtrCpntDbInfo02`) 배치 적재 |
 | `POST` | `/import/brand-csv` | 브랜드 공식 메뉴 CSV 수동 검수 적재 |
-| `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트 |
+| `GET` | `/dedup/report` | 비커스텀 카탈로그 전체 대상 중복 후보 리포트(전체 메모리 적재) |
+| `POST` | `/dedup/backfill` | 기존 행을 출처 우선순위 canonical로 1회 수렴(멱등·재실행 안전) + 패자 ServingOption 정리 |
+| `GET` | `/dedup/collisions` | 같은 코드·다른 이름 충돌(COLLISION) 검토 큐. `afterCode`·`limit` 코드 커서 페이지네이션 |
 
 import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기본 500, 최대 500) 쿼리 파라미터를 받습니다. 상한을 벗어나면 실제 적재를 시작하지 않고 400으로 거부합니다. 응답은 `FoodCatalogBatchImportSummary`(source, startPage, lastCompletedPage, fetchedPageCount, created/updated/skipped 수, `attemptedCount`, `skippedRatio`, exhausted 여부)를 포함합니다.
 
@@ -301,8 +303,18 @@ import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기�
 | 5 | 음식 전량 적재 | 같은 `pageSize`로 `/import/dish-foods` 반복 실행, `exhausted=true`까지 |
 | 6 | 식품영양성분DB 전량 적재 | 같은 `pageSize`로 `/import/nutrient-db` 반복 실행, `exhausted=true`까지 |
 | 7 | 적재 검증 | source별 row count, 체크포인트, skipped 비율, 대표 검색어 조회 확인 |
-| 8 | 중복 후보 점검 | `/dedup/report` 실행 후 운영 검수 목록 생성. 자동 병합 금지 |
-| 9 | 후속 큐레이션 | local 기준 브랜드 CSV 보강과 추천 후보 12개 승격 완료. staging/운영에서는 동일 CSV 재적재 후 source/status count와 caution 노출을 검증 |
+| 8 | canonical dedup 수렴 | `/dedup/backfill` 실행(또는 적재가 행별 수렴) → dedup_state 분포가 acceptance target과 일치하는지 확인. 자동 병합 금지 |
+| 9 | 충돌 검토 큐 | `/dedup/collisions` 로 COLLISION 코드 검토 목록 생성(코드 커서 페이지네이션) |
+| 10 | 후속 큐레이션 | local 기준 브랜드 CSV 보강과 추천 후보 12개 승격 완료. staging/운영에서는 동일 CSV 재적재 후 source/status count와 caution 노출을 검증 |
+
+#### canonical dedup 적재 검증 (#68)
+
+출처 간 동일 식품을 정규(canonical) 1개로 수렴시키는 dedup은 별도 설계·검증을 거친다. 상세: [DIET_FOOD_CATALOG_SOURCE_PRIORITY_DEDUP](exec-plans/DIET_FOOD_CATALOG_SOURCE_PRIORITY_DEDUP.md).
+
+- **acceptance target (전수 census 재생, read-only)**: 적재 615,509행 → canonical 323,899 / superseded 291,610(47.4%) / COLLISION 코드 2,781. 산출: `python3 scripts/food-census/census.py project` → [FOOD_CATALOG_DEDUP_LOAD_PROJECTION](references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md). 적재 후 `dedup_state`별 count가 이 값(+ 기존 SEED/BRAND 보정)과 일치해야 한다.
+- **G1 정합성 게이트(자동)**: `FoodCatalogDedupLoadIT`(실 PostgreSQL + Flyway V39 부분 유니크 인덱스)가 적재 경로 전체(수렴·검색/추천 패자 제외·ServingOption 대표 한정·백필 옵션 정리)를 검증. CI는 postgres 17 서비스에서 자동 실행.
+- **옵션 폭증 차단**: ServingOption은 canonical 행에만 생성(대표당 4개 ≈ 130만). 강등된 구 대표 옵션은 `/dedup/backfill`의 정리 패스로 제거.
+- ⚠️ **적재 부하 대상 = prod RDS db.t3.micro(앱 호스트 t3.medium과 별개)**. 전량 적재 전 RDS 스냅샷 + 적재 창 동안 클래스 일시 상향(또는 스냅샷→임시 인스턴스 리허설) 권장. dev/prod DB 토폴로지: dev는 박스 컨테이너 PG, prod만 RDS.
 
 주의: 체크포인트는 source별 마지막 완료 페이지 번호만 저장하고 `pageSize`는 저장하지 않습니다. 같은 source를 이어서 적재하는 동안 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있습니다. smoke 후 다른 `pageSize`로 전환해야 한다면 해당 source의 smoke row와 체크포인트를 초기화한 뒤 다시 시작합니다.
 

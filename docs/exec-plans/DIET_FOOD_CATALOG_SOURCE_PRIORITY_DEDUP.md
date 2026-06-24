@@ -162,8 +162,9 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 ## 8. 검증 (TDD)
 
 - `CanonicalDedupResolver` 단위: 우선순위 승격/강등, **순서 무관성**(음식→영양DB, 영양DB→음식 동일 결과), 충돌 분리, 출처 내 upsert 불변.
-- 통합: 3 출처 표본 적재 → canonical 수가 census 기대치와 일치, 음식 코드가 영양DB로 흡수되는지.
-- 회귀: 검색/추천이 canonical만 반환(패자 미노출).
+- 통합(구현 완료): `FoodCatalogDedupLoadIT`(@DataJpaTest, 실 PostgreSQL + Flyway V39 부분 유니크 인덱스). 3 출처 표본을 실제 적재 경로로 통과 → dedup_state 분포(CANONICAL/SUPERSEDED/COLLISION), 음식→가공/영양DB 흡수, 검색 게이트(대표만 노출), ServingOption 대표 한정, 강등 구 대표 옵션 백필 정리를 검증. CI는 postgres 17 서비스에서 자동 실행(ci-backend.yml).
+- 전수 projection(read-only): `census.py project` 가 캡처 census TSV로 acceptance target(canonical 323,899 등) 산출 → §7.
+- 회귀: 검색/추천이 canonical만 반환(패자 미노출) — IT 검색 게이트 단언으로 커버.
 
 ## 9. 미결 / 후속
 
