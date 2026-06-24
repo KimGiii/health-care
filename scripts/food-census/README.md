@@ -35,10 +35,6 @@ python3 census.py run --mode sample --sample-pages 3
 # 전수 (재개 가능 — 중단 후 같은 명령 재실행 시 이어받음)
 python3 census.py fetch --mode full --delay 0.12
 python3 census.py profile
-
-# 전량 적재 검증: 캡처 TSV에 프로덕션 dedup(CanonicalDedupResolver) 의미를 재생해
-# 적재 후 기대 canonical/superseded/COLLISION 수(acceptance target)를 산출 (read-only)
-python3 census.py project
 ```
 
 API 키는 `--api-key`, `PUBLIC_FOOD_API_KEY` 환경변수, `application-local.yml` 순으로 해석.
@@ -46,8 +42,7 @@ API 키는 `--api-key`, `PUBLIC_FOOD_API_KEY` 환경변수, `application-local.y
 ## 산출물
 
 - 중간 데이터: `data/{source}.tsv` + `{source}.ckpt` (gitignore, 재개용)
-- 리포트(`profile`): `docs/references/FOOD_API_CENSUS_DEDUP_PROFILE.md` (6개 지표)
-- 리포트(`project`): `docs/references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md` (전량 적재 acceptance target)
+- 리포트: `docs/references/FOOD_API_CENSUS_DEDUP_PROFILE.md` (6개 지표)
 
 ## 6개 지표
 
@@ -57,10 +52,3 @@ API 키는 `--api-key`, `PUBLIC_FOOD_API_KEY` 환경변수, `application-local.y
 4. 이름+제조사(production `dup_key`) 일치 — 검토 후보
 5. 같은 코드인데 이름·영양값이 다른 충돌
 6. 합산 후 최종 고유 식품 예상 수 (보수/적극 범위)
-
-## `profile` vs `project`
-
-`profile` 의 지표 6은 `food_code` **단독** 병합(U₁=321,118 / U₂=256,925 범위)이라 실제 적재 모델을
-반영하지 못한다. 프로덕션 dedup 은 `(source, food_code)` upsert 후 **`(food_code, name_key)`** 로 클러스터링하므로
-정확한 적재 결과는 `project` 가 산출한다(예: canonical 323,899 / superseded 291,610 / COLLISION 2,781).
-`project` 는 캡처 TSV에 `CanonicalDedupResolver` 의미를 그대로 재생하며, 출력은 `profile` 지표 1·5와 교차검증된다.
