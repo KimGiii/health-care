@@ -158,7 +158,7 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 > **남은 일(전량 적재 실행 단계, live DB·API 키 필요)**: 운영 DB에 3종 전량 적재 → 결과가 위 target과 일치하는지
 > (canonical≈323,899, superseded≈291,610, COLLISION 코드 2,781) 확인. ServingOption 은 canonical 323,899 행에만 생성되어
 > 옵션 폭증 0. 코드 게이트(검색/추천 패자 제외, 옵션 게이트, 강등 옵션 정리, 순서 무관 수렴)는 이미 구현·검증됨.
-> 본 적재 전 **G2 운영 리허설**(prod RDS 스냅샷→임시 인스턴스 적재→용량·정합성 측정) 권장:
+> 본 적재 전 **G2 운영 리허설**(일회성 ephemeral RDS 적재→용량·정합성 측정, 상시 dev RDS 불필요) 권장:
 > [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](../operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).
 
 ## 8. 검증 (TDD)

@@ -314,7 +314,7 @@ import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기�
 - **acceptance target (전수 census 재생, read-only)**: 적재 615,509행 → canonical 323,899 / superseded 291,610(47.4%) / COLLISION 코드 2,781. 산출: `python3 scripts/food-census/census.py project` → [FOOD_CATALOG_DEDUP_LOAD_PROJECTION](references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md). 적재 후 `dedup_state`별 count가 이 값(+ 기존 SEED/BRAND 보정)과 일치해야 한다.
 - **G1 정합성 게이트(자동)**: `FoodCatalogDedupLoadIT`(실 PostgreSQL + Flyway V39 부분 유니크 인덱스)가 적재 경로 전체(수렴·검색/추천 패자 제외·ServingOption 대표 한정·백필 옵션 정리)를 검증. CI는 postgres 17 서비스에서 자동 실행.
 - **옵션 폭증 차단**: ServingOption은 canonical 행에만 생성(대표당 4개 ≈ 130만). 강등된 구 대표 옵션은 `/dedup/backfill`의 정리 패스로 제거.
-- ⚠️ **적재 부하 대상 = prod RDS db.t3.micro(앱 호스트 t3.medium과 별개)**. 전량 적재 전 RDS 스냅샷 + 적재 창 동안 클래스 일시 상향(또는 스냅샷→임시 인스턴스 리허설) 권장. dev/prod DB 토폴로지: dev는 박스 컨테이너 PG, prod만 RDS. **G2 리허설 절차**: [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).
+- ⚠️ **적재 부하 대상 = prod RDS db.t3.micro(앱 호스트 t3.medium과 별개)**. 전량 적재 전 일회성(ephemeral) RDS에서 용량 리허설 + 적재 창 동안 클래스 일시 상향 권장. **상시 dev RDS는 불필요**(정합성은 싼 DB, 용량은 일회성 RDS). dev/prod DB 토폴로지: dev는 박스 컨테이너 PG, prod만 RDS. **G2 리허설 절차**: [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).
 
 주의: 체크포인트는 source별 마지막 완료 페이지 번호만 저장하고 `pageSize`는 저장하지 않습니다. 같은 source를 이어서 적재하는 동안 `pageSize`를 바꾸면 중간 row를 건너뛸 수 있습니다. smoke 후 다른 `pageSize`로 전환해야 한다면 해당 source의 smoke row와 체크포인트를 초기화한 뒤 다시 시작합니다.
 
