@@ -8,7 +8,8 @@
 > 패자 = 대표 id를 가리킴). 신설은 `dedup_group`·`dedup_name_key`·`dedup_state`(V39)뿐이다.
 > 근거: [backend ADR-0005](../../backend/docs/adr/0005-source-priority-dedup-canonical-reuse.md).
 > 따라서 §5의 후보 풀·검색 게이트는 기존 `canonical_group_id IS NULL` 필터를 그대로 쓴다(추가 술어 불필요).
-> **백필·전량 적재는 미실행**(검증 후 별도 수행).
+> **백필 패스 구현 완료**(`FoodCatalogCanonicalBackfillService`). **전량 적재 검증 완료**(2026-06-24,
+> `census.py project` — §7 acceptance target). **전량 적재 실행만 미수행**(live DB·API 키 필요, §7 남은 일).
 
 ## 1. 문제 (현 모델의 격차)
 
@@ -113,7 +114,7 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 |---|---|
 | [FoodCatalogRepository.searchAll](../../backend/src/main/java/com/healthcare/domain/diet/repository/FoodCatalogRepository.java) | WHERE 에 `AND (f.isCustom = TRUE OR f.isCanonical = TRUE)` 추가 |
 | [DietRecommendationCandidatePool:127](../../backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java) | Specification 에 `isCanonical = true` 술어 추가 |
-| 검토 큐 API | 기존 `/api/v1/admin/diet/catalog/dedup/report` 확장: `dedup_state=COLLISION` + dup_key 교차후보(221,221) 노출 |
+| 검토 큐 API | **구현 완료**: `GET /api/v1/admin/diet/catalog/dedup/collisions?afterCode=&limit=` — `dedup_state=COLLISION` 대표 행을 코드 단위로 묶어 코드 커서 페이지네이션(`DedupCollisionQueueService`). 전체 메모리 적재 대신 일정 크기 응답(verified-only 강화 계획 §5 방향). dup_key 교차후보(221,221) 자동병합은 §9대로 보류. |
 
 ## 6. 영향 코드
 
@@ -134,11 +135,39 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 
 **예상 결과**: canonical 행 ≈ 290k~321k(음식 전량 + 가공·영양DB 교차분 흡수), 충돌 3,961 검토 큐, 나머지 ~58만 행은 `is_canonical=false` 보존.
 
+### 검증된 acceptance target (2026-06-24, `census.py project`)
+
+전수 census TSV에 `CanonicalDedupResolver` 의미(① `(source, food_code)` upsert 병합 → ② `(food_code, name_key)`
+클러스터링)를 재생한 결과. 리포트: [FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md](../references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md).
+
+| 지표 | 값 |
+|---|---:|
+| 적재 행(`food_catalog`, source-code 병합 후) | **615,509** |
+| canonical(대표, 검색·추천 노출 + ServingOption 대상) | **323,899** |
+| superseded(패자, 숨김·옵션 미생성) | **291,610** (47.4%) |
+| COLLISION 코드(검토 큐) | **2,781** |
+
+- 적재 행 per-source(가공 293,489 / 음식 19,495 / 영양DB 302,525)는 census 지표 1의 고유 코드와 정확히 일치.
+- COLLISION 2,781 = census 지표 5의 **이름 불일치** 부분집합과 정확히 일치(영양값만 다른 1,360은 우선순위 출처 값으로
+  병합되어 COLLISION 아님). 따라서 §3의 "충돌 3,961 검토 큐"는 census 충돌 코드 총수이고, resolver 의 COLLISION 표시는
+  이름 차이 기준 2,781 이다.
+- canonical 323,899 는 census U₁(321,118, food_code 단독 병합)보다 2,781 코드의 이름키 분할만큼 높다 — §6 미주의
+  "실제 고유 수는 U₁보다 다소 높을 수 있음"을 정량 확인.
+- 음식(dish)은 19,495 중 19,480이 상위 출처에 흡수, 15만 이름 불일치로 대표 잔존(COLLISION 포함).
+
+> **남은 일(전량 적재 실행 단계, live DB·API 키 필요)**: 운영 DB에 3종 전량 적재 → 결과가 위 target과 일치하는지
+> (canonical≈323,899, superseded≈291,610, COLLISION 코드 2,781) 확인. ServingOption 은 canonical 323,899 행에만 생성되어
+> 옵션 폭증 0. 코드 게이트(검색/추천 패자 제외, 옵션 게이트, 강등 옵션 정리, 순서 무관 수렴)는 이미 구현·검증됨.
+> 본 적재 전 **G2 운영 리허설**(일회성 ephemeral RDS 적재→용량·정합성 측정, 상시 dev RDS 불필요) 권장:
+> [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](../operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).
+
 ## 8. 검증 (TDD)
 
 - `CanonicalDedupResolver` 단위: 우선순위 승격/강등, **순서 무관성**(음식→영양DB, 영양DB→음식 동일 결과), 충돌 분리, 출처 내 upsert 불변.
-- 통합: 3 출처 표본 적재 → canonical 수가 census 기대치와 일치, 음식 코드가 영양DB로 흡수되는지.
-- 회귀: 검색/추천이 canonical만 반환(패자 미노출).
+- 통합(구현 완료): `FoodCatalogDedupLoadIT`(@DataJpaTest, 실 PostgreSQL + Flyway V39 부분 유니크 인덱스). 3 출처 표본을 실제 적재 경로로 통과 → dedup_state 분포(CANONICAL/SUPERSEDED/COLLISION), 음식→가공/영양DB 흡수, 검색 게이트(대표만 노출), ServingOption 대표 한정, 강등 구 대표 옵션 백필 정리를 검증. CI는 postgres 17 서비스에서 자동 실행(ci-backend.yml).
+- 전수 projection(read-only): `census.py project` 가 캡처 census TSV로 acceptance target(canonical 323,899 등) 산출 → §7.
+- 회귀: 검색/추천이 canonical만 반환(패자 미노출) — IT 검색 게이트 단언으로 커버.
+- 운영 게이트: **G1**(위 IT, 자동/CI) 통과 후 **G2**(prod RDS 스냅샷 리허설, 수동) → 본 적재. G2 절차: [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](../operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).
 
 ## 9. 미결 / 후속
 

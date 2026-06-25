@@ -3,6 +3,8 @@ package com.healthcare.domain.diet.admin;
 import com.healthcare.common.exception.ValidationException;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.external.dedup.DedupCollisionQueueResponse;
+import com.healthcare.domain.diet.external.dedup.DedupCollisionQueueService;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillService;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogCanonicalBackfillSummary;
 import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportResponse;
@@ -45,6 +47,7 @@ public class FoodCatalogAdminOperations {
     private final MfdsFoodNutrientDbPageFetcher foodNutrientDbPageFetcher;
     private final MfdsFoodNutrientDbImporter foodNutrientDbImporter;
     private final FoodCatalogDuplicateReportService duplicateReportService;
+    private final DedupCollisionQueueService dedupCollisionQueueService;
     private final BrandMenuCsvImporter brandMenuCsvImporter;
     private final FoodCatalogNameRenormalizationService nameRenormalizationService;
     private final FoodCatalogNameOverrideService nameOverrideService;
@@ -100,6 +103,22 @@ public class FoodCatalogAdminOperations {
                 report.totalCandidates()
         );
         return report;
+    }
+
+    /**
+     * 같은 코드·다른 이름으로 충돌(COLLISION) 표시된 대표 행을 코드 단위로 묶어 검토 큐로 조회한다(설계 §5·§9).
+     * 코드 커서 페이지네이션이라 충돌이 많아도 응답 크기가 일정하다. 자동 병합 없이 운영자 검토용으로만 노출한다.
+     */
+    public DedupCollisionQueueResponse getCollisionReviewQueue(String adminToken, String afterCode, int limit) {
+        adminOperationGuard.assertAllowed(adminToken);
+        log.info("관리자 카탈로그 작업 시작: operation=dedup-collisions, afterCode={}, limit={}", afterCode, limit);
+        DedupCollisionQueueResponse response = dedupCollisionQueueService.queue(afterCode, limit);
+        log.info(
+                "관리자 카탈로그 작업 완료: operation=dedup-collisions, groups={}, nextCursor={}",
+                response.groupCount(),
+                response.nextCursor()
+        );
+        return response;
     }
 
     /**
