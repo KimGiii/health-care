@@ -74,11 +74,14 @@ jobs:
       - name: Run unit tests
         working-directory: ios
         run: |
+          mkdir -p test-results
           xcodebuild test \
             -project HealthCare.xcodeproj \
             -scheme HealthCare \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -only-testing:HealthCareTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath test-results/HealthCareTests.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --report junit --output test-results/results.xml
 

@@ -67,14 +67,17 @@ jobs:
 
       - name: Run tests
         working-directory: backend
-        run: ./gradlew test --no-daemon
+        run: ./gradlew test jacocoTestReport --no-daemon
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: backend/build/reports/tests/test/
+          name: backend-test-and-coverage
+          path: |
+            backend/build/reports/tests/test/
+            backend/build/reports/jacoco/test/html/
+            backend/build/reports/jacoco/test/jacocoTestReport.xml
 
   build:
     name: Build JAR

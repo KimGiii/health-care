@@ -185,6 +185,7 @@ targets:
         embed: true
         codeSign: true
     scheme:
+      gatherCoverageData: true
       testTargets:
         - HealthCareTests
         - HealthCareUITests

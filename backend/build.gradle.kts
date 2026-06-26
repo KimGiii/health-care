@@ -2,6 +2,7 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
     java
+    jacoco
     id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.6"
 }
@@ -76,6 +77,21 @@ tasks.withType<Test> {
     // smoke 테스트에서 @EnabledIfEnvironmentVariable 조건이 동작하려면 데몬 JVM에서
     // 테스트 JVM으로 명시적으로 전달해야 한다.
     System.getenv("PUBLIC_FOOD_API_KEY")?.let { environment("PUBLIC_FOOD_API_KEY", it) }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
 }
 
 tasks.named<BootJar>("bootJar") {
