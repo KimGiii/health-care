@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.domain.diet.ai.dto.AiNutritionEstimateResponse;
 import com.healthcare.domain.diet.ai.dto.EstimatedItem;
 import com.healthcare.domain.diet.ai.dto.NutritionFacts;
+import com.healthcare.domain.diet.ai.client.OpenAiResponsesClient;
 import com.healthcare.domain.diet.ai.dto.ServingBasis;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -13,11 +14,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,26 +25,15 @@ class AiNutritionEstimationServiceTest {
 
     private AiNutritionEstimationService service;
 
-    private RestClient mockClient;
-    private RestClient.RequestBodyUriSpec postSpec;
-    private RestClient.ResponseSpec responseSpec;
+    private OpenAiResponsesClient openAiClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        service = new AiNutritionEstimationService(objectMapper, new SimpleMeterRegistry());
+        openAiClient = mock(OpenAiResponsesClient.class);
+        service = new AiNutritionEstimationService(objectMapper, new SimpleMeterRegistry(), openAiClient);
 
-        mockClient   = mock(RestClient.class);
-        postSpec     = mock(RestClient.RequestBodyUriSpec.class);
-        responseSpec = mock(RestClient.ResponseSpec.class);
-
-        when(mockClient.post()).thenReturn(postSpec);
-        when(postSpec.uri(anyString())).thenReturn(postSpec);
-        when(postSpec.body(any(Object.class))).thenReturn(postSpec);
-        when(postSpec.retrieve()).thenReturn(responseSpec);
-
-        ReflectionTestUtils.setField(service, "client", mockClient);
         ReflectionTestUtils.setField(service, "model", "gpt-4.1-mini");
     }
 
@@ -64,11 +52,11 @@ class AiNutritionEstimationServiceTest {
     }
 
     private void givenApiReturns(JsonNode node) {
-        when(responseSpec.body(JsonNode.class)).thenReturn(node);
+        when(openAiClient.createResponse(anyMap())).thenReturn(node);
     }
 
     private void givenApiThrows(RuntimeException ex) {
-        when(responseSpec.body(JsonNode.class)).thenThrow(ex);
+        when(openAiClient.createResponse(anyMap())).thenThrow(ex);
     }
 
     private String singleItemJson(String name, String category, String servingBasis,
