@@ -87,7 +87,7 @@
    - iOS 검토 화면에 경고 배지를 추가한다.
 5. **Phase 5 — 테스트와 검증**
    - 백엔드 서비스/MockMvc/provider 테스트와 iOS polling 테스트를 보강한다.
-   - 커버리지 80%+를 수용 기준으로 둘 경우 Jacoco와 Xcode coverage 측정 설정을 함께 추가한다.
+   - 커버리지 목표를 수용 기준으로 둘 경우 Jacoco와 Xcode `xccov` 리포트가 생성되고 테스트가 통과한 상태에서만 수치를 확정한다.
 6. 정확도 benchmark 확보 시에만 `GAINSY_QUANTIFIED_PROGRESS.md`를 갱신한다.
 
 ## 3. 테스트 계획
@@ -118,7 +118,7 @@
 - `analyze` 요청은 `202 Accepted`로 즉시 반환되고, iOS polling으로 최종 분석 상태를 반영한다.
 - 사진 분석으로 생성된 식단 기록은 기존 식단 기록 유스케이스를 재사용하고, **10종 영양소 표준과 일치**한다.
 - 외부 provider 호출은 DB 트랜잭션 밖에서 수행되어 커넥션 풀을 점유하지 않는다.
-- 커버리지 80%+는 Jacoco/Xcode coverage 설정이 추가된 경우에만 정량 수용 기준으로 사용한다.
+- 커버리지 목표는 Jacoco/Xcode `xccov` 리포트가 생성되고 테스트가 통과한 경우에만 정량 수용 기준으로 사용한다.
 
 ## 5. 비고
 - `application-local.yml`의 라이브 AI 키는 git-ignore이어도 공유 이력이 있으면 폐기·재발급 권장.

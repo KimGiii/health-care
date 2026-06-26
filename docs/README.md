@@ -117,6 +117,7 @@
 
 | 문서 | 내용 |
 | --- | --- |
+| [COVERAGE_MEASUREMENT](operations/COVERAGE_MEASUREMENT.md) | 테스트 커버리지 측정 절차 — Jacoco, Xcode xccov |
 | [MONITORING_PROMETHEUS_GRAFANA](operations/MONITORING_PROMETHEUS_GRAFANA.md) | 모니터링 구축 가이드 — Prometheus + Grafana |
 | [DOMAIN_MIGRATION_GAINSY_SITE](operations/DOMAIN_MIGRATION_GAINSY_SITE.md) | 도메인 전환 가이드 — api.gainsy.site (HTTPS) |
 | [TROUBLESHOOTING](operations/TROUBLESHOOTING.md) | 트러블슈팅 로그 |
@@ -149,7 +150,7 @@
 | [KOREA_HEALTH_FITNESS_MARKET_2026](references/KOREA_HEALTH_FITNESS_MARKET_2026.md) | 2026 국내 헬스·피트니스 앱 시장 조사 |
 | [EXERCISE_API_SURVEY_2026-04-22](references/EXERCISE_API_SURVEY_2026-04-22.md) | 운동 종목·칼로리 API 조사 |
 | [FATSECRET_PLATFORM_API_TERMS_2026-06-09](references/FATSECRET_PLATFORM_API_TERMS_2026-06-09.md) | FatSecret Platform API 약관 검토 |
-| [EAT_THIS_MUCH_RECOMMENDATION_TEARDOWN_2026-06-20](references/EAT_THIS_MUCH_RECOMMENDATION_TEARDOWN_2026-06-20.md) | Eat This Much 추천 알고리즘 역설계 대비 |
+| [EAT_THIS_MUCH_RECOMMENDATION_TEARDOWN_2026-06-20](references/EAT_THIS_MUCH_RECOMMENDATION_TEARDOWN_2026-06-20.md) | Eat This Much 공개 동작 관찰 기반 추천 벤치마킹 |
 
 ### 식품 카탈로그 데이터
 | 문서 | 내용 |
