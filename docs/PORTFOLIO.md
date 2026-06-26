@@ -156,12 +156,13 @@ iOS 앱은 기능 단위로 `Features`를 나누고, 네트워크와 인증 상�
 
 | 항목 | 현황 |
 |---|---|
-| 백엔드 소스 규모 | Java main 파일 301개 |
-| 백엔드 테스트 | Java test 파일 101개 |
-| iOS 소스 규모 | Swift 앱 파일 140개 |
-| iOS 테스트 | Unit/UI test 파일 13개 |
-| API 엔드포인트 | 75개 |
-| DB 마이그레이션 | Flyway 37개 |
+| 백엔드 소스 규모 | Java main 파일 317개 |
+| 백엔드 테스트 | Java test 파일 114개, 754개 중 749 pass / 0 fail / 5 skip(2026-06-25 로컬 기준) |
+| iOS 소스 규모 | Swift 앱 파일 124개 |
+| iOS 테스트 | Unit/UI test 파일 12개 |
+| API 엔드포인트 | 77개 |
+| DB 마이그레이션 | Flyway 39개 |
+| 테스트 커버리지 | 백엔드 line 79.40%, branch 65.17%; iOS는 테스트 실패로 확정 보류 |
 | CI | backend CI, iOS CI, dev-to-prod 배포 워크플로우 |
 | 문서 | PRD, API 설계, DB 스키마, 실행 계획, ADR, 운영 가이드, 회고 문서 |
 

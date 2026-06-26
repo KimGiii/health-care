@@ -36,6 +36,13 @@
 - **G2 용량 리허설(이 문서 본문)**: ephemeral RDS(PG17) → 전량 적재 1회 → acceptance target 대조 + **용량 측정** → 인스턴스 폐기.
 - **본 적재**: G2 통과 후 prod RDS에 실행([FOOD_CATALOG_GUIDE 운영 순서](../FOOD_CATALOG_GUIDE.md#공공데이터-전량-적재-운영-순서) 4~10번).
 
+### 리허설 클래스 결정 (2026-06-26): **db.t3.medium (PG17)**, micro 리허설 스킵
+
+- **micro 리허설 안 함**: 로컬 전량 적재 실측이 **큰 개발 머신에서도 ~12시간**(processed 8.5h, 콜당 19→69분 가속 둔화)이었다. db.t3.micro(1GB·t3 버스트)는 이 지속 쓰기에서 **CPU 크레딧 고갈 + gp2 IOPS 한계로 베이스라인까지 스로틀** → 반나절이 하루+로 늘어진다. 실패 모드는 OOM 크래시("터짐")가 아니라 **throttle("기어감")** 이지만, 어느 쪽이든 micro에서 끝까지 돌려 확인할 실익이 없다.
+- **medium으로 리허설 = 본 적재 플랜을 그대로 리허설**: prod는 micro지만 적재 창에는 **micro→medium 일시 상향 후 적재, 완료 후 원복**이 플랜(아래 판단 기준). 따라서 medium 리허설이 그 플랜을 동일 클래스에서 검증한다. 스로틀 없는 medium은 로컬 12h보다 빠를 것(추정 4–8h).
+- **반드시 PG17**: 로컬은 PG16이었으니, 이 리허설로 prod 17.7 **엔진 패리티 갭도 함께 닫는다**.
+- 비용 무시 가능: db.t3.medium ≈ $0.068/h × 수 시간 = $1 미만 + 스토리지.
+
 ## 사전 조건
 
 - AWS 콘솔/CLI 권한(RDS 생성·복원·삭제, 보안그룹). Terraform 사용 시 일회성 스택 권한.
@@ -43,7 +50,7 @@
 - 적재를 돌릴 백엔드 1대(별도 EC2 또는 로컬에서 `DB_URL`만 ephemeral 인스턴스로 오버라이드). 이 빌드에 **V39 + dedup 코드**가 포함돼 있어야 Flyway가 인스턴스에 스키마를 적용한다.
 - 시크릿/환경값: `PUBLIC_FOOD_API_KEY`, `ADMIN_OPERATION_TOKEN`, ephemeral `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`
   (앱은 `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env를 읽는다 — `application-prod.yml`/`application-dev.yml`, prod 시크릿 `PROD_DB_*`)
-- 검증 기준값(acceptance target): 적재 **615,509**행 → canonical **323,899** / superseded **291,610**(47.4%) / COLLISION 코드 **2,781**
+- 검증 기준값(acceptance target): 적재 **615,509**행 → canonical **323,899** / superseded **291,610**(47.4%) / COLLISION **코드 2,781 = `dedup_state` 행 ~5,562**
   ([FOOD_CATALOG_DEDUP_LOAD_PROJECTION](../references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md))
 
 ## 인스턴스 모드 (택1)
@@ -60,12 +67,12 @@
 | 순서 | 작업 | 명령/확인 |
 |---:|---|---|
 | 0 | **정합성 선검증**(선택·권장) | dev/로컬 PG17에 실 MFDS 전량 적재 → `dedup_state` 분포가 target과 일치 확인. 통과 시 G2에서는 용량에 집중 |
-| 1 | ephemeral 인스턴스 기동 | **A**: `terraform apply`(일회성 db.t3.micro/medium PG17 스택). **B**: `aws rds restore-db-instance-from-db-snapshot --db-instance-class db.t3.medium`. 클래스를 의도적으로 **한 단계 위(medium)** 로 잡아 "여유 있을 때 소요"를 먼저 측정 |
+| 1 | ephemeral 인스턴스 기동 | **클래스 = db.t3.medium, 엔진 = PG17 고정**(위 "리허설 클래스 결정"). **A**: `cd infra/terraform/rehearsal && terraform init && terraform apply`(일회성 격리 스택, [README](../../infra/terraform/rehearsal/README.md)). **B**: `aws rds restore-db-instance-from-db-snapshot --db-instance-class db.t3.medium`. micro는 스로틀 자명이라 리허설 스킵 |
 | 2 | 격리 확인 | **prod와 다른 보안그룹/서브넷**, 인바운드를 적재 백엔드 IP로만 제한. prod 트래픽이 인스턴스를 보지 못하게 한다 |
 | 3 | 적재 백엔드 배선 | 백엔드 `DB_URL`을 ephemeral 엔드포인트로 오버라이드(**prod `DB_URL` 불변**). 기동 로그에서 Flyway가 **V39까지 적용**됐는지 확인(`flyway_schema_history` last=39) |
 | 4 | 전량 적재 실행 | [운영 순서 표](../FOOD_CATALOG_GUIDE.md#공공데이터-전량-적재-운영-순서) 1~6번 그대로. `processed-foods`→`dish-foods`→`nutrient-db` 각각 `exhausted=true`까지 반복. **source별 `pageSize` 고정**(체크포인트는 pageSize 미저장) |
 | 5 | dedup 수렴 | `POST /dedup/backfill`(멱등) 실행 |
-| 6 | 정합성 대조 | `dedup_state`별 count가 acceptance target(canonical 323,899 / superseded 291,610 / COLLISION 2,781, + 기존 SEED/BRAND 보정)과 일치하는지. ServingOption은 canonical 행에만 생성(옵션 폭증 0) |
+| 6 | 정합성 대조 | `dedup_state`별 count가 acceptance target(canonical 323,899 / superseded 291,610 / **COLLISION 행 ~5,562** = 코드 2,781×2, + 기존 SEED/BRAND 보정)과 일치하는지. ⚠️ `dedup_state` count는 **행**이므로 코드 2,781이 아니라 행 ~5,562와 비교. ServingOption은 canonical 행에만 생성(옵션 폭증 0) |
 | 7 | **용량·소요 측정** | 아래 "측정 항목" 기록. CloudWatch(prod 알람 동형: cpu/storage/connections)와 적재 소요시간 |
 | 8 | 판단 | 측정값으로 본 적재 창 동안 **prod 클래스 일시 상향 필요 여부** 결정(아래 "판단 기준") |
 | 9 | 인스턴스 폐기 | **A**: `terraform destroy`. **B**: `aws rds delete-db-instance --skip-final-snapshot` + 리허설 스냅샷 정리 |
@@ -85,8 +92,9 @@
 
 ### 판단 기준 (8번)
 
-- 한 단계 위(db.t3.medium)에서도 메모리 압력·IOPS 한계가 보이면 → 본 적재 창 동안 prod를 **최소 동급(db.t3.medium) 이상으로 일시 상향** 후 적재, 완료 후 원복.
-- db.t3.medium에서 여유로우면 → prod db.t3.micro 유지하되, **적재 창에 트래픽 한산 시간대 선택 + 스냅샷 선행** 조건으로 진행 가능. micro 동급 재측정은 별도 판단.
+- **기본 플랜(권장)**: medium 리허설이 깔끔히 끝나면 → 본 적재 창 동안 prod를 **micro→db.t3.medium 일시 상향 → 적재 → 원복**. medium 리허설이 곧 이 플랜의 검증이므로 확신도가 높다.
+- medium에서도 메모리 압력·IOPS 한계가 보이면 → 상향 클래스를 medium보다 더 위로(또는 적재 분할·창 확대) 재검토.
+- (micro 유지 옵션은 권장 안 함 — 로컬·이론상 스로틀로 적재 창이 비현실적으로 길어짐.)
 - 스토리지가 오토스케일(>20GB) 트리거되면 → 적재 후에도 축소되지 않으므로(오토스케일은 단방향) prod 적용 시 비용 영향 사전 합의.
 
 ## 함정 / 주의
@@ -94,7 +102,7 @@
 - **prod `DB_URL`을 절대 ephemeral 인스턴스로 바꾸지 않는다.** 적재는 별도 백엔드/오버라이드에서만. prod 앱 배포(`dev-to-prod.yml`)는 `PROD_DB_URL` 시크릿을 그대로 쓴다.
 - **스토리지 오토스케일은 비가역**(단방향 확장). 리허설에서 20GB를 넘기면 prod 본 적재에서도 동일하게 넘긴다는 신호다.
 - **체크포인트는 pageSize를 저장하지 않는다.** 한 source 적재 중 pageSize를 바꾸면 중간 row를 건너뛴다. 리허설과 본 적재의 pageSize를 동일하게 유지(권장 100).
-- **COLLISION은 이름 차이 2,781 기준**이다(census 충돌 총수 3,961 중 영양값만 다른 1,360은 우선순위 출처값으로 병합돼 COLLISION 아님). 대조 시 2,781을 기준값으로 본다.
+- **COLLISION 단위 = 코드 2,781 / `dedup_state` 행 ~5,562**(코드당 대표 2개). census 충돌 총수 3,961 중 영양값만 다른 1,360은 우선순위 출처값으로 병합돼 COLLISION 아님. `dedup_state` count(행)는 코드가 아니라 **행 ~5,562와 비교**. 실측(2026-06-26 로컬 전량): 2,872 코드 / 5,744 행이며, 그 **89%는 구두점만 다른 동일 제품**(`현미100%`↔`100`)이라 검토 큐 대부분은 사소한 노이즈다.
 - 자동 병합 금지 — `/dedup/collisions`는 검토 큐 생성까지만. 코드 정정/양쪽 유지는 운영 검토 후 결정(설계 §9).
 - **모드 B(스냅샷 복원)는 prod 데이터 사본**이다. 작업 종료 즉시 폐기하고 접근 IP를 적재 백엔드로 제한한다(PHI/데이터 노출 방지). 모드 A(신규)는 이 위험이 없다.
 

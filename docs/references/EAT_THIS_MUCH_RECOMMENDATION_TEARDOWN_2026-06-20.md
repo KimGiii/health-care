@@ -1,11 +1,11 @@
-# Eat This Much 추천 알고리즘 역설계 ↔ 우리 추천 엔진 대비
+# Eat This Much 공개 동작 관찰 기반 추천 벤치마킹 ↔ 우리 추천 엔진 대비
 
 작성일: 2026-06-20
-방법: `eatthismuch.com` 무료 데모 생성기의 실제 UI·네트워크 동작을 헤드리스 브라우저로 직접 관찰(요청 페이로드·응답 본문·후속 호출 캡처)
+방법: `eatthismuch.com` 무료 데모 생성기의 공개 UI 흐름과 브라우저에서 확인 가능한 요청·응답 형태를 관찰
 목적: 외부 레퍼런스 동작을 우리 설계 의도와 나란히 두고, 채택 검토 후보와 명시적 비채택을 구분한다
 관련 문서: `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`, `docs/exec-plans/DIET_RECOMMENDATION_RESTRICTIONS.md`, `docs/adr/0002-goal-aware-nutrition-optimization.md`
 
-> 경쟁 제품의 공개 UI·네트워크 동작 관찰에 기반한 추정이다. 서버 내부 알고리즘은 비공개이며, 여기 기술한 ETM 동작은 관찰 가능한 입출력에서 역추론한 것이다.
+> 경쟁 제품의 공개 UI·네트워크 동작 관찰에 기반한 벤치마킹 메모다. 서버 내부 알고리즘은 비공개이며, 여기 기술한 ETM 동작은 관찰 가능한 입출력에서 추정한 것이다.
 
 ---
 
@@ -149,7 +149,7 @@ GET  /api/v1/food/{food_id}/?HTTP_BACKEND_VERSION=16                (음식 상�
 
 ## 7. 참고
 
-- 관찰 원본 요약(메모리): `etm_reverse_engineering`
+- 관찰 원본 요약: 공개 데모 UI·요청/응답 형태 관찰 메모
 - 우리 엔진 계약·로드맵: `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md` §1, §5, §8
 - 제약 엔진: `backend/src/main/java/com/healthcare/domain/diet/recommendation/engine/ConstraintRecommendationEngine.java`
 - 오케스트레이션: `backend/src/main/java/com/healthcare/domain/diet/recommendation/usecase/DailyDietRecommendationUseCases.java`

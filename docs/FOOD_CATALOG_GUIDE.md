@@ -311,7 +311,7 @@ import 엔드포인트는 `pageSize`(기본 100, 최대 500)와 `maxPages`(기�
 
 출처 간 동일 식품을 정규(canonical) 1개로 수렴시키는 dedup은 별도 설계·검증을 거친다. 상세: [DIET_FOOD_CATALOG_SOURCE_PRIORITY_DEDUP](exec-plans/DIET_FOOD_CATALOG_SOURCE_PRIORITY_DEDUP.md).
 
-- **acceptance target (전수 census 재생, read-only)**: 적재 615,509행 → canonical 323,899 / superseded 291,610(47.4%) / COLLISION 코드 2,781. 산출: `python3 scripts/food-census/census.py project` → [FOOD_CATALOG_DEDUP_LOAD_PROJECTION](references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md). 적재 후 `dedup_state`별 count가 이 값(+ 기존 SEED/BRAND 보정)과 일치해야 한다.
+- **acceptance target (전수 census 재생, read-only)**: 적재 615,509행 → canonical 323,899 / superseded 291,610(47.4%) / COLLISION **코드 2,781 (= `dedup_state` 행 ~5,562, 코드당 2대표)**. 산출: `python3 scripts/food-census/census.py project` → [FOOD_CATALOG_DEDUP_LOAD_PROJECTION](references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md). 적재 후 `dedup_state`별 count(=행)가 이 값(+ 기존 SEED/BRAND 보정)과 일치해야 한다. ⚠️ COLLISION은 코드가 아니라 **행**으로 세므로 ~5,562와 비교. 로컬 전량 실측(2026-06-26): 2,872 코드 / 5,744 행(+3.3%, gov 성장), 그중 89%는 구두점만 다른 동일 제품.
 - **G1 정합성 게이트(자동)**: `FoodCatalogDedupLoadIT`(실 PostgreSQL + Flyway V39 부분 유니크 인덱스)가 적재 경로 전체(수렴·검색/추천 패자 제외·ServingOption 대표 한정·백필 옵션 정리)를 검증. CI는 postgres 17 서비스에서 자동 실행.
 - **옵션 폭증 차단**: ServingOption은 canonical 행에만 생성(대표당 4개 ≈ 130만). 강등된 구 대표 옵션은 `/dedup/backfill`의 정리 패스로 제거.
 - ⚠️ **적재 부하 대상 = prod RDS db.t3.micro(앱 호스트 t3.medium과 별개)**. 전량 적재 전 일회성(ephemeral) RDS에서 용량 리허설 + 적재 창 동안 클래스 일시 상향 권장. **상시 dev RDS는 불필요**(정합성은 싼 DB, 용량은 일회성 RDS). dev/prod DB 토폴로지: dev는 박스 컨테이너 PG, prod만 RDS. **G2 리허설 절차**: [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).

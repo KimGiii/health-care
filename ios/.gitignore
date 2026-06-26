@@ -3,6 +3,7 @@ HealthCare.xcodeproj/
 *.xcworkspace/
 xcuserdata/
 DerivedData/
+build/
 
 # Firebase secret — NEVER commit
 HealthCare/Resources/GoogleService-Info.plist
