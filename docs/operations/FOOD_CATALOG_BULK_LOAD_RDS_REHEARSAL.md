@@ -67,7 +67,7 @@
 | 순서 | 작업 | 명령/확인 |
 |---:|---|---|
 | 0 | **정합성 선검증**(선택·권장) | dev/로컬 PG17에 실 MFDS 전량 적재 → `dedup_state` 분포가 target과 일치 확인. 통과 시 G2에서는 용량에 집중 |
-| 1 | ephemeral 인스턴스 기동 | **클래스 = db.t3.medium, 엔진 = PG17 고정**(위 "리허설 클래스 결정"). **A**: `terraform apply`(일회성 db.t3.medium PG17 스택). **B**: `aws rds restore-db-instance-from-db-snapshot --db-instance-class db.t3.medium`. micro는 스로틀 자명이라 리허설 스킵 |
+| 1 | ephemeral 인스턴스 기동 | **클래스 = db.t3.medium, 엔진 = PG17 고정**(위 "리허설 클래스 결정"). **A**: `cd infra/terraform/rehearsal && terraform init && terraform apply`(일회성 격리 스택, [README](../../infra/terraform/rehearsal/README.md)). **B**: `aws rds restore-db-instance-from-db-snapshot --db-instance-class db.t3.medium`. micro는 스로틀 자명이라 리허설 스킵 |
 | 2 | 격리 확인 | **prod와 다른 보안그룹/서브넷**, 인바운드를 적재 백엔드 IP로만 제한. prod 트래픽이 인스턴스를 보지 못하게 한다 |
 | 3 | 적재 백엔드 배선 | 백엔드 `DB_URL`을 ephemeral 엔드포인트로 오버라이드(**prod `DB_URL` 불변**). 기동 로그에서 Flyway가 **V39까지 적용**됐는지 확인(`flyway_schema_history` last=39) |
 | 4 | 전량 적재 실행 | [운영 순서 표](../FOOD_CATALOG_GUIDE.md#공공데이터-전량-적재-운영-순서) 1~6번 그대로. `processed-foods`→`dish-foods`→`nutrient-db` 각각 `exhausted=true`까지 반복. **source별 `pageSize` 고정**(체크포인트는 pageSize 미저장) |

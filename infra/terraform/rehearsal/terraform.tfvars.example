@@ -1,0 +1,16 @@
+# G2 전량 적재 리허설 일회성 스택 변수 예시.
+# 복사: cp terraform.tfvars.example terraform.tfvars  (terraform.tfvars 는 .gitignore 대상)
+
+# 로더(백엔드)가 RDS 에 접속할 공인 IP /32. 반드시 본인 IP 로 좁힌다. 0.0.0.0/0 금지.
+#   확인: curl -s https://checkip.amazonaws.com
+allowed_cidrs = ["203.0.113.10/32"]
+
+# 마스터 자격(최소 16자). 리허설용 임시값 — prod 시크릿 재사용 금지.
+db_username = "rehearsal_admin"
+db_password = "change-me-min-16-chars"
+
+# 아래는 기본값 사용 가능(필요 시 override)
+# instance_class      = "db.t3.medium"
+# engine_version      = "17.7"
+# db_name             = "healthcare"
+# publicly_accessible = true
