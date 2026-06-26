@@ -145,18 +145,18 @@ CREATE UNIQUE INDEX uq_food_catalog_canonical
 | 적재 행(`food_catalog`, source-code 병합 후) | **615,509** |
 | canonical(대표, 검색·추천 노출 + ServingOption 대상) | **323,899** |
 | superseded(패자, 숨김·옵션 미생성) | **291,610** (47.4%) |
-| COLLISION 코드(검토 큐) | **2,781** |
+| COLLISION 코드(검토 큐) | **2,781** (= `dedup_state` 행 **5,562**, 코드당 2대표) |
 
 - 적재 행 per-source(가공 293,489 / 음식 19,495 / 영양DB 302,525)는 census 지표 1의 고유 코드와 정확히 일치.
 - COLLISION 2,781 = census 지표 5의 **이름 불일치** 부분집합과 정확히 일치(영양값만 다른 1,360은 우선순위 출처 값으로
   병합되어 COLLISION 아님). 따라서 §3의 "충돌 3,961 검토 큐"는 census 충돌 코드 총수이고, resolver 의 COLLISION 표시는
-  이름 차이 기준 2,781 이다.
+  이름 차이 기준 2,781 이다. **단위 주의**: 2,781은 **코드(그룹)** 수, `dedup_state=COLLISION` **행**은 그 2배(≈5,562). 실측(2026-06-26): 2,872 코드 / 5,744 행 (+3.3%, gov 데이터 성장). 충돌의 89%는 구두점만 다른 동일 제품(`현미100%`↔`100`), 11%만 진짜 이름 차이 — 상세 [FOOD_CATALOG_DEDUP_LOAD_PROJECTION §6](../references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md).
 - canonical 323,899 는 census U₁(321,118, food_code 단독 병합)보다 2,781 코드의 이름키 분할만큼 높다 — §6 미주의
   "실제 고유 수는 U₁보다 다소 높을 수 있음"을 정량 확인.
 - 음식(dish)은 19,495 중 19,480이 상위 출처에 흡수, 15만 이름 불일치로 대표 잔존(COLLISION 포함).
 
 > **남은 일(전량 적재 실행 단계, live DB·API 키 필요)**: 운영 DB에 3종 전량 적재 → 결과가 위 target과 일치하는지
-> (canonical≈323,899, superseded≈291,610, COLLISION 코드 2,781) 확인. ServingOption 은 canonical 323,899 행에만 생성되어
+> (canonical≈323,899, superseded≈291,610, COLLISION 코드 2,781 = 행 ~5,562) 확인. ServingOption 은 canonical 323,899 행에만 생성되어
 > 옵션 폭증 0. 코드 게이트(검색/추천 패자 제외, 옵션 게이트, 강등 옵션 정리, 순서 무관 수렴)는 이미 구현·검증됨.
 > 본 적재 전 **G2 운영 리허설**(일회성 ephemeral RDS 적재→용량·정합성 측정, 상시 dev RDS 불필요) 권장:
 > [operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL](../operations/FOOD_CATALOG_BULK_LOAD_RDS_REHEARSAL.md).

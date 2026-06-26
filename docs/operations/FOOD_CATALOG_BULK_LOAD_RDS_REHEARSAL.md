@@ -43,7 +43,7 @@
 - 적재를 돌릴 백엔드 1대(별도 EC2 또는 로컬에서 `DB_URL`만 ephemeral 인스턴스로 오버라이드). 이 빌드에 **V39 + dedup 코드**가 포함돼 있어야 Flyway가 인스턴스에 스키마를 적용한다.
 - 시크릿/환경값: `PUBLIC_FOOD_API_KEY`, `ADMIN_OPERATION_TOKEN`, ephemeral `DB_URL`/`DB_USERNAME`/`DB_PASSWORD`
   (앱은 `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env를 읽는다 — `application-prod.yml`/`application-dev.yml`, prod 시크릿 `PROD_DB_*`)
-- 검증 기준값(acceptance target): 적재 **615,509**행 → canonical **323,899** / superseded **291,610**(47.4%) / COLLISION 코드 **2,781**
+- 검증 기준값(acceptance target): 적재 **615,509**행 → canonical **323,899** / superseded **291,610**(47.4%) / COLLISION **코드 2,781 = `dedup_state` 행 ~5,562**
   ([FOOD_CATALOG_DEDUP_LOAD_PROJECTION](../references/FOOD_CATALOG_DEDUP_LOAD_PROJECTION.md))
 
 ## 인스턴스 모드 (택1)
@@ -65,7 +65,7 @@
 | 3 | 적재 백엔드 배선 | 백엔드 `DB_URL`을 ephemeral 엔드포인트로 오버라이드(**prod `DB_URL` 불변**). 기동 로그에서 Flyway가 **V39까지 적용**됐는지 확인(`flyway_schema_history` last=39) |
 | 4 | 전량 적재 실행 | [운영 순서 표](../FOOD_CATALOG_GUIDE.md#공공데이터-전량-적재-운영-순서) 1~6번 그대로. `processed-foods`→`dish-foods`→`nutrient-db` 각각 `exhausted=true`까지 반복. **source별 `pageSize` 고정**(체크포인트는 pageSize 미저장) |
 | 5 | dedup 수렴 | `POST /dedup/backfill`(멱등) 실행 |
-| 6 | 정합성 대조 | `dedup_state`별 count가 acceptance target(canonical 323,899 / superseded 291,610 / COLLISION 2,781, + 기존 SEED/BRAND 보정)과 일치하는지. ServingOption은 canonical 행에만 생성(옵션 폭증 0) |
+| 6 | 정합성 대조 | `dedup_state`별 count가 acceptance target(canonical 323,899 / superseded 291,610 / **COLLISION 행 ~5,562** = 코드 2,781×2, + 기존 SEED/BRAND 보정)과 일치하는지. ⚠️ `dedup_state` count는 **행**이므로 코드 2,781이 아니라 행 ~5,562와 비교. ServingOption은 canonical 행에만 생성(옵션 폭증 0) |
 | 7 | **용량·소요 측정** | 아래 "측정 항목" 기록. CloudWatch(prod 알람 동형: cpu/storage/connections)와 적재 소요시간 |
 | 8 | 판단 | 측정값으로 본 적재 창 동안 **prod 클래스 일시 상향 필요 여부** 결정(아래 "판단 기준") |
 | 9 | 인스턴스 폐기 | **A**: `terraform destroy`. **B**: `aws rds delete-db-instance --skip-final-snapshot` + 리허설 스냅샷 정리 |
@@ -94,7 +94,7 @@
 - **prod `DB_URL`을 절대 ephemeral 인스턴스로 바꾸지 않는다.** 적재는 별도 백엔드/오버라이드에서만. prod 앱 배포(`dev-to-prod.yml`)는 `PROD_DB_URL` 시크릿을 그대로 쓴다.
 - **스토리지 오토스케일은 비가역**(단방향 확장). 리허설에서 20GB를 넘기면 prod 본 적재에서도 동일하게 넘긴다는 신호다.
 - **체크포인트는 pageSize를 저장하지 않는다.** 한 source 적재 중 pageSize를 바꾸면 중간 row를 건너뛴다. 리허설과 본 적재의 pageSize를 동일하게 유지(권장 100).
-- **COLLISION은 이름 차이 2,781 기준**이다(census 충돌 총수 3,961 중 영양값만 다른 1,360은 우선순위 출처값으로 병합돼 COLLISION 아님). 대조 시 2,781을 기준값으로 본다.
+- **COLLISION 단위 = 코드 2,781 / `dedup_state` 행 ~5,562**(코드당 대표 2개). census 충돌 총수 3,961 중 영양값만 다른 1,360은 우선순위 출처값으로 병합돼 COLLISION 아님. `dedup_state` count(행)는 코드가 아니라 **행 ~5,562와 비교**. 실측(2026-06-26 로컬 전량): 2,872 코드 / 5,744 행이며, 그 **89%는 구두점만 다른 동일 제품**(`현미100%`↔`100`)이라 검토 큐 대부분은 사소한 노이즈다.
 - 자동 병합 금지 — `/dedup/collisions`는 검토 큐 생성까지만. 코드 정정/양쪽 유지는 운영 검토 후 결정(설계 §9).
 - **모드 B(스냅샷 복원)는 prod 데이터 사본**이다. 작업 종료 즉시 폐기하고 접근 IP를 적재 백엔드로 제한한다(PHI/데이터 노출 방지). 모드 A(신규)는 이 위험이 없다.
 
