@@ -86,7 +86,7 @@ final class CoreFlowUITests: XCTestCase {
         app.staticTexts["오늘 먹은 것"].tap()
         XCTAssertTrue(app.staticTexts["식단 기록"].waitForExistence(timeout: 5))
 
-        tapAddButton(primaryLabel: "첫 식사 기록하기", fallbackLabel: "Add")
+        tapAddButton(primaryLabel: "식단 기록하기", fallbackLabel: "Add")
 
         // Sheet presents AddDietLogView ("식단 기록" title in its own NavigationStack)
         XCTAssertTrue(app.buttons["식품 추가"].waitForExistence(timeout: 5))
@@ -100,7 +100,7 @@ final class CoreFlowUITests: XCTestCase {
         app.staticTexts["오늘 먹은 것"].tap()
         XCTAssertTrue(app.staticTexts["식단 기록"].waitForExistence(timeout: 5))
 
-        tapAddButton(primaryLabel: "첫 식사 기록하기", fallbackLabel: "Add")
+        tapAddButton(primaryLabel: "식단 기록하기", fallbackLabel: "Add")
 
         XCTAssertTrue(app.buttons["식품 추가"].waitForExistence(timeout: 5))
 
@@ -117,7 +117,7 @@ final class CoreFlowUITests: XCTestCase {
 
         app.staticTexts["신체 변화"].tap()
 
-        XCTAssertTrue(app.staticTexts["측정 기록"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["측정 기록이 아직 없어요"].waitForExistence(timeout: 5))
     }
 
     func testAddBodyMeasurementSheetOpens() throws {
@@ -125,9 +125,9 @@ final class CoreFlowUITests: XCTestCase {
         navigateToHub()
 
         app.staticTexts["신체 변화"].tap()
-        XCTAssertTrue(app.staticTexts["측정 기록"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["측정 기록이 아직 없어요"].waitForExistence(timeout: 5))
 
-        tapAddButton(primaryLabel: "기록 추가하기", fallbackLabel: "Add")
+        tapAddButton(primaryLabel: "신체 측정 기록", fallbackLabel: "Add")
 
         XCTAssertTrue(app.navigationBars["신체 측정 기록"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["취소"].exists)
@@ -138,13 +138,13 @@ final class CoreFlowUITests: XCTestCase {
         navigateToHub()
 
         app.staticTexts["신체 변화"].tap()
-        XCTAssertTrue(app.staticTexts["측정 기록"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["측정 기록이 아직 없어요"].waitForExistence(timeout: 5))
 
-        tapAddButton(primaryLabel: "기록 추가하기", fallbackLabel: "Add")
+        tapAddButton(primaryLabel: "신체 측정 기록", fallbackLabel: "Add")
 
         XCTAssertTrue(app.navigationBars["신체 측정 기록"].waitForExistence(timeout: 5))
 
-        let saveButton = app.buttons["저장하기"]
+        let saveButton = app.buttons["저장"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 3))
         XCTAssertFalse(saveButton.isEnabled)
     }
@@ -152,7 +152,7 @@ final class CoreFlowUITests: XCTestCase {
     // MARK: - Helpers
 
     private func launchAuthenticated() {
-        app.launchArguments = ["UI_TEST_RESET_STATE", "UI_TEST_AUTHENTICATED"]
+        app.launchArguments = ["UI_TEST_RESET_STATE", "UI_TEST_AUTHENTICATED", "UI_TEST_STUB_NETWORK"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["기록"].waitForExistence(timeout: 8))
     }

@@ -130,6 +130,25 @@ struct MainTabView: View {
     private func handlePushRoute(type: String) {
         print("[MainTabView] handlePushRoute type=\(type)")
         switch type {
+        case "WIDGET_CALORIE":
+            // 칼로리 위젯 탭 → 기록 탭의 식단 기록 화면으로 직진.
+            // 식사 리마인더 푸시와 동일한 패턴 (AddDietLogView가 시간대 기반 mealType 자동 선택).
+            recordPath = NavigationPath([RecordDestination.diet])
+            selectedTab = .record
+        case "WIDGET_GOAL":
+            // 목표 위젯 → 홈 탭의 GoalProgressView로 직접 진입.
+            // 위젯 스냅샷 캐시에서 goalId를 읽어 path에 push. 활성 목표가 없으면 GoalSettingView로.
+            let snapshot = WidgetDataStore()?.loadGoal()
+            if let goalId = snapshot?.goal?.goalId {
+                homePath = NavigationPath([HomeDestination.goalDetail(id: goalId)])
+            } else {
+                homePath = NavigationPath([HomeDestination.goalSetting])
+            }
+            selectedTab = .home
+        case "WIDGET_STREAK":
+            // 스트릭 위젯 → 홈 탭으로.
+            homePath = NavigationPath()
+            selectedTab = .home
         case "WEEKLY_SUMMARY":
             // explorePath를 먼저 세팅 — ExploreView가 mount되며 destination을 자동 push.
             // exploreId 재생성은 path append와 race를 일으켜 제거.

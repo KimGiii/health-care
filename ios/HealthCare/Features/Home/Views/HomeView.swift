@@ -1,6 +1,16 @@
 import GoogleMobileAds
 import SwiftUI
 
+// MARK: - Home Navigation Destinations
+//
+// 위젯 딥링크에서 homePath에 push할 수 있도록 value 기반 enum으로 노출.
+// MainTabView.handlePushRoute가 캐시에서 goalId를 읽어 .goalDetail(id:)를 append.
+
+enum HomeDestination: Hashable {
+    case goalSetting           // 활성 목표 없을 때 — 목표 목록/추가 화면
+    case goalDetail(id: Int)   // 활성 목표 상세 (GoalProgressView)
+}
+
 // MARK: - HomeView (대시보드)
 //
 // 기록 진입점 중심 → 활동 진행현황 대시보드 중심으로 재구성.
@@ -107,11 +117,32 @@ struct HomeView: View {
             // 탭 전환 시에는 항상 새로 로드된다. 이전의 .onAppear는 child push→pop 시에도
             // 재실행되어 두 번째 loadDashboard가 실패하면 데이터는 있는데 에러 alert이 뜨는
             // 버그를 일으켰다.
+            .navigationDestination(for: HomeDestination.self) { dest in
+                switch dest {
+                case .goalSetting:
+                    GoalSettingView()
+                        .environmentObject(container)
+                case .goalDetail(let id):
+                    GoalProgressView(goalId: id)
+                        .environmentObject(container)
+                }
+            }
             .task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             .refreshable {
                 await viewModel.loadDashboard(apiClient: container.apiClient)
                 // pull-to-refresh로 인한 실패는 alert으로 알리지 않음(기존 화면 데이터 유지).
                 viewModel.errorMessage = nil
+            }
+            // 식단/운동/체중 기록이 변경되면 dashboard를 재로드해 위젯 스냅샷까지 갱신한다.
+            // HomeView가 mount 상태일 때만 동작 — unmount이면 다음 .task에서 자연 처리.
+            .onReceive(NotificationCenter.default.publisher(for: .dietRecordChanged)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .exerciseRecordChanged)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .bodyMeasurementDidChange)) { _ in
+                Task { await viewModel.loadDashboard(apiClient: container.apiClient) }
             }
 
             // 8. 기록 FAB (기존 LogCTASection 대체)
