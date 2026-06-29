@@ -296,7 +296,7 @@ struct DietRecommendationView: View {
                 Text(item.displayName)
                     .font(.subheadline)
                     .foregroundStyle(Color.textPrimary)
-                Text(String(format: "%.0fg · %.0f kcal", item.servingG, item.calories))
+                Text("\(item.displayServing) · " + String(format: "%.0f kcal", item.calories))
                     .font(.caption)
                     .foregroundStyle(Color.textSecondary)
                 if let caution = item.caution, !caution.isEmpty {
@@ -499,7 +499,7 @@ struct DietRecommendationView: View {
                         .font(.caption)
                         .foregroundStyle(Color.textPrimary)
                     Spacer()
-                    Text(String(format: "%.0fg · %.0f kcal", item.servingG, item.calories))
+                    Text("\(item.displayServing) · " + String(format: "%.0f kcal", item.calories))
                         .font(.caption2)
                         .foregroundStyle(Color.textSecondary)
                 }

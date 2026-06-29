@@ -36,7 +36,8 @@ final class DietRecommendationViewModel: ObservableObject {
                 date: dateFormatter.string(from: selectedDate),
                 mealTypes: selectedMeals.sorted { $0.rawValue < $1.rawValue }.map(\.rawValue),
                 strictAllergyMode: strictAllergyMode,
-                alternativeCount: 2
+                // 서버가 기본 버퍼만큼 후보를 미리 생성하므로 클라는 추가 요청량 0으로 서버 기본에 위임한다.
+                alternativeCount: 0
             )
             let body = try JSONEncoder().encode(request)
             result = try await apiClient.request(.getDailyRecommendation(body: body))
