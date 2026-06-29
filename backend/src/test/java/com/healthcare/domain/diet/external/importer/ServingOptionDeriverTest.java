@@ -100,4 +100,30 @@ class ServingOptionDeriverTest {
         assertThat(options).allSatisfy(o ->
                 assertThat(o.getServingType()).isEqualTo(FoodServingOption.ServingType.OFFICIAL_SERVING));
     }
+
+    @Test
+    @DisplayName("가식부 기준 환산 — 바나나 100g·귤 70g·계란 50g·키위 75g (영양사 검수 확정)")
+    void usesEdiblePortionGrams() {
+        assertThat(deriver.countableGramsFor("계란")).isEqualTo(50.0);
+        assertThat(deriver.countableGramsFor("바나나")).isEqualTo(100.0);
+        assertThat(deriver.countableGramsFor("귤")).isEqualTo(70.0);
+        assertThat(deriver.countableGramsFor("키위")).isEqualTo(75.0);
+        assertThat(deriver.countableGramsFor("자두")).isEqualTo(60.0);
+    }
+
+    @Test
+    @DisplayName("긴 키워드 우선 매칭 — 방울토마토는 토마토(100g)가 아니라 15g")
+    void prefersLongerKeywordMatch() {
+        assertThat(deriver.countableGramsFor("방울토마토")).isEqualTo(15.0);
+        assertThat(deriver.countableGramsFor("토마토")).isEqualTo(100.0);
+    }
+
+    @Test
+    @DisplayName("가공형(주스·케첩·잼·칩 등)은 낱개가 아니다 — 제외 가드")
+    void excludesProcessedForms() {
+        assertThat(deriver.countableGramsFor("사과주스")).isNull();
+        assertThat(deriver.countableGramsFor("토마토케첩")).isNull();
+        assertThat(deriver.countableGramsFor("바나나칩")).isNull();
+        assertThat(deriver.countableGramsFor("사과잼")).isNull();
+    }
 }
