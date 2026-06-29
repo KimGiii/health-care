@@ -61,6 +61,7 @@ public class ServingOptionDeriver {
      * (식약처 식품영양성분 DB·표시기준 1회 섭취참고량 근거) 운영 데이터로 보정한다(§3 데이터).
      * 음료·즙 등 가공형은 {@link #countableGramsFor}의 제외 가드에서 먼저 걸러진다.
      * 편차·오탐이 큰 식품(배·감·감자 등)은 일부러 제외하고 g 기반 OFFICIAL_SERVING으로 둔다.
+     * 사과는 영양사 검수상 "경계선(크기 편차 큼)"이라 초기엔 보류하고 큐레이션 후 추가를 검토한다.
      */
     private static final Map<String, Double> COUNTABLE_GRAMS_BY_KEYWORD = Map.ofEntries(
             Map.entry("계란", 50.0),
@@ -70,8 +71,7 @@ public class ServingOptionDeriver {
             Map.entry("키위", 75.0),
             Map.entry("자두", 60.0),
             Map.entry("방울토마토", 15.0),
-            Map.entry("토마토", 100.0),
-            Map.entry("사과", 200.0)
+            Map.entry("토마토", 100.0)
     );
 
     /** 가공형은 낱개가 아니다. 화이트리스트보다 먼저 평가해 오탐(사과주스·토마토케첩 등)을 차단한다. */
