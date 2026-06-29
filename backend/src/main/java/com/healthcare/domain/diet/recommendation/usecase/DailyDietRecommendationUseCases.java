@@ -49,6 +49,11 @@ import java.util.Set;
 public class DailyDietRecommendationUseCases {
 
     private static final int REPETITION_LOOKBACK_DAYS = 7;
+    /**
+     * 요청이 대안 수를 지정하지 않아도 미리 생성하는 기본 후보 버퍼. iOS가 버퍼에서 즉시 "다시 추천"하고
+     * 소진 시에만 재호출하도록 한다(ETM num_results 패턴). 작은 검증 풀을 고려한 가설값 — benchmark·제품으로 조정.
+     */
+    private static final int DEFAULT_ALTERNATIVE_BUFFER = 4;
     private static final NutritionTargets ZERO_TARGETS = new NutritionTargets(0, 0, 0, 0);
 
     private final UserRepository userRepository;
@@ -120,7 +125,8 @@ public class DailyDietRecommendationUseCases {
                 userId, request.date().minusDays(REPETITION_LOOKBACK_DAYS));
         UserRepetitionPolicy repetitionPolicy = new UserRepetitionPolicy(recentIds);
 
-        int maxSolutions = 1 + Math.max(0, request.alternativeCount());
+        // 요청값과 기본 버퍼 중 큰 쪽만큼 후보를 미리 생성한다(다시 추천 즉시성).
+        int maxSolutions = 1 + Math.max(request.alternativeCount(), DEFAULT_ALTERNATIVE_BUFFER);
         RecommendationResult result = engine.recommend(
                 request.date(), budget, request.mealTypes(), eligible,
                 repetitionPolicy, OnlinePreferencePolicy.noSignals(),
