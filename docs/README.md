@@ -118,6 +118,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [COVERAGE_MEASUREMENT](operations/COVERAGE_MEASUREMENT.md) | 테스트 커버리지 측정 절차 — Jacoco, Xcode xccov |
+| [DIET_RECOMMENDATION_CURATION_BATCH_RUNBOOK](operations/DIET_RECOMMENDATION_CURATION_BATCH_RUNBOOK.md) | 추천 후보 큐레이션 배치 운영 절차 |
 | [MONITORING_PROMETHEUS_GRAFANA](operations/MONITORING_PROMETHEUS_GRAFANA.md) | 모니터링 구축 가이드 — Prometheus + Grafana |
 | [DOMAIN_MIGRATION_GAINSY_SITE](operations/DOMAIN_MIGRATION_GAINSY_SITE.md) | 도메인 전환 가이드 — api.gainsy.site (HTTPS) |
 | [TROUBLESHOOTING](operations/TROUBLESHOOTING.md) | 트러블슈팅 로그 |

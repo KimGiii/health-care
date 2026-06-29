@@ -372,6 +372,48 @@ CSV 헤더가 템플릿과 다르면 파일 전체를 거절합니다. 개별 ro
 
 v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재를 기준 경로로 둡니다. 개별 식품의 추천 상태를 직접 수정하는 관리자 API는 원본 CSV와 DB 상태가 갈라질 수 있으므로 즉시 제공하지 않습니다. 운영 중 CSV 재적재가 과하게 무겁다는 근거가 쌓이면 변경 이력과 원본 충돌 정책을 함께 설계한 뒤 후속으로 검토합니다.
 
+알러젠 검토 컬럼은 포함 태그와 완결 프로필을 분리해서 해석합니다.
+
+- `allergen_tags`: 공식 라벨/알러젠 표에서 확인한 포함 알러젠만 입력합니다. 한국어 라벨과 내부 enum 코드를 허용하며, 여러 값은 쉼표, `|`, `/` 중 하나로 구분합니다.
+- `allergen_profile_verified`: 해당 식품의 표시대상 알러젠 집합을 공식 근거로 완결 검토했을 때만 `true`로 입력합니다.
+- 포함 알러젠이 없는 제품도 공식 라벨에서 "해당 없음"을 확인했다면 `allergen_tags`를 비우고 `allergen_profile_verified=true`로 입력할 수 있습니다. 이 경우 `food_allergen_tags`는 비어 있고 `food_allergen_profiles`에 `LABEL_DERIVED` 완결 프로필이 저장됩니다.
+- `allergen_profile_verified=true`에는 `last_verified_at`이 필수입니다. 검수일이 없으면 프로필 레코드의 유효성을 판단할 수 없으므로 row를 거절합니다.
+- 브랜드 CSV가 알러젠 검토값을 포함하면 동일 `BRAND_OFFICIAL` 메뉴의 기존 `BRAND_OFFICIAL` 알러젠 태그를 CSV 내용으로 교체합니다.
+
+#### 추천 큐레이션 CSV 계약
+
+신규 식품 생성은 브랜드 CSV 또는 공공데이터 적재가 담당하고, 추천 큐레이션 CSV는 이미 존재하는 `source + food_code` row의 추천 자격과 검수 근거를 갱신합니다.
+
+템플릿: [recommendation_curation_csv_template.csv](references/recommendation_curation_csv_template.csv)
+
+필수 헤더:
+
+- `source`
+- `food_code`
+- `recommendation_status`
+- `recommendation_reason`
+- `last_verified_at`
+- `review_source_url`
+- `allergen_tags`
+- `allergen_profile_verified`
+
+운영 경로:
+
+1. `GET /api/v1/admin/diet/candidate-pool/curation-queue?limit=50`로 `SEARCH_ONLY` 중 승격 가치가 큰 canonical row를 조회합니다.
+2. 신규 포장 SKU는 먼저 `POST /api/v1/admin/diet/catalog/import/brand-csv`로 `BRAND_OFFICIAL` row를 만들거나 갱신합니다.
+3. `POST /api/v1/admin/diet/catalog/curation-csv`로 추천 상태와 검수 근거를 적용합니다.
+4. `GET /api/v1/admin/diet/candidate-pool/summary`에서 `macroCompleteTotal`, `verifiedServingOptionTotal`, `allergenProfileVerifiedTotal`, `engineReadyTotal` 변화를 확인합니다.
+
+추천 후보(`RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION`)로 승격하려면 다음 조건을 모두 만족해야 합니다.
+
+- canonical 대표 row
+- 열량, 단백질, 탄수화물, 지방 모두 존재
+- 검증된 제공량 옵션 존재
+- `last_verified_at` 존재
+- `review_source_url` 존재
+- `allergen_profile_verified=true`
+- 주의 기준을 넘는 row는 `RECOMMENDABLE_WITH_CAUTION`과 사유 입력
+
 ### 1. 식품 사용 횟수 추적 (usage_count)
 
 #### 데이터베이스 변경 (V13 마이그레이션)
