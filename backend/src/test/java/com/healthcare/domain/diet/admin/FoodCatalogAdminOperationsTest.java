@@ -10,6 +10,7 @@ import com.healthcare.domain.diet.external.dedup.FoodCatalogDuplicateReportServi
 import com.healthcare.domain.diet.external.importer.BrandMenuCsvImporter;
 import com.healthcare.domain.diet.external.importer.FoodCatalogBatchImportSummary;
 import com.healthcare.domain.diet.external.importer.FoodCatalogImportBatchRunner;
+import com.healthcare.domain.diet.external.importer.FoodCatalogImportResult;
 import com.healthcare.domain.diet.external.importer.MfdsFoodNutrientDbImporter;
 import com.healthcare.domain.diet.external.importer.MfdsFoodNutrientDbPageFetcher;
 import com.healthcare.domain.diet.external.importer.StandardDishFoodImporter;
@@ -42,6 +43,7 @@ class FoodCatalogAdminOperationsTest {
     private FoodCatalogDuplicateReportService duplicateReportService;
     private DedupCollisionQueueService dedupCollisionQueueService;
     private BrandMenuCsvImporter brandMenuCsvImporter;
+    private RecommendationCurationCsvImporter recommendationCurationCsvImporter;
     private FoodCatalogNameRenormalizationService nameRenormalizationService;
     private FoodCatalogNameOverrideService nameOverrideService;
     private FoodCatalogCanonicalBackfillService canonicalBackfillService;
@@ -60,6 +62,7 @@ class FoodCatalogAdminOperationsTest {
         duplicateReportService = mock(FoodCatalogDuplicateReportService.class);
         dedupCollisionQueueService = mock(DedupCollisionQueueService.class);
         brandMenuCsvImporter = mock(BrandMenuCsvImporter.class);
+        recommendationCurationCsvImporter = mock(RecommendationCurationCsvImporter.class);
         nameRenormalizationService = mock(FoodCatalogNameRenormalizationService.class);
         nameOverrideService = mock(FoodCatalogNameOverrideService.class);
         canonicalBackfillService = mock(FoodCatalogCanonicalBackfillService.class);
@@ -75,6 +78,7 @@ class FoodCatalogAdminOperationsTest {
                 duplicateReportService,
                 dedupCollisionQueueService,
                 brandMenuCsvImporter,
+                recommendationCurationCsvImporter,
                 nameRenormalizationService,
                 nameOverrideService,
                 canonicalBackfillService
@@ -207,6 +211,19 @@ class FoodCatalogAdminOperationsTest {
         verify(adminOperationGuard).assertAllowed("admin-token");
         verify(nameRenormalizationService).renormalizeAll();
         org.assertj.core.api.Assertions.assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("추천 큐레이션 CSV — admin token 검증 후 importer를 실행한다")
+    void importRecommendationCurationCsv_validatesTokenAndDelegates() throws Exception {
+        java.io.InputStream csvStream = new java.io.ByteArrayInputStream("header\n".getBytes());
+        given(recommendationCurationCsvImporter.importFromCsv(same(csvStream)))
+                .willReturn(new FoodCatalogImportResult(0, 1, 0));
+
+        operations.importRecommendationCurationCsv("admin-token", csvStream);
+
+        verify(adminOperationGuard).assertAllowed("admin-token");
+        verify(recommendationCurationCsvImporter).importFromCsv(same(csvStream));
     }
 
     @Test

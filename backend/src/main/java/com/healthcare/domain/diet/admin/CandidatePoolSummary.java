@@ -8,6 +8,9 @@ import java.util.Map;
 public record CandidatePoolSummary(
         long totalCandidates,
         long macroCompleteTotal,
+        long verifiedServingOptionTotal,
+        long allergenProfileVerifiedTotal,
+        long engineReadyTotal,
         long untaggedTotal,
         Map<FoodCategory, Long> countByCategory,
         List<FoodCategory> underrepresentedCategories

@@ -4,6 +4,8 @@ import com.healthcare.common.response.ApiResponse;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.CandidatePoolSummary;
 import com.healthcare.domain.diet.admin.CandidatePoolSummaryService;
+import com.healthcare.domain.diet.admin.RecommendationCurationQueueEntry;
+import com.healthcare.domain.diet.admin.RecommendationCurationQueueService;
 import com.healthcare.domain.diet.admin.RevalidationQueueEntry;
 import com.healthcare.domain.diet.admin.RevalidationQueueService;
 import com.healthcare.domain.diet.admin.VerificationPriorityEntry;
@@ -23,6 +25,7 @@ public class CandidatePoolAdminController {
     private final CandidatePoolSummaryService summaryService;
     private final VerificationPriorityService priorityService;
     private final RevalidationQueueService revalidationQueueService;
+    private final RecommendationCurationQueueService curationQueueService;
 
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<CandidatePoolSummary>> summary(
@@ -45,5 +48,13 @@ public class CandidatePoolAdminController {
             @RequestParam(defaultValue = "50") int limit) {
         adminOperationGuard.assertAllowed(adminToken);
         return ResponseEntity.ok(ApiResponse.ok("재검증 큐", revalidationQueueService.queue(limit)));
+    }
+
+    @GetMapping("/curation-queue")
+    public ResponseEntity<ApiResponse<List<RecommendationCurationQueueEntry>>> curationQueue(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
+            @RequestParam(defaultValue = "50") int limit) {
+        adminOperationGuard.assertAllowed(adminToken);
+        return ResponseEntity.ok(ApiResponse.ok("추천 큐레이션 대기열", curationQueueService.queue(limit)));
     }
 }
