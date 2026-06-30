@@ -410,6 +410,13 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 - `allergen_tags`
 - `allergen_profile_verified`
 
+선택 헤더:
+
+- `allergen_data_source`
+- `allergen_confidence_level`
+
+기본 8개 헤더만 있으면 food source에 따라 알러젠 근거 source를 자동 결정합니다. 기존 `MFDS_FOOD_NUTRIENT_DB` row에 브랜드 공식 알러젠표를 붙이는 경우처럼 영양 source와 알러젠 source가 다르면, 선택 헤더를 함께 입력합니다. 두 선택 헤더는 함께 입력해야 합니다.
+
 운영 경로:
 
 1. `GET /api/v1/admin/diet/candidate-pool/curation-queue?limit=50`로 `SEARCH_ONLY` 중 승격 가치가 큰 canonical row를 조회합니다.

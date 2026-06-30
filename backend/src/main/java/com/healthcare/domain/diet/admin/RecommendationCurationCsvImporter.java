@@ -118,6 +118,8 @@ public class RecommendationCurationCsvImporter {
                         .reviewSourceUrl(record.get("review_source_url"))
                         .allergenTags(record.get("allergen_tags"))
                         .allergenProfileVerified(record.get("allergen_profile_verified"))
+                        .allergenDataSource(optionalValue(record, "allergen_data_source"))
+                        .allergenConfidenceLevel(optionalValue(record, "allergen_confidence_level"))
                         .build());
             }
         }
@@ -216,7 +218,13 @@ public class RecommendationCurationCsvImporter {
             }
         }
 
-        EvidencePolicy evidencePolicy = evidencePolicyFor(source);
+        EvidencePolicy explicitEvidencePolicy = parseExplicitEvidencePolicy(row);
+        if (explicitEvidencePolicy.rejectionReason() != null) {
+            return rejected(row, explicitEvidencePolicy.rejectionField(), explicitEvidencePolicy.rejectionReason());
+        }
+        EvidencePolicy evidencePolicy = explicitEvidencePolicy.isPresent()
+                ? explicitEvidencePolicy
+                : evidencePolicyFor(source);
         if (profileVerified.value() && !evidencePolicy.confidenceLevel().isProfileGrade()) {
             return rejected(row, "allergen_profile_verified",
                     "완결 프로필은 DIRECT_VERIFIED 또는 LABEL_DERIVED 근거에서만 만들 수 있습니다.");
@@ -336,6 +344,45 @@ public class RecommendationCurationCsvImporter {
         };
     }
 
+    private EvidencePolicy parseExplicitEvidencePolicy(RecommendationCurationCsvRow row) {
+        String sourceValue = normalize(row.allergenDataSource());
+        String confidenceValue = normalize(row.allergenConfidenceLevel());
+        if (sourceValue == null && confidenceValue == null) {
+            return EvidencePolicy.notPresent();
+        }
+        if (sourceValue == null || confidenceValue == null) {
+            return EvidencePolicy.rejected(
+                    "allergen_data_source",
+                    "allergen_data_source와 allergen_confidence_level은 함께 입력해야 합니다.");
+        }
+
+        AllergenDataSource dataSource = parseAllergenDataSource(sourceValue);
+        if (dataSource == null) {
+            return EvidencePolicy.rejected("allergen_data_source", "알 수 없는 allergen_data_source입니다.");
+        }
+        AllergenConfidenceLevel confidenceLevel = parseAllergenConfidenceLevel(confidenceValue);
+        if (confidenceLevel == null) {
+            return EvidencePolicy.rejected("allergen_confidence_level", "알 수 없는 allergen_confidence_level입니다.");
+        }
+        return new EvidencePolicy(dataSource, confidenceLevel);
+    }
+
+    private AllergenDataSource parseAllergenDataSource(String value) {
+        try {
+            return AllergenDataSource.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private AllergenConfidenceLevel parseAllergenConfidenceLevel(String value) {
+        try {
+            return AllergenConfidenceLevel.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private boolean isMacroComplete(FoodCatalog food) {
         return food.getCaloriesPer100g() != null
                 && food.getProteinPer100g() != null
@@ -437,9 +484,15 @@ public class RecommendationCurationCsvImporter {
 
     private void validateHeaders(List<String> actualHeaders) {
         List<String> expectedHeaders = Arrays.asList(RecommendationCurationCsvRow.HEADERS);
-        if (!actualHeaders.equals(expectedHeaders)) {
+        List<String> expectedHeadersWithEvidence = new ArrayList<>(expectedHeaders);
+        expectedHeadersWithEvidence.addAll(Arrays.asList(RecommendationCurationCsvRow.OPTIONAL_HEADERS));
+        if (!actualHeaders.equals(expectedHeaders) && !actualHeaders.equals(expectedHeadersWithEvidence)) {
             throw new ValidationException("추천 큐레이션 CSV 헤더가 템플릿과 일치해야 합니다.");
         }
+    }
+
+    private String optionalValue(CSVRecord record, String header) {
+        return record.isMapped(header) ? record.get(header) : null;
     }
 
     private String normalize(String value) {
@@ -459,7 +512,27 @@ public class RecommendationCurationCsvImporter {
     private record ValidationFailure(String field, String reason) {
     }
 
-    private record EvidencePolicy(AllergenDataSource source, AllergenConfidenceLevel confidenceLevel) {
+    private record EvidencePolicy(
+            AllergenDataSource source,
+            AllergenConfidenceLevel confidenceLevel,
+            String rejectionField,
+            String rejectionReason
+    ) {
+        EvidencePolicy(AllergenDataSource source, AllergenConfidenceLevel confidenceLevel) {
+            this(source, confidenceLevel, null, null);
+        }
+
+        static EvidencePolicy notPresent() {
+            return new EvidencePolicy(null, null, null, null);
+        }
+
+        static EvidencePolicy rejected(String field, String reason) {
+            return new EvidencePolicy(null, null, field, reason);
+        }
+
+        boolean isPresent() {
+            return source != null && confidenceLevel != null;
+        }
     }
 
     private record RowPreparation(

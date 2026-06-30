@@ -28,6 +28,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +55,23 @@ class RecommendationCurationCsvImporterTest {
                 servingOptionRepository,
                 allergenTagRepository,
                 allergenProfileRepository);
+    }
+
+    @Test
+    @DisplayName("알러젠 근거 확장 헤더를 포함한 CSV를 파싱한다")
+    void parseCsv_acceptsOptionalEvidenceHeaders() throws Exception {
+        String csv = """
+                source,food_code,recommendation_status,recommendation_reason,last_verified_at,review_source_url,allergen_tags,allergen_profile_verified,allergen_data_source,allergen_confidence_level
+                MFDS_FOOD_NUTRIENT_DB,D202-001,RECOMMENDABLE,,2026-06-20,https://brand.example/allergy,우유,true,BRAND_OFFICIAL,LABEL_DERIVED
+                """;
+
+        List<RecommendationCurationCsvRow> rows = importer.parseCsv(
+                new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(rows).singleElement().satisfies(row -> {
+            assertThat(row.allergenDataSource()).isEqualTo("BRAND_OFFICIAL");
+            assertThat(row.allergenConfidenceLevel()).isEqualTo("LABEL_DERIVED");
+        });
     }
 
     @Test
@@ -227,6 +246,44 @@ class RecommendationCurationCsvImporterTest {
         });
     }
 
+    @Test
+    @DisplayName("알러젠 근거 source를 명시하면 food source와 독립적으로 저장한다")
+    void importRows_usesExplicitAllergenEvidencePolicy() {
+        FoodCatalog food = lowCautionFood(10L, FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB, RecommendationStatus.SEARCH_ONLY);
+        given(foodCatalogRepository.findBySourceAndFoodCode(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB, "brand:food"))
+                .willReturn(Optional.of(food));
+        given(servingOptionRepository.findByFoodCatalogIdOrderBySortOrderAsc(10L))
+                .willReturn(List.of(servingOption(10L, 100.0)));
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row(
+                "MFDS_FOOD_NUTRIENT_DB",
+                "brand:food",
+                "RECOMMENDABLE",
+                "",
+                "2026-06-20",
+                "https://brand.example/allergy",
+                "우유",
+                "true",
+                "BRAND_OFFICIAL",
+                "LABEL_DERIVED"
+        )));
+
+        assertThat(result.updatedCount()).isEqualTo(1);
+        verify(allergenTagRepository).replaceBySource(
+                eq(10L),
+                eq(AllergenDataSource.BRAND_OFFICIAL),
+                argThat(tags -> tags.size() == 1
+                        && tags.get(0).getAllergenTag() == AllergenTag.MILK
+                        && tags.get(0).getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+                        && tags.get(0).getSource() == AllergenDataSource.BRAND_OFFICIAL)
+        );
+        verify(allergenProfileRepository).save(argThat(profile ->
+                profile.getFoodCatalogId().equals(10L)
+                        && profile.getSource() == AllergenDataSource.BRAND_OFFICIAL
+                        && profile.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+        ));
+    }
+
     private RecommendationCurationCsvRow row(
             String source,
             String foodCode,
@@ -247,6 +304,33 @@ class RecommendationCurationCsvImporterTest {
                 .reviewSourceUrl(reviewSourceUrl)
                 .allergenTags(allergenTags)
                 .allergenProfileVerified(allergenProfileVerified)
+                .build();
+    }
+
+    private RecommendationCurationCsvRow row(
+            String source,
+            String foodCode,
+            String status,
+            String reason,
+            String lastVerifiedAt,
+            String reviewSourceUrl,
+            String allergenTags,
+            String allergenProfileVerified,
+            String allergenDataSource,
+            String allergenConfidenceLevel
+    ) {
+        return RecommendationCurationCsvRow.builder()
+                .rowNumber(1)
+                .source(source)
+                .foodCode(foodCode)
+                .recommendationStatus(status)
+                .recommendationReason(reason)
+                .lastVerifiedAt(lastVerifiedAt)
+                .reviewSourceUrl(reviewSourceUrl)
+                .allergenTags(allergenTags)
+                .allergenProfileVerified(allergenProfileVerified)
+                .allergenDataSource(allergenDataSource)
+                .allergenConfidenceLevel(allergenConfidenceLevel)
                 .build();
     }
 
