@@ -175,15 +175,31 @@ class DietRecommendationCandidatePoolTest {
     }
 
     @Test
-    @DisplayName("strict 모드에서 고신뢰 verified 태그가 없는 식품은 제외된다")
-    void load_strictMode_excludesFoodWithoutHighConfidenceVerifiedTag() {
+    @DisplayName("strict 모드에서도 고신뢰 완결 프로필이 있으면 개별 태그 verified 플래그 없이 통과한다")
+    void load_strictMode_passesWithProfileGradeProfileWithoutVerifiedTagFlag() {
         FoodCatalog plainRice = food(1L, "백미밥", FoodCategory.GRAIN, 130.0);
         givenCatalogCandidates(List.of(plainRice));
-        // WHEAT 태그가 있지만 allergenProfileVerified=false → strict gate 미통과
+        // 개별 포함 태그 플래그가 아니라 별도 FoodAllergenProfile이 완결성 근거다.
         given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
                 .willReturn(List.of(allergenTag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.UNKNOWN)));
         given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
                 .willReturn(List.of(allergenProfile(1L)));
+
+        DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
+        List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), true).foods();
+
+        assertThat(resultFoodIds(result)).contains(plainRice.getId());
+    }
+
+    @Test
+    @DisplayName("strict 모드에서 완결 프로필 신뢰도가 낮으면 제외된다")
+    void load_strictMode_excludesFoodWithoutProfileGradeProfile() {
+        FoodCatalog plainRice = food(1L, "백미밥", FoodCategory.GRAIN, 130.0);
+        givenCatalogCandidates(List.of(plainRice));
+        given(foodAllergenTagRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenTag(1L, AllergenTag.WHEAT, AllergenConfidenceLevel.UNKNOWN)));
+        given(foodAllergenProfileRepository.findByFoodCatalogIdIn(any()))
+                .willReturn(List.of(allergenProfile(1L, AllergenConfidenceLevel.RECIPE_DERIVED)));
 
         DietRestriction milkRestriction = allergenTagRestriction(RestrictionType.ALLERGY, AllergenTag.MILK);
         List<DietRecommendationCandidate> result = candidatePool.load(List.of(milkRestriction), true).foods();
@@ -503,9 +519,13 @@ class DietRecommendationCandidatePoolTest {
     }
 
     private FoodAllergenProfile allergenProfile(Long foodCatalogId) {
+        return allergenProfile(foodCatalogId, AllergenConfidenceLevel.LABEL_DERIVED);
+    }
+
+    private FoodAllergenProfile allergenProfile(Long foodCatalogId, AllergenConfidenceLevel confidenceLevel) {
         return FoodAllergenProfile.builder()
                 .foodCatalogId(foodCatalogId)
-                .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
+                .confidenceLevel(confidenceLevel)
                 .source(AllergenDataSource.BRAND_OFFICIAL)
                 .standardVersion("KR-22-2026")
                 .reviewedAt(OffsetDateTime.now().minusDays(1))

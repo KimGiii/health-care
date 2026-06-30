@@ -6,6 +6,8 @@ import com.healthcare.domain.diet.allergen.AllergenTag;
 import com.healthcare.domain.diet.entity.DietLog;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodServingOption.ServingType;
+import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
@@ -189,6 +191,33 @@ class DailyDietRecommendationUseCasesTest {
         assertThat(response.failureReason()).isNotBlank();
         assertThat(response.failureCode())
                 .isEqualTo(RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE.name());
+    }
+
+    @Test
+    @DisplayName("알러젠 제한 후보가 단백질 하한에 물리적으로 못 닿으면 알러젠 검증 풀 부족으로 분류한다")
+    void recommend_engineInfeasibleWithAllergenProteinShortfall_returnsAllergenPoolInsufficient() {
+        DietRestriction milkRestriction = DietRestriction.builder()
+                .id(1L).userId(1L).restrictionType(RestrictionType.ALLERGY)
+                .targetType(TargetType.ALLERGEN_TAG).allergenTag(AllergenTag.MILK)
+                .build();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of(milkRestriction));
+        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        given(candidatePool.load(any(), anyBoolean())).willReturn(new DietRecommendationCandidates(List.of(
+                foodWithServing(1L, "저단백음료A", FoodCategory.BEVERAGE, 100.0, 1.0, 100.0),
+                foodWithServing(2L, "저단백음료B", FoodCategory.BEVERAGE, 100.0, 1.0, 100.0)
+        )));
+        given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
+                .willReturn(RecommendationResult.failure(
+                        RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE));
+
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.DINNER, MealType.SNACK)));
+
+        assertThat(response.succeeded()).isFalse();
+        assertThat(response.failureCode())
+                .isEqualTo(RecommendationFailureReason.ALLERGEN_VERIFIED_POOL_INSUFFICIENT.name());
     }
 
     @Test
@@ -412,5 +441,15 @@ class DailyDietRecommendationUseCasesTest {
         return new DietRecommendationCandidate(
                 id, name, null, category, cal, 20.0, 10.0, 5.0, 0L, id,
                 AllergenConfidenceLevel.UNKNOWN, null, true, List.of(), true);
+    }
+
+    private DietRecommendationCandidate foodWithServing(
+            Long id, String name, FoodCategory category,
+            double caloriesPer100g, double proteinPer100g, double servingG) {
+        ServingOptionSnapshot serving = new ServingOptionSnapshot(
+                "1회 제공량", "1회 제공량", servingG, 0, ServingType.OFFICIAL_SERVING, true);
+        return new DietRecommendationCandidate(
+                id, name, null, category, caloriesPer100g, proteinPer100g, 10.0, 1.0, 0L, id,
+                AllergenConfidenceLevel.LABEL_DERIVED, null, true, List.of(serving), true);
     }
 }

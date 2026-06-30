@@ -2,6 +2,7 @@ package com.healthcare.domain.diet.recommendation.usecase;
 
 import com.healthcare.common.exception.BusinessRuleViolationException;
 import com.healthcare.domain.diet.entity.DietLog;
+import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.recommendation.candidate.CandidatePoolDiagnostics;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
@@ -49,6 +50,8 @@ import java.util.Set;
 public class DailyDietRecommendationUseCases {
 
     private static final int REPETITION_LOOKBACK_DAYS = 7;
+    private static final int MAX_ITEMS_PER_MAIN_MEAL = 3;
+    private static final int MAX_ITEMS_PER_SNACK = 2;
     /**
      * 요청이 대안 수를 지정하지 않아도 미리 생성하는 기본 후보 버퍼. iOS가 버퍼에서 즉시 "다시 추천"하고
      * 소진 시에만 재호출하도록 한다(ETM num_results 패턴). 작은 검증 풀을 고려한 가설값 — benchmark·제품으로 조정.
@@ -133,8 +136,10 @@ public class DailyDietRecommendationUseCases {
                 maxSolutions, GoalAwareNutritionPolicy.CURRENT_VERSION);
 
         if (result instanceof RecommendationResult.Failure failure) {
+            RecommendationFailureReason reason = classifyEngineFailure(
+                    failure.reason(), restrictions, request.mealTypes(), eligible, budget);
             return failureResponse(request, targets, remainingTargets, appliedRestrictions,
-                    failure.reason());
+                    reason);
         }
 
         RecommendationResult.Success success = (RecommendationResult.Success) result;
@@ -167,6 +172,56 @@ public class DailyDietRecommendationUseCases {
             case INCOMPLETE_MACRO -> RecommendationFailureReason.NUTRIENT_DATA_INCOMPLETE;
             case RESTRICTION, FRESHNESS, NONE -> RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE;
         };
+    }
+
+    private RecommendationFailureReason classifyEngineFailure(
+            RecommendationFailureReason reason,
+            List<DietRestriction> restrictions,
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> eligible,
+            RemainingNutritionBudget budget
+    ) {
+        if (reason != RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE
+                || !hasAllergenRestriction(restrictions)
+                || canReachProteinFloorWithinSelectedMealSlots(selectedMeals, eligible, budget)) {
+            return reason;
+        }
+        return RecommendationFailureReason.ALLERGEN_VERIFIED_POOL_INSUFFICIENT;
+    }
+
+    private boolean hasAllergenRestriction(List<DietRestriction> restrictions) {
+        return restrictions.stream()
+                .anyMatch(restriction -> restriction.getTargetType() == DietRestriction.TargetType.ALLERGEN_TAG
+                        && restriction.getAllergenTag() != null);
+    }
+
+    private boolean canReachProteinFloorWithinSelectedMealSlots(
+            List<MealType> selectedMeals,
+            List<DietRecommendationCandidate> eligible,
+            RemainingNutritionBudget budget
+    ) {
+        double proteinFloor = budget.protein().minimum();
+        if (!Double.isFinite(proteinFloor) || proteinFloor <= 0.0) {
+            return true;
+        }
+        int maxItems = selectedMeals.stream()
+                .mapToInt(meal -> meal == MealType.SNACK ? MAX_ITEMS_PER_SNACK : MAX_ITEMS_PER_MAIN_MEAL)
+                .sum();
+        double theoreticalMaxProtein = eligible.stream()
+                .mapToDouble(this::maxProteinFromVerifiedServingOptions)
+                .boxed()
+                .sorted(java.util.Comparator.reverseOrder())
+                .limit(maxItems)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+        return theoreticalMaxProtein + 0.1 >= proteinFloor;
+    }
+
+    private double maxProteinFromVerifiedServingOptions(DietRecommendationCandidate candidate) {
+        return candidate.verifiedServingGramOptions().stream()
+                .mapToDouble(servingG -> candidate.proteinPer100g() * servingG / 100.0)
+                .max()
+                .orElse(0.0);
     }
 
     private DailyDietRecommendationResponse failureResponse(

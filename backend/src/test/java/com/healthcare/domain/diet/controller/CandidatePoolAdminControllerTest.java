@@ -11,6 +11,7 @@ import com.healthcare.domain.diet.admin.RevalidationReason;
 import com.healthcare.domain.diet.admin.VerificationPriorityService;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -91,10 +92,17 @@ class CandidatePoolAdminControllerTest {
                         "P001",
                         "큐레이션 후보",
                         FoodCategory.PROTEIN_SOURCE,
+                        RecommendationStatus.RECOMMENDABLE,
                         20L,
+                        165.0,
+                        31.0,
+                        18.8,
+                        "A_ENGINE_READY_HIGH_PROTEIN",
                         true,
                         true,
                         false,
+                        false,
+                        true,
                         2_020.0)
         ));
 
@@ -103,6 +111,7 @@ class CandidatePoolAdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].foodCatalogId").value(10))
                 .andExpect(jsonPath("$.data[0].macroComplete").value(true))
-                .andExpect(jsonPath("$.data[0].hasVerifiedServingOption").value(true));
+                .andExpect(jsonPath("$.data[0].hasVerifiedServingOption").value(true))
+                .andExpect(jsonPath("$.data[0].allergenProfileGap").value(true));
     }
 }

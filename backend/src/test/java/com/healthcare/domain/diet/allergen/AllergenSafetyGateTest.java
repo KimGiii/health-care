@@ -67,6 +67,15 @@ class AllergenSafetyGateTest {
                     profile(AllergenConfidenceLevel.DIRECT_VERIFIED), false);
             assertThat(gate.decide(ctx).passes()).isTrue();
         }
+
+        @Test
+        @DisplayName("GLUTEN 제한은 WHEAT 포함 태그도 차단한다")
+        void glutenRestriction_blocksWheatTag() {
+            AllergenContext ctx = ctx(Set.of(AllergenTag.GLUTEN),
+                    List.of(tag(AllergenTag.WHEAT, AllergenConfidenceLevel.LABEL_DERIVED, true)),
+                    profile(AllergenConfidenceLevel.LABEL_DERIVED), true);
+            assertThat(gate.decide(ctx).passes()).isFalse();
+        }
     }
 
     @Nested
@@ -92,28 +101,28 @@ class AllergenSafetyGateTest {
         }
 
         @Test
-        @DisplayName("고신뢰 태그여도 verified=false면 차단한다")
-        void highConfidenceNotVerified_blocked() {
+        @DisplayName("완결 프로필이 고신뢰면 개별 태그 verified=false여도 통과한다")
+        void profileGradeProfile_passesEvenWhenTagVerificationFlagIsFalse() {
             AllergenContext ctx = ctx(Set.of(AllergenTag.MILK),
                     List.of(tag(AllergenTag.WHEAT, AllergenConfidenceLevel.DIRECT_VERIFIED, false)),
                     profile(AllergenConfidenceLevel.DIRECT_VERIFIED), true);
-            assertThat(gate.decide(ctx).passes()).isFalse();
+            assertThat(gate.decide(ctx).passes()).isTrue();
         }
 
         @Test
-        @DisplayName("태그가 없으면 차단한다")
-        void noTags_blocked() {
+        @DisplayName("포함 태그가 없어도 고신뢰 완결 프로필이 있으면 통과한다")
+        void noTags_profileGradeProfile_passes() {
             AllergenContext ctx = ctx(Set.of(AllergenTag.MILK), List.of(),
                     profile(AllergenConfidenceLevel.LABEL_DERIVED), true);
-            assertThat(gate.decide(ctx).passes()).isFalse();
+            assertThat(gate.decide(ctx).passes()).isTrue();
         }
 
         @Test
-        @DisplayName("RECIPE_DERIVED verified 태그는 차단한다")
-        void recipeDerivedVerified_blocked() {
+        @DisplayName("RECIPE_DERIVED 완결 프로필은 차단한다")
+        void recipeDerivedProfile_blocked() {
             AllergenContext ctx = ctx(Set.of(AllergenTag.MILK),
                     List.of(tag(AllergenTag.WHEAT, AllergenConfidenceLevel.RECIPE_DERIVED, true)),
-                    profile(AllergenConfidenceLevel.LABEL_DERIVED), true);
+                    profile(AllergenConfidenceLevel.RECIPE_DERIVED), true);
             assertThat(gate.decide(ctx).passes()).isFalse();
         }
 
