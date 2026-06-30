@@ -1,0 +1,2 @@
+source,food_code,recommendation_status,recommendation_reason,last_verified_at,review_source_url,allergen_tags,allergen_profile_verified,allergen_data_source,allergen_confidence_level
+MFDS_STANDARD_PROCESSED,P112-013001300-0005,RECOMMENDABLE,,2026-06-30,http://www.haccp.or.kr/fresh/prdimg/1991/1991045804731/1991045804731-1.jpg,"대두,밀",true,FOODQR,LABEL_DERIVED
