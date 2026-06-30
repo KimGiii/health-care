@@ -129,6 +129,19 @@ CREATE INDEX idx_food_catalog_recommendation_status
   WHERE deleted_at IS NULL;
 ```
 
+##### 제공량 필드 해석 (중요)
+
+`serving_size_g`를 "1회 제공량"으로 쓰면 안 됩니다. dev DB(62만 건) 프로파일링 기준:
+
+- `MFDS_FOOD_NUTRIENT_DB`: 99.99%가 `serving_size_g = 100` 플레이스홀더(Z10500/foodWeight 유래).
+- `MFDS_STANDARD_PROCESSED`: **포장 총중량** — 16%가 1000g↑, 10kg 벌크 포함. 기록 기본량으로 쓰면 안 됨.
+
+권위 있는 1회 제공량은 **`food_serving_options`(전부 `serving_type=OFFICIAL_SERVING`)**이며, `ServingOptionDeriver`가 `serving_reference`(제조사 표기 1회 제공량, 텍스트)에서 파생합니다. 대표 옵션은 `sort_order = 0`. 검색 응답은 `FoodCatalogResponse.servingOptions`로 이미 노출됩니다(`FoodCatalogService.searchFoods`가 옵션 동반 로딩).
+
+**소비자(iOS 등) 규칙**: 기본 제공량 = ① `servingOptions` 대표(OFFICIAL_SERVING, sort 0) `equivalentG` → ② 브랜드 공식 메뉴면 `servingSizeG` → ③ 100g. `serving_size_g`는 직접 쓰지 않습니다.
+
+> 영양소(`calories_per_100g` 등)는 **진짜 100g당**이 맞습니다. MFDS 통합DB가 100g/100mL로 표준화하며, `NUTRI_AMOUNT_SERVING`/`serving_reference`는 영양소 기준량이 아니라 제공량 설명입니다(증거: 식용유 기준량 "5g(ml)"인데 `calories_per_100g = 900`). 따라서 영양값 정규화/이중계산 보정은 불필요합니다.
+
 #### 구현 위치
 
 ```
