@@ -8,6 +8,7 @@ import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodEntry;
+import com.healthcare.domain.diet.recommendation.snapshot.RecommendationConversionService;
 import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
@@ -35,6 +36,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * 식단 기록 유스케이스의 규칙을 Repository 경계에서 검증한다.
@@ -47,6 +49,7 @@ class DietLogUseCasesTest {
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private FoodCatalogRepository foodCatalogRepository;
     @Mock private UserRepository userRepository;
+    @Mock private RecommendationConversionService conversionService;
     @Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
@@ -103,6 +106,56 @@ class DietLogUseCasesTest {
         assertThat(logCaptor.getValue().getTotalCalories()).isEqualTo(425.0);
         assertThat(logCaptor.getValue().getMealType()).isEqualTo(MealType.LUNCH);
         verify(foodCatalogRepository).incrementUsageCountBatch(anyCollection());
+    }
+
+    @Test
+    @DisplayName("recommendationSnapshotId가 있으면 기록 식품 목록으로 전환 이벤트 배선을 호출한다")
+    void createDietLog_withSnapshotId_recordsConversion() {
+        Long userId = 1L;
+        FoodCatalog chicken = buildGlobalFood(10L, "Chicken Breast", FoodCategory.PROTEIN_SOURCE,
+                165.0, 31.0, 0.0, 3.6);
+        CreateDietLogRequest request = CreateDietLogRequest.builder()
+                .logDate(LocalDate.of(2026, 7, 14))
+                .mealType(MealType.LUNCH)
+                .recommendationSnapshotId(77L)
+                .entries(List.of(
+                        CreateFoodEntryRequest.builder().foodCatalogId(10L).servingG(100.0).build()))
+                .build();
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(buildUser(userId)));
+        given(foodCatalogRepository.findAllById(anyList())).willReturn(List.of(chicken));
+        DietLog savedLog = buildSavedDietLog(100L, userId, LocalDate.of(2026, 7, 14),
+                MealType.LUNCH, 165.0, 31.0, 0.0, 3.6);
+        given(dietLogRepository.save(any(DietLog.class))).willReturn(savedLog);
+        given(foodEntryRepository.saveAll(anyList())).willReturn(List.of());
+
+        dietLogUseCases.createDietLog(userId, request);
+
+        verify(conversionService).recordConversion(
+                eq(userId), eq(77L), any(DietLog.class), eq(List.of(10L)));
+    }
+
+    @Test
+    @DisplayName("recommendationSnapshotId가 없으면 전환 이벤트를 호출하지 않는다")
+    void createDietLog_withoutSnapshotId_skipsConversion() {
+        Long userId = 1L;
+        FoodCatalog chicken = buildGlobalFood(10L, "Chicken Breast", FoodCategory.PROTEIN_SOURCE,
+                165.0, 31.0, 0.0, 3.6);
+        CreateDietLogRequest request = CreateDietLogRequest.builder()
+                .logDate(LocalDate.of(2026, 7, 14))
+                .mealType(MealType.LUNCH)
+                .entries(List.of(
+                        CreateFoodEntryRequest.builder().foodCatalogId(10L).servingG(100.0).build()))
+                .build();
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(buildUser(userId)));
+        given(foodCatalogRepository.findAllById(anyList())).willReturn(List.of(chicken));
+        DietLog savedLog = buildSavedDietLog(100L, userId, LocalDate.of(2026, 7, 14),
+                MealType.LUNCH, 165.0, 31.0, 0.0, 3.6);
+        given(dietLogRepository.save(any(DietLog.class))).willReturn(savedLog);
+        given(foodEntryRepository.saveAll(anyList())).willReturn(List.of());
+
+        dietLogUseCases.createDietLog(userId, request);
+
+        verifyNoInteractions(conversionService);
     }
 
     @Test
