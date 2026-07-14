@@ -77,7 +77,7 @@ class OnlinePreferenceSignalLoaderTest {
 
         assertThat(sinceCaptor.getValue())
                 .isCloseTo(OffsetDateTime.now().minusDays(30),
-                        org.assertj.core.api.Assertions.within(java.time.Duration.ofMinutes(5)));
+                        org.assertj.core.api.Assertions.within(5, java.time.temporal.ChronoUnit.MINUTES));
         assertThat(reasonsCaptor.getValue()).containsExactlyInAnyOrder(
                 RecommendationFeedbackReason.RECENTLY_ATE,
                 RecommendationFeedbackReason.HARD_TO_PREPARE,

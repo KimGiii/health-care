@@ -16,6 +16,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.ToDoubleFunction;
+
+import static com.healthcare.domain.diet.entity.DietLog.MealType.*;
+import static com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory.*;
+import static com.healthcare.domain.diet.recommendation.engine.RecommendationFailureReason.*;
+import static com.healthcare.domain.diet.recommendation.engine.RecommendationResult.*;
 
 /**
  * 제약 최적화 추천 엔진 (추천 최적화 계획 §8, Phase 3).
@@ -37,17 +43,17 @@ import java.util.Set;
 public class ConstraintRecommendationEngine {
 
     private static final Map<MealType, Double> BASE_RATIOS = Map.of(
-            MealType.BREAKFAST, 0.25,
-            MealType.LUNCH, 0.35,
-            MealType.DINNER, 0.30,
-            MealType.SNACK, 0.10
+            BREAKFAST, 0.25,
+            LUNCH, 0.35,
+            DINNER, 0.30,
+            SNACK, 0.10
     );
 
     private static final Map<MealType, List<FoodCategory>> PREFERRED_CATEGORIES = Map.of(
-            MealType.BREAKFAST, List.of(FoodCategory.GRAIN, FoodCategory.DAIRY, FoodCategory.FRUIT, FoodCategory.PROTEIN_SOURCE),
-            MealType.LUNCH, List.of(FoodCategory.PROTEIN_SOURCE, FoodCategory.GRAIN, FoodCategory.VEGETABLE),
-            MealType.DINNER, List.of(FoodCategory.PROTEIN_SOURCE, FoodCategory.VEGETABLE, FoodCategory.GRAIN),
-            MealType.SNACK, List.of(FoodCategory.FRUIT, FoodCategory.DAIRY, FoodCategory.PROCESSED)
+            BREAKFAST, List.of(GRAIN, DAIRY, FRUIT, PROTEIN_SOURCE),
+            LUNCH, List.of(PROTEIN_SOURCE, GRAIN, VEGETABLE),
+            DINNER, List.of(PROTEIN_SOURCE, VEGETABLE, GRAIN),
+            SNACK, List.of(FRUIT, DAIRY, PROCESSED)
     );
 
     private static final int MAX_ITEMS_PER_MAIN_MEAL = 3;
@@ -66,8 +72,8 @@ public class ConstraintRecommendationEngine {
     /**
      * 남은 하루를 공동 최적화한다.
      *
-     * @param eligible macro 완전성을 갖춘 후보(use case가 사전 필터). 비어 있으면 안 된다.
-     * @param maxSolutions primary 포함 반환할 최대 해 수(1 이상)
+     * @param eligible      macro 완전성을 갖춘 후보(use case가 사전 필터). 비어 있으면 안 된다.
+     * @param maxSolutions  primary 포함 반환할 최대 해 수(1 이상)
      * @param policyVersion 근거에 표기할 정책 버전
      */
     public RecommendationResult recommend(
@@ -81,13 +87,13 @@ public class ConstraintRecommendationEngine {
             String policyVersion
     ) {
         if (!budget.feasible()) {
-            return RecommendationResult.failure(RecommendationFailureReason.CALORIE_PROTEIN_CONFLICT);
+            return failure(CALORIE_PROTEIN_CONFLICT);
         }
         List<DietRecommendationCandidate> complete = eligible.stream()
                 .filter(DietRecommendationCandidate::macroDataComplete)
                 .toList();
         if (complete.isEmpty()) {
-            return RecommendationResult.failure(RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE);
+            return failure(REMAINING_MEALS_INFEASIBLE);
         }
 
         double aimCalories = aim(budget.calories());
@@ -97,15 +103,15 @@ public class ConstraintRecommendationEngine {
                     repetitionPolicy, onlinePolicy, BEAM_WIDTH_LADDER[rung], VARIATIONS_LADDER[rung]);
             List<SearchState> feasible = run.feasibleStates();
             if (!feasible.isEmpty()) {
-                return RecommendationResult.success(
+                return success(
                         buildSolutions(feasible, budget, repetitionPolicy, onlinePolicy,
                                 maxSolutions, policyVersion));
             }
             if (run.truncated()) {
-                return RecommendationResult.failure(RecommendationFailureReason.SEARCH_LIMIT_REACHED);
+                return failure(SEARCH_LIMIT_REACHED);
             }
         }
-        return RecommendationResult.failure(RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE);
+        return failure(REMAINING_MEALS_INFEASIBLE);
     }
 
     // ─── beam search ───
@@ -195,7 +201,7 @@ public class ConstraintRecommendationEngine {
         if (pool.isEmpty()) {
             return List.of();
         }
-        int maxItems = mealType == MealType.SNACK ? MAX_ITEMS_PER_SNACK : MAX_ITEMS_PER_MAIN_MEAL;
+        int maxItems = mealType == SNACK ? MAX_ITEMS_PER_SNACK : MAX_ITEMS_PER_MAIN_MEAL;
         List<FoodCategory> preferred = PREFERRED_CATEGORIES.getOrDefault(mealType, List.of());
 
         List<List<DietRecommendationCandidate>> fills = new ArrayList<>();
@@ -232,7 +238,7 @@ public class ConstraintRecommendationEngine {
         List<DietRecommendationCandidate> selected = new ArrayList<>();
         Set<Long> usedIds = new HashSet<>();
 
-        List<java.util.function.ToDoubleFunction<DietRecommendationCandidate>> levers = new ArrayList<>();
+        List<ToDoubleFunction<DietRecommendationCandidate>> levers = new ArrayList<>();
         if (aim.proteinAim() > 0) {
             levers.add(DietRecommendationCandidate::proteinPer100g);
         }
@@ -269,7 +275,7 @@ public class ConstraintRecommendationEngine {
 
     private java.util.Optional<DietRecommendationCandidate> pickTopBy(
             List<DietRecommendationCandidate> pool,
-            java.util.function.ToDoubleFunction<DietRecommendationCandidate> density,
+            ToDoubleFunction<DietRecommendationCandidate> density,
             Set<Long> usedIds) {
         return pool.stream()
                 .filter(food -> !usedIds.contains(food.foodCatalogId()))
@@ -442,7 +448,9 @@ public class ConstraintRecommendationEngine {
         return false;
     }
 
-    /** 제공량 조합의 끼니 합계가 목표(칼로리 + 제약 매크로)에서 벗어난 정규화 거리. */
+    /**
+     * 제공량 조합의 끼니 합계가 목표(칼로리 + 제약 매크로)에서 벗어난 정규화 거리.
+     */
     private double mealDistance(
             List<DietRecommendationCandidate> foods, double[] grams,
             double calTarget, MealMacroAim aim) {
@@ -507,7 +515,7 @@ public class ConstraintRecommendationEngine {
     ) {
         double cumulativeRatio = totalRatio > 0
                 ? state.meals().stream()
-                        .mapToDouble(m -> BASE_RATIOS.getOrDefault(m.mealType(), 0.0)).sum() / totalRatio
+                .mapToDouble(m -> BASE_RATIOS.getOrDefault(m.mealType(), 0.0)).sum() / totalRatio
                 : 0.0;
         double cumulativeAim = aimCalories * cumulativeRatio;
         double scale = aimCalories > 0 ? aimCalories : 1.0;
@@ -574,11 +582,13 @@ public class ConstraintRecommendationEngine {
         return centerDistance + 0.5 * mealVariance + 0.3 * repetition + 0.3 * online + 0.4 * proteinOccupancy;
     }
 
-    /** 같은 단백질 소스 카테고리가 여러 끼니를 점유할수록 penalty(soft). */
+    /**
+     * 같은 단백질 소스 카테고리가 여러 끼니를 점유할수록 penalty(soft).
+     */
     private double proteinSourceOccupancyPenalty(SearchState state) {
         long proteinMeals = state.meals().stream()
                 .filter(meal -> meal.items().stream()
-                        .anyMatch(item -> item.category() == FoodCategory.PROTEIN_SOURCE))
+                        .anyMatch(item -> item.category() == PROTEIN_SOURCE))
                 .count();
         return Math.max(0, proteinMeals - 1);
     }
@@ -670,7 +680,9 @@ public class ConstraintRecommendationEngine {
                 .thenComparingLong(f -> rotationKey(date, f));
     }
 
-    /** 식품의 매크로 칼로리 구성비가 목표 구성비에서 벗어난 정도(제약 차원만 합산). */
+    /**
+     * 식품의 매크로 칼로리 구성비가 목표 구성비에서 벗어난 정도(제약 차원만 합산).
+     */
     private double macroFitDistance(DietRecommendationCandidate food, MealMacroAim aim) {
         double foodProteinCal = food.proteinPer100g() * 4.0;
         double foodCarbCal = food.carbsPer100g() * 4.0;
@@ -693,7 +705,9 @@ public class ConstraintRecommendationEngine {
         return distance;
     }
 
-    /** 끼니별 매크로 목표(g). 값이 0이면 해당 매크로는 비제약. */
+    /**
+     * 끼니별 매크로 목표(g). 값이 0이면 해당 매크로는 비제약.
+     */
     private record MealMacroAim(double proteinAim, double carbAim, double fatAim) {
         MealMacroAim scaled(double ratio) {
             return new MealMacroAim(proteinAim * ratio, carbAim * ratio, fatAim * ratio);
@@ -770,7 +784,9 @@ public class ConstraintRecommendationEngine {
             return categories;
         }
 
-        /** 결정적 tie-break용 안정 서명(사용된 foodId 정렬 해시). */
+        /**
+         * 결정적 tie-break용 안정 서명(사용된 foodId 정렬 해시).
+         */
         long stableSignature() {
             long signature = 1L;
             List<Long> ids = usedFoodIds.stream().sorted().toList();

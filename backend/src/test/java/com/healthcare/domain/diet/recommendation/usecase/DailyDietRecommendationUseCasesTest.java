@@ -20,6 +20,7 @@ import com.healthcare.domain.diet.recommendation.engine.RecommendationFailureRea
 import com.healthcare.domain.diet.recommendation.engine.RecommendationRationale;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
+import com.healthcare.domain.diet.recommendation.snapshot.OnlinePreferenceSignalLoader;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.repository.DietLogRepository;
@@ -65,6 +66,7 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private RecommendationSnapshotStore snapshotStore;
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private ConstraintRecommendationEngine engine;
+    @Mock private OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;

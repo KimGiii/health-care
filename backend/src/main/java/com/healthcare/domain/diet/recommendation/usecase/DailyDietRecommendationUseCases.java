@@ -12,7 +12,7 @@ import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResp
 import com.healthcare.domain.diet.recommendation.dto.DailyDietRecommendationResponse.NutrientSummary;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.diet.recommendation.engine.ConstraintRecommendationEngine;
-import com.healthcare.domain.diet.recommendation.engine.OnlinePreferencePolicy;
+import com.healthcare.domain.diet.recommendation.snapshot.OnlinePreferenceSignalLoader;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationFailureReason;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
@@ -67,6 +67,7 @@ public class DailyDietRecommendationUseCases {
     private final ConstraintRecommendationEngine engine;
     private final RecommendationSnapshotStore snapshotStore;
     private final FoodEntryRepository foodEntryRepository;
+    private final OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
 
     // 무상태 정책 객체 — 빈 등록 없이 직접 보유한다.
     private final GoalAwareNutritionPolicy policies = new GoalAwareNutritionPolicy();
@@ -130,9 +131,10 @@ public class DailyDietRecommendationUseCases {
 
         // 요청값과 기본 버퍼 중 큰 쪽만큼 후보를 미리 생성한다(다시 추천 즉시성).
         int maxSolutions = 1 + Math.max(request.alternativeCount(), DEFAULT_ALTERNATIVE_BUFFER);
+        // R1: 본인 최근 30일 참여 신호(기록 전환 우대·음식 기인 거절 불이익)를 soft 순위에 반영.
         RecommendationResult result = engine.recommend(
                 request.date(), budget, request.mealTypes(), eligible,
-                repetitionPolicy, OnlinePreferencePolicy.noSignals(),
+                repetitionPolicy, onlinePreferenceSignalLoader.load(userId),
                 maxSolutions, GoalAwareNutritionPolicy.CURRENT_VERSION);
 
         if (result instanceof RecommendationResult.Failure failure) {
