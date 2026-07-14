@@ -107,6 +107,18 @@ public class RecommendationEvent {
                 .build();
     }
 
+    static RecommendationEvent recorded(Long snapshotId, Long userId, Long dietLogId,
+                                        Long foodCatalogId) {
+        return RecommendationEvent.builder()
+                .snapshotId(snapshotId)
+                .userId(userId)
+                .eventType(EventType.RECORDED)
+                .dietLogId(dietLogId)
+                .foodCatalogId(foodCatalogId)
+                .createdAt(OffsetDateTime.now())
+                .build();
+    }
+
     public enum EventType {
         GENERATED, EXPOSED, REFRESHED, RECORDED
     }

@@ -10,6 +10,7 @@ import com.healthcare.domain.diet.entity.FoodEntry;
 import com.healthcare.domain.diet.repository.DietLogRepository;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
+import com.healthcare.domain.diet.recommendation.snapshot.RecommendationConversionService;
 import com.healthcare.domain.user.repository.UserRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +34,7 @@ public class DietLogUseCases {
     private final FoodEntryRepository foodEntryRepository;
     private final FoodCatalogRepository foodCatalogRepository;
     private final UserRepository userRepository;
+    private final RecommendationConversionService conversionService;
 
     private final Counter dietLogCreatedCounter;
 
@@ -39,11 +42,13 @@ public class DietLogUseCases {
                            FoodEntryRepository foodEntryRepository,
                            FoodCatalogRepository foodCatalogRepository,
                            UserRepository userRepository,
+                           RecommendationConversionService conversionService,
                            MeterRegistry meterRegistry) {
         this.dietLogRepository = dietLogRepository;
         this.foodEntryRepository = foodEntryRepository;
         this.foodCatalogRepository = foodCatalogRepository;
         this.userRepository = userRepository;
+        this.conversionService = conversionService;
         this.dietLogCreatedCounter = Counter.builder("healthcare.diet.log.created")
             .description("식단 기록 생성 수")
             .register(meterRegistry);
@@ -84,6 +89,16 @@ public class DietLogUseCases {
         foodEntryRepository.saveAll(entriesWithLogId);
 
         foodCatalogRepository.incrementUsageCountBatch(new ArrayList<>(catalogMap.keySet()));
+
+        // 추천에서 온 기록이면 전환 이벤트를 food 단위로 귀속한다(스냅샷 없으면 서비스가 스킵).
+        if (request.getRecommendationSnapshotId() != null) {
+            List<Long> recordedFoodIds = request.getEntries().stream()
+                    .map(CreateFoodEntryRequest::getFoodCatalogId)
+                    .filter(Objects::nonNull)
+                    .toList();
+            conversionService.recordConversion(
+                    userId, request.getRecommendationSnapshotId(), savedLog, recordedFoodIds);
+        }
 
         dietLogCreatedCounter.increment();
         return toCreateResponse(savedLog, agg.entries().size());
