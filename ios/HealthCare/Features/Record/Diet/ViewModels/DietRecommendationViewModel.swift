@@ -58,7 +58,8 @@ final class DietRecommendationViewModel: ObservableObject {
         do {
             let request = Self.makeCreateDietLogRequest(
                 for: meal,
-                date: result?.date ?? dateFormatter.string(from: selectedDate)
+                date: result?.date ?? dateFormatter.string(from: selectedDate),
+                snapshotId: result?.snapshotId
             )
             let body = try JSONEncoder().encode(request)
             let _: CreateDietLogResponse = try await apiClient.request(.createDietLog(body: body))
@@ -149,6 +150,7 @@ final class DietRecommendationViewModel: ObservableObject {
     static func makeCreateDietLogRequest(
         for meal: RecommendedMeal,
         date: String,
+        snapshotId: Int? = nil,
         note: String = String(localized: "recommend.log.note")
     ) -> CreateDietLogRequest {
         CreateDietLogRequest(
@@ -161,7 +163,8 @@ final class DietRecommendationViewModel: ObservableObject {
                     notes: $0.caution.flatMap { $0.isEmpty ? nil : $0 }
                 )
             },
-            notes: note
+            notes: note,
+            recommendationSnapshotId: snapshotId
         )
     }
 }

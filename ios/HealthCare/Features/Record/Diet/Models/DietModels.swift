@@ -314,6 +314,8 @@ struct CreateDietLogRequest: Codable {
     let mealType: String          // MealType.rawValue
     let entries: [CreateFoodEntryRequest]
     let notes: String?
+    /// 추천에서 기록으로 전환된 경우의 스냅샷 ID. 수동 기록은 nil(인코딩 시 생략).
+    var recommendationSnapshotId: Int? = nil
 }
 
 struct CreateFoodEntryRequest: Codable {
