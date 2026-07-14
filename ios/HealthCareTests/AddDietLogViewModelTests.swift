@@ -246,6 +246,41 @@ final class AddDietLogViewModelTests: XCTestCase {
         XCTAssertEqual(request.entries[1].foodCatalogId, 202)
         XCTAssertEqual(request.entries[1].servingG, 150)
         XCTAssertEqual(request.entries[1].notes, "알러젠 정보 확인 필요")
+        XCTAssertNil(request.recommendationSnapshotId)
+    }
+
+    func testRecommendationMeal_스냅샷ID가기록요청에전달된다() {
+        let meal = RecommendedMeal(
+            mealType: .DINNER,
+            targetCalories: 600,
+            totalCalories: 550,
+            totalProteinG: 35,
+            totalCarbsG: 60,
+            totalFatG: 15,
+            items: [
+                RecommendedFoodEntry(
+                    foodCatalogId: 101,
+                    name: "brown rice",
+                    nameKo: "현미밥",
+                    category: .GRAIN,
+                    servingG: 180,
+                    calories: 270,
+                    proteinG: 5,
+                    carbsG: 58,
+                    fatG: 2,
+                    allergenConfidenceLevel: .DIRECT_VERIFIED,
+                    caution: nil
+                )
+            ]
+        )
+
+        let request = DietRecommendationViewModel.makeCreateDietLogRequest(
+            for: meal,
+            date: "2026-07-14",
+            snapshotId: 77
+        )
+
+        XCTAssertEqual(request.recommendationSnapshotId, 77)
     }
 
     private func makeCatalogItem(name: String) -> FoodCatalogItem {
