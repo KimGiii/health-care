@@ -36,7 +36,7 @@ class RecommendationSnapshotStoreTest {
     @BeforeEach
     void setUp() {
         snapshotStore = new RecommendationSnapshotStore(
-                snapshotRepository, eventRepository, new ObjectMapper());
+                snapshotRepository, eventRepository, new SnapshotMealsCodec(new ObjectMapper()));
     }
 
     @Test

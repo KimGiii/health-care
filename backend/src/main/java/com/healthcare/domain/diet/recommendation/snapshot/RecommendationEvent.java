@@ -85,6 +85,18 @@ public class RecommendationEvent {
                 .build();
     }
 
+    static RecommendationEvent refreshed(Long snapshotId, Long userId,
+                                         RecommendationFeedbackReason reason, Long foodCatalogId) {
+        return RecommendationEvent.builder()
+                .snapshotId(snapshotId)
+                .userId(userId)
+                .eventType(EventType.REFRESHED)
+                .feedbackReason(reason)
+                .foodCatalogId(foodCatalogId)
+                .createdAt(OffsetDateTime.now())
+                .build();
+    }
+
     static RecommendationEvent recorded(Long snapshotId, Long userId, Long dietLogId) {
         return RecommendationEvent.builder()
                 .snapshotId(snapshotId)
