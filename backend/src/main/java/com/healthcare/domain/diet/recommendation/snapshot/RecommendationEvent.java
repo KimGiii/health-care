@@ -34,6 +34,10 @@ public class RecommendationEvent {
     @Column(name = "diet_log_id")
     private Long dietLogId;
 
+    /** 이벤트가 귀속되는 식품(V40, food별 fan-out 행). 스냅샷 단위 이벤트는 null. */
+    @Column(name = "food_catalog_id")
+    private Long foodCatalogId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -47,6 +51,16 @@ public class RecommendationEvent {
                 .snapshotId(snapshotId)
                 .userId(userId)
                 .eventType(EventType.GENERATED)
+                .createdAt(OffsetDateTime.now())
+                .build();
+    }
+
+    static RecommendationEvent generated(Long snapshotId, Long userId, Long foodCatalogId) {
+        return RecommendationEvent.builder()
+                .snapshotId(snapshotId)
+                .userId(userId)
+                .eventType(EventType.GENERATED)
+                .foodCatalogId(foodCatalogId)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }

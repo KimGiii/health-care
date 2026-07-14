@@ -147,8 +147,7 @@ public class DailyDietRecommendationUseCases {
         List<RecommendedMeal> meals = primary.meals();
         NutrientSummary summary = buildSummary(meals);
 
-        String mealsJson = snapshotStore.serializeMeals(meals);
-        Long snapshotId = snapshotStore.save(userId, request.date(), mealsJson, goalType,
+        Long snapshotId = snapshotStore.save(userId, request.date(), meals, goalType,
                 request.strictAllergyMode());
 
         return DailyDietRecommendationResponse.of(
