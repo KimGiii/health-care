@@ -62,6 +62,16 @@
 [별도 트랙 ⑤]  알러지 verified-only 강화 (ADR-0005) — 안전 회귀 시 단독 롤백
 ```
 
+### 진행 상태 (2026-07-15 업데이트)
+
+- **R1 완료** (이슈 #83, 브랜치 `feat/issue-83-diet-reco-r1`, 엔지니어링 리뷰 통과):
+  - ③ 이산 제공량 — `ServingOptionDeriver` COUNT_UNIT 정수배 전개("N개" 표시), iOS 반영 ✅
+  - 다중 후보 버퍼링 — `DEFAULT_ALTERNATIVE_BUFFER=4`, iOS 프리페치 위임 ✅
+  - 추천 이벤트 식품별 매핑 — V40 `food_catalog_id`, GENERATED/REFRESHED/RECORDED food별 fan-out, `OnlinePreferenceSignalLoader`(본인 30일 참여 신호)로 `noSignals()` 대체 ✅
+  - 부수: 추천 실패 Counter(`healthcare.diet.recommendation.failure{reason}`), funnel IT(실 PG 적재 보증), strict 게이트 죽은 분기 제거(ADR-0005 정합)
+- **R1 배포 후 2주 관찰 대기** — KPI 판정 쿼리 3개(실패율 20%·음식기인 refresh 40%·상위10 전환 점유 70% 임계 + 판정 분기)로 **R2 vs ⓪ 우선순위 결정**. 관찰 기간 중 ⓪ 큐레이션 배치 병행(verified 풀 54→90개 목표). 상세: office-hours 설계 문서(`~/.gstack/projects/.../design-*.md`).
+- **R2·R3·⑤·⓪ 미착수** — R1 데이터가 정확도(→R2) vs 가용성(→⓪) 중 무엇을 가리키는지 확인 후 착수.
+
 ## 5. 직군별 핵심 입력
 
 ### 5.1 영양관리사 — 목표별 매크로 밴드 가설 (정책 가설, 의료 확정값 아님)

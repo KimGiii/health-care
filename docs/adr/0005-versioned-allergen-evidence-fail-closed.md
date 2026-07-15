@@ -45,3 +45,7 @@ ADR-0001은 포함 태그와 Strict 모드를 함께 도입했지만, 사용자�
 - 기존 `food_allergen_tags` 단일 출처 행과 legacy 프로필 플래그를 출처별 근거 모델로 이전해야 한다.
 - 알러젠별 단일·복합 제한 benchmark, 충돌·만료 운영 흐름, 추천 전환 재검증이 출시 조건이 된다.
 - ADR-0001의 기본/Strict 2모드와 태그 행 기반 완결성 결정을 이 ADR이 대체한다. ADR-0002의 verified-only 방향과 목표별 영양 hard constraint는 유지한다.
+
+### 구현 후기 (2026-07-15, 이슈 #83 R1 엔지니어링 리뷰)
+
+`AllergenSafetyGate`에 남아 있던 strict 전용 분기(`strictAllergyMode && !profileHasProfileGradeConfidence`)는 이 ADR의 "strict 토글은 판정에 미사용" 결정과 어긋난 잔재였다. 더구나 `FoodAllergenProfile.isVerifiedAt()`이 이미 `confidenceLevel.isProfileGrade()`를 강제하므로 그 분기는 도달 불능(tautology)이었다 — strict/일반 판정이 실제로 동일했다. 리뷰에서 분기를 제거하고 "게이트 수준 strict = baseline"을 javadoc·동등성 테스트로 명문화해 코드를 이 ADR과 정합시켰다. 사용자 토글은 스냅샷·KPI 기록용으로 유지한다. strict 재차별화(예: `DIRECT_VERIFIED` 상향)는 **검증 풀(⓪) 확장 후** 재검토한다 — 현재 상향 시 verified 풀이 326→24로 -93% 축소되어 추천이 상시 실패한다(실측).
