@@ -18,9 +18,13 @@ import java.util.Set;
  *   <li>제한 알러젠 없음 → 통과 (신뢰도만 해석)</li>
  *   <li>제한 알러젠 포함 → 차단. {@code GLUTEN} 제한은 {@code WHEAT} 포함 태그도 차단한다.</li>
  *   <li>완결 알러젠 프로필 미검증 → 차단</li>
- *   <li>strict 모드: 완결 프로필의 신뢰도가 프로필 등급이 아니면 차단</li>
  *   <li>모두 통과 → 허용 (신뢰도 포함)</li>
  * </ol>
+ *
+ * <p><b>strict 모드 계약:</b> 완결 프로필 검증이 전 사용자 baseline이 되면서(ADR-0005 방향)
+ * 게이트 수준에서 strict가 추가로 거를 것이 없다 — strict와 일반 모드의 게이트 판정은 동일하다.
+ * 과거의 "프로필 profile-grade 재확인" 분기는 {@code isVerifiedAt()}이 이미 보장해 도달 불능인
+ * 죽은 코드였다. strict 재차별화(예: DIRECT_VERIFIED 상향)는 검증 풀(ⓠ) 확장 후 재도입을 검토한다.
  *
  * <p>신뢰도 해석: 프로필 레코드가 있으면 프로필 신뢰도, 없으면 태그 중 최고 신뢰도.
  */
@@ -47,9 +51,6 @@ public class AllergenSafetyGate {
         if (!profileIsVerified(context)) {
             return SafetyDecision.block();
         }
-        if (context.strictAllergyMode() && !profileHasProfileGradeConfidence(context)) {
-            return SafetyDecision.block();
-        }
         return SafetyDecision.allow(resolvedConfidence(context));
     }
 
@@ -70,10 +71,6 @@ public class AllergenSafetyGate {
 
     private boolean profileIsVerified(AllergenContext ctx) {
         return ctx.profile() != null && ctx.profile().isVerifiedAt(OffsetDateTime.now(clock));
-    }
-
-    private boolean profileHasProfileGradeConfidence(AllergenContext ctx) {
-        return ctx.profile() != null && ctx.profile().getConfidenceLevel().isProfileGrade();
     }
 
     private AllergenConfidenceLevel resolvedConfidence(AllergenContext ctx) {
