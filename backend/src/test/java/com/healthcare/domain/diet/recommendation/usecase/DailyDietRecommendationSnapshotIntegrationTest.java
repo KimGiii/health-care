@@ -54,6 +54,7 @@ class DailyDietRecommendationSnapshotIntegrationTest {
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private ConstraintRecommendationEngine engine;
     @Mock private OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
+    @org.mockito.Spy private io.micrometer.core.instrument.MeterRegistry meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry();
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;

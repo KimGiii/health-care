@@ -37,6 +37,7 @@ import com.healthcare.domain.nutrition.service.NutritionCalculator;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +51,6 @@ import java.util.Set;
 public class DailyDietRecommendationUseCases {
 
     private static final int REPETITION_LOOKBACK_DAYS = 7;
-    private static final int MAX_ITEMS_PER_MAIN_MEAL = 3;
-    private static final int MAX_ITEMS_PER_SNACK = 2;
     /**
      * 요청이 대안 수를 지정하지 않아도 미리 생성하는 기본 후보 버퍼. iOS가 버퍼에서 즉시 "다시 추천"하고
      * 소진 시에만 재호출하도록 한다(ETM num_results 패턴). 작은 검증 풀을 고려한 가설값 — benchmark·제품으로 조정.
@@ -68,6 +67,7 @@ public class DailyDietRecommendationUseCases {
     private final RecommendationSnapshotStore snapshotStore;
     private final FoodEntryRepository foodEntryRepository;
     private final OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
+    private final MeterRegistry meterRegistry;
 
     // 무상태 정책 객체 — 빈 등록 없이 직접 보유한다.
     private final GoalAwareNutritionPolicy policies = new GoalAwareNutritionPolicy();
@@ -196,6 +196,11 @@ public class DailyDietRecommendationUseCases {
                         && restriction.getAllergenTag() != null);
     }
 
+    /**
+     * 선택 끼니 슬롯만으로 단백질 하한 도달이 이론상 가능한지 판정한다.
+     * 반복 회피({@code UserRepetitionPolicy})는 soft 정렬 페널티라 후보를 제외하지 않으므로
+     * 전체 eligible로 계산하는 것이 올바르다 — recentIds를 차감하면 오히려 오분류가 늘어난다.
+     */
     private boolean canReachProteinFloorWithinSelectedMealSlots(
             List<MealType> selectedMeals,
             List<DietRecommendationCandidate> eligible,
@@ -206,7 +211,9 @@ public class DailyDietRecommendationUseCases {
             return true;
         }
         int maxItems = selectedMeals.stream()
-                .mapToInt(meal -> meal == MealType.SNACK ? MAX_ITEMS_PER_SNACK : MAX_ITEMS_PER_MAIN_MEAL)
+                .mapToInt(meal -> meal == MealType.SNACK
+                        ? ConstraintRecommendationEngine.MAX_ITEMS_PER_SNACK
+                        : ConstraintRecommendationEngine.MAX_ITEMS_PER_MAIN_MEAL)
                 .sum();
         double theoreticalMaxProtein = eligible.stream()
                 .mapToDouble(this::maxProteinFromVerifiedServingOptions)
@@ -232,6 +239,10 @@ public class DailyDietRecommendationUseCases {
             List<DietRestrictionResponse> appliedRestrictions,
             RecommendationFailureReason reason
     ) {
+        // 실패는 이벤트로 적재되지 않으므로(성공 시에만 스냅샷) 이 카운터가
+        // KPI 판정 쿼리 1(추천 실패율)의 유일한 데이터 소스다 — R1 관찰 설계 문서 참조.
+        meterRegistry.counter("healthcare.diet.recommendation.failure",
+                "reason", reason.name()).increment();
         return DailyDietRecommendationResponse.failure(
                 request.date(), targets, remainingTargets, appliedRestrictions,
                 request.strictAllergyMode(), reason.name(), reason.userMessage());

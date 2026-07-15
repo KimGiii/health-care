@@ -31,11 +31,14 @@ import com.healthcare.domain.diet.restriction.repository.DietRestrictionReposito
 import com.healthcare.domain.goals.repository.GoalRepository;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -67,9 +70,25 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private ConstraintRecommendationEngine engine;
     @Mock private OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
+    @Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
+
+    @Test
+    @DisplayName("실패 응답 시 사유 태그가 붙은 실패 카운터가 증가한다 (R1 관찰: KPI 판정 쿼리 1의 데이터 소스)")
+    void recommend_failure_incrementsFailureCounterWithReasonTag() {
+        User user = User.builder().id(1L).email("a@b.com").displayName("test").build(); // 프로필 미완
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+
+        useCases.recommend(1L, request(List.of(MealType.LUNCH)));
+
+        double count = meterRegistry.counter(
+                "healthcare.diet.recommendation.failure",
+                "reason", RecommendationFailureReason.TARGET_PROFILE_MISSING.name()).count();
+        assertThat(count).isEqualTo(1.0);
+    }
 
     @Test
     @DisplayName("recommend는 스냅샷·이벤트를 저장하므로 쓰기 트랜잭션 경계를 가진다")

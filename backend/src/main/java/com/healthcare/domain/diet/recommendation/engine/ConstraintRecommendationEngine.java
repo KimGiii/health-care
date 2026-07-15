@@ -56,8 +56,9 @@ public class ConstraintRecommendationEngine {
             SNACK, List.of(FRUIT, DAIRY, PROCESSED)
     );
 
-    private static final int MAX_ITEMS_PER_MAIN_MEAL = 3;
-    private static final int MAX_ITEMS_PER_SNACK = 2;
+    /** 끼니당 최대 아이템 수 — 실패 사유 재분류 휴리스틱(use case)이 같은 값을 참조한다(드리프트 방지). */
+    public static final int MAX_ITEMS_PER_MAIN_MEAL = 3;
+    public static final int MAX_ITEMS_PER_SNACK = 2;
 
     // 탐색 파라미터 (계획 리뷰 P0-2). beam이 feasible 0이면 단계적으로 키운다.
     private static final int[] BEAM_WIDTH_LADDER = {24, 48, 96};
