@@ -46,41 +46,12 @@ public class RecommendationEvent {
         if (createdAt == null) createdAt = OffsetDateTime.now();
     }
 
-    static RecommendationEvent generated(Long snapshotId, Long userId) {
-        return RecommendationEvent.builder()
-                .snapshotId(snapshotId)
-                .userId(userId)
-                .eventType(EventType.GENERATED)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
-
     static RecommendationEvent generated(Long snapshotId, Long userId, Long foodCatalogId) {
         return RecommendationEvent.builder()
                 .snapshotId(snapshotId)
                 .userId(userId)
                 .eventType(EventType.GENERATED)
                 .foodCatalogId(foodCatalogId)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
-
-    static RecommendationEvent exposed(Long snapshotId, Long userId) {
-        return RecommendationEvent.builder()
-                .snapshotId(snapshotId)
-                .userId(userId)
-                .eventType(EventType.EXPOSED)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
-
-    static RecommendationEvent refreshed(Long snapshotId, Long userId,
-                                         RecommendationFeedbackReason reason) {
-        return RecommendationEvent.builder()
-                .snapshotId(snapshotId)
-                .userId(userId)
-                .eventType(EventType.REFRESHED)
-                .feedbackReason(reason)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }
@@ -93,16 +64,6 @@ public class RecommendationEvent {
                 .eventType(EventType.REFRESHED)
                 .feedbackReason(reason)
                 .foodCatalogId(foodCatalogId)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
-
-    static RecommendationEvent recorded(Long snapshotId, Long userId, Long dietLogId) {
-        return RecommendationEvent.builder()
-                .snapshotId(snapshotId)
-                .userId(userId)
-                .eventType(EventType.RECORDED)
-                .dietLogId(dietLogId)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }

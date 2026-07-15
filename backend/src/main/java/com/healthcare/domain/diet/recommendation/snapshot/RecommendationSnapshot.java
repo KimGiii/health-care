@@ -6,9 +6,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Entity
 @Table(name = "recommendation_snapshots")
@@ -39,9 +36,12 @@ public class RecommendationSnapshot {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    @Transient
-    private final List<RecommendationEvent> events = new ArrayList<>();
-
+    /**
+     * 이벤트 생성은 snapshot 패키지 서비스들(Store=GENERATED, Feedback=REFRESHED,
+     * Conversion=RECORDED)이 food별 fan-out으로 직접 영속화한다 — 엔티티가 이벤트를
+     * 들고 있지 않는다. 과거 @Transient events 리스트는 저장되지 않는 채 쌓여
+     * GENERATED 유실 버그를 만들었던 코드라 제거했다(R1 eng review 이슈 1).
+     */
     public static RecommendationSnapshot create(Long userId, LocalDate snapshotDate,
                                                 String mealsJson, Goal.GoalType goalType,
                                                 boolean strictAllergyMode) {
@@ -52,24 +52,7 @@ public class RecommendationSnapshot {
         snapshot.goalType = goalType;
         snapshot.strictAllergyMode = strictAllergyMode;
         snapshot.createdAt = OffsetDateTime.now();
-        snapshot.events.add(RecommendationEvent.generated(null, userId));
         return snapshot;
-    }
-
-    public void recordExposed() {
-        events.add(RecommendationEvent.exposed(id, userId));
-    }
-
-    public void recordRefreshed(RecommendationFeedbackReason reason) {
-        events.add(RecommendationEvent.refreshed(id, userId, reason));
-    }
-
-    public void recordConverted(Long dietLogId) {
-        events.add(RecommendationEvent.recorded(id, userId, dietLogId));
-    }
-
-    public List<RecommendationEvent> getEvents() {
-        return Collections.unmodifiableList(events);
     }
 
     @PrePersist
