@@ -123,6 +123,11 @@ struct FeedbackRequest: Encodable {
     let reason: RecommendationFeedbackReason
 }
 
+/// 대안 swap 계측(#85 선행). 어느 대안을 골랐는지 서버에 남긴다.
+struct SwapRequest: Encodable {
+    let alternativeIndex: Int
+}
+
 struct DailyDietRecommendationRequest: Encodable {
     let date: String           // "yyyy-MM-dd"
     let mealTypes: [String]

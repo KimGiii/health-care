@@ -96,4 +96,45 @@ class RecommendationFeedbackControllerTest {
                         .content("{}"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("유효한 alternativeIndex로 swap 요청 시 204를 반환한다")
+    void postSwap_validRequest_returns204() throws Exception {
+        mockMvc.perform(post("/api/v1/diet/recommendations/10/swap")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"alternativeIndex\":1}"))
+                .andExpect(status().isNoContent());
+
+        verify(feedbackService).recordSwap(eq(USER_ID), eq(10L), eq(1));
+    }
+
+    @Test
+    @DisplayName("swap 요청에 존재하지 않는 snapshotId면 404를 반환한다")
+    void postSwap_unknownSnapshot_returns404() throws Exception {
+        doThrow(new ResourceNotFoundException("RecommendationSnapshot", 999L))
+                .when(feedbackService).recordSwap(eq(USER_ID), eq(999L), eq(0));
+
+        mockMvc.perform(post("/api/v1/diet/recommendations/999/swap")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"alternativeIndex\":0}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("alternativeIndex 누락 시 400을 반환한다")
+    void postSwap_missingIndex_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/diet/recommendations/10/swap")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("음수 alternativeIndex면 400을 반환한다")
+    void postSwap_negativeIndex_returns400() throws Exception {
+        mockMvc.perform(post("/api/v1/diet/recommendations/10/swap")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"alternativeIndex\":-1}"))
+                .andExpect(status().isBadRequest());
+    }
 }

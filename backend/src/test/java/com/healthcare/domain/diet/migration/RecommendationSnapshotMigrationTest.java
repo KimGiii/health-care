@@ -47,9 +47,28 @@ class RecommendationSnapshotMigrationTest {
         assertThat(sql).contains("idx_recommendation_events_user");
     }
 
+    @Test
+    @DisplayName("V41은 SWAPPED 이벤트 타입과 alternative_index 컬럼을 추가한다")
+    void v41AddsSwappedEventTypeAndAlternativeIndex() throws Exception {
+        String sql = readMigration("V41__recommendation_event_swap.sql");
+
+        assertThat(sql).contains("DROP CONSTRAINT chk_recommendation_event_type");
+        assertThat(sql).contains("'SWAPPED'");
+        // 기존 타입이 새 제약에서 빠지면 기존 행이 위반돼 마이그레이션이 실패한다.
+        assertThat(sql).contains("'GENERATED'");
+        assertThat(sql).contains("'EXPOSED'");
+        assertThat(sql).contains("'REFRESHED'");
+        assertThat(sql).contains("'RECORDED'");
+        assertThat(sql).containsPattern("alternative_index\\s+INTEGER");
+    }
+
     private String readMigration() throws Exception {
+        return readMigration("V36__recommendation_snapshots.sql");
+    }
+
+    private String readMigration(String fileName) throws Exception {
         URL resource = getClass().getClassLoader()
-                .getResource("db/migration/V36__recommendation_snapshots.sql");
+                .getResource("db/migration/" + fileName);
         assertThat(resource).isNotNull();
         return Files.readString(Path.of(resource.toURI()));
     }

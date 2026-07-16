@@ -34,4 +34,17 @@ public class RecommendationFeedbackService {
                         .toList();
         eventRepository.saveAll(events);
     }
+
+    /**
+     * 대안 swap을 스냅샷 단위 SWAPPED 이벤트로 기록한다(#85 선행 계측).
+     * 대안 식품 목록은 스냅샷에 저장되지 않으므로 food fan-out 없이 선택 인덱스만 남긴다
+     * — swap 빈도·인덱스 분포가 대안 스냅샷 저장 방식(A/B/C)의 판정 데이터가 된다.
+     */
+    @Transactional
+    public void recordSwap(Long userId, Long snapshotId, int alternativeIndex) {
+        snapshotRepository.findByIdAndUserId(snapshotId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("RecommendationSnapshot", snapshotId));
+
+        eventRepository.save(RecommendationEvent.swapped(snapshotId, userId, alternativeIndex));
+    }
 }

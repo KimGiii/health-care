@@ -38,6 +38,10 @@ public class RecommendationEvent {
     @Column(name = "food_catalog_id")
     private Long foodCatalogId;
 
+    /** SWAPPED 이벤트에서 선택된 대안의 인덱스(V41, #85 판정 계측). 그 외 이벤트는 null. */
+    @Column(name = "alternative_index")
+    private Integer alternativeIndex;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -80,7 +84,22 @@ public class RecommendationEvent {
                 .build();
     }
 
+    /**
+     * 대안 swap 계측 이벤트(#85 선행). 대안 식품 목록이 스냅샷에 없어 food fan-out은
+     * 불가능하므로 스냅샷 단위 1행만 남긴다. swap 빈도·선택 인덱스 분포가 후보 5
+     * 잔여분(A/B/C 설계)의 판정 데이터가 된다.
+     */
+    static RecommendationEvent swapped(Long snapshotId, Long userId, int alternativeIndex) {
+        return RecommendationEvent.builder()
+                .snapshotId(snapshotId)
+                .userId(userId)
+                .eventType(EventType.SWAPPED)
+                .alternativeIndex(alternativeIndex)
+                .createdAt(OffsetDateTime.now())
+                .build();
+    }
+
     public enum EventType {
-        GENERATED, EXPOSED, REFRESHED, RECORDED
+        GENERATED, EXPOSED, REFRESHED, RECORDED, SWAPPED
     }
 }
