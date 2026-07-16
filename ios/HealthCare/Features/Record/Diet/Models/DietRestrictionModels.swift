@@ -230,6 +230,8 @@ struct RecommendedFoodEntry: Codable, Identifiable {
     let fatG: Double
     let allergenConfidenceLevel: AllergenConfidenceLevel
     let caution: String?
+    /// 낱개 식품의 개수 라벨("2개") 또는 제공량 라벨. 서버(백엔드 servingLabel) 미제공 시 nil.
+    var servingLabel: String? = nil
 
     var id: Int { foodCatalogId }
 
@@ -237,6 +239,12 @@ struct RecommendedFoodEntry: Codable, Identifiable {
         let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
         if prefersKo, let ko = nameKo, !ko.isEmpty { return ko }
         return name
+    }
+
+    /// 낱개 식품이면 "2개" 같은 개수 라벨, 아니면 "100g"으로 표시한다(추천 항목 표시용).
+    var displayServing: String {
+        if let label = servingLabel, !label.isEmpty { return label }
+        return String(format: "%.0fg", servingG)
     }
 
     var needsCaution: Bool { caution != nil || allergenConfidenceLevel.cautionRequired }

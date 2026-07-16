@@ -106,6 +106,29 @@ class FoodCatalogAdminControllerTest {
     }
 
     @Test
+    @DisplayName("추천 큐레이션 CSV 파일을 업로드하면 200과 import 결과를 반환한다")
+    void importRecommendationCurationCsv_returnsSummary() throws Exception {
+        String csvContent = """
+                source,food_code,recommendation_status,recommendation_reason,last_verified_at,review_source_url,allergen_tags,allergen_profile_verified
+                BRAND_OFFICIAL,brand:food,RECOMMENDABLE,,2026-06-20,https://example.com,label,true
+                """;
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "curation.csv", "text/csv",
+                csvContent.getBytes(StandardCharsets.UTF_8)
+        );
+        given(adminOperations.importRecommendationCurationCsv(any(), any())).willReturn(
+                new FoodCatalogImportResult(0, 1, 0)
+        );
+
+        mockMvc.perform(multipart("/api/v1/admin/diet/catalog/curation-csv")
+                        .file(file)
+                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.updatedCount").value(1))
+                .andExpect(jsonPath("$.data.skippedCount").value(0));
+    }
+
+    @Test
     @DisplayName("canonical dedup 백필을 요청하면 200과 백필 요약을 반환한다")
     void backfillCanonicalDedup_returnsSummary() throws Exception {
         given(adminOperations.backfillCanonicalDedup(any())).willReturn(

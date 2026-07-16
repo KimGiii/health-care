@@ -167,6 +167,17 @@ struct FoodEntryResponse: Codable, Identifiable {
 
 // MARK: - FoodCatalog
 
+/// 백엔드가 파생한 제공량 옵션 스냅샷(`food_serving_options`). 신뢰할 수 없는
+/// `servingSizeG`(포장중량/플레이스홀더) 대신 1회 제공량의 권위 있는 출처다.
+struct ServingOption: Codable, Hashable {
+    let label: String?
+    let labelKo: String?
+    let equivalentG: Double
+    let sortOrder: Int
+    let servingType: String?
+    let verified: Bool?
+}
+
 struct FoodCatalogItem: Codable, Identifiable {
     let id: Int
     let name: String
@@ -192,6 +203,7 @@ struct FoodCatalogItem: Codable, Identifiable {
     var maker: String? = nil
     var servingSizeG: Double? = nil
     var servingReference: String? = nil
+    var servingOptions: [ServingOption]? = nil
 
     var displayName: String {
         let prefersKo = (Locale.preferredLanguages.first ?? "").hasPrefix("ko")
@@ -203,7 +215,35 @@ struct FoodCatalogItem: Codable, Identifiable {
         source == "BRAND_OFFICIAL"
     }
 
+    /// 대표 1회 제공량 옵션(sort_order가 가장 작은 OFFICIAL_SERVING).
+    /// 백엔드가 `serving_reference`에서 파생한 깨끗한 값으로, 제공량 판단의 1순위.
+    var primaryServingOption: ServingOption? {
+        (servingOptions ?? [])
+            .filter { $0.equivalentG > 0 }
+            .min { $0.sortOrder < $1.sortOrder }
+    }
+
+    /// 신뢰할 수 있는 1회 제공량이 존재하는지 여부.
+    var hasServingSize: Bool {
+        if primaryServingOption != nil { return true }
+        if isBrandOfficialMenu, let servingSizeG, servingSizeG > 0 { return true }
+        return false
+    }
+
+    /// 검색 결과에 표시할 브랜드/제조사명. 둘 다 없으면 nil.
+    var displayBrand: String? {
+        if let brandName, !brandName.isEmpty { return brandName }
+        if let maker, !maker.isEmpty { return maker }
+        return nil
+    }
+
+    /// 표시·기록의 기본 제공량(g).
+    /// 1) 파생 제공량 옵션 → 2) 브랜드 공식 메뉴의 큐레이션된 제공량 → 3) 100g.
+    /// `servingSizeG`는 MFDS에서 포장중량/플레이스홀더(100)인 경우가 많아 직접 쓰지 않는다.
     var defaultServingG: Double {
+        if let option = primaryServingOption {
+            return option.equivalentG
+        }
         if isBrandOfficialMenu, let servingSizeG, servingSizeG > 0 {
             return servingSizeG
         }
@@ -211,19 +251,38 @@ struct FoodCatalogItem: Codable, Identifiable {
     }
 
     var displayServingReference: String {
-        if let servingReference, !servingReference.isEmpty {
-            return servingReference
-        }
-        return formatGrams(defaultServingG)
+        servingLabel(forGrams: defaultServingG)
     }
 
     var catalogNutritionSummary: String {
         guard let caloriesPer100g else { return "-" }
-        if isBrandOfficialMenu {
-            let calories = calories(forServing: defaultServingG)
-            return String(format: "%.0f kcal / %@", calories, displayServingReference)
+        if hasServingSize {
+            let serving = defaultServingG
+            let calories = calories(forServing: serving)
+            return String(format: "%.0f kcal / %@", calories, servingLabel(forGrams: serving))
         }
         return String(format: "%.0f kcal / 100g", caloriesPer100g)
+    }
+
+    /// 제공량 라벨. `servingReference` 텍스트(예: "1봉지(120g)")가 실제 제공량 그람수와
+    /// 일치할 때만 사용하고, 어긋나면(식품중량 ≠ 영양성분 기준량) 숫자 그람으로 표시해
+    /// 표시 칼로리와 그람수가 모순되지 않게 한다.
+    private func servingLabel(forGrams grams: Double) -> String {
+        if let servingReference, !servingReference.isEmpty,
+           let parsed = Self.parseGrams(servingReference),
+           abs(parsed - grams) < 0.5 {
+            return servingReference
+        }
+        return formatGrams(grams)
+    }
+
+    /// "210g", "1봉지(120g)" 등에서 g 앞 숫자를 그람수로 추출한다.
+    private static func parseGrams(_ text: String) -> Double? {
+        guard let range = text.range(
+            of: #"[0-9]+(\.[0-9]+)?\s*[gG]"#, options: .regularExpression
+        ) else { return nil }
+        let digits = text[range].filter { $0.isNumber || $0 == "." }
+        return Double(digits)
     }
 
     private func amount(_ per100g: Double?, forServing g: Double) -> Double {
@@ -255,6 +314,8 @@ struct CreateDietLogRequest: Codable {
     let mealType: String          // MealType.rawValue
     let entries: [CreateFoodEntryRequest]
     let notes: String?
+    /// 추천에서 기록으로 전환된 경우의 스냅샷 ID. 수동 기록은 nil(인코딩 시 생략).
+    var recommendationSnapshotId: Int? = nil
 }
 
 struct CreateFoodEntryRequest: Codable {

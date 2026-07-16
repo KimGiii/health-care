@@ -3,12 +3,15 @@ package com.healthcare.domain.diet.controller;
 import com.healthcare.common.exception.GlobalExceptionHandler;
 import com.healthcare.common.security.AdminOperationGuard;
 import com.healthcare.domain.diet.admin.CandidatePoolSummaryService;
+import com.healthcare.domain.diet.admin.RecommendationCurationQueueEntry;
+import com.healthcare.domain.diet.admin.RecommendationCurationQueueService;
 import com.healthcare.domain.diet.admin.RevalidationQueueEntry;
 import com.healthcare.domain.diet.admin.RevalidationQueueService;
 import com.healthcare.domain.diet.admin.RevalidationReason;
 import com.healthcare.domain.diet.admin.VerificationPriorityService;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.RecommendationStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,7 @@ class CandidatePoolAdminControllerTest {
     @Mock private CandidatePoolSummaryService summaryService;
     @Mock private VerificationPriorityService priorityService;
     @Mock private RevalidationQueueService revalidationQueueService;
+    @Mock private RecommendationCurationQueueService curationQueueService;
 
     @InjectMocks
     private CandidatePoolAdminController controller;
@@ -76,5 +80,38 @@ class CandidatePoolAdminControllerTest {
         mockMvc.perform(get("/api/v1/admin/diet/candidate-pool/revalidation-queue")
                         .header(AdminOperationGuard.HEADER_NAME, "wrong-token"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("추천 큐레이션 대기열을 조회하면 200과 큐 항목을 반환한다")
+    void curationQueue_returnsEntries() throws Exception {
+        given(curationQueueService.queue(50)).willReturn(List.of(
+                new RecommendationCurationQueueEntry(
+                        10L,
+                        FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB,
+                        "P001",
+                        "큐레이션 후보",
+                        FoodCategory.PROTEIN_SOURCE,
+                        RecommendationStatus.RECOMMENDABLE,
+                        20L,
+                        165.0,
+                        31.0,
+                        18.8,
+                        "A_ENGINE_READY_HIGH_PROTEIN",
+                        true,
+                        true,
+                        false,
+                        false,
+                        true,
+                        2_020.0)
+        ));
+
+        mockMvc.perform(get("/api/v1/admin/diet/candidate-pool/curation-queue")
+                        .header(AdminOperationGuard.HEADER_NAME, "test-admin-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].foodCatalogId").value(10))
+                .andExpect(jsonPath("$.data[0].macroComplete").value(true))
+                .andExpect(jsonPath("$.data[0].hasVerifiedServingOption").value(true))
+                .andExpect(jsonPath("$.data[0].allergenProfileGap").value(true));
     }
 }

@@ -129,6 +129,19 @@ CREATE INDEX idx_food_catalog_recommendation_status
   WHERE deleted_at IS NULL;
 ```
 
+##### 제공량 필드 해석 (중요)
+
+`serving_size_g`를 "1회 제공량"으로 쓰면 안 됩니다. dev DB(62만 건) 프로파일링 기준:
+
+- `MFDS_FOOD_NUTRIENT_DB`: 99.99%가 `serving_size_g = 100` 플레이스홀더(Z10500/foodWeight 유래).
+- `MFDS_STANDARD_PROCESSED`: **포장 총중량** — 16%가 1000g↑, 10kg 벌크 포함. 기록 기본량으로 쓰면 안 됨.
+
+권위 있는 1회 제공량은 **`food_serving_options`(전부 `serving_type=OFFICIAL_SERVING`)**이며, `ServingOptionDeriver`가 `serving_reference`(제조사 표기 1회 제공량, 텍스트)에서 파생합니다. 대표 옵션은 `sort_order = 0`. 검색 응답은 `FoodCatalogResponse.servingOptions`로 이미 노출됩니다(`FoodCatalogService.searchFoods`가 옵션 동반 로딩).
+
+**소비자(iOS 등) 규칙**: 기본 제공량 = ① `servingOptions` 대표(OFFICIAL_SERVING, sort 0) `equivalentG` → ② 브랜드 공식 메뉴면 `servingSizeG` → ③ 100g. `serving_size_g`는 직접 쓰지 않습니다.
+
+> 영양소(`calories_per_100g` 등)는 **진짜 100g당**이 맞습니다. MFDS 통합DB가 100g/100mL로 표준화하며, `NUTRI_AMOUNT_SERVING`/`serving_reference`는 영양소 기준량이 아니라 제공량 설명입니다(증거: 식용유 기준량 "5g(ml)"인데 `calories_per_100g = 900`). 따라서 영양값 정규화/이중계산 보정은 불필요합니다.
+
 #### 구현 위치
 
 ```
@@ -371,6 +384,55 @@ CSV 헤더가 템플릿과 다르면 파일 전체를 거절합니다. 개별 ro
 `recommendation_reason`은 `recommendation_status = RECOMMENDABLE_WITH_CAUTION`일 때만 저장되는 주의 사유입니다. 이 상태에서는 사유가 필수이며, 다른 상태의 사유 입력은 저장하지 않습니다.
 
 v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재적재를 기준 경로로 둡니다. 개별 식품의 추천 상태를 직접 수정하는 관리자 API는 원본 CSV와 DB 상태가 갈라질 수 있으므로 즉시 제공하지 않습니다. 운영 중 CSV 재적재가 과하게 무겁다는 근거가 쌓이면 변경 이력과 원본 충돌 정책을 함께 설계한 뒤 후속으로 검토합니다.
+
+알러젠 검토 컬럼은 포함 태그와 완결 프로필을 분리해서 해석합니다.
+
+- `allergen_tags`: 공식 라벨/알러젠 표에서 확인한 포함 알러젠만 입력합니다. 한국어 라벨과 내부 enum 코드를 허용하며, 여러 값은 쉼표, `|`, `/` 중 하나로 구분합니다.
+- `allergen_profile_verified`: 해당 식품의 표시대상 알러젠 집합을 공식 근거로 완결 검토했을 때만 `true`로 입력합니다.
+- 포함 알러젠이 없는 제품도 공식 라벨에서 "해당 없음"을 확인했다면 `allergen_tags`를 비우고 `allergen_profile_verified=true`로 입력할 수 있습니다. 이 경우 `food_allergen_tags`는 비어 있고 `food_allergen_profiles`에 `LABEL_DERIVED` 완결 프로필이 저장됩니다.
+- `allergen_profile_verified=true`에는 `last_verified_at`이 필수입니다. 검수일이 없으면 프로필 레코드의 유효성을 판단할 수 없으므로 row를 거절합니다.
+- 브랜드 CSV가 알러젠 검토값을 포함하면 동일 `BRAND_OFFICIAL` 메뉴의 기존 `BRAND_OFFICIAL` 알러젠 태그를 CSV 내용으로 교체합니다.
+
+#### 추천 큐레이션 CSV 계약
+
+신규 식품 생성은 브랜드 CSV 또는 공공데이터 적재가 담당하고, 추천 큐레이션 CSV는 이미 존재하는 `source + food_code` row의 추천 자격과 검수 근거를 갱신합니다.
+
+템플릿: [recommendation_curation_csv_template.csv](references/recommendation_curation_csv_template.csv)
+
+필수 헤더:
+
+- `source`
+- `food_code`
+- `recommendation_status`
+- `recommendation_reason`
+- `last_verified_at`
+- `review_source_url`
+- `allergen_tags`
+- `allergen_profile_verified`
+
+선택 헤더:
+
+- `allergen_data_source`
+- `allergen_confidence_level`
+
+기본 8개 헤더만 있으면 food source에 따라 알러젠 근거 source를 자동 결정합니다. 기존 `MFDS_FOOD_NUTRIENT_DB` row에 브랜드 공식 알러젠표를 붙이는 경우처럼 영양 source와 알러젠 source가 다르면, 선택 헤더를 함께 입력합니다. 두 선택 헤더는 함께 입력해야 합니다.
+
+운영 경로:
+
+1. `GET /api/v1/admin/diet/candidate-pool/curation-queue?limit=50`로 `SEARCH_ONLY` 중 승격 가치가 큰 canonical row를 조회합니다.
+2. 신규 포장 SKU는 먼저 `POST /api/v1/admin/diet/catalog/import/brand-csv`로 `BRAND_OFFICIAL` row를 만들거나 갱신합니다.
+3. `POST /api/v1/admin/diet/catalog/curation-csv`로 추천 상태와 검수 근거를 적용합니다.
+4. `GET /api/v1/admin/diet/candidate-pool/summary`에서 `macroCompleteTotal`, `verifiedServingOptionTotal`, `allergenProfileVerifiedTotal`, `engineReadyTotal` 변화를 확인합니다.
+
+추천 후보(`RECOMMENDABLE`, `RECOMMENDABLE_WITH_CAUTION`)로 승격하려면 다음 조건을 모두 만족해야 합니다.
+
+- canonical 대표 row
+- 열량, 단백질, 탄수화물, 지방 모두 존재
+- 검증된 제공량 옵션 존재
+- `last_verified_at` 존재
+- `review_source_url` 존재
+- `allergen_profile_verified=true`
+- 주의 기준을 넘는 row는 `RECOMMENDABLE_WITH_CAUTION`과 사유 입력
 
 ### 1. 식품 사용 횟수 추적 (usage_count)
 

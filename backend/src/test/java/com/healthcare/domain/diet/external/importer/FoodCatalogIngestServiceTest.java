@@ -3,6 +3,7 @@ package com.healthcare.domain.diet.external.importer;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.entity.FoodCatalogSource;
+import com.healthcare.domain.diet.entity.FoodServingOption;
 import com.healthcare.domain.diet.entity.RecommendationStatus;
 import com.healthcare.domain.diet.repository.FoodCatalogRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -258,6 +259,38 @@ class FoodCatalogIngestServiceTest {
         // 패자는 옵션을 생성하지 않고 남은 옵션만 정리한다(옵션 행 폭증 방지)
         verify(servingOptionRepository).deleteByFoodCatalogId(1L);
         verify(servingOptionRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("낱개 식품(계란) 적재 시 음식 이름을 deriver에 넘겨 COUNT_UNIT 옵션을 생성한다")
+    void ingest_countableFood_derivesCountUnitOptions() {
+        FoodCatalog imported = FoodCatalog.builder()
+                .id(5L)
+                .foodCode("E001")
+                .source(FoodCatalogSource.MFDS_FOOD_NUTRIENT_DB)
+                .name("계란").nameKo("계란")
+                .category(FoodCategory.PROTEIN_SOURCE)
+                .caloriesPer100g(155.0)
+                .recommendationStatus(RecommendationStatus.RECOMMENDABLE)
+                .isCustom(false)
+                .build();
+        given(foodCatalogRepository.findBySourceAndFoodCode(any(), any())).willReturn(Optional.empty());
+        given(foodCatalogRepository.save(any(FoodCatalog.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ingestService.ingest(
+                List.of(FoodCatalogIngestCandidate.accepted(imported)),
+                FoodCatalogIngestCurationMode.PRESERVE_EXISTING
+        );
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<FoodServingOption>> captor = ArgumentCaptor.forClass(List.class);
+        verify(servingOptionRepository).saveAll(captor.capture());
+        assertThat(captor.getValue())
+                .allSatisfy(o -> assertThat(o.getServingType())
+                        .isEqualTo(FoodServingOption.ServingType.COUNT_UNIT));
+        assertThat(captor.getValue()).extracting(FoodServingOption::getEquivalentG)
+                .containsExactly(50.0, 100.0, 150.0);
     }
 
     private FoodCatalog food(String name, RecommendationStatus status, String reason) {

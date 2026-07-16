@@ -1,9 +1,11 @@
 # ETM 관찰 기반 식단 추천 보강 설계
 
 작성일: 2026-06-20
-상태: 설계 제안(미구현). 정량값은 정책 버전·benchmark로 확정한다.
+상태: 설계 제안. **확정 합의·실행 순서는 `DIET_RECOMMENDATION_ENHANCEMENT_DECISIONS_2026-06-29.md`(4인 팀 결정 기록) 참조.** 정량값은 정책 버전·benchmark로 확정한다.
 상위: `docs/exec-plans/DIET_RECOMMENDATION_OPTIMIZATION.md`, `docs/adr/0002-goal-aware-nutrition-optimization.md`
 관찰 근거: `docs/references/EAT_THIS_MUCH_RECOMMENDATION_TEARDOWN_2026-06-20.md`
+
+> **정정(2026-06-29, dev 최신 확인)**: 본 문서 초안의 두 전제가 dev 코드와 달랐다 — ① `ServingOptionDeriver`는 이미 존재한다(§3) ② 체중은 `User.weightKg`로 항상 접근 가능해 매크로 밴드는 `g/kg`로 간다(§1). 아래 본문에 반영.
 
 ## 0. 서비스 정체성 (전제)
 
@@ -53,8 +55,9 @@ ETM처럼 **전 매크로에 밴드**를 두되, ETM의 균일 범위가 아니�
 - 즉 **"비핵심 매크로 = 넓은 hard 가드레일 + soft 중심 유도"** 조합이 ETM 밴드 효과를 내면서 실패율을 통제한다.
 
 ### 영향 파일
-- `nutrition/policy/GoalAwareNutritionPolicy.java` — 밴드 값 채움
-- `nutrition/policy/NutritionPolicy.java` / `RemainingNutritionBudget.java` — 표현 그대로 사용
+- `nutrition/policy/GoalAwareNutritionPolicy.java` — `resolve(goalType, targets, weightKg)`로 **체중 인자 추가** + 비핵심 매크로 밴드 채움. 밴드 단위는 **`g/kg` 채택**(탄수·지방 균형 상한 등 보조에만 `%E`).
+- `nutrition/policy/NutritionPolicy.java` / `RemainingNutritionBudget.java` — 표현 그대로 사용(`NutrientConstraint` between/atLeast/atMost로 충분)
+- 호출부 `usecase/DailyDietRecommendationUseCases.java` — `user.getWeightKg()` 전달. 체중은 `canCalculate`가 null이면 추천을 막으므로 정책 진입 시 non-null 보장(`NutritionTargets`엔 체중이 없지만 호출부가 `user`를 보유)
 - benchmark 시나리오 추가(목표별 극단 조합 회피 검증)
 
 ---
@@ -99,16 +102,17 @@ ETM처럼 **전 매크로에 밴드**를 두되, ETM의 균일 범위가 아니�
 `FoodServingOption.ServingType`에 이미 `COUNT_UNIT`(1개, 2개)이 있다. 그러나 `DietRecommendationCandidate.verifiedServingGramOptions()`는 모든 검증 옵션을 **g 값으로 평탄화**하고, 엔진 `chooseServingCombination`은 g 옵션 조합을 탐색한다. `OFFICIAL_SERVING`의 0.5× 같은 분수 배수가 섞이면 "계란 0.5개"처럼 **이산 식품의 비현실적 분량**이 나올 수 있다(ETM `is_discrete`/`minimum_discrete_amount`가 막는 문제).
 
 ### 설계
-- `ServingOptionSnapshot`에 `servingType` 보존(엔진이 이산성 인지).
-- **이산 식품**(`COUNT_UNIT`): 전개 시 **정수 배수만** 옵션으로 만든다(1개=50g, 2개=100g … / 0.5개 금지). `ServingOptionDeriver`가 책임.
-- 엔진은 이산 식품의 양을 정수 단위 옵션에서만 고른다(이미 옵션이 정수배뿐이면 자동 충족).
-- 표시: 이산 식품은 g가 아니라 "2개"로 라벨(`label`/`labelKo` 활용, iOS UX).
+> **정정(dev 최신)**: `ServingOptionSnapshot`의 `servingType`과 `ServingOptionDeriver`(diet/external/importer)는 **이미 존재**한다. 진짜 갭은 deriver가 모든 옵션을 `OFFICIAL_SERVING`으로만 생성해 `COUNT_UNIT`을 채우지 않고, 엔진이 servingType을 무시(g로 평탄화)하는 것이다.
+- **이산 식품**(`COUNT_UNIT`): deriver에 **정수 배수 분기** 추가(1개=50g, 2개=100g … / 0.5개 금지).
+- 엔진은 이산 식품의 양을 정수 단위 옵션에서만 고른다.
+- 표시: g가 아니라 "2개"로 라벨(`label`/`labelKo`, iOS UX).
 - `minimum_discrete_amount` 대응: 최소 1단위 미만 추천 금지.
+- 데이터: 카탈로그에 "낱개 식품" 신호가 거의 없어 초기엔 카테고리 화이트리스트(계란·과일 일부)로 시작, 큐레이션 후속.
 
 ### 영향 파일
-- `diet/external/importer/ServingOptionDeriver.java` — 이산 식품 정수배 전개
-- `diet/entity/ServingOptionSnapshot.java` — `servingType` 노출
-- `DietRecommendationCandidate.verifiedServingGramOptions()` — 이산/연속 구분(또는 `verifiedServingOptions()`로 type 포함 반환)
+- `diet/external/importer/ServingOptionDeriver.java` — (이미 존재, 현재 `OFFICIAL_SERVING`만 생성) **`COUNT_UNIT` 정수배 분기 추가**
+- `diet/entity/ServingOptionSnapshot.java` — `servingType` **이미 보존됨**(candidate까지 운반만)
+- `DietRecommendationCandidate.verifiedServingGramOptions()` — 이산/연속 구분(또는 type 포함 반환)
 - `ConstraintRecommendationEngine.chooseServingCombination` — 이산 식품 분수배 배제
 - `dto/RecommendedFoodEntry.java` — 표시 단위(개수)
 
@@ -142,6 +146,8 @@ ETM처럼 **전 매크로에 밴드**를 두되, ETM의 균일 범위가 아니�
 | 4. 끼니 역할 main/side | 끼니 현실성 | 데이터 분류 품질 의존 | 2와 병행 |
 
 공통: 모든 변경은 **benchmark baseline 대비 feasible율·목표 적합·다양성 회귀 검증**을 동반한다(`OPTIMIZATION.md` §11). 알러지 안전·실패 투명성·결정성은 불변.
+
+> **확정 로드맵(2026-06-29, 4인 팀 합의)**: 위 가치/위험 순위에 더해 **⓪ 추천 자격 풀 확장(검증 큐)을 ① 매크로 밴드 앞 선결로 격상**(추천 통과 풀이 ~54개라 풀 확장 없이 밴드를 조이면 feasible이 깨짐). 릴리스 단위: **R1**(③ 이산 + 다중후보 버퍼링 + 추천 이벤트 식품별 매핑) → **R2**(① 매크로 밴드 g/kg) → **R3**(② 끼니 분배 + ④ 역할). **⑤ 알러지 강화는 단독 롤백 가능한 별도 트랙.** 상세는 `DIET_RECOMMENDATION_ENHANCEMENT_DECISIONS_2026-06-29.md`.
 
 ---
 

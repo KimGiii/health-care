@@ -667,11 +667,6 @@ private struct CatalogFoodRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: item.category?.sfSymbol ?? "fork.knife")
-                .font(.title2)
-                .frame(width: 40, height: 40)
-                .background(Color.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
                     Text(item.displayName).font(.subheadline.bold())
@@ -684,6 +679,12 @@ private struct CatalogFoodRow: View {
                             .foregroundColor(.brandAccent)
                             .clipShape(Capsule())
                     }
+                }
+                if let brand = item.displayBrand {
+                    Text(brand)
+                        .font(.caption2)
+                        .foregroundColor(Color.brandAccent)
+                        .lineLimit(1)
                 }
                 Text(item.catalogNutritionSummary)
                     .font(.caption)

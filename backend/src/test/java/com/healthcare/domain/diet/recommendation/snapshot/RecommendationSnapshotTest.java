@@ -1,5 +1,6 @@
 package com.healthcare.domain.diet.recommendation.snapshot;
 
+import com.healthcare.domain.goals.entity.Goal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -7,56 +8,25 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 스냅샷은 순수 저장 모델이다 — 이벤트 생성·영속화는 snapshot 패키지 서비스들
+ * (Store/Feedback/Conversion)의 책임이며 각 서비스 테스트가 검증한다.
+ * (과거 @Transient 이벤트 리스트는 GENERATED 유실 버그의 원인이라 제거됨)
+ */
 @DisplayName("RecommendationSnapshot 도메인 모델")
 class RecommendationSnapshotTest {
 
     @Test
-    @DisplayName("스냅샷 생성 시 GENERATED 이벤트가 자동으로 추가된다")
-    void newSnapshotHasGeneratedEvent() {
+    @DisplayName("create()는 스냅샷 필드를 채우고 생성 시각을 기록한다")
+    void createPopulatesFields() {
         RecommendationSnapshot snapshot = RecommendationSnapshot.create(
-                1L, LocalDate.of(2026, 6, 19), "[]", null, false);
+                1L, LocalDate.of(2026, 7, 15), "[]", Goal.GoalType.WEIGHT_LOSS, true);
 
-        assertThat(snapshot.getEvents()).hasSize(1);
-        assertThat(snapshot.getEvents().getFirst().getEventType())
-                .isEqualTo(RecommendationEvent.EventType.GENERATED);
-    }
-
-    @Test
-    @DisplayName("recordExposed() 호출 시 EXPOSED 이벤트가 추가된다")
-    void recordExposedAddsEvent() {
-        RecommendationSnapshot snapshot = RecommendationSnapshot.create(
-                1L, LocalDate.now(), "[]", null, false);
-
-        snapshot.recordExposed();
-
-        assertThat(snapshot.getEvents()).hasSize(2);
-        assertThat(snapshot.getEvents().getLast().getEventType())
-                .isEqualTo(RecommendationEvent.EventType.EXPOSED);
-    }
-
-    @Test
-    @DisplayName("recordRefreshed()는 feedback reason과 함께 REFRESHED 이벤트를 추가한다")
-    void recordRefreshedAddsEventWithReason() {
-        RecommendationSnapshot snapshot = RecommendationSnapshot.create(
-                1L, LocalDate.now(), "[]", null, false);
-
-        snapshot.recordRefreshed(RecommendationFeedbackReason.NOT_HUNGRY);
-
-        RecommendationEvent event = snapshot.getEvents().getLast();
-        assertThat(event.getEventType()).isEqualTo(RecommendationEvent.EventType.REFRESHED);
-        assertThat(event.getFeedbackReason()).isEqualTo(RecommendationFeedbackReason.NOT_HUNGRY);
-    }
-
-    @Test
-    @DisplayName("recordConverted()는 dietLogId와 함께 RECORDED 이벤트를 추가한다")
-    void recordConvertedAddsEventWithDietLogId() {
-        RecommendationSnapshot snapshot = RecommendationSnapshot.create(
-                1L, LocalDate.now(), "[]", null, false);
-
-        snapshot.recordConverted(42L);
-
-        RecommendationEvent event = snapshot.getEvents().getLast();
-        assertThat(event.getEventType()).isEqualTo(RecommendationEvent.EventType.RECORDED);
-        assertThat(event.getDietLogId()).isEqualTo(42L);
+        assertThat(snapshot.getUserId()).isEqualTo(1L);
+        assertThat(snapshot.getSnapshotDate()).isEqualTo(LocalDate.of(2026, 7, 15));
+        assertThat(snapshot.getMealsJson()).isEqualTo("[]");
+        assertThat(snapshot.getGoalType()).isEqualTo(Goal.GoalType.WEIGHT_LOSS);
+        assertThat(snapshot.isStrictAllergyMode()).isTrue();
+        assertThat(snapshot.getCreatedAt()).isNotNull();
     }
 }

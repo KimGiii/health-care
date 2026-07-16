@@ -118,6 +118,7 @@
 | 문서 | 내용 |
 | --- | --- |
 | [COVERAGE_MEASUREMENT](operations/COVERAGE_MEASUREMENT.md) | 테스트 커버리지 측정 절차 — Jacoco, Xcode xccov |
+| [DIET_RECOMMENDATION_CURATION_BATCH_RUNBOOK](operations/DIET_RECOMMENDATION_CURATION_BATCH_RUNBOOK.md) | 추천 후보 큐레이션 배치 운영 절차 |
 | [MONITORING_PROMETHEUS_GRAFANA](operations/MONITORING_PROMETHEUS_GRAFANA.md) | 모니터링 구축 가이드 — Prometheus + Grafana |
 | [DOMAIN_MIGRATION_GAINSY_SITE](operations/DOMAIN_MIGRATION_GAINSY_SITE.md) | 도메인 전환 가이드 — api.gainsy.site (HTTPS) |
 | [TROUBLESHOOTING](operations/TROUBLESHOOTING.md) | 트러블슈팅 로그 |
@@ -163,6 +164,8 @@
 | 문서 | 내용 |
 | --- | --- |
 | [ALLERGEN_SEED_COVERAGE_2026-06-16](references/ALLERGEN_SEED_COVERAGE_2026-06-16.md) | 알러젠 seed 커버리지 리포트 |
+| [BATCH_A_RECOMMENDATION_CURATION_2026-06-30](references/BATCH_A_RECOMMENDATION_CURATION_2026-06-30.md) | Batch A 추천 후보 큐레이션 근거와 CSV 적용 순서 |
+| [BRAND_ALLERGEN_PROFILE_GAP_QUEUE_2026-06-30](references/BRAND_ALLERGEN_PROFILE_GAP_QUEUE_2026-06-30.md) | 로컬 브랜드/제조사 추천 후보의 알러젠 완결 프로필 보강 큐 |
 | [BRAND_ALLERGEN_CSV_VERIFICATION_2026-06-17](references/BRAND_ALLERGEN_CSV_VERIFICATION_2026-06-17.md) | 브랜드 공식 메뉴 알러젠 CSV 검수 |
 | [BURGER_KING_KOREA_NUTRITION_ALLERGY_2026-06-09](references/BURGER_KING_KOREA_NUTRITION_ALLERGY_2026-06-09.md) | 버거킹 코리아 영양·알레르기 |
 | [MCDONALDS_KOREA_NUTRITION_ALLERGY_2026-06-09](references/MCDONALDS_KOREA_NUTRITION_ALLERGY_2026-06-09.md) | 맥도날드 영양·알레르기 |

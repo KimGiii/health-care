@@ -3,7 +3,9 @@ package com.healthcare.domain.diet.external.importer;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenDataSource;
 import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenProfile;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileRepository;
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
@@ -30,19 +32,22 @@ class BrandMenuCsvImporterTest {
 
     private FoodCatalogRepository repository;
     private FoodAllergenTagRepository allergenTagRepository;
+    private FoodAllergenProfileRepository allergenProfileRepository;
     private BrandMenuCsvImporter importer;
 
     @BeforeEach
     void setUp() {
         repository = mock(FoodCatalogRepository.class);
         allergenTagRepository = mock(FoodAllergenTagRepository.class);
+        allergenProfileRepository = mock(FoodAllergenProfileRepository.class);
         importer = new BrandMenuCsvImporter(
                 new FoodCatalogIngestService(
                         repository,
                         mock(com.healthcare.domain.diet.repository.FoodServingOptionRepository.class),
                         new ServingOptionDeriver(),
                 org.mockito.Mockito.mock(com.healthcare.domain.diet.external.dedup.CanonicalDedupResolver.class)),
-                allergenTagRepository
+                allergenTagRepository,
+                allergenProfileRepository
         );
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
@@ -234,6 +239,13 @@ class BrandMenuCsvImporterTest {
                         ))
                 )
         );
+        verify(allergenProfileRepository).save(argThat(profile ->
+                profile.getFoodCatalogId().equals(42L)
+                        && profile.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+                        && profile.getSource() == AllergenDataSource.BRAND_OFFICIAL
+                        && profile.getStandardVersion().equals("brand-menu-csv-v1")
+                        && profile.getReviewedAt().equals(existing.getLastVerifiedAt())
+        ));
     }
 
     @Test
@@ -422,14 +434,55 @@ class BrandMenuCsvImporterTest {
     }
 
     @Test
-    @DisplayName("포함 알러젠 없이 allergen_profile_verified=true이면 row를 거절한다")
-    void importRows_rejectsVerifiedEmptyAllergenProfile() {
+    @DisplayName("포함 알러젠이 없어도 allergen_profile_verified=true이면 완결 프로필을 저장한다")
+    void importRows_savesVerifiedProfileWithoutIncludedAllergens() {
+        FoodCatalog saved = FoodCatalog.builder()
+                .id(77L)
+                .foodCode("브랜드:알러젠_없음_메뉴")
+                .source(FoodCatalogSource.BRAND_OFFICIAL)
+                .name("알러젠 없음 메뉴")
+                .nameKo("알러젠 없음 메뉴")
+                .category(FoodCategory.PROCESSED)
+                .caloriesPer100g(200.0)
+                .recommendationStatus(RecommendationStatus.SEARCH_ONLY)
+                .isCustom(false)
+                .build();
         BrandMenuCsvRow row = BrandMenuCsvRow.builder()
                 .brandName("브랜드").menuName("알러젠 없음 메뉴").category("PROCESSED")
                 .nutritionBasis("PER_SERVING")
                 .servingSizeG("100").calories("200").protein("5").carbs("30")
                 .fat("8").sodium("300").sugar("3").saturatedFat("2")
-                .sourceUrl("").lastVerifiedAt("").recommendationStatus("SEARCH_ONLY")
+                .sourceUrl("https://brand.example/label").lastVerifiedAt("2026-06-30").recommendationStatus("SEARCH_ONLY")
+                .recommendationReason("")
+                .allergenTags("")
+                .allergenProfileVerified("true")
+                .build();
+        when(repository.findBySourceAndFoodCode(FoodCatalogSource.BRAND_OFFICIAL, "브랜드:알러젠_없음_메뉴"))
+                .thenReturn(Optional.empty(), Optional.of(saved));
+
+        FoodCatalogImportResult result = importer.importRows(List.of(row));
+
+        assertThat(result.createdCount()).isEqualTo(1);
+        assertThat(result.skippedCount()).isEqualTo(0);
+        verify(allergenTagRepository).replaceBySource(77L, AllergenDataSource.BRAND_OFFICIAL, List.of());
+        verify(allergenProfileRepository).save(argThat(profile ->
+                profile.getFoodCatalogId().equals(77L)
+                        && profile.getConfidenceLevel() == AllergenConfidenceLevel.LABEL_DERIVED
+                        && profile.getSource() == AllergenDataSource.BRAND_OFFICIAL
+                        && profile.getSourceReference().equals("https://brand.example/label")
+                        && profile.getReviewedAt() != null
+        ));
+    }
+
+    @Test
+    @DisplayName("완결 알러젠 프로필에는 검수일이 필요하다")
+    void importRows_rejectsVerifiedAllergenProfileWithoutReviewDate() {
+        BrandMenuCsvRow row = BrandMenuCsvRow.builder()
+                .brandName("브랜드").menuName("알러젠 없음 메뉴").category("PROCESSED")
+                .nutritionBasis("PER_SERVING")
+                .servingSizeG("100").calories("200").protein("5").carbs("30")
+                .fat("8").sodium("300").sugar("3").saturatedFat("2")
+                .sourceUrl("https://brand.example/label").lastVerifiedAt("").recommendationStatus("SEARCH_ONLY")
                 .recommendationReason("")
                 .allergenTags("")
                 .allergenProfileVerified("true")
@@ -439,9 +492,9 @@ class BrandMenuCsvImporterTest {
 
         assertThat(result.skippedCount()).isEqualTo(1);
         assertThat(result.rejectedRows()).extracting(FoodCatalogImportRejectedRow::field)
-                .containsExactly("allergen_tags");
+                .containsExactly("last_verified_at");
         verify(repository, never()).save(any());
-        verify(allergenTagRepository, never()).replaceBySource(any(), any(), any());
+        verify(allergenProfileRepository, never()).save(any());
     }
 
     @Test

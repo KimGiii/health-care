@@ -1,7 +1,5 @@
 package com.healthcare.domain.diet.recommendation.snapshot;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.domain.diet.recommendation.dto.RecommendedMeal;
 import com.healthcare.domain.goals.entity.Goal;
 import lombok.RequiredArgsConstructor;
@@ -15,21 +13,25 @@ import java.util.List;
 public class RecommendationSnapshotStore {
 
     private final RecommendationSnapshotRepository snapshotRepository;
-    private final ObjectMapper objectMapper;
+    private final RecommendationEventRepository eventRepository;
+    private final SnapshotMealsCodec mealsCodec;
 
-    public Long save(Long userId, LocalDate date, String mealsJson,
+    /**
+     * 스냅샷을 저장하고 식품별 GENERATED 이벤트를 fan-out 저장한다(R1 food 매핑).
+     * GENERATED fan-out은 식품별 전환율 KPI의 분모가 된다 — 스냅샷 단위 생성 수가
+     * 필요하면 {@code COUNT(DISTINCT snapshot_id)}로 복원한다.
+     */
+    public Long save(Long userId, LocalDate date, List<RecommendedMeal> meals,
                      Goal.GoalType goalType, boolean strictAllergyMode) {
+        String mealsJson = mealsCodec.serialize(meals);
         RecommendationSnapshot snapshot = RecommendationSnapshot.create(
                 userId, date, mealsJson, goalType, strictAllergyMode);
         RecommendationSnapshot saved = snapshotRepository.save(snapshot);
-        return saved.getId();
-    }
 
-    public String serializeMeals(List<RecommendedMeal> meals) {
-        try {
-            return objectMapper.writeValueAsString(meals);
-        } catch (JsonProcessingException e) {
-            return "[]";
-        }
+        List<RecommendationEvent> generated = mealsCodec.extractFoodCatalogIds(mealsJson).stream()
+                .map(foodId -> RecommendationEvent.generated(saved.getId(), userId, foodId))
+                .toList();
+        eventRepository.saveAll(generated);
+        return saved.getId();
     }
 }

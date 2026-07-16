@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -51,14 +52,53 @@ public class ServingOptionDeriver {
     );
 
     private static final double[] MULTIPLIERS = {1.0, 0.5, 1.5, 2.0};
+    /** 낱개 식품의 전개 개수(정수배). 0.5개 같은 분수 분량을 만들지 않는다. */
+    private static final int[] COUNT_UNITS = {1, 2, 3};
     private static final Pattern SINGLE_GRAM = Pattern.compile("^([0-9]+(?:\\.[0-9]+)?)\\s*(g|ml)$");
 
-    /** 한 식품의 제공량 옵션을 도출한다. 항상 1개 이상의 검증 옵션을 반환한다. */
+    /**
+     * 낱개로 먹는 식품의 이름 키워드 → 1개당 <b>가식부</b> g. 영양사 검수 확정 정책 가설값이며
+     * (식약처 식품영양성분 DB·표시기준 1회 섭취참고량 근거) 운영 데이터로 보정한다(§3 데이터).
+     * 음료·즙 등 가공형은 {@link #countableGramsFor}의 제외 가드에서 먼저 걸러진다.
+     * 편차·오탐이 큰 식품(배·감·감자 등)은 일부러 제외하고 g 기반 OFFICIAL_SERVING으로 둔다.
+     * 사과는 영양사 검수상 "경계선(크기 편차 큼)"이라 초기엔 보류하고 큐레이션 후 추가를 검토한다.
+     */
+    private static final Map<String, Double> COUNTABLE_GRAMS_BY_KEYWORD = Map.ofEntries(
+            Map.entry("계란", 50.0),
+            Map.entry("달걀", 50.0),
+            Map.entry("바나나", 100.0),
+            Map.entry("귤", 70.0),
+            Map.entry("키위", 75.0),
+            Map.entry("자두", 60.0),
+            Map.entry("방울토마토", 15.0),
+            Map.entry("토마토", 100.0)
+    );
+
+    /** 가공형은 낱개가 아니다. 화이트리스트보다 먼저 평가해 오탐(사과주스·토마토케첩 등)을 차단한다. */
+    private static final List<String> COUNTABLE_EXCLUSION_KEYWORDS = List.of(
+            "주스", "즙", "음료", "가루", "분말",
+            "케첩", "소스", "잼", "통조림", "말랭이", "칩", "식초", "퓨레", "페이스트", "농축", "시럽", "스무디", "셰이크"
+    );
+
+    /** 한 식품의 제공량 옵션을 도출한다(이름 미지정 = 비낱개로 간주). */
     public List<FoodServingOption> derive(
             Long foodCatalogId, FoodCategory category, String servingReference) {
-        double base = resolveBaseServingG(category, servingReference);
-        OffsetDateTime now = OffsetDateTime.now();
+        return derive(foodCatalogId, category, servingReference, null);
+    }
 
+    /**
+     * 한 식품의 제공량 옵션을 도출한다. 항상 1개 이상의 검증 옵션을 반환한다.
+     * 낱개 식품(계란 등)은 {@code COUNT_UNIT} 정수배로, 그 외는 {@code OFFICIAL_SERVING} multiplier로 전개한다.
+     */
+    public List<FoodServingOption> derive(
+            Long foodCatalogId, FoodCategory category, String servingReference, String foodName) {
+        OffsetDateTime now = OffsetDateTime.now();
+        Double perUnitG = countableGramsFor(foodName);
+        if (perUnitG != null) {
+            return deriveCountUnitOptions(foodCatalogId, perUnitG, now);
+        }
+
+        double base = resolveBaseServingG(category, servingReference);
         List<FoodServingOption> options = new ArrayList<>(MULTIPLIERS.length);
         for (int i = 0; i < MULTIPLIERS.length; i++) {
             double grams = Math.round(base * MULTIPLIERS[i]);
@@ -74,6 +114,47 @@ public class ServingOptionDeriver {
                     .build());
         }
         return options;
+    }
+
+    /** 낱개 식품을 1·2·3개 정수배 COUNT_UNIT 옵션으로 전개한다(1개 = primary, sort 0). */
+    private List<FoodServingOption> deriveCountUnitOptions(
+            Long foodCatalogId, double perUnitG, OffsetDateTime now) {
+        List<FoodServingOption> options = new ArrayList<>(COUNT_UNITS.length);
+        for (int i = 0; i < COUNT_UNITS.length; i++) {
+            int count = COUNT_UNITS[i];
+            double grams = Math.round(perUnitG * count);
+            String label = count + "개";
+            options.add(FoodServingOption.builder()
+                    .foodCatalogId(foodCatalogId)
+                    .label(label)
+                    .labelKo(label)
+                    .equivalentG(grams)
+                    .sortOrder(i)
+                    .servingType(ServingType.COUNT_UNIT)
+                    .verifiedAt(now)
+                    .build());
+        }
+        return options;
+    }
+
+    /** 낱개 식품이면 1개당 g, 아니면 null. 이름 키워드 화이트리스트 + 가공형 제외 가드. */
+    Double countableGramsFor(String foodName) {
+        if (foodName == null) {
+            return null;
+        }
+        String normalized = foodName.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        if (COUNTABLE_EXCLUSION_KEYWORDS.stream().anyMatch(normalized::contains)) {
+            return null;
+        }
+        // 긴 키워드 우선: "방울토마토"가 "토마토"보다 먼저 매칭되어야 한다.
+        return COUNTABLE_GRAMS_BY_KEYWORD.entrySet().stream()
+                .filter(e -> normalized.contains(e.getKey()))
+                .max(Comparator.comparingInt(e -> e.getKey().length()))
+                .map(Map.Entry::getValue)
+                .orElse(null);
     }
 
     /** source 기준 또는 카테고리 표준에서 1회 제공량(g)을 정한 뒤 현실 범위로 캡한다. */

@@ -49,6 +49,7 @@ public class FoodCatalogAdminOperations {
     private final FoodCatalogDuplicateReportService duplicateReportService;
     private final DedupCollisionQueueService dedupCollisionQueueService;
     private final BrandMenuCsvImporter brandMenuCsvImporter;
+    private final RecommendationCurationCsvImporter recommendationCurationCsvImporter;
     private final FoodCatalogNameRenormalizationService nameRenormalizationService;
     private final FoodCatalogNameOverrideService nameOverrideService;
     private final FoodCatalogCanonicalBackfillService canonicalBackfillService;
@@ -87,6 +88,19 @@ public class FoodCatalogAdminOperations {
         log.info(
                 "관리자 카탈로그 작업 완료: operation=brand-csv, created={}, updated={}, skipped={}",
                 result.createdCount(),
+                result.updatedCount(),
+                result.skippedCount()
+        );
+        return result;
+    }
+
+    public FoodCatalogImportResult importRecommendationCurationCsv(String adminToken, InputStream csvStream)
+            throws IOException {
+        adminOperationGuard.assertAllowed(adminToken);
+        log.info("관리자 카탈로그 작업 시작: operation=recommendation-curation-csv");
+        FoodCatalogImportResult result = recommendationCurationCsvImporter.importFromCsv(csvStream);
+        log.info(
+                "관리자 카탈로그 작업 완료: operation=recommendation-curation-csv, updated={}, skipped={}",
                 result.updatedCount(),
                 result.skippedCount()
         );

@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gainsy Diet Domain Architecture Review</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+        primaryColor: "#e8f2ff",
+        primaryBorderColor: "#2563eb",
+        primaryTextColor: "#111827",
+        lineColor: "#64748b",
+        secondaryColor: "#f7fee7",
+        tertiaryColor: "#fff7ed"
+      }
+    });
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { letter-spacing: 0; }
+    .mermaid svg { max-width: 100%; height: auto; }
+    .file-pill { word-break: break-all; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-950">
+  <main class="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+    <section class="mb-8 border-b border-slate-200 pb-8">
+      <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-700">Architecture Review</p>
+      <h1 class="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">Gainsy diet 도메인 전체 아키텍처 검토</h1>
+      <p class="mt-4 max-w-4xl text-base leading-7 text-slate-700">
+        기준 문서인 <span class="font-semibold">CONTEXT.md</span>, 식단 추천 관련 ADR, 실행 계획, 그리고
+        <span class="font-semibold">backend/src/main/java/com/healthcare/domain/diet</span> 코드를 함께 읽고 정리한
+        개선 후보입니다. 관점은 “Module이 충분히 Deep한가”, “Interface가 호출자에게 구현 세부를 얼마나 요구하는가”,
+        “Locality와 Leverage를 높일 수 있는가”입니다.
+      </p>
+    </section>
+
+    <section class="mb-8 grid gap-4 md:grid-cols-3">
+      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-500">검토 기준</h2>
+        <p class="mt-2 text-lg font-semibold">Deep Module / Shallow Module</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">삭제 사고 실험, ADR 적합성, 테스트 우회 여부를 함께 보았습니다.</p>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-500">가장 강한 신호</h2>
+        <p class="mt-2 text-lg font-semibold">추천 후보 자격 + Allergen Evidence</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">ADR-0005와 현재 구현 사이의 차이가 가장 큰 축입니다.</p>
+      </div>
+      <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-500">리포트 결과</h2>
+        <p class="mt-2 text-lg font-semibold">Strong 4개, Worth exploring 2개</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">첫 탐색은 후보 1번을 추천합니다.</p>
+      </div>
+    </section>
+
+    <section class="mb-10 rounded-lg border border-blue-200 bg-blue-50 p-5">
+      <h2 class="text-lg font-semibold text-blue-950">요약 판단</h2>
+      <p class="mt-3 leading-7 text-blue-950">
+        diet 도메인은 문서와 ADR이 이미 좋은 편입니다. 그래서 새 Module을 많이 늘리는 것보다,
+        이미 존재하는 추천 후보 풀, AllergenSafetyGate, Recommendation Snapshot and Event, Food Catalog Ingest Run의
+        Depth를 키워 호출자가 구현 세부를 덜 알게 만드는 쪽이 더 높은 Leverage를 가집니다.
+      </p>
+    </section>
+
+    <section class="space-y-8">
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 1</p>
+            <h2 class="mt-1 text-2xl font-semibold">추천 후보 자격 Module을 Deep하게 만들기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800">Strong</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/usecase/DailyDietRecommendationUseCases.java:100</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java:49</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidate.java:17</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/nutrition/policy/NutrientCompletenessPolicy.java:11</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              `DietRecommendationCandidatePool`의 Interface가 “검증된 추천 후보”를 보장하지 못해
+              `DailyDietRecommendationUseCases`가 `macroDataComplete`, `hasVerifiedServingOptions`를 다시 알아야 합니다.
+              후보 자격 Implementation 일부가 호출자로 새고 있어 후보 풀 Module의 Depth가 부족합니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  U["DailyDietRecommendationUseCases"] --> P["DietRecommendationCandidatePool"]
+  P --> A["AllergenSafetyGate"]
+  P --> C["Catalog / Serving Option 조회"]
+  U --> F["macro / serving 재필터"]
+  F --> E["ConstraintRecommendationEngine"]
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  U["DailyDietRecommendationUseCases"] --> Q["Verified Recommendation Candidate Qualification Module"]
+  Q --> P["DietRecommendationCandidatePool"]
+  Q --> A["Allergen Evidence / Profile 판단"]
+  Q --> V["검증된 추천 후보 값"]
+  V --> E["ConstraintRecommendationEngine"]
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">후보 자격 판정을 후보 풀 근처의 Deep Module로 모으고, UseCase는 추천 orchestration만 알게 합니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">자격 조건 변경이 한 Module에 모이고, 엔진·관리자 리포트·벤치마크가 같은 판단을 재사용할 수 있습니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">UseCase 재필터 제거 회귀, 후보 풀 자격 결과, 엔진 테스트 fixture의 우회 생성 방지를 확인합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 2</p>
+            <h2 class="mt-1 text-2xl font-semibold">Allergen Evidence/Profile Ingest Module로 통합하기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800">Strong</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/allergen/FoodAllergenTagAdminOperations.java:30</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/importer/BrandMenuCsvImporter.java:132</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/allergen/repository/FoodAllergenTagRepository.java:35</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/allergen/entity/FoodAllergenProfile.java:16</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/allergen/AllergenSafetyGate.java:38</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              관리자 입력과 브랜드 CSV Adapter가 같은 알러젠 사실을 서로 다른 경로에서 직접 저장합니다.
+              ADR-0005의 versioned evidence, complete profile, invalidation, conflict 처리가 하나의 Deep Module 뒤에 숨지 못합니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  Admin["Admin Adapter"] --> Tags["FoodAllergenTagRepository"]
+  Csv["BrandMenuCsvImporter"] --> Tags
+  Csv --> Catalog["FoodCatalogIngestService"]
+  Gate["AllergenSafetyGate"] --> Tags
+  Gate --> Profile["FoodAllergenProfileRepository"]
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  Admin["Admin Adapter"] --> M["Allergen Evidence/Profile Ingest Module"]
+  Csv["Brand CSV Adapter"] --> M
+  M --> Tags["Tags"]
+  M --> Profile["Complete Profile"]
+  M --> Queue["Invalidation / Conflict Queue"]
+  Gate["AllergenSafetyGate"] --> M
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">알러젠 근거 적재, complete profile 생성, source 교체, 무효화 판단을 한 Module의 책임으로 모읍니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">근거 스키마 확장과 ADR-0005 정책 변경이 한곳에 모이고, 추천 후보 자격과 운영자 검수 흐름이 같은 판단을 씁니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">Admin 입력과 브랜드 CSV가 같은 근거/Profile 결과를 만드는지, source 교체가 profile을 일관되게 갱신하는지 확인합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 3</p>
+            <h2 class="mt-1 text-2xl font-semibold">`strictAllergyMode` legacy Seam 제거하기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800">Strong</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/dto/DailyDietRecommendationRequest.java:10</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/usecase/DailyDietRecommendationUseCases.java:96</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java:49</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/allergen/AllergenContext.java:13</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/snapshot/RecommendationSnapshot.java:36</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              ADR-0005 이후 알러지 제한은 항상 verified-only fail-closed 정책이어야 하지만,
+              `strictAllergyMode`가 요청, UseCase, 후보 풀, AllergenContext, Snapshot까지 관통합니다.
+              legacy 값이 내부 Interface를 넓히고 정책 Locality를 낮춥니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  Req["Request.strictAllergyMode"] --> U["UseCase"]
+  U --> P["CandidatePool"]
+  P --> C["AllergenContext"]
+  C --> G["AllergenSafetyGate"]
+  U --> S["Snapshot.strictAllergyMode"]
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  Req["Legacy request field"] --> A["Compatibility Adapter"]
+  A --> Policy["Internal Allergy Policy"]
+  Policy --> G["AllergenSafetyGate"]
+  Policy --> S["Snapshot policy version"]
+  G --> V["Fail-closed decision"]
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">호환 입력은 Adapter 근처에서만 처리하고, 내부 Allergy Policy는 legacy toggle 없이 동작하게 합니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">ADR-0005 정책 변경이 SafetyGate와 Snapshot 정책 버전으로 모여, 요청 필드 변경이 추천 엔진까지 번지지 않습니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">strict true/false가 동일한 판정을 내는지, Snapshot이 policy version을 남기는지, 기존 클라이언트 호환이 깨지지 않는지 확인합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 4</p>
+            <h2 class="mt-1 text-2xl font-semibold">Recommendation Snapshot and Event Module을 Deep하게 만들기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800">Strong</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/snapshot/RecommendationSnapshotStore.java:20</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/snapshot/RecommendationConversionService.java:16</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/snapshot/RecommendationFeedbackService.java:16</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/dto/CreateDietLogRequest.java:30</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/entity/DietLog.java:17</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              SnapshotStore는 JSON 저장 세부를 UseCase에 노출하고, Conversion Implementation은 실제 Diet Log 생성 흐름과 연결되지 않습니다.
+              `recommendationSnapshotId`는 요청에는 있지만 DietLog에 매핑되지 않아 “추천 기록 전환”의 Leverage가 낮습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  U["DailyDietRecommendationUseCases"] --> Store["serializeMeals / save"]
+  Feedback["Feedback Adapter"] --> F["RecommendationFeedbackService"]
+  Conv["ConversionService"] --> Event["RecommendationEventRepository"]
+  Log["DietLogUseCases"] -. "snapshotId ignored" .-> D["DietLog"]
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  U["Recommendation UseCase"] --> M["Recommendation Snapshot and Event Module"]
+  M --> Snap["Snapshot with policy/evidence version"]
+  M --> Event["Generated / Exposed / Refreshed / Recorded"]
+  M --> Recheck["Conversion revalidation"]
+  Recheck --> Log["Diet Log Interface"]
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">Snapshot 생성, policy/evidence 버전 보존, feedback, conversion, retention을 같은 Deep Module 책임으로 묶습니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">전환 재검증, 이벤트 멱등성, 90일 보존 정책 변경이 한 곳으로 모입니다. Diet Log는 전환 결과만 받습니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">추천 생성부터 Diet Log 기록까지의 전환 테스트, stale evidence 차단, event 저장, retention 삭제를 통합 검증합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 5</p>
+            <h2 class="mt-1 text-2xl font-semibold">Food Catalog Ingest Run Module의 Depth 키우기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">Worth exploring</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/admin/FoodCatalogAdminOperations.java:56</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogImportBatchRunner.java:25</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/importer/FoodCatalogIngestService.java:26</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/dedup/CanonicalDedupResolver.java:30</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/dedup/FoodCatalogCanonicalBackfillService.java:36</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/external/importer/BrandMenuCsvImporter.java:132</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              적재, checkpoint, dedup, serving option, backfill, 브랜드 메뉴 검수 흐름이 나뉘어 있습니다.
+              각 Implementation은 의미가 있지만, 한 번의 Food Catalog Ingest Run이 남겨야 하는 보장이 여러 곳에 흩어져 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  Admin["FoodCatalogAdminOperations"] --> Batch["ImportBatchRunner"]
+  Batch --> Fetch["PageFetcher"]
+  Batch --> Importer["Importer"]
+  Importer --> Ingest["FoodCatalogIngestService"]
+  Ingest --> Dedup["CanonicalDedupResolver"]
+  Ingest --> Serving["ServingOptionDeriver"]
+  Backfill["CanonicalBackfillService"] --> Dedup
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  Admin["Admin Adapter"] --> Run["Food Catalog Ingest Run Module"]
+  Source["Source Adapters"] --> Run
+  Run --> Norm["Normalize / Identity"]
+  Run --> Dedup["Canonical convergence"]
+  Run --> Serving["Serving option guarantee"]
+  Run --> Summary["Run summary / checkpoint"]
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">Source Adapter는 외부 형태만 다루고, 적재 후 보장은 Ingest Run Module에 모읍니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">출처 우선순위, canonical 정책, serving option 보장 변경이 적재 전체에 일관되게 적용됩니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">source 순서가 바뀌어도 같은 canonical로 수렴하는지, 패자 옵션 정리와 checkpoint summary가 함께 맞는지 확인합니다.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500">Candidate 6</p>
+            <h2 class="mt-1 text-2xl font-semibold">Diet Restriction 조합 정책 Module 정리하기</h2>
+          </div>
+          <span class="inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">Worth exploring</span>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Files</h3>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/restriction/usecase/DietRestrictionUseCases.java:73</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/restriction/entity/DietRestriction.java:75</li>
+              <li class="file-pill">/Volumes/GOLD/프로젝트/develop/health-care/backend/src/main/java/com/healthcare/domain/diet/recommendation/candidate/DietRecommendationCandidatePool.java:188</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Problem</h3>
+            <p class="mt-2 leading-7 text-slate-700">
+              `ALLERGY/AVOID`와 `FOOD/CATEGORY/KEYWORD/ALLERGEN_TAG` 조합이 그대로 노출됩니다.
+              추천 후보 풀은 제한 조합을 다시 파싱하고, 알러지 제한의 의미가 Allergen Policy 뒤에 숨지 않습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">Before</h3>
+            <pre class="mermaid">
+flowchart LR
+  R["CreateDietRestrictionRequest"] --> U["DietRestrictionUseCases"]
+  U --> E["DietRestriction entity"]
+  P["DietRecommendationCandidatePool"] --> Parse["CandidateRestrictions.from"]
+  E --> Parse
+            </pre>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 class="mb-3 text-sm font-semibold text-slate-600">After</h3>
+            <pre class="mermaid">
+flowchart LR
+  R["Restriction input"] --> M["Diet Restriction Policy Module"]
+  M --> Canon["Canonical restriction model"]
+  Canon --> Store["Persistence"]
+  Canon --> Q["Recommendation qualification"]
+  Canon --> Allergy["Allergy Policy"]
+            </pre>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Solution</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">제한 조합 검증과 정규화를 Diet Restriction Policy Module로 모으고, 추천 후보 풀은 정규화된 제한만 소비합니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Locality / Leverage</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">알러지 제한 규칙과 일반 회피 규칙이 분리되어 ADR-0005 정책을 후보 풀까지 일관되게 전달할 수 있습니다.</p>
+          </div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            <h3 class="font-semibold">Tests</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-700">허용 조합과 거절 조합, keyword 정규화, 후보 풀 파싱 결과를 한 묶음으로 검증합니다.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="mt-10 rounded-lg border border-emerald-200 bg-emerald-50 p-6">
+      <h2 class="text-2xl font-semibold text-emerald-950">Top Recommendation</h2>
+      <p class="mt-3 leading-7 text-emerald-950">
+        첫 탐색 후보는 <span class="font-semibold">Candidate 1: 추천 후보 자격 Module을 Deep하게 만들기</span>입니다.
+        이 후보가 Candidate 2의 Allergen Evidence/Profile, Candidate 3의 legacy strict field, Candidate 4의 전환 재검증과
+        직접 연결되어 Leverage가 가장 큽니다. 작은 첫 단위로는 “UseCase가 후보 자격 세부를 모르게 만들 수 있는가”를
+        검증하는 것이 좋습니다.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

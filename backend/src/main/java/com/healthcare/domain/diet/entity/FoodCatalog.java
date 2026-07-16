@@ -264,6 +264,19 @@ public class FoodCatalog {
         this.recommendationReason = curation.reasonForStorage();
     }
 
+    /**
+     * 운영 큐레이션 CSV 검수 근거를 반영한다. 기존 source facts는 유지하되,
+     * 검수 URL/검수일이 명시된 경우 추천 검수 메타데이터로 보존한다.
+     */
+    public void updateCurationReviewMetadata(String sourceDetail, OffsetDateTime lastVerifiedAt) {
+        if (sourceDetail != null && !sourceDetail.isBlank()) {
+            this.sourceDetail = sourceDetail;
+        }
+        if (lastVerifiedAt != null) {
+            this.lastVerifiedAt = lastVerifiedAt;
+        }
+    }
+
     /** 출처 간 dedup 클러스터 키를 부여한다(설계 §4-1). */
     public void assignDedupKeys(String dedupGroup, String dedupNameKey) {
         this.dedupGroup = dedupGroup;

@@ -4,7 +4,9 @@ import com.healthcare.common.exception.ValidationException;
 import com.healthcare.domain.diet.allergen.AllergenConfidenceLevel;
 import com.healthcare.domain.diet.allergen.AllergenDataSource;
 import com.healthcare.domain.diet.allergen.AllergenTag;
+import com.healthcare.domain.diet.allergen.entity.FoodAllergenProfile;
 import com.healthcare.domain.diet.allergen.entity.FoodAllergenTag;
+import com.healthcare.domain.diet.allergen.repository.FoodAllergenProfileRepository;
 import com.healthcare.domain.diet.allergen.repository.FoodAllergenTagRepository;
 import com.healthcare.domain.diet.entity.FoodCatalog;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
@@ -76,9 +78,11 @@ public class BrandMenuCsvImporter {
     private static final int NAME_MAX_LENGTH = 150;
     private static final int SOURCE_DETAIL_MAX_LENGTH = 120;
     private static final int SERVING_REFERENCE_MAX_LENGTH = 80;
+    private static final String PROFILE_STANDARD_VERSION = "brand-menu-csv-v1";
 
     private final FoodCatalogIngestService ingestService;
     private final FoodAllergenTagRepository allergenTagRepository;
+    private final FoodAllergenProfileRepository allergenProfileRepository;
 
     /**
      * CSV 파일을 파싱해서 BRAND_OFFICIAL 출처로 upsert한다.
@@ -164,9 +168,9 @@ public class BrandMenuCsvImporter {
                     false
             );
         }
-        if (allergenProfileVerified.value() && allergens.tags().isEmpty()) {
+        if (allergenProfileVerified.value() && parseDate(row.lastVerifiedAt()) == null) {
             return new PreparedBrandMenuRow(
-                    rejected(row, "allergen_tags", "포함 알러젠 태그 없이 완결 프로필 검토를 표시할 수 없습니다."),
+                    rejected(row, "last_verified_at", "완결 알러젠 프로필에는 yyyy-MM-dd 형식의 검수일이 필요합니다."),
                     List.of(),
                     false,
                     false
@@ -266,20 +270,34 @@ public class BrandMenuCsvImporter {
     private void replaceBrandOfficialAllergenTags(PreparedBrandMenuRow preparedRow) {
         FoodCatalog imported = preparedRow.candidate().food();
         foodBySourceAndCode(imported)
-                .ifPresent(food -> allergenTagRepository.replaceBySource(
-                        food.getId(),
-                        AllergenDataSource.BRAND_OFFICIAL,
-                        preparedRow.allergenTags().stream()
-                                .map(tag -> FoodAllergenTag.builder()
-                                        .foodCatalogId(food.getId())
-                                        .allergenTag(tag)
-                                        .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
-                                        .source(AllergenDataSource.BRAND_OFFICIAL)
-                                        .allergenProfileVerified(preparedRow.allergenProfileVerified())
-                                        .reviewedAt(imported.getLastVerifiedAt())
-                                        .build())
-                                .toList()
-                ));
+                .ifPresent(food -> {
+                    allergenTagRepository.replaceBySource(
+                            food.getId(),
+                            AllergenDataSource.BRAND_OFFICIAL,
+                            preparedRow.allergenTags().stream()
+                                    .map(tag -> FoodAllergenTag.builder()
+                                            .foodCatalogId(food.getId())
+                                            .allergenTag(tag)
+                                            .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
+                                            .source(AllergenDataSource.BRAND_OFFICIAL)
+                                            .allergenProfileVerified(preparedRow.allergenProfileVerified())
+                                            .reviewedAt(imported.getLastVerifiedAt())
+                                            .build())
+                                    .toList()
+                    );
+                    if (preparedRow.allergenProfileVerified()) {
+                        allergenProfileRepository.save(FoodAllergenProfile.builder()
+                                .foodCatalogId(food.getId())
+                                .confidenceLevel(AllergenConfidenceLevel.LABEL_DERIVED)
+                                .source(AllergenDataSource.BRAND_OFFICIAL)
+                                .standardVersion(PROFILE_STANDARD_VERSION)
+                                .sourceReference(imported.getSourceDetail())
+                                .reviewedAt(imported.getLastVerifiedAt())
+                                .build());
+                    } else {
+                        allergenProfileRepository.findById(food.getId()).ifPresent(allergenProfileRepository::delete);
+                    }
+                });
     }
 
     private Optional<FoodCatalog> foodBySourceAndCode(FoodCatalog imported) {

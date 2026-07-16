@@ -6,6 +6,8 @@ import com.healthcare.domain.diet.allergen.AllergenTag;
 import com.healthcare.domain.diet.entity.DietLog;
 import com.healthcare.domain.diet.entity.DietLog.MealType;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
+import com.healthcare.domain.diet.entity.FoodServingOption.ServingType;
+import com.healthcare.domain.diet.entity.ServingOptionSnapshot;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidate;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidatePool;
 import com.healthcare.domain.diet.recommendation.candidate.DietRecommendationCandidates;
@@ -18,6 +20,7 @@ import com.healthcare.domain.diet.recommendation.engine.RecommendationFailureRea
 import com.healthcare.domain.diet.recommendation.engine.RecommendationRationale;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationResult;
 import com.healthcare.domain.diet.recommendation.engine.RecommendationSolution;
+import com.healthcare.domain.diet.recommendation.snapshot.OnlinePreferenceSignalLoader;
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationSnapshotStore;
 import com.healthcare.domain.diet.repository.FoodEntryRepository;
 import com.healthcare.domain.diet.repository.DietLogRepository;
@@ -28,10 +31,14 @@ import com.healthcare.domain.diet.restriction.repository.DietRestrictionReposito
 import com.healthcare.domain.goals.repository.GoalRepository;
 import com.healthcare.domain.user.entity.User;
 import com.healthcare.domain.user.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -62,9 +69,26 @@ class DailyDietRecommendationUseCasesTest {
     @Mock private RecommendationSnapshotStore snapshotStore;
     @Mock private FoodEntryRepository foodEntryRepository;
     @Mock private ConstraintRecommendationEngine engine;
+    @Mock private OnlinePreferenceSignalLoader onlinePreferenceSignalLoader;
+    @Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
     private DailyDietRecommendationUseCases useCases;
+
+    @Test
+    @DisplayName("실패 응답 시 사유 태그가 붙은 실패 카운터가 증가한다 (R1 관찰: KPI 판정 쿼리 1의 데이터 소스)")
+    void recommend_failure_incrementsFailureCounterWithReasonTag() {
+        User user = User.builder().id(1L).email("a@b.com").displayName("test").build(); // 프로필 미완
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(user));
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of());
+
+        useCases.recommend(1L, request(List.of(MealType.LUNCH)));
+
+        double count = meterRegistry.counter(
+                "healthcare.diet.recommendation.failure",
+                "reason", RecommendationFailureReason.TARGET_PROFILE_MISSING.name()).count();
+        assertThat(count).isEqualTo(1.0);
+    }
 
     @Test
     @DisplayName("recommend는 스냅샷·이벤트를 저장하므로 쓰기 트랜잭션 경계를 가진다")
@@ -188,6 +212,33 @@ class DailyDietRecommendationUseCasesTest {
         assertThat(response.failureReason()).isNotBlank();
         assertThat(response.failureCode())
                 .isEqualTo(RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE.name());
+    }
+
+    @Test
+    @DisplayName("알러젠 제한 후보가 단백질 하한에 물리적으로 못 닿으면 알러젠 검증 풀 부족으로 분류한다")
+    void recommend_engineInfeasibleWithAllergenProteinShortfall_returnsAllergenPoolInsufficient() {
+        DietRestriction milkRestriction = DietRestriction.builder()
+                .id(1L).userId(1L).restrictionType(RestrictionType.ALLERGY)
+                .targetType(TargetType.ALLERGEN_TAG).allergenTag(AllergenTag.MILK)
+                .build();
+        given(userRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(fullProfileUser()));
+        given(goalRepository.findActiveGoalByUserId(1L)).willReturn(Optional.empty());
+        given(dietRestrictionRepository.findByUserIdAndDeletedAtIsNull(1L)).willReturn(List.of(milkRestriction));
+        given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
+        given(candidatePool.load(any(), anyBoolean())).willReturn(new DietRecommendationCandidates(List.of(
+                foodWithServing(1L, "저단백음료A", FoodCategory.BEVERAGE, 100.0, 1.0, 100.0),
+                foodWithServing(2L, "저단백음료B", FoodCategory.BEVERAGE, 100.0, 1.0, 100.0)
+        )));
+        given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
+                .willReturn(RecommendationResult.failure(
+                        RecommendationFailureReason.REMAINING_MEALS_INFEASIBLE));
+
+        DailyDietRecommendationResponse response = useCases.recommend(1L,
+                request(List.of(MealType.DINNER, MealType.SNACK)));
+
+        assertThat(response.succeeded()).isFalse();
+        assertThat(response.failureCode())
+                .isEqualTo(RecommendationFailureReason.ALLERGEN_VERIFIED_POOL_INSUFFICIENT.name());
     }
 
     @Test
@@ -322,6 +373,35 @@ class DailyDietRecommendationUseCasesTest {
         given(dietLogRepository.findByUserIdAndLogDate(any(), any())).willReturn(List.of());
     }
 
+    @Test
+    @DisplayName("alternativeCount 미지정이어도 기본 버퍼만큼 후보를 미리 요청한다(다시 추천 즉시성)")
+    void recommend_defaultBuffer_prefetchesAlternatives() {
+        stubCommon();
+        given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST), 0);
+
+        useCases.recommend(1L, request(List.of(MealType.BREAKFAST)));
+
+        ArgumentCaptor<Integer> maxSolutions = ArgumentCaptor.forClass(Integer.class);
+        verify(engine).recommend(any(), any(), any(), any(), any(), any(), maxSolutions.capture(), any());
+        // primary 1 + 기본 버퍼 4 = 5
+        assertThat(maxSolutions.getValue()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("요청 alternativeCount가 기본 버퍼보다 크면 요청값을 따른다")
+    void recommend_largerRequestedCount_honored() {
+        stubCommon();
+        given(candidatePool.load(any(), anyBoolean())).willReturn(candidateSet());
+        givenEngineSucceeds(List.of(MealType.BREAKFAST), 0);
+
+        useCases.recommend(1L, requestWithAlternatives(List.of(MealType.BREAKFAST), 8));
+
+        ArgumentCaptor<Integer> maxSolutions = ArgumentCaptor.forClass(Integer.class);
+        verify(engine).recommend(any(), any(), any(), any(), any(), any(), maxSolutions.capture(), any());
+        assertThat(maxSolutions.getValue()).isEqualTo(9); // 1 + max(8, 4)
+    }
+
     private void givenEngineSucceeds(List<MealType> mealTypes, int alternativeCount) {
         given(engine.recommend(any(), any(), any(), any(), any(), any(), anyInt(), any()))
                 .willReturn(success(mealTypes, alternativeCount));
@@ -382,5 +462,15 @@ class DailyDietRecommendationUseCasesTest {
         return new DietRecommendationCandidate(
                 id, name, null, category, cal, 20.0, 10.0, 5.0, 0L, id,
                 AllergenConfidenceLevel.UNKNOWN, null, true, List.of(), true);
+    }
+
+    private DietRecommendationCandidate foodWithServing(
+            Long id, String name, FoodCategory category,
+            double caloriesPer100g, double proteinPer100g, double servingG) {
+        ServingOptionSnapshot serving = new ServingOptionSnapshot(
+                "1회 제공량", "1회 제공량", servingG, 0, ServingType.OFFICIAL_SERVING, true);
+        return new DietRecommendationCandidate(
+                id, name, null, category, caloriesPer100g, proteinPer100g, 10.0, 1.0, 0L, id,
+                AllergenConfidenceLevel.LABEL_DERIVED, null, true, List.of(serving), true);
     }
 }

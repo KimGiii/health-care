@@ -34,6 +34,10 @@ public class RecommendationEvent {
     @Column(name = "diet_log_id")
     private Long dietLogId;
 
+    /** 이벤트가 귀속되는 식품(V40, food별 fan-out 행). 스냅샷 단위 이벤트는 null. */
+    @Column(name = "food_catalog_id")
+    private Long foodCatalogId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -42,41 +46,36 @@ public class RecommendationEvent {
         if (createdAt == null) createdAt = OffsetDateTime.now();
     }
 
-    static RecommendationEvent generated(Long snapshotId, Long userId) {
+    static RecommendationEvent generated(Long snapshotId, Long userId, Long foodCatalogId) {
         return RecommendationEvent.builder()
                 .snapshotId(snapshotId)
                 .userId(userId)
                 .eventType(EventType.GENERATED)
-                .createdAt(OffsetDateTime.now())
-                .build();
-    }
-
-    static RecommendationEvent exposed(Long snapshotId, Long userId) {
-        return RecommendationEvent.builder()
-                .snapshotId(snapshotId)
-                .userId(userId)
-                .eventType(EventType.EXPOSED)
+                .foodCatalogId(foodCatalogId)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }
 
     static RecommendationEvent refreshed(Long snapshotId, Long userId,
-                                         RecommendationFeedbackReason reason) {
+                                         RecommendationFeedbackReason reason, Long foodCatalogId) {
         return RecommendationEvent.builder()
                 .snapshotId(snapshotId)
                 .userId(userId)
                 .eventType(EventType.REFRESHED)
                 .feedbackReason(reason)
+                .foodCatalogId(foodCatalogId)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }
 
-    static RecommendationEvent recorded(Long snapshotId, Long userId, Long dietLogId) {
+    static RecommendationEvent recorded(Long snapshotId, Long userId, Long dietLogId,
+                                        Long foodCatalogId) {
         return RecommendationEvent.builder()
                 .snapshotId(snapshotId)
                 .userId(userId)
                 .eventType(EventType.RECORDED)
                 .dietLogId(dietLogId)
+                .foodCatalogId(foodCatalogId)
                 .createdAt(OffsetDateTime.now())
                 .build();
     }

@@ -80,8 +80,11 @@ public class FoodCatalogIngestService {
             return;
         }
         servingOptionRepository.deleteByFoodCatalogId(food.getId());
+        // 낱개 식품(계란 등) 판별을 위해 음식 이름을 전달한다. nameKo 우선, 없으면 name fallback.
+        String foodName = food.getNameKo() != null ? food.getNameKo() : food.getName();
         servingOptionRepository.saveAll(
-                servingOptionDeriver.derive(food.getId(), food.getCategory(), food.getServingReference()));
+                servingOptionDeriver.derive(
+                        food.getId(), food.getCategory(), food.getServingReference(), foodName));
     }
 
     Optional<FoodCatalog> findBySourceAndFoodCode(FoodCatalogSource source, String foodCode) {

@@ -25,6 +25,16 @@ public final class FoodCatalogSpecs {
                 .in(RecommendationStatus.recommendationCandidateStatuses());
     }
 
+    /** 지정한 추천 상태만 포함한다. */
+    public static Specification<FoodCatalog> hasRecommendationStatus(RecommendationStatus status) {
+        return (root, query, cb) -> cb.equal(root.get("recommendationStatus"), status);
+    }
+
+    /** 지정한 추천 상태 목록만 포함한다. */
+    public static Specification<FoodCatalog> hasRecommendationStatusIn(Collection<RecommendationStatus> statuses) {
+        return (root, query, cb) -> root.get("recommendationStatus").in(statuses);
+    }
+
     /** 지정한 식품 ID 목록을 제외한다 (FOOD 타입 제한 적용). */
     public static Specification<FoodCatalog> idNotIn(Collection<Long> ids) {
         return (root, query, cb) -> root.get("id").in(ids).not();

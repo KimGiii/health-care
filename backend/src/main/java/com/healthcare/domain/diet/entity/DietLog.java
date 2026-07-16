@@ -63,6 +63,10 @@ public class DietLog {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    /** 이 기록의 출처가 된 추천 스냅샷(V37). 추천 없이 기록하면 null. */
+    @Column(name = "recommendation_snapshot_id")
+    private Long recommendationSnapshotId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -71,6 +75,11 @@ public class DietLog {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    /** 추천 스냅샷 검증(존재·소유) 통과 후에만 호출한다 — FK 위반 방지. */
+    public void linkRecommendationSnapshot(Long snapshotId) {
+        this.recommendationSnapshotId = snapshotId;
+    }
 
     @PrePersist
     protected void onCreate() {

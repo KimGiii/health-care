@@ -239,8 +239,9 @@ v1에서 브랜드 공식 메뉴의 추천 상태 변경은 CSV 재업로드/재
 
 - `allergen_tags`는 브랜드 공식 라벨/알러젠 표에서 확인한 포함 알러젠을 입력한다. 한국어 라벨(`우유`, `대두`, `밀`, `난류`, `쇠고기` 등)과 내부 enum 코드(`MILK`, `SOY`, `WHEAT`)를 허용한다. 여러 값은 쉼표, `|`, `/` 중 하나로 구분한다.
 - `allergen_profile_verified`는 해당 메뉴의 공식 알러젠 표를 완결된 프로필로 검토했을 때만 `true`로 입력한다. 값은 `true` 또는 `false`만 허용한다.
-- v1은 포함 태그만 저장하므로 `allergen_profile_verified=true`에는 포함 알러젠이 1개 이상 필요하다. 공식 표에 알러젠이 없다고 표시된 메뉴의 "없음 주장"은 별도 테이블이 생기기 전까지 표현하지 않는다.
-- 브랜드 CSV가 알러젠 검토값을 포함하면 동일 `BRAND_OFFICIAL` 메뉴의 기존 알러젠 태그를 CSV 내용으로 교체한다. 포함 태그는 `confidence_level=LABEL_DERIVED`, `source=BRAND_OFFICIAL`로 저장한다.
+- 포함 알러젠이 없는 메뉴/제품도 공식 표에서 표시대상 알러젠 집합을 완결 검토했다면 `allergen_tags` 공란 + `allergen_profile_verified=true`로 입력할 수 있다. 이 경우 포함 태그는 없지만 `food_allergen_profiles`에 `LABEL_DERIVED` 완결 프로필을 저장한다.
+- `allergen_profile_verified=true`에는 검수일(`last_verified_at`)이 필수다.
+- 브랜드 CSV가 알러젠 검토값을 포함하면 동일 `BRAND_OFFICIAL` 메뉴의 기존 알러젠 태그를 CSV 내용으로 교체한다. 포함 태그는 `confidence_level=LABEL_DERIVED`, `source=BRAND_OFFICIAL`로 저장하고, 완결 검토는 별도 프로필 레코드로도 저장한다.
 - 알러젠 정보가 아직 검수되지 않은 메뉴는 두 컬럼을 비워 두고, 추천 후보 승격은 별도 큐레이션 완료 후 진행한다.
 
 ---

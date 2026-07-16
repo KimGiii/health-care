@@ -143,6 +143,55 @@ final class AddDietLogViewModelTests: XCTestCase {
         XCTAssertEqual(food.catalogNutritionSummary, "290 kcal / 290g")
     }
 
+    func testCatalogNutritionSummary_파생제공량옵션이있으면옵션기준으로표시한다() {
+        // STANDARD_PROCESSED: servingSizeG(257)는 포장중량이라 무시, 옵션(200g)이 1회 제공량.
+        var food = makeCatalogItem(name: "카레 덮밥")  // 100 kcal/100g
+        food.servingSizeG = 257
+        food.servingReference = "210g"
+        food.servingOptions = [
+            ServingOption(label: "1 serving", labelKo: "1회 제공량",
+                          equivalentG: 200, sortOrder: 0,
+                          servingType: "OFFICIAL_SERVING", verified: true),
+            ServingOption(label: "0.5 serving", labelKo: "0.5회 제공량",
+                          equivalentG: 100, sortOrder: 1,
+                          servingType: "OFFICIAL_SERVING", verified: true)
+        ]
+
+        // 포장중량(257)도 영양기준량(210)도 아닌 대표 옵션(200g) 기준.
+        XCTAssertEqual(food.catalogNutritionSummary, "200 kcal / 200g")
+        XCTAssertEqual(DraftFoodEntry(food: food).servingGText, "200")
+    }
+
+    func testCatalogNutritionSummary_옵션없는일반식품은신뢰못할servingSizeG를무시하고100g로표시한다() {
+        // MFDS_FOOD_NUTRIENT_DB: servingSizeG=100(플레이스홀더)·포장중량은 1회 제공량이 아님.
+        var food = makeCatalogItem(name: "카레 덮밥")  // 100 kcal/100g
+        food.servingSizeG = 370
+        food.servingReference = "210g"
+        food.servingOptions = nil
+
+        XCTAssertEqual(food.catalogNutritionSummary, "100 kcal / 100g")
+        XCTAssertEqual(DraftFoodEntry(food: food).servingGText, "100")
+    }
+
+    func testCatalogNutritionSummary_제공량이없으면100g기준으로표시한다() {
+        let food = makeCatalogItem(name: "쌀밥")  // 100 kcal/100g, servingSizeG nil
+
+        XCTAssertEqual(food.catalogNutritionSummary, "100 kcal / 100g")
+    }
+
+    func testDisplayBrand_브랜드명이없으면제조사명으로폴백한다() {
+        var withBrand = makeCatalogItem(name: "와퍼")
+        withBrand.brandName = "버거킹"
+        withBrand.maker = "비케이알"
+        XCTAssertEqual(withBrand.displayBrand, "버거킹")
+
+        var makerOnly = makeCatalogItem(name: "초코파이")
+        makerOnly.maker = "오리온"
+        XCTAssertEqual(makerOnly.displayBrand, "오리온")
+
+        XCTAssertNil(makeCatalogItem(name: "사과").displayBrand)
+    }
+
     func testRecommendationMeal_식단기록요청으로변환된다() {
         let meal = RecommendedMeal(
             mealType: .LUNCH,
@@ -197,6 +246,41 @@ final class AddDietLogViewModelTests: XCTestCase {
         XCTAssertEqual(request.entries[1].foodCatalogId, 202)
         XCTAssertEqual(request.entries[1].servingG, 150)
         XCTAssertEqual(request.entries[1].notes, "알러젠 정보 확인 필요")
+        XCTAssertNil(request.recommendationSnapshotId)
+    }
+
+    func testRecommendationMeal_스냅샷ID가기록요청에전달된다() {
+        let meal = RecommendedMeal(
+            mealType: .DINNER,
+            targetCalories: 600,
+            totalCalories: 550,
+            totalProteinG: 35,
+            totalCarbsG: 60,
+            totalFatG: 15,
+            items: [
+                RecommendedFoodEntry(
+                    foodCatalogId: 101,
+                    name: "brown rice",
+                    nameKo: "현미밥",
+                    category: .GRAIN,
+                    servingG: 180,
+                    calories: 270,
+                    proteinG: 5,
+                    carbsG: 58,
+                    fatG: 2,
+                    allergenConfidenceLevel: .DIRECT_VERIFIED,
+                    caution: nil
+                )
+            ]
+        )
+
+        let request = DietRecommendationViewModel.makeCreateDietLogRequest(
+            for: meal,
+            date: "2026-07-14",
+            snapshotId: 77
+        )
+
+        XCTAssertEqual(request.recommendationSnapshotId, 77)
     }
 
     private func makeCatalogItem(name: String) -> FoodCatalogItem {

@@ -64,6 +64,19 @@ public class FoodCatalogAdminController {
     }
 
     /**
+     * 기존 카탈로그 row를 source + food_code 기준으로 추천 후보 승격/강등한다.
+     * CSV 형식: RecommendationCurationCsvRow.HEADERS 컬럼 순서, UTF-8 인코딩, 첫 행 헤더.
+     */
+    @PostMapping(value = "/curation-csv", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<FoodCatalogImportResult>> importRecommendationCurationCsv(
+            @RequestHeader(value = AdminOperationGuard.HEADER_NAME, required = false) String adminToken,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        FoodCatalogImportResult result =
+                adminOperations.importRecommendationCurationCsv(adminToken, file.getInputStream());
+        return ResponseEntity.ok(ApiResponse.ok("추천 큐레이션 CSV 반영 완료", result));
+    }
+
+    /**
      * 이미 적재된 MFDS 원본명({@code 경단_깨})을 자연어 표시명({@code 깨경단})으로 백필하고
      * 검색 별칭을 채운다. importer가 신규 적재를 처리하므로 기존 DB 1회 보정용이다.
      */
