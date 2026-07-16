@@ -100,9 +100,20 @@ final class DietRecommendationViewModel: ObservableObject {
 
     /// 대안 해를 상단 추천으로 적용하고, 기존 추천은 해당 대안 자리로 보낸다(swap).
     /// 대안은 서버가 검증한 feasible 해이므로 실패 사유는 nil이며, 근거(rationale)도 함께 교체한다.
-    func applyAlternative(at index: Int) {
+    /// swap 사실은 서버에 SWAPPED 이벤트로 계측한다(#85 선행) — 계측 실패가 UX를 막으면 안 되므로
+    /// best-effort로 보내고 실패는 무시한다.
+    func applyAlternative(at index: Int, apiClient: APIClient? = nil) {
         guard let current = result,
               index >= 0, index < current.alternatives.count else { return }
+
+        if let apiClient, let snapshotId = current.snapshotId {
+            Task {
+                let body = try JSONEncoder().encode(SwapRequest(alternativeIndex: index))
+                try? await apiClient.requestVoid(
+                    .postRecommendationSwap(snapshotId: snapshotId, body: body)
+                )
+            }
+        }
 
         let chosen = current.alternatives[index]
         // 현재 추천을 대안 자리로 보낸다. rationale이 없으면 교체하지 않는다(안전).

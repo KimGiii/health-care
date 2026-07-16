@@ -90,6 +90,36 @@ class RecommendationFeedbackServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
+    @Test
+    @DisplayName("swap 기록 시 선택 인덱스를 가진 스냅샷 단위 SWAPPED 1행이 저장된다 (food fan-out 없음)")
+    void recordSwap_savesSnapshotLevelSwappedEvent() {
+        RecommendationSnapshot snapshot = snapshotWithFoods(11L, 12L);
+        given(snapshotRepository.findByIdAndUserId(10L, 1L))
+                .willReturn(Optional.of(snapshot));
+
+        feedbackService.recordSwap(1L, 10L, 2);
+
+        ArgumentCaptor<RecommendationEvent> captor =
+                ArgumentCaptor.forClass(RecommendationEvent.class);
+        verify(eventRepository).save(captor.capture());
+        RecommendationEvent event = captor.getValue();
+        assertThat(event.getEventType()).isEqualTo(RecommendationEvent.EventType.SWAPPED);
+        assertThat(event.getAlternativeIndex()).isEqualTo(2);
+        assertThat(event.getFoodCatalogId()).isNull();
+        assertThat(event.getUserId()).isEqualTo(1L);
+        assertThat(event.getSnapshotId()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("swap 기록 시 존재하지 않는 snapshotId면 ResourceNotFoundException을 던진다")
+    void recordSwap_unknownSnapshot_throws() {
+        given(snapshotRepository.findByIdAndUserId(999L, 1L))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> feedbackService.recordSwap(1L, 999L, 0))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     // ─── 헬퍼 ───
 
     private List<RecommendationEvent> capturedEvents() {

@@ -453,7 +453,7 @@ struct DietRecommendationView: View {
 
     private func applyAlternativeButton(altIndex: Int) -> some View {
         Button {
-            withAnimation { viewModel.applyAlternative(at: altIndex) }
+            withAnimation { viewModel.applyAlternative(at: altIndex, apiClient: container.apiClient) }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.up.circle.fill")

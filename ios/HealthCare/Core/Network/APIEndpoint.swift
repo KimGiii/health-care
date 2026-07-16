@@ -56,6 +56,7 @@ enum APIEndpoint {
     // Diet - Recommendation
     case getDailyRecommendation(body: Data)
     case postRecommendationFeedback(snapshotId: Int, body: Data)
+    case postRecommendationSwap(snapshotId: Int, body: Data)
 
     // Body Measurement
     case createBodyMeasurement(body: Data)
@@ -129,6 +130,8 @@ extension APIEndpoint {
         case .getDailyRecommendation:            return "/api/v1/diet/recommendations/daily"
         case .postRecommendationFeedback(let snapshotId, _):
                                                  return "/api/v1/diet/recommendations/\(snapshotId)/feedback"
+        case .postRecommendationSwap(let snapshotId, _):
+                                                 return "/api/v1/diet/recommendations/\(snapshotId)/swap"
         case .createBodyMeasurement, .getBodyMeasurements:
                                                  return "/api/v1/body-measurements"
         case .getBodyMeasurementsRange:          return "/api/v1/body-measurements/range"
@@ -165,7 +168,7 @@ extension APIEndpoint {
              .createBodyMeasurement, .initiatePhotoUpload, .registerProgressPhoto, .createGoal,
              .aiEstimateFood, .aiEstimateExercise, .createCustomFood, .createCustomExercise,
              .createDietRestriction, .getDailyRecommendation,
-             .postRecommendationFeedback:
+             .postRecommendationFeedback, .postRecommendationSwap:
             return .POST
         case .updateProfile, .updateGoal,
              .markNotificationRead, .markAllNotificationsRead:
@@ -194,7 +197,7 @@ extension APIEndpoint {
              .aiEstimateFood(let b), .aiEstimateExercise(let b),
              .createCustomFood(let b), .createCustomExercise(let b),
              .createDietRestriction(let b), .getDailyRecommendation(let b),
-             .postRecommendationFeedback(_, let b):
+             .postRecommendationFeedback(_, let b), .postRecommendationSwap(_, let b):
             return b
         default:
             return nil

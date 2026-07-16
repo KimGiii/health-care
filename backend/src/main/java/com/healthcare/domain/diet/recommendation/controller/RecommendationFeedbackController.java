@@ -4,6 +4,7 @@ import com.healthcare.domain.diet.recommendation.snapshot.RecommendationFeedback
 import com.healthcare.domain.diet.recommendation.snapshot.RecommendationFeedbackService;
 import com.healthcare.security.CurrentUserId;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +26,16 @@ public class RecommendationFeedbackController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{snapshotId}/swap")
+    public ResponseEntity<Void> postSwap(
+            @CurrentUserId Long userId,
+            @PathVariable Long snapshotId,
+            @Valid @RequestBody SwapRequest request) {
+        feedbackService.recordSwap(userId, snapshotId, request.alternativeIndex());
+        return ResponseEntity.noContent().build();
+    }
+
     public record FeedbackRequest(@NotNull RecommendationFeedbackReason reason) {}
+
+    public record SwapRequest(@NotNull @Min(0) Integer alternativeIndex) {}
 }
