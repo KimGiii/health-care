@@ -10542,7 +10542,6 @@
       }
     },
     "medical.nutrition.attribution" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10593,7 +10592,6 @@
       }
     },
     "medical.nutrition.link.mfdsDish" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10610,7 +10608,6 @@
       }
     },
     "medical.nutrition.link.mfdsProcessed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

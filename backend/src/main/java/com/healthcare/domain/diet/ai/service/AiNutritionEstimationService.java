@@ -6,17 +6,14 @@ import com.healthcare.domain.diet.ai.dto.AiNutritionEstimateResponse;
 import com.healthcare.domain.diet.ai.dto.EstimatedItem;
 import com.healthcare.domain.diet.ai.dto.NutritionFacts;
 import com.healthcare.domain.diet.ai.dto.ServingBasis;
+import com.healthcare.domain.diet.ai.client.OpenAiResponsesClient;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,34 +102,21 @@ public class AiNutritionEstimationService {
     private final ObjectMapper objectMapper;
     private final Timer analysisTimer;
     private final MeterRegistry meterRegistry;
+    private final OpenAiResponsesClient openAiClient;
 
-    public AiNutritionEstimationService(ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public AiNutritionEstimationService(ObjectMapper objectMapper,
+                                        MeterRegistry meterRegistry,
+                                        OpenAiResponsesClient openAiClient) {
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
+        this.openAiClient = openAiClient;
         this.analysisTimer = Timer.builder("healthcare.diet.ai.analysis")
             .description("식단 AI 영양성분 분석 호출 지연")
             .register(meterRegistry);
     }
 
-    @Value("${app.ai.meal.openai-api-key}")
-    private String apiKey;
-
-    @Value("${app.ai.meal.openai-base-url:https://api.openai.com}")
-    private String baseUrl;
-
     @Value("${app.ai.meal.model:gpt-4.1-mini}")
     private String model;
-
-    private RestClient client;
-
-    @PostConstruct
-    void initializeClient() {
-        this.client = RestClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-    }
 
     public AiNutritionEstimateResponse estimate(String foodName) {
         Timer.Sample sample = Timer.start(meterRegistry);
@@ -155,13 +139,15 @@ public class AiNutritionEstimationService {
 
         JsonNode rawResponse;
         try {
-            rawResponse = client.post()
-                    .uri("/v1/responses")
-                    .body(requestBody)
-                    .retrieve()
-                    .body(JsonNode.class);
+            rawResponse = openAiClient.createResponse(requestBody);
         } catch (Exception e) {
             log.error("AI API 호출 실패: foodName={}, error={}", foodName, e.getMessage());
+            return AiNutritionEstimateResponse.unavailable(foodName);
+        }
+
+        // 재시도 소진 시 OpenAiResponsesClient.recover()가 null을 반환한다.
+        if (rawResponse == null) {
+            log.error("AI API 응답 없음(재시도 종료): foodName={}", foodName);
             return AiNutritionEstimateResponse.unavailable(foodName);
         }
 
