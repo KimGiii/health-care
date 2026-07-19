@@ -1,7 +1,10 @@
 package com.healthcare.domain.diet.external.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.cfg.CoercionAction;
+import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.healthcare.domain.diet.entity.FoodCatalog.FoodCategory;
 import com.healthcare.domain.diet.external.config.ExternalApiProperties;
 import com.healthcare.domain.diet.external.dto.ExternalFoodResult;
@@ -14,10 +17,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -32,13 +39,20 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
     /** API 설정 */
     private final ExternalApiProperties properties;
 
+    private final ObjectMapper objectMapper;
+
     public PublicFoodApiClientImpl(
             @Qualifier("processedFoodRestClient") RestClient processedFoodClient,
             @Qualifier("generalFoodRestClient") RestClient generalFoodClient,
-            ExternalApiProperties properties) {
+            ExternalApiProperties properties,
+            ObjectMapper objectMapper) {
         this.processedFoodClient = processedFoodClient;
         this.generalFoodClient = generalFoodClient;
         this.properties = properties;
+        // 결과 없음일 때 "items": "" 로 내려오는 포털 응답 방어 — 빈 문자열을 null로 수용
+        this.objectMapper = objectMapper.copy();
+        this.objectMapper.coercionConfigDefaults(cfg ->
+                cfg.setCoercion(CoercionInputShape.EmptyString, CoercionAction.AsNull));
     }
 
     // 식품 대분류 → FoodCategory 매핑
@@ -67,12 +81,18 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
     @Override
     public List<ExternalFoodResult> search(String query, int page, int size) {
+        String serviceKey = normalizeServiceKey(properties.getPublicApiKey());
+        if (serviceKey.isEmpty()) {
+            log.warn("공공 식품 API 키 미설정 (PUBLIC_FOOD_API_KEY) — 외부 식품 검색을 건너뜀");
+            return List.of();
+        }
+
         List<ExternalFoodResult> processedResults = List.of();
         List<ExternalFoodResult> generalResults = List.of();
 
         // 1. 가공식품 API 검색
         try {
-            processedResults = searchProcessedFood(query, page, size);
+            processedResults = callApi(processedFoodClient, serviceKey, query, page, size);
             log.debug("가공식품 API 검색 결과: {} 건", processedResults.size());
         } catch (Exception e) {
             log.warn("가공식품 API 검색 실패: {}", e.getMessage());
@@ -80,7 +100,7 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
 
         // 2. 음식 API 검색
         try {
-            generalResults = searchGeneralFood(query, page, size);
+            generalResults = callApi(generalFoodClient, serviceKey, query, page, size);
             log.debug("음식 API 검색 결과: {} 건", generalResults.size());
         } catch (Exception e) {
             log.warn("음식 API 검색 실패: {}", e.getMessage());
@@ -109,22 +129,63 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
     }
 
     /**
-     * 가공식품 API 검색
+     * 공공데이터 포털 영양정보 API 호출 (가공식품/음식 공통 — 요청 파라미터 동일).
+     *
+     * 모든 값은 URI 템플릿 변수로 전달한다. 리터럴 queryParam은 Spring이 '+'를
+     * 인코딩하지 않아(서버는 공백으로 해석) 디코딩 인증키가 깨지고, 인코딩 키는
+     * '%'가 %25로 이중 인코딩되는 문제가 있다. 템플릿 변수는 예약 문자를 엄격히
+     * 인코딩하므로 디코딩 키('+', '=', '/' 포함)가 항상 올바르게 전송된다.
      */
-    private List<ExternalFoodResult> searchProcessedFood(String query, int page, int size) {
-        ApiResponseWrapper response = processedFoodClient.get()
+    private List<ExternalFoodResult> callApi(
+            RestClient client, String serviceKey, String query, int page, int size) {
+        String raw = client.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("serviceKey", properties.getPublicApiKey())
+                        .queryParam("serviceKey", "{serviceKey}")
                         .queryParam("type", "json")
-                        .queryParam("pageNo", page + 1)
-                        .queryParam("numOfRows", size * 2)
-                        .queryParam("foodNm", query)
-                        .build())
+                        .queryParam("pageNo", "{pageNo}")
+                        .queryParam("numOfRows", "{numOfRows}")
+                        .queryParam("foodNm", "{foodNm}")
+                        .build(serviceKey, page + 1, size * 2, query))
                 .retrieve()
-                .body(ApiResponseWrapper.class);
+                .body(String.class);
+        return parseResponse(raw);
+    }
 
-        if (response == null || response.getResponse() == null ||
-            response.getResponse().getBody() == null ||
+    /**
+     * 포털 응답 파싱. 인증 실패·시스템 오류는 type=json 요청에도 XML로 내려오므로
+     * 원인 메시지를 로그에 남긴다 (기존에는 파싱 예외로 삼켜져 원인 추적 불가).
+     */
+    private List<ExternalFoodResult> parseResponse(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return List.of();
+        }
+
+        String body = raw.stripLeading();
+        if (body.startsWith("<")) {
+            log.warn("공공 식품 API 오류 응답(XML): {}", extractXmlError(body));
+            return List.of();
+        }
+
+        ApiResponseWrapper response;
+        try {
+            response = objectMapper.readValue(body, ApiResponseWrapper.class);
+        } catch (JsonProcessingException e) {
+            log.warn("공공 식품 API 응답 파싱 실패: {} — 본문: {}",
+                    e.getOriginalMessage(), snippet(body));
+            return List.of();
+        }
+
+        if (response == null || response.getResponse() == null) {
+            return List.of();
+        }
+
+        Header header = response.getResponse().getHeader();
+        if (header != null && header.getResultCode() != null && !"00".equals(header.getResultCode())) {
+            log.warn("공공 식품 API 비정상 resultCode={} resultMsg={}",
+                    header.getResultCode(), header.getResultMsg());
+        }
+
+        if (response.getResponse().getBody() == null ||
             response.getResponse().getBody().getItems() == null) {
             return List.of();
         }
@@ -136,30 +197,42 @@ public class PublicFoodApiClientImpl implements PublicFoodApiClient {
     }
 
     /**
-     * 음식 API 검색
+     * 설정된 인증키를 디코딩 형태로 정규화한다.
+     * 공공데이터포털은 Encoding/Decoding 두 형태의 키를 제공하는데, '%'가 포함되어
+     * 있으면 Encoding 키로 보고 한 번 디코딩한다 (전송 시 URI 템플릿이 다시 인코딩).
      */
-    private List<ExternalFoodResult> searchGeneralFood(String query, int page, int size) {
-        ApiResponseWrapper response = generalFoodClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .queryParam("serviceKey", properties.getPublicApiKey())
-                        .queryParam("type", "json")
-                        .queryParam("pageNo", page + 1)
-                        .queryParam("numOfRows", size * 2)
-                        .queryParam("foodNm", query)
-                        .build())
-                .retrieve()
-                .body(ApiResponseWrapper.class);
-
-        if (response == null || response.getResponse() == null ||
-            response.getResponse().getBody() == null ||
-            response.getResponse().getBody().getItems() == null) {
-            return List.of();
+    static String normalizeServiceKey(String key) {
+        if (key == null) {
+            return "";
         }
+        String trimmed = key.trim();
+        if (trimmed.contains("%")) {
+            try {
+                return URLDecoder.decode(trimmed, StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException e) {
+                return trimmed;
+            }
+        }
+        return trimmed;
+    }
 
-        return response.getResponse().getBody().getItems().stream()
-                .map(this::toExternalResult)
-                .filter(Objects::nonNull)
-                .toList();
+    private static final Pattern XML_ERROR_PATTERN =
+            Pattern.compile("<(returnAuthMsg|returnReasonCode|errMsg|resultMsg|resultCode)>([^<]*)</\\1>");
+
+    /** 포털 XML 오류 본문에서 원인 필드만 추출. 실패 시 앞부분 스니펫 반환. */
+    static String extractXmlError(String xml) {
+        Matcher matcher = XML_ERROR_PATTERN.matcher(xml);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append(matcher.group(1)).append('=').append(matcher.group(2));
+        }
+        return sb.isEmpty() ? snippet(xml) : sb.toString();
+    }
+
+    private static String snippet(String body) {
+        String flat = body.replaceAll("\\s+", " ").trim();
+        return flat.length() <= 200 ? flat : flat.substring(0, 200) + "…";
     }
 
     private ExternalFoodResult toExternalResult(PublicFoodItem item) {

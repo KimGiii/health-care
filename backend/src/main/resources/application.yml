@@ -101,6 +101,7 @@ app:
   notifications:
     max-per-day: 2
   food-api:
+    # 공공데이터포털 인증키 — Encoding/Decoding 어느 형태든 허용 ('%' 포함 시 자동 디코딩 후 전송)
     public-api-key: "${PUBLIC_FOOD_API_KEY:}"
     processed-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_process_info_api
     general-food-api-url: https://api.data.go.kr/openapi/tn_pubr_public_nutri_food_info_api
