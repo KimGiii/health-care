@@ -163,8 +163,8 @@ struct DietRecommendationView: View {
     @ViewBuilder
     private func resultSection(_ result: DailyDietRecommendationResponse) -> some View {
         targetsCard(result.targets)
-        if let reason = result.failureReason {
-            failureReasonBanner(reason)
+        if result.failureReason != nil {
+            failureCard(result)
         }
         if !result.meals.isEmpty {
             ForEach(result.meals) { meal in
@@ -345,24 +345,139 @@ struct DietRecommendationView: View {
         .elevation(.low)
     }
 
-    private func failureReasonBanner(_ reason: String) -> some View {
-        HStack(alignment: .top, spacing: Spacing.sm) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(Color.brandWarning)
-                .font(.subheadline)
-                .padding(.top, 1) // design-lint:ignore
-            Text(reason)
+    // MARK: - 실패 카드 (#95)
+    // failureCode별 원인 메시지 + 회복 액션 1개를 짝으로 제공한다. "실패"라 쓰지 않고,
+    // 색 이외 신호(텍스트 라벨)를 병기한다. 안전·목표 절대제약 완화는 제안하지 않는다.
+
+    /// 회복 액션 — VM이 실제로 지원하는 레버만 사용(재시도 / 간식 포함 / 안전 모드 끄기).
+    private enum RecoveryAction {
+        case retry
+        case includeSnack
+        case disableStrict
+
+        var label: String {
+            switch self {
+            case .retry:        return String(localized: "recommend.failure.action.retry", defaultValue: "다시 시도하기")
+            case .includeSnack: return String(localized: "recommend.failure.action.snack", defaultValue: "간식을 포함해 다시 찾기")
+            case .disableStrict:return String(localized: "recommend.failure.action.unstrict", defaultValue: "안전 모드를 끄고 다시 찾기")
+            }
+        }
+    }
+
+    private func failureCard(_ result: DailyDietRecommendationResponse) -> some View {
+        let action = recoveryAction(for: result.failureCode)
+        return VStack(alignment: .leading, spacing: Spacing.md) {
+            // 색 이외 신호 — 아이콘 + 짧은 텍스트 라벨
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(Color.brandWarning)
+                    .font(.subheadline)
+                Text(failureLabel(result.failureCode))
+                    .font(.footnote).fontWeight(.semibold)
+                    .foregroundStyle(Color.textSecondary)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+            }
+
+            Text(failureMessage(result))
                 .font(.subheadline)
                 .foregroundStyle(Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if let action {
+                Button {
+                    perform(action)
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(action.label)
+                            .font(.subheadline).fontWeight(.semibold)
+                        Image(systemName: "arrow.clockwise")
+                            .font(.caption).fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md) // design-lint:ignore — micro/hero spacing
+                    .background(Color.brandPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                }
+                .disabled(viewModel.isLoading)
+            }
         }
-        .padding(14) // design-lint:ignore
+        .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.brandWarning.opacity(0.1))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.md)
                 .stroke(Color.brandWarning.opacity(0.4), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+    }
+
+    private func failureLabel(_ code: String?) -> String {
+        switch code {
+        case "CALORIE_PROTEIN_CONFLICT":          return String(localized: "recommend.failure.label.conflict", defaultValue: "조건 충돌")
+        case "ALLERGEN_VERIFIED_POOL_INSUFFICIENT": return String(localized: "recommend.failure.label.pool", defaultValue: "후보 부족")
+        case "SERVING_OPTIONS_INFEASIBLE":        return String(localized: "recommend.failure.label.serving", defaultValue: "조합 없음")
+        case "REMAINING_MEALS_INFEASIBLE":        return String(localized: "recommend.failure.label.meals", defaultValue: "끼니 부족")
+        case "SEARCH_LIMIT_REACHED":              return String(localized: "recommend.failure.label.search", defaultValue: "탐색 한도")
+        case "NUTRIENT_DATA_INCOMPLETE":          return String(localized: "recommend.failure.label.data", defaultValue: "데이터 부족")
+        case "TARGET_PROFILE_MISSING":            return String(localized: "recommend.failure.label.profile", defaultValue: "프로필 필요")
+        default:                                   return String(localized: "recommend.failure.label.generic", defaultValue: "추천 실패")
+        }
+    }
+
+    private func failureMessage(_ result: DailyDietRecommendationResponse) -> String {
+        switch result.failureCode {
+        case "CALORIE_PROTEIN_CONFLICT":
+            return String(localized: "recommend.failure.msg.conflict", defaultValue: "지금 목표로는 칼로리와 단백질을 같이 맞추기 어려워요.")
+        case "ALLERGEN_VERIFIED_POOL_INSUFFICIENT":
+            return String(localized: "recommend.failure.msg.pool", defaultValue: "제외한 재료가 많아 추천할 후보가 부족해요.")
+        case "SERVING_OPTIONS_INFEASIBLE":
+            return String(localized: "recommend.failure.msg.serving", defaultValue: "제공량 단위가 딱 맞는 조합을 찾지 못했어요.")
+        case "REMAINING_MEALS_INFEASIBLE":
+            return String(localized: "recommend.failure.msg.meals", defaultValue: "남은 끼니만으로 목표를 채우기 어려워요.")
+        case "SEARCH_LIMIT_REACHED":
+            return String(localized: "recommend.failure.msg.search", defaultValue: "조합을 더 찾지 못했어요.")
+        case "NUTRIENT_DATA_INCOMPLETE":
+            return String(localized: "recommend.failure.msg.data", defaultValue: "영양 정보가 부족한 항목이 있어 조합을 만들지 못했어요.")
+        case "TARGET_PROFILE_MISSING":
+            return String(localized: "recommend.failure.msg.profile", defaultValue: "추천에 필요한 프로필 정보가 부족해요. 마이페이지에서 키와 몸무게를 확인해 주세요.")
+        default:
+            // 알 수 없는 코드 — 서버 사유 문구로 폴백
+            return result.failureReason ?? String(localized: "recommend.failure.msg.generic", defaultValue: "지금은 조건에 맞는 식단을 찾지 못했어요.")
+        }
+    }
+
+    /// failureCode + 현재 설정 기준으로 실제 의미 있는 회복 액션 1개를 고른다.
+    /// 프로필 부족(TARGET_PROFILE_MISSING)은 재시도로 해결되지 않으므로 CTA를 주지 않는다.
+    private func recoveryAction(for code: String?) -> RecoveryAction? {
+        let hasSnack = viewModel.selectedMeals.contains(.SNACK)
+        switch code {
+        case "CALORIE_PROTEIN_CONFLICT",
+             "SERVING_OPTIONS_INFEASIBLE",
+             "REMAINING_MEALS_INFEASIBLE":
+            return hasSnack ? .retry : .includeSnack
+        case "ALLERGEN_VERIFIED_POOL_INSUFFICIENT":
+            return viewModel.strictAllergyMode ? .disableStrict : .retry
+        case "SEARCH_LIMIT_REACHED", "NUTRIENT_DATA_INCOMPLETE":
+            return .retry
+        case "TARGET_PROFILE_MISSING":
+            return nil
+        default:
+            return .retry
+        }
+    }
+
+    private func perform(_ action: RecoveryAction) {
+        switch action {
+        case .retry:
+            break
+        case .includeSnack:
+            viewModel.selectedMeals.insert(.SNACK)
+        case .disableStrict:
+            viewModel.strictAllergyMode = false
+        }
+        Task { await viewModel.recommend(apiClient: container.apiClient) }
     }
 
     private func rationaleCard(_ rationale: RecommendationRationale) -> some View {
