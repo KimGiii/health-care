@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// 목표 탭 내에서 특정 목표 진행 상세로 딥링크 push할 때 쓰는 값(#100, WIDGET_GOAL).
+struct GoalDetailRoute: Hashable {
+    let id: Int
+}
+
 struct MainTabView: View {
     @State private var selectedTab: Tab = .home
     @ObservedObject private var pushRouter = PushRouter.shared
@@ -8,23 +13,26 @@ struct MainTabView: View {
     @State private var homePath    = NavigationPath()
     @State private var diaryPath   = NavigationPath()
     @State private var recordPath  = NavigationPath()
+    @State private var goalsPath   = NavigationPath()
     @State private var myPagePath  = NavigationPath()
 
     // 각 탭 root view의 id — 변경 시 SwiftUI가 view를 새로 만들어 ViewModel/스크롤 위치까지 초기화
     @State private var homeId    = UUID()
     @State private var diaryId   = UUID()
     @State private var recordId  = UUID()
+    @State private var goalsId   = UUID()
     @State private var myPageId  = UUID()
 
     enum Tab: Int, CaseIterable {
-        // Explore 탭은 제거됨(#93). 주간회고·변화분석은 홈에서 직접 진입한다.
-        case home, diary, record, myPage
+        // Explore 탭은 제거됨(#93). 목표 탭은 승격됨(#100).
+        case home, diary, record, goals, myPage
 
         var titleKey: LocalizedStringKey {
             switch self {
             case .home:    return "tab.home"
             case .diary:   return "tab.diary"
             case .record:  return "tab.record"
+            case .goals:   return "tab.goals"
             case .myPage:  return "tab.myPage"
             }
         }
@@ -34,6 +42,7 @@ struct MainTabView: View {
             case .home:    return "square.grid.2x2.fill"
             case .diary:   return "calendar"
             case .record:  return "plus.circle.fill"
+            case .goals:   return "target"
             case .myPage:  return "person.crop.circle"
             }
         }
@@ -58,6 +67,18 @@ struct MainTabView: View {
             }
             .tabItem { Label(Tab.record.titleKey, systemImage: Tab.record.systemImage) }
             .tag(Tab.record)
+
+            NavigationStack(path: $goalsPath) {
+                GoalSettingView()
+                    .id(goalsId)
+                    // WIDGET_GOAL 딥링크가 특정 목표 진행 상세로 직행할 수 있게 값 기반 destination 등록.
+                    // GoalSettingView 내부의 NavigationLink(destination:)와 같은 스택에서 공존한다.
+                    .navigationDestination(for: GoalDetailRoute.self) { route in
+                        GoalProgressView(goalId: route.id)
+                    }
+            }
+            .tabItem { Label(Tab.goals.titleKey, systemImage: Tab.goals.systemImage) }
+            .tag(Tab.goals)
 
             NavigationStack(path: $myPagePath) {
                 MyPageView().id(myPageId)
@@ -109,6 +130,9 @@ struct MainTabView: View {
         case .record:
             recordPath = NavigationPath()
             recordId = UUID()
+        case .goals:
+            goalsPath = NavigationPath()
+            goalsId = UUID()
         case .myPage:
             myPagePath = NavigationPath()
             myPageId = UUID()
@@ -124,15 +148,15 @@ struct MainTabView: View {
             recordPath = NavigationPath([RecordDestination.diet])
             selectedTab = .record
         case "WIDGET_GOAL":
-            // 목표 위젯 → 홈 탭의 GoalProgressView로 직접 진입.
-            // 위젯 스냅샷 캐시에서 goalId를 읽어 path에 push. 활성 목표가 없으면 GoalSettingView로.
+            // 목표 위젯 → 목표 탭(#100). 위젯 스냅샷 캐시에서 goalId를 읽어 진행 상세로 직행.
+            // 활성 목표가 없으면 목표 탭 root(GoalSettingView 목록)로.
             let snapshot = WidgetDataStore()?.loadGoal()
             if let goalId = snapshot?.goal?.goalId {
-                homePath = NavigationPath([HomeDestination.goalDetail(id: goalId)])
+                goalsPath = NavigationPath([GoalDetailRoute(id: goalId)])
             } else {
-                homePath = NavigationPath([HomeDestination.goalSetting])
+                goalsPath = NavigationPath()
             }
-            selectedTab = .home
+            selectedTab = .goals
         case "WIDGET_STREAK":
             // 스트릭 위젯 → 홈 탭으로.
             homePath = NavigationPath()
