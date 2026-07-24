@@ -11,6 +11,7 @@ enum HomeDestination: Hashable {
     case goalDetail(id: Int)   // 활성 목표 상세 (GoalProgressView)
     case weeklyRetrospective   // 주간 회고 (구 Explore 탭 → 홈 흡수, #93)
     case changeAnalysis        // 변화 분석 (구 Explore 탭 → 홈 흡수, #93)
+    case recommendation        // 오늘의 맞춤 식단 추천 (홈 히어로 카드, #94)
 }
 
 // MARK: - HomeView (대시보드)
@@ -46,6 +47,14 @@ struct HomeView: View {
                         onWhyTapped: viewModel.userProfile != nil
                             ? { showCalorieExplanation = true }
                             : nil
+                    )
+
+                    // 2.5 오늘의 추천 히어로 (#94) — 차별화 자산을 fold 위로
+                    HomeRecommendationHeroCard(
+                        preview: viewModel.recommendationPreview,
+                        isLoading: viewModel.isLoadingRecommendation,
+                        unavailable: viewModel.recommendationUnavailable,
+                        hasProfile: viewModel.userProfile != nil
                     )
 
                     // 3. 매크로 + 연속일 — 2열 그리드
@@ -136,9 +145,17 @@ struct HomeView: View {
                 case .changeAnalysis:
                     ChangeAnalysisView()
                         .environmentObject(container)
+                case .recommendation:
+                    DietRecommendationView()
+                        .environmentObject(container)
                 }
             }
-            .task { await viewModel.loadDashboard(apiClient: container.apiClient) }
+            .task {
+                await viewModel.loadDashboard(apiClient: container.apiClient)
+                // 대시보드 로드 후 논블로킹으로 오늘의 추천 프리뷰 프리페치(#94).
+                // 홈 크리티컬 패스에 올리지 않으려 대시보드 완료 뒤 순차 실행한다.
+                await viewModel.loadRecommendationPreview(apiClient: container.apiClient)
+            }
             .refreshable {
                 await viewModel.loadDashboard(apiClient: container.apiClient)
                 // pull-to-refresh로 인한 실패는 alert으로 알리지 않음(기존 화면 데이터 유지).

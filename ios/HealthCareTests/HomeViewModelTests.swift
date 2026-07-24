@@ -392,6 +392,47 @@ final class HomeViewModelTests: XCTestCase {
 
 // MARK: - Mock
 
+// MARK: - loadRecommendationPreview (#94)
+
+@MainActor
+extension HomeViewModelTests {
+
+    func testLoadRecommendationPreview_프로필없으면조용히스킵한다() async {
+        let loader = MockHomeDashboardLoader()
+        let vm = HomeViewModel()
+        // loadDashboard 미호출 → userProfile == nil
+
+        await vm.loadRecommendationPreview(apiClient: loader)
+
+        XCTAssertNil(vm.recommendationPreview)
+        XCTAssertFalse(vm.recommendationUnavailable)   // 스킵은 실패가 아님
+        XCTAssertFalse(vm.isLoadingRecommendation)
+    }
+
+    func testLoadRecommendationPreview_추천실패시unavailable로degrade한다() async {
+        // 기본 목의 loadDailyRecommendation은 throw → 카드가 CTA로 degrade해야 한다.
+        let loader = MockHomeDashboardLoader(userProfile: makeProfileWithTargets())
+        let vm = HomeViewModel()
+        await vm.loadDashboard(apiClient: loader)   // userProfile 채움
+        XCTAssertNotNil(vm.userProfile)
+
+        await vm.loadRecommendationPreview(apiClient: loader)
+
+        XCTAssertNil(vm.recommendationPreview)
+        XCTAssertTrue(vm.recommendationUnavailable)
+        XCTAssertFalse(vm.isLoadingRecommendation)
+    }
+
+    private func makeProfileWithTargets() -> UserProfile {
+        UserProfile(
+            id: 1, email: "t@t.com", displayName: "Tester",
+            sex: nil, dateOfBirth: nil, heightCm: 175, weightKg: 70,
+            activityLevel: nil, onboardingCompleted: true, isPremium: false,
+            calorieTarget: 2000, proteinTargetG: 120, carbTargetG: 200, fatTargetG: 60
+        )
+    }
+}
+
 private actor MockHomeDashboardLoader: HomeDashboardLoading {
     private let dietLogs: [DietLogSummary]
     private let sessions: [SessionSummary]
@@ -465,5 +506,10 @@ private actor MockHomeDashboardLoader: HomeDashboardLoading {
         // 위젯 전용 데이터 — 테스트에서는 빈 응답으로 충분.
         if shouldFail { throw APIError.unknown }
         return []
+    }
+
+    func loadDailyRecommendation(body: Data) async throws -> DailyDietRecommendationResponse {
+        // 대시보드 로드 테스트는 추천 프리뷰(#94)를 호출하지 않는다 — 최소 구현.
+        throw APIError.unknown
     }
 }
