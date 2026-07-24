@@ -3,12 +3,10 @@ import SwiftUI
 
 // MARK: - Home Navigation Destinations
 //
-// 위젯 딥링크에서 homePath에 push할 수 있도록 value 기반 enum으로 노출.
-// MainTabView.handlePushRoute가 캐시에서 goalId를 읽어 .goalDetail(id:)를 append.
+// 홈 스택에서 value 기반으로 push하는 목적지.
+// 목표 관련 목적지는 목표 탭으로 이동됨(#100).
 
 enum HomeDestination: Hashable {
-    case goalSetting           // 활성 목표 없을 때 — 목표 목록/추가 화면
-    case goalDetail(id: Int)   // 활성 목표 상세 (GoalProgressView)
     case weeklyRetrospective   // 주간 회고 (구 Explore 탭 → 홈 흡수, #93)
     case changeAnalysis        // 변화 분석 (구 Explore 탭 → 홈 흡수, #93)
     case recommendation        // 오늘의 맞춤 식단 추천 (홈 히어로 카드, #94)
@@ -49,15 +47,7 @@ struct HomeView: View {
                             : nil
                     )
 
-                    // 2.5 오늘의 추천 히어로 (#94) — 차별화 자산을 fold 위로
-                    HomeRecommendationHeroCard(
-                        preview: viewModel.recommendationPreview,
-                        isLoading: viewModel.isLoadingRecommendation,
-                        unavailable: viewModel.recommendationUnavailable,
-                        hasProfile: viewModel.userProfile != nil
-                    )
-
-                    // 3. 매크로 + 연속일 — 2열 그리드
+                    // 3. 매크로 + 연속일 — 핵심 지표를 링 바로 아래로 집약 (#100)
                     HStack(alignment: .top, spacing: 12) {
                         MacroBreakdownCard(
                             proteinG:    viewModel.todayProteinG,
@@ -77,19 +67,20 @@ struct HomeView: View {
                     }
                     .padding(.horizontal, Spacing.xl) // design-lint:ignore — micro/hero spacing
 
-                    // 4. 주간 추세
+                    // 4. 오늘의 추천 히어로 (#94) — 차별화 자산
+                    HomeRecommendationHeroCard(
+                        preview: viewModel.recommendationPreview,
+                        isLoading: viewModel.isLoadingRecommendation,
+                        unavailable: viewModel.recommendationUnavailable,
+                        hasProfile: viewModel.userProfile != nil
+                    )
+
+                    // 5. 주간 추세
                     WeeklyTrendCard(weeklyActivity: viewModel.weeklyActivity)
 
-                    // 5. 목표 진행
-                    GoalProgressCard(goal: viewModel.activeGoal)
-
-                    // 6. 최근 식단 (기존 카드 재사용, 헤더 간소화)
-                    MealsSectionCompact(logs: viewModel.todayDietLogs)
-
-                    // 7. 최근 운동 (기존 카드 재사용, 높이 축소)
-                    WorkoutSectionCompact(session: viewModel.recentSessions.first(where: { $0.sessionDate == viewModel.today }))
-
-                    // 8. 이번 주 인사이트 (구 Explore 탭 흡수, #93) — 주간회고·변화분석 진입
+                    // 6. 이번 주 인사이트 (구 Explore 탭 흡수, #93) — 주간회고·변화분석 진입
+                    // 목표 진행·최근 식단·최근 운동은 홈에서 제거(#100): 목표는 목표 탭으로,
+                    // 최근 기록은 다이어리 탭이 이미 날짜별로 보여준다.
                     HomeInsightsSection()
 
                     Spacer(minLength: 100)
@@ -133,12 +124,6 @@ struct HomeView: View {
             // 버그를 일으켰다.
             .navigationDestination(for: HomeDestination.self) { dest in
                 switch dest {
-                case .goalSetting:
-                    GoalSettingView()
-                        .environmentObject(container)
-                case .goalDetail(let id):
-                    GoalProgressView(goalId: id)
-                        .environmentObject(container)
                 case .weeklyRetrospective:
                     WeeklyRetrospectiveView()
                         .environmentObject(container)
