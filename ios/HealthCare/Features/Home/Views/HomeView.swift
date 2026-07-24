@@ -9,6 +9,8 @@ import SwiftUI
 enum HomeDestination: Hashable {
     case goalSetting           // 활성 목표 없을 때 — 목표 목록/추가 화면
     case goalDetail(id: Int)   // 활성 목표 상세 (GoalProgressView)
+    case weeklyRetrospective   // 주간 회고 (구 Explore 탭 → 홈 흡수, #93)
+    case changeAnalysis        // 변화 분석 (구 Explore 탭 → 홈 흡수, #93)
 }
 
 // MARK: - HomeView (대시보드)
@@ -78,6 +80,9 @@ struct HomeView: View {
                     // 7. 최근 운동 (기존 카드 재사용, 높이 축소)
                     WorkoutSectionCompact(session: viewModel.recentSessions.first(where: { $0.sessionDate == viewModel.today }))
 
+                    // 8. 이번 주 인사이트 (구 Explore 탭 흡수, #93) — 주간회고·변화분석 진입
+                    HomeInsightsSection()
+
                     Spacer(minLength: 100)
                 }
                 .padding(.top, Spacing.xs) // design-lint:ignore — micro/hero spacing
@@ -124,6 +129,12 @@ struct HomeView: View {
                         .environmentObject(container)
                 case .goalDetail(let id):
                     GoalProgressView(goalId: id)
+                        .environmentObject(container)
+                case .weeklyRetrospective:
+                    WeeklyRetrospectiveView()
+                        .environmentObject(container)
+                case .changeAnalysis:
+                    ChangeAnalysisView()
                         .environmentObject(container)
                 }
             }

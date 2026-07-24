@@ -8,25 +8,23 @@ struct MainTabView: View {
     @State private var homePath    = NavigationPath()
     @State private var diaryPath   = NavigationPath()
     @State private var recordPath  = NavigationPath()
-    @State private var explorePath = NavigationPath()
     @State private var myPagePath  = NavigationPath()
 
     // 각 탭 root view의 id — 변경 시 SwiftUI가 view를 새로 만들어 ViewModel/스크롤 위치까지 초기화
     @State private var homeId    = UUID()
     @State private var diaryId   = UUID()
     @State private var recordId  = UUID()
-    @State private var exploreId = UUID()
     @State private var myPageId  = UUID()
 
     enum Tab: Int, CaseIterable {
-        case home, diary, record, explore, myPage
+        // Explore 탭은 제거됨(#93). 주간회고·변화분석은 홈에서 직접 진입한다.
+        case home, diary, record, myPage
 
         var titleKey: LocalizedStringKey {
             switch self {
             case .home:    return "tab.home"
             case .diary:   return "tab.diary"
             case .record:  return "tab.record"
-            case .explore: return "tab.explore"
             case .myPage:  return "tab.myPage"
             }
         }
@@ -36,7 +34,6 @@ struct MainTabView: View {
             case .home:    return "square.grid.2x2.fill"
             case .diary:   return "calendar"
             case .record:  return "plus.circle.fill"
-            case .explore: return "safari"
             case .myPage:  return "person.crop.circle"
             }
         }
@@ -61,12 +58,6 @@ struct MainTabView: View {
             }
             .tabItem { Label(Tab.record.titleKey, systemImage: Tab.record.systemImage) }
             .tag(Tab.record)
-
-            NavigationStack(path: $explorePath) {
-                ExploreView().id(exploreId)
-            }
-            .tabItem { Label(Tab.explore.titleKey, systemImage: Tab.explore.systemImage) }
-            .tag(Tab.explore)
 
             NavigationStack(path: $myPagePath) {
                 MyPageView().id(myPageId)
@@ -118,9 +109,6 @@ struct MainTabView: View {
         case .record:
             recordPath = NavigationPath()
             recordId = UUID()
-        case .explore:
-            explorePath = NavigationPath()
-            exploreId = UUID()
         case .myPage:
             myPagePath = NavigationPath()
             myPageId = UUID()
@@ -150,10 +138,9 @@ struct MainTabView: View {
             homePath = NavigationPath()
             selectedTab = .home
         case "WEEKLY_SUMMARY":
-            // explorePath를 먼저 세팅 — ExploreView가 mount되며 destination을 자동 push.
-            // exploreId 재생성은 path append와 race를 일으켜 제거.
-            explorePath = NavigationPath([ExploreDestination.weeklyRetrospective])
-            selectedTab = .explore
+            // 주간회고는 홈에서 진입(#93, Explore 탭 제거). homePath에 destination을 push.
+            homePath = NavigationPath([HomeDestination.weeklyRetrospective])
+            selectedTab = .home
         case "MEAL_BREAKFAST_REMINDER",
              "MEAL_LUNCH_REMINDER",
              "MEAL_DINNER_REMINDER":
