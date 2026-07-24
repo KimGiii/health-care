@@ -30,6 +30,9 @@ struct StreakCard: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(format: String(localized: "home.streak.a11y"), streakDays))
 
+            // 옆 매크로 카드와 높이를 맞추기 위해 여백을 흡수 — 도트 캘린더를 하단에 정렬
+            Spacer(minLength: Spacing.sm)
+
             // 7일 도트 캘린더
             HStack(spacing: 6) {
                 ForEach(Array(weeklyActivity.enumerated()), id: \.offset) { idx, day in
@@ -42,7 +45,7 @@ struct StreakCard: View {
             .accessibilityHidden(true)
         }
         .padding(Spacing.lg) // design-lint:ignore — micro/hero spacing
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                 .fill(Color.surfaceCard)
