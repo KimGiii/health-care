@@ -7,6 +7,7 @@ protocol HomeDashboardLoading: Sendable {
     func loadGoalProgress(id: Int) async throws -> GoalProgressResponse
     func loadUserProfile() async throws -> UserProfile
     func loadBodyMeasurements(from: String, to: String) async throws -> [MeasurementResponse]
+    func loadDailyRecommendation(body: Data) async throws -> DailyDietRecommendationResponse
 }
 
 extension APIClient: HomeDashboardLoading {
@@ -31,6 +32,17 @@ extension APIClient: HomeDashboardLoading {
     func loadUserProfile() async throws -> UserProfile {
         try await request(.getProfile)
     }
+    func loadDailyRecommendation(body: Data) async throws -> DailyDietRecommendationResponse {
+        try await request(.getDailyRecommendation(body: body))
+    }
+}
+
+// MARK: - 홈 추천 프리뷰
+
+/// 홈 히어로 카드에 노출할 오늘의 추천 요약(#94). 전체 추천은 DietRecommendationView에서 본다.
+struct HomeRecommendationPreview {
+    let featuredMeal: RecommendedMeal
+    let restrictionCount: Int
 }
 
 // MARK: - 주간 활동 데이터 포인트
@@ -63,6 +75,22 @@ final class HomeViewModel: ObservableObject {
     @Published var userProfile: UserProfile? = nil
     /// 최근 7일 체중 측정 (목표 위젯 차트용). 화면 표시에는 사용하지 않는다.
     @Published var recentMeasurements: [MeasurementResponse] = []
+
+    // MARK: - 오늘의 추천 프리뷰 (#94)
+    // 대시보드 로드와 분리된 논블로킹 프리페치. 홈 로드 크리티컬 패스에 올리지 않는다.
+    @Published private(set) var recommendationPreview: HomeRecommendationPreview? = nil
+    @Published private(set) var isLoadingRecommendation = false
+    /// 추천이 실패했거나 후보가 없어 프리뷰를 못 만든 상태. 카드는 CTA로 degrade.
+    @Published private(set) var recommendationUnavailable = false
+
+    /// 시간대 기준 다음 끼니 — 히어로 카드에 어떤 끼니를 앞세울지 결정.
+    var nextMealType: MealType {
+        switch Calendar.current.component(.hour, from: Date()) {
+        case 0..<11:  return .BREAKFAST
+        case 11..<16: return .LUNCH
+        default:      return .DINNER
+        }
+    }
 
     // MARK: - 날짜 유틸리티
 
@@ -210,6 +238,51 @@ final class HomeViewModel: ObservableObject {
                 caloriesBurned: caloriesBurned,
                 durationMinutes: durationMinutes
             )
+        }
+    }
+
+    // MARK: - 오늘의 추천 프리페치 (#94)
+
+    /// 대시보드 로드 이후 논블로킹으로 오늘의 추천을 미리 가져온다.
+    /// 프로필이 없으면 추천이 불가하므로 카드가 빈 상태(설정 유도)를 보이도록 조용히 반환한다.
+    /// 실패·후보 없음은 `recommendationUnavailable`로 표시해 카드가 CTA로 degrade한다.
+    func loadRecommendationPreview(apiClient: any HomeDashboardLoading) async {
+        guard userProfile != nil else {
+            recommendationPreview = nil
+            recommendationUnavailable = false
+            return
+        }
+        guard !isLoadingRecommendation else { return }
+        isLoadingRecommendation = true
+        recommendationUnavailable = false
+        defer { isLoadingRecommendation = false }
+
+        do {
+            let request = DailyDietRecommendationRequest(
+                date: today,
+                mealTypes: [MealType.BREAKFAST, .LUNCH, .DINNER].map(\.rawValue),
+                strictAllergyMode: false,
+                alternativeCount: 0
+            )
+            let body = try JSONEncoder().encode(request)
+            let response = try await apiClient.loadDailyRecommendation(body: body)
+
+            guard response.succeeded,
+                  let featured = response.meals.first(where: { $0.mealType == nextMealType })
+                    ?? response.meals.first,
+                  !featured.items.isEmpty else {
+                recommendationPreview = nil
+                recommendationUnavailable = true
+                return
+            }
+            recommendationPreview = HomeRecommendationPreview(
+                featuredMeal: featured,
+                restrictionCount: response.appliedRestrictions.count
+            )
+        } catch {
+            // 프리뷰 실패는 홈 전체 에러로 올리지 않는다 — 카드만 CTA로 degrade.
+            recommendationPreview = nil
+            recommendationUnavailable = true
         }
     }
 
