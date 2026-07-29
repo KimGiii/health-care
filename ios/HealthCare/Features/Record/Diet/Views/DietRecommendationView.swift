@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DietRecommendationView: View {
     @StateObject private var viewModel = DietRecommendationViewModel()
@@ -176,7 +177,7 @@ struct DietRecommendationView: View {
             }
         }
         if !result.alternatives.isEmpty {
-            alternativesSection(result.alternatives)
+            alternativesSection(result.alternatives, primaryMeals: result.meals)
         }
         if result.snapshotId != nil {
             refreshButton
@@ -524,8 +525,14 @@ struct DietRecommendationView: View {
         }
     }
 
-    private func alternativesSection(_ alts: [RecommendationSolution]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+    // MARK: - 대안 조합 (#96)
+    // DisclosureGroup(펼쳐야 보임) 폐기 → primary 대비 차이(단백질·칼로리)를 앞세운
+    // 평면 카드로 한눈 비교. 데이터에서 도출 가능한 델타만 라벨로(조리 난이도 등 미보유값 금지).
+
+    private func alternativesSection(_ alts: [RecommendationSolution], primaryMeals: [RecommendedMeal]) -> some View {
+        let primaryCal = mealsCalories(primaryMeals)
+        let primaryProtein = mealsProtein(primaryMeals)
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .foregroundStyle(Color.brandAccent)
@@ -534,41 +541,80 @@ struct DietRecommendationView: View {
                     .foregroundStyle(Color.textPrimary)
             }
             ForEach(Array(alts.enumerated()), id: \.offset) { index, solution in
-                alternativeCard(index: index + 1, meals: solution.meals, altIndex: index)
+                alternativeCard(
+                    solution: solution,
+                    altIndex: index,
+                    primaryCal: primaryCal,
+                    primaryProtein: primaryProtein
+                )
             }
         }
     }
 
-    private func alternativeCard(index: Int, meals: [RecommendedMeal], altIndex: Int) -> some View {
-        DisclosureGroup {
-            VStack(spacing: 10) {
-                ForEach(meals) { meal in
-                    alternativeMealRow(meal)
+    private func alternativeCard(
+        solution: RecommendationSolution,
+        altIndex: Int,
+        primaryCal: Double,
+        primaryProtein: Double
+    ) -> some View {
+        let proteinDelta = mealsProtein(solution.meals) - primaryProtein
+        let calorieDelta = mealsCalories(solution.meals) - primaryCal
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
+            // 차이 라벨 — 색 이외에 부호(+/-) 텍스트로도 방향을 전달
+            HStack(spacing: 6) {
+                if abs(proteinDelta) >= 1 {
+                    diffChip(signedGram(proteinDelta, unit: "단백질"), tone: proteinDelta > 0 ? .up : .down)
                 }
-                applyAlternativeButton(altIndex: altIndex)
-            }
-            .padding(.top, Spacing.sm)
-        } label: {
-            HStack {
-                Text(String(format: String(localized: "recommend.alternative.n"), index))
-                    .font(.subheadline).fontWeight(.medium)
-                    .foregroundStyle(Color.textPrimary)
+                if abs(calorieDelta) >= 5 {
+                    diffChip(signedKcal(calorieDelta), tone: .neutral)
+                }
+                if abs(proteinDelta) < 1 && abs(calorieDelta) < 5 {
+                    diffChip(String(localized: "recommend.alternative.diffNone", defaultValue: "구성이 달라요"), tone: .neutral)
+                }
                 Spacer()
-                Text(String(format: "%.0f kcal",
-                            meals.flatMap(\.items).reduce(0) { $0 + $1.calories }))
-                    .font(.caption).fontWeight(.medium)
-                    .foregroundStyle(Color.textSecondary)
             }
+
+            // 이 조합에 담긴 식품 미리보기(펼치지 않고 바로 보임)
+            Text(foodSummary(solution.meals))
+                .font(.caption)
+                .foregroundStyle(Color.textSecondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            applyAlternativeButton(altIndex: altIndex)
         }
-        .padding(14) // design-lint:ignore
+        .padding(14) // design-lint:ignore — micro/hero spacing
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 14)) // design-lint:ignore
+        .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
         .elevation(.low)
+    }
+
+    private enum DiffTone { case up, down, neutral }
+
+    private func diffChip(_ text: String, tone: DiffTone) -> some View {
+        let color: Color = {
+            switch tone {
+            case .up:      return Color.brandAccent
+            case .down:    return Color.brandWarning
+            case .neutral: return Color.textSecondary
+            }
+        }()
+        return Text(text)
+            .font(.caption2).fontWeight(.semibold)
+            .foregroundStyle(color)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, 4) // design-lint:ignore — micro/hero spacing
+            .background(color.opacity(0.12))
+            .clipShape(Capsule())
     }
 
     private func applyAlternativeButton(altIndex: Int) -> some View {
         Button {
-            withAnimation { viewModel.applyAlternative(at: altIndex, apiClient: container.apiClient) }
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                viewModel.applyAlternative(at: altIndex, apiClient: container.apiClient)
+            }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.up.circle.fill")
@@ -583,47 +629,31 @@ struct DietRecommendationView: View {
             .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
         }
         .buttonStyle(.plain)
-        .padding(.top, Spacing.xs)
+        .disabled(viewModel.isLoading)
     }
 
-    private func alternativeMealRow(_ meal: RecommendedMeal) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label {
-                    Text(meal.mealType.displayName)
-                        .font(.caption).fontWeight(.semibold)
-                        .foregroundStyle(Color.textPrimary)
-                } icon: {
-                    Image(systemName: meal.mealType.sfSymbol)
-                        .font(.caption2)
-                        .foregroundStyle(Color.brandPrimary)
-                }
-                Spacer()
-                Text(String(format: "%.0f kcal", meal.totalCalories))
-                    .font(.caption2)
-                    .foregroundStyle(Color.textSecondary)
-            }
-            ForEach(meal.items) { item in
-                HStack(spacing: 6) {
-                    if item.needsCaution {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 10)) // design-lint:ignore
-                            .foregroundStyle(Color.brandWarning)
-                    }
-                    Text(item.displayName)
-                        .font(.caption)
-                        .foregroundStyle(Color.textPrimary)
-                    Spacer()
-                    Text("\(item.displayServing) · " + String(format: "%.0f kcal", item.calories))
-                        .font(.caption2)
-                        .foregroundStyle(Color.textSecondary)
-                }
-                .padding(.horizontal, Spacing.xs)
-            }
-        }
-        .padding(10) // design-lint:ignore
-        .background(Color.backgroundPage)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+    // MARK: - 대안 비교 헬퍼
+
+    private func mealsCalories(_ meals: [RecommendedMeal]) -> Double {
+        meals.flatMap(\.items).reduce(0) { $0 + $1.calories }
+    }
+
+    private func mealsProtein(_ meals: [RecommendedMeal]) -> Double {
+        meals.flatMap(\.items).reduce(0) { $0 + $1.proteinG }
+    }
+
+    private func foodSummary(_ meals: [RecommendedMeal]) -> String {
+        meals.flatMap(\.items).prefix(5).map(\.displayName).joined(separator: " · ")
+    }
+
+    private func signedGram(_ delta: Double, unit: String) -> String {
+        let n = Int(delta.rounded())
+        return "\(unit) \(n > 0 ? "+" : "")\(n)g"
+    }
+
+    private func signedKcal(_ delta: Double) -> String {
+        let n = Int(delta.rounded())
+        return "\(n > 0 ? "+" : "")\(n) kcal"
     }
 
     private var refreshButton: some View {
