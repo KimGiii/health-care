@@ -5,6 +5,8 @@ struct DietRecommendationView: View {
     @StateObject private var viewModel = DietRecommendationViewModel()
     @EnvironmentObject private var container: AppContainer
     @State private var showDisclaimer = false
+    @State private var safetyBadgeVisible = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView {
@@ -174,6 +176,9 @@ struct DietRecommendationView: View {
             totalsCard(result)
             if let rationale = result.rationale {
                 rationaleCard(rationale)
+            }
+            if !result.appliedRestrictions.isEmpty {
+                safetyBadge(result.appliedRestrictions)
             }
         }
         if !result.alternatives.isEmpty {
@@ -697,6 +702,73 @@ struct DietRecommendationView: View {
         .padding(Spacing.md)
         .background(Color.surfaceSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 10)) // design-lint:ignore
+    }
+
+    // MARK: - 안전 배지 (#97)
+    // 알러지 안전 게이트가 실제로 작동했음을 조용히 알린다. 축하하지 않고(회색조),
+    // "정직한 안전" 브랜드를 시각화한다. ADR-0005대로 라벨 확인 안내를 병기한다.
+
+    private func safetyBadge(_ restrictions: [DietRestriction]) -> some View {
+        let labels = restrictions.map(\.displayLabel).filter { !$0.isEmpty }
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "checkmark.shield.fill")
+                    .foregroundStyle(Color.textSecondary)
+                    .font(.caption)
+                Text(safetyBadgeText(labels, total: restrictions.count))
+                    .font(.caption).fontWeight(.medium)
+                    .foregroundStyle(Color.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+            }
+            Text(String(localized: "recommend.safety.checkLabel", defaultValue: "알러지 라벨은 직접 한 번 더 확인해 주세요"))
+                .font(.caption2)
+                .foregroundStyle(Color.textTertiary)
+        }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surfaceSecondary)
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.sm)
+                .stroke(Color.cardStroke, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+        .opacity(safetyBadgeVisible ? 1 : 0)
+        .scaleEffect(safetyBadgeVisible ? 1 : 0.97)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(safetyBadgeA11y(labels, total: restrictions.count))
+        .onAppear {
+            guard !safetyBadgeVisible else { return }
+            if reduceMotion {
+                safetyBadgeVisible = true
+            } else {
+                withAnimation(.easeOut(duration: 0.35).delay(0.4)) {
+                    safetyBadgeVisible = true
+                }
+            }
+        }
+    }
+
+    /// "땅콩·새우 제외했어요" — 3건 초과면 "외 N건"으로 축약.
+    private func safetyBadgeText(_ labels: [String], total: Int) -> String {
+        let shown = labels.prefix(3).joined(separator: "·")
+        if total > 3 {
+            return String(
+                localized: "recommend.safety.excludedMore",
+                defaultValue: "\(shown) 외 \(total - 3)건 제외했어요"
+            )
+        }
+        return String(
+            localized: "recommend.safety.excluded",
+            defaultValue: "\(shown) 제외했어요"
+        )
+    }
+
+    private func safetyBadgeA11y(_ labels: [String], total: Int) -> String {
+        String(
+            localized: "recommend.safety.a11y",
+            defaultValue: "제한 재료 \(total)건이 자동으로 제외되었어요. 알러지 라벨을 꼭 확인해 주세요."
+        )
     }
 }
 
