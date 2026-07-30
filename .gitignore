@@ -48,3 +48,13 @@ scripts/food-census/data/
 macos-roots.pem
 __pycache__/
 *.pyc
+
+# ruflo/claude-flow agent orchestration tool — local runtime state, not project source
+.agents/
+.claude-flow/
+.swarm/
+.mcp.json
+agentdb.rvf
+agentdb.rvf.idmap.json
+ruvector.db
+skills-lock.json
