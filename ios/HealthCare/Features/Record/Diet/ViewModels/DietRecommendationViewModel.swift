@@ -1,15 +1,35 @@
 import Foundation
 
+enum SnackPlacement: String, CaseIterable, Identifiable {
+    case morning
+    case afternoon
+    case evening
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .morning:
+            return String(localized: "recommend.snackPlacement.morning", defaultValue: "아침~점심")
+        case .afternoon:
+            return String(localized: "recommend.snackPlacement.afternoon", defaultValue: "점심~저녁")
+        case .evening:
+            return String(localized: "recommend.snackPlacement.evening", defaultValue: "저녁 이후")
+        }
+    }
+}
+
 @MainActor
 final class DietRecommendationViewModel: ObservableObject {
     @Published var result: DailyDietRecommendationResponse?
     @Published var selectedMeals: Set<MealType> = [.BREAKFAST, .LUNCH, .DINNER]
     @Published var selectedDate: Date = .now
     @Published var strictAllergyMode: Bool = false
+    @Published var snackPlacements: Set<SnackPlacement> = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published private(set) var savingMealTypes: Set<MealType> = []
-    @Published private(set) var savedMealTypes: Set<MealType> = []
+    @Published private(set) var savingMealKeys: Set<String> = []
+    @Published private(set) var savedMealKeys: Set<String> = []
     @Published var showFeedbackSheet = false
     @Published private(set) var isSendingFeedback = false
 
@@ -24,17 +44,47 @@ final class DietRecommendationViewModel: ObservableObject {
 
     var orderedMeals: [MealType] { [.BREAKFAST, .LUNCH, .DINNER, .SNACK] }
 
+    var selectedMealsInDisplayOrder: [MealType] {
+        let effectivePlacements: Set<SnackPlacement> =
+            selectedMeals.contains(.SNACK) && snackPlacements.isEmpty ? [.afternoon] : snackPlacements
+        return Self.mealOrder(for: effectivePlacements).filter {
+            $0 == .SNACK || selectedMeals.contains($0)
+        }
+    }
+
+    func ordered(_ meals: [RecommendedMeal]) -> [RecommendedMeal] {
+        var buckets = Dictionary(grouping: meals, by: \.mealType)
+        let effectivePlacements: Set<SnackPlacement> =
+            meals.contains { $0.mealType == .SNACK } && snackPlacements.isEmpty ? [.afternoon] : snackPlacements
+        return Self.mealOrder(for: effectivePlacements).compactMap { type in
+            guard var bucket = buckets[type], !bucket.isEmpty else { return nil }
+            let meal = bucket.removeFirst()
+            buckets[type] = bucket
+            return meal
+        }
+    }
+
+    static func mealOrder(for placements: Set<SnackPlacement>) -> [MealType] {
+        var order: [MealType] = [.BREAKFAST]
+        if placements.contains(.morning) { order.append(.SNACK) }
+        order.append(.LUNCH)
+        if placements.contains(.afternoon) { order.append(.SNACK) }
+        order.append(.DINNER)
+        if placements.contains(.evening) { order.append(.SNACK) }
+        return order
+    }
+
     func recommend(apiClient: APIClient) async {
         guard canRecommend else { return }
         isLoading = true
         errorMessage = nil
         result = nil
-        savedMealTypes = []
+        savedMealKeys = []
         defer { isLoading = false }
         do {
             let request = DailyDietRecommendationRequest(
                 date: dateFormatter.string(from: selectedDate),
-                mealTypes: selectedMeals.sorted { $0.rawValue < $1.rawValue }.map(\.rawValue),
+                mealTypes: selectedMealsInDisplayOrder.map(\.rawValue),
                 strictAllergyMode: strictAllergyMode,
                 // 서버가 기본 버퍼만큼 후보를 미리 생성하므로 클라는 추가 요청량 0으로 서버 기본에 위임한다.
                 alternativeCount: 0
@@ -49,11 +99,12 @@ final class DietRecommendationViewModel: ObservableObject {
     }
 
     func saveMeal(_ meal: RecommendedMeal, apiClient: APIClient) async {
-        guard !meal.items.isEmpty, !savingMealTypes.contains(meal.mealType) else { return }
+        let key = mealKey(meal)
+        guard !meal.items.isEmpty, !savingMealKeys.contains(key) else { return }
 
-        savingMealTypes.insert(meal.mealType)
+        savingMealKeys.insert(key)
         errorMessage = nil
-        defer { savingMealTypes.remove(meal.mealType) }
+        defer { savingMealKeys.remove(key) }
 
         do {
             let request = Self.makeCreateDietLogRequest(
@@ -63,7 +114,7 @@ final class DietRecommendationViewModel: ObservableObject {
             )
             let body = try JSONEncoder().encode(request)
             let _: CreateDietLogResponse = try await apiClient.request(.createDietLog(body: body))
-            savedMealTypes.insert(meal.mealType)
+            savedMealKeys.insert(key)
             NotificationCenter.default.post(name: .dietRecordChanged, object: nil)
         } catch let error as APIError {
             errorMessage = error.errorDescription
@@ -73,11 +124,15 @@ final class DietRecommendationViewModel: ObservableObject {
     }
 
     func isSaving(_ meal: RecommendedMeal) -> Bool {
-        savingMealTypes.contains(meal.mealType)
+        savingMealKeys.contains(mealKey(meal))
     }
 
     func isSaved(_ meal: RecommendedMeal) -> Bool {
-        savedMealTypes.contains(meal.mealType)
+        savedMealKeys.contains(mealKey(meal))
+    }
+
+    private func mealKey(_ meal: RecommendedMeal) -> String {
+        meal.mealType.rawValue + ":" + meal.items.map { String($0.foodCatalogId) }.joined(separator: ",")
     }
 
     func requestRefresh(reason: RecommendationFeedbackReason, apiClient: APIClient) async {
@@ -138,7 +193,7 @@ final class DietRecommendationViewModel: ObservableObject {
             snapshotId: current.snapshotId
         )
         // 새 식단으로 바뀌었으므로 저장 상태를 초기화한다.
-        savedMealTypes = []
+        savedMealKeys = []
     }
 
     static func summarize(_ meals: [RecommendedMeal]) -> DailyDietRecommendationResponse.NutrientSummary {
@@ -151,10 +206,33 @@ final class DietRecommendationViewModel: ObservableObject {
     }
 
     func toggleMeal(_ meal: MealType) {
+        if meal == .SNACK {
+            if selectedMeals.contains(.SNACK) {
+                selectedMeals.remove(.SNACK)
+                snackPlacements.removeAll()
+            } else {
+                selectedMeals.insert(.SNACK)
+                snackPlacements = [.afternoon]
+            }
+            return
+        }
         if selectedMeals.contains(meal) {
             selectedMeals.remove(meal)
         } else {
             selectedMeals.insert(meal)
+        }
+    }
+
+    func toggleSnackPlacement(_ placement: SnackPlacement) {
+        if snackPlacements.contains(placement) {
+            snackPlacements.remove(placement)
+        } else {
+            snackPlacements.insert(placement)
+        }
+        if snackPlacements.isEmpty {
+            selectedMeals.remove(.SNACK)
+        } else {
+            selectedMeals.insert(.SNACK)
         }
     }
 

@@ -99,6 +99,34 @@ struct DietRecommendationView: View {
                     }
                 }
             }
+            if viewModel.selectedMeals.contains(.SNACK) {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    Text(String(localized: "recommend.snackPlacement.title", defaultValue: "간식 시간"))
+                        .font(.caption)
+                        .foregroundStyle(Color.textSecondary)
+                    HStack(spacing: Spacing.sm) {
+                    ForEach(SnackPlacement.allCases) { placement in
+                            let selected = viewModel.snackPlacements.contains(placement)
+                            Button {
+                                viewModel.toggleSnackPlacement(placement)
+                            } label: {
+                                Text(placement.displayName)
+                                    .font(.caption2).fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, Spacing.sm)
+                                    .background(selected ? Color.brandAccent : Color.surfaceSecondary)
+                                    .foregroundStyle(selected ? Color.white : Color.textSecondary)
+                                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .accessibilityHint(
+                    String(localized: "recommend.snackPlacement.hint",
+                           defaultValue: "간식을 추가할 시간대를 하나 이상 선택합니다.")
+                )
+            }
         }
     }
 
@@ -170,7 +198,7 @@ struct DietRecommendationView: View {
             failureCard(result)
         }
         if !result.meals.isEmpty {
-            ForEach(result.meals) { meal in
+            ForEach(Array(viewModel.ordered(result.meals).enumerated()), id: \.offset) { _, meal in
                 mealCard(meal)
             }
             totalsCard(result)

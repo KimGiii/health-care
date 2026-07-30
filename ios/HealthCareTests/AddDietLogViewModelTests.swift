@@ -501,6 +501,38 @@ final class DietRecommendationViewModelTests: XCTestCase {
         super.tearDown()
     }
 
+    func testMealOrder_기본메인끼니순서를유지하고선택한위치에간식을삽입한다() {
+        XCTAssertEqual(
+            DietRecommendationViewModel.mealOrder(for: [.morning]),
+            [.BREAKFAST, .SNACK, .LUNCH, .DINNER]
+        )
+        XCTAssertEqual(
+            DietRecommendationViewModel.mealOrder(for: [.afternoon]),
+            [.BREAKFAST, .LUNCH, .SNACK, .DINNER]
+        )
+        XCTAssertEqual(
+            DietRecommendationViewModel.mealOrder(for: [.evening]),
+            [.BREAKFAST, .LUNCH, .DINNER, .SNACK]
+        )
+        XCTAssertEqual(
+            DietRecommendationViewModel.mealOrder(for: [.morning, .afternoon, .evening]),
+            [.BREAKFAST, .SNACK, .LUNCH, .SNACK, .DINNER, .SNACK]
+        )
+    }
+
+    func testSnackPlacement_여러시간대를선택하면간식슬롯을각각생성한다() {
+        let viewModel = DietRecommendationViewModel()
+
+        viewModel.toggleMeal(.SNACK)
+        viewModel.toggleSnackPlacement(.morning)
+        viewModel.toggleSnackPlacement(.evening)
+
+        XCTAssertEqual(
+            viewModel.selectedMealsInDisplayOrder,
+            [.BREAKFAST, .SNACK, .LUNCH, .SNACK, .DINNER, .SNACK]
+        )
+    }
+
     func testRecommend_성공응답을상태에반영하고의료안전단정문구를포함하지않는다() async throws {
         let viewModel = DietRecommendationViewModel()
         viewModel.selectedDate = Self.fixedDate
@@ -514,7 +546,10 @@ final class DietRecommendationViewModelTests: XCTestCase {
 
             let body = try XCTUnwrap(Self.bodyJSON(from: request))
             XCTAssertEqual(body["date"] as? String, "2026-06-17")
-            XCTAssertEqual(Set(body["mealTypes"] as? [String] ?? []), ["BREAKFAST", "LUNCH", "DINNER", "SNACK"])
+            XCTAssertEqual(
+                body["mealTypes"] as? [String],
+                ["BREAKFAST", "LUNCH", "SNACK", "DINNER"]
+            )
             XCTAssertEqual(body["strictAllergyMode"] as? Bool, false)
 
             return Self.jsonResponse(path: request.url?.path, body: """
