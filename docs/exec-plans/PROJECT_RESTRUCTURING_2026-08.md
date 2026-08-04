@@ -177,7 +177,11 @@ apply 직후 `/actuator/health`가 503을 반환했다 — 당시 실행 중이�
 
    dev state도 함께 옮긴 이유: destroy 잔여 리소스(IAM 롤·정책·빈 버킷) 정리를 특정 노트북이 아니라 **권한을 가진 사람이 어디서든** 마무리할 수 있어야 하기 때문이다.
 
-4. DB 비밀번호를 SSM Parameter Store 또는 Secrets Manager로 이전. → **이월** — `ssm:*`·`secretsmanager:*` 권한이 없다. 5번 선행 필요.
+4. DB 비밀번호를 SSM Parameter Store 또는 Secrets Manager로 이전. → **이월, 실행 준비 완료** ([#118](https://github.com/KimGiii/Gainsy/issues/118))
+
+   `ssm:*`·`secretsmanager:*` 권한이 없어 실행하지 못했다. 권한 확보 즉시 진행할 수 있도록 최소 권한 정책([`infra/iam/health-care-gap-policy.json`](../../infra/iam/health-care-gap-policy.json))과 단계별 절차([런북](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md))를 준비했다.
+
+   **한계를 미리 밝힌다:** SSM 이관은 로컬 평문을 없애지만 `data.aws_ssm_parameter`로 읽은 값이 **Terraform state에는 평문으로 남는다.** state가 S3(AES256·버저닝·퍼블릭 차단)로 옮겨졌으므로 노트북 평문보다는 낫지만 완전한 제거는 아니다. 근본 해결은 `manage_master_user_password = true`이나, 기존 인스턴스에 적용하면 비밀번호가 즉시 회전해 앱의 GitHub Secret이 낡아지고 **DB 연결이 끊긴다.** 활성 사용자 약 50명이 있는 운영 DB라 앱 측 변경과 함께 별도 과제로 다룬다.
 
 5. IAM 정책을 실제 부착 상태와 정합화. → **문서화 완료, 실행은 관리자 몫**
 
@@ -262,7 +266,7 @@ Phase 1 진행 중 `dev`가 `prod`보다 백엔드 커밋 124개·Flyway 마이�
 
 | 항목 | 상태 |
 |---|---|
-| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인 (`ce:GetCostAndUsage` 권한 없음) |
+| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인. CLI는 `ce:GetCostAndUsage` 권한 대기 중이나 **Billing 콘솔은 권한과 무관하게 지금 확인 가능** ([런북 §2.1](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md)) |
 | ~~**EC2 t3.medium 실제 부하** — 다운사이징 판단 근거~~ | **확인 완료** — CPU 14일 평균 3.8%·최대 37%. 다만 제약은 CPU가 아니라 blue-green 피크 메모리 3.8GB로 판명, 다운사이징 불가 |
 | **베타 테스터 모집 진행 상태** — 식단 추천 de-scope 폭에 영향 | 활성 사용자 50명 확인. 모집 단계·목표는 미확인 |
 | **`diet/external` 수집 파이프라인 중 curated pool 유지에 필수인 범위** | 미확인 |

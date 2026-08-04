@@ -98,6 +98,18 @@ Phase 1과 V22→V41 릴리스를 진행하며 실제로 막힌 액션이다.
 | `ssm:*` · `secretsmanager:*` | DB 비밀번호 시크릿 이관 | **보류 중 — 평문 tfvars 유지** |
 | `iam:ListAttachedUserPolicies` | 자기 정책 조회 | 없음 |
 
+### 공백 보완 정책
+
+확인된 공백을 최소 권한으로 담은 정책을 준비해 뒀다.
+
+| 파일 | 내용 |
+|---|---|
+| [`health-care-gap-policy.json`](health-care-gap-policy.json) | SSM·KMS·Cost Explorer·IAM 자기조회·dev 롤 정리·RDS 스냅샷·인벤토리 조회 (11개 구문 / 39개 액션) |
+
+와일드카드 `Resource`를 쓴 4개 구문은 AWS가 리소스 수준 권한을 지원하지 않는 액션이거나(`ssm:DescribeParameters`, `ce:*`, `s3:ListAllMyBuckets`, `cloudwatch:ListMetrics`), `kms:ViaService` 조건으로 범위를 제한했다.
+
+부착 절차와 이후 작업(시크릿 이관·청구액 검증)은 **[시크릿 이관·청구액 검증 런북](../../docs/operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md)** 에 있다.
+
 ### 정합화 절차
 
 정책 부착·수정은 **관리자 자격증명이 필요하다.** 아래는 관리자가 실행한다.
