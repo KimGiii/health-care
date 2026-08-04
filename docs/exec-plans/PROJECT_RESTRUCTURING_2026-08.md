@@ -148,22 +148,53 @@ apply 직후 `/actuator/health`가 503을 반환했다 — 당시 실행 중이�
 
 > RDS는 유지를 권한다. `deletion_protection = true` + 최종 스냅샷 설정이 걸려 있고, 데이터 재구축 비용이 월 $21보다 크다.
 
-### Phase 2 — Terraform 정리 (2~3일)
+### Phase 2 — Terraform 정리 — **부분 완료 (2026-08-04)**
 
-1. `rehearsal` 죽은 state 삭제, 디렉터리 제거.
-2. `aws` 스택을 `environment` 변수 기반 구조로 재편.
-   ```
-   infra/terraform/
-   ├── modules/          # network, compute, database, storage, dns
-   └── envs/
-       ├── prod/
-       └── dev/          # 필요 시 apply, 평소 destroy 상태 유지
-   ```
-3. **state를 S3 백엔드 + DynamoDB 잠금으로 이전.** 최우선 항목이다.
-4. DB 비밀번호를 SSM Parameter Store(SecureString) 또는 Secrets Manager로 이전, `tfvars`에서 제거.
-5. `infra/iam/health-care-dev-policy.json`을 실제 IAM 사용자에게 부착. 부착 절차를 `infra/iam/README.md`에 검증 명령과 함께 기록.
-6. `dev` 환경은 "상시 가동"이 아니라 **필요할 때 apply → 끝나면 destroy**하는 일회성 환경으로 재정의. 이번 destroy를 그 기본 상태로 삼는다.
-7. **배포 스크립트의 도커 이미지 정리 로직 보강.** `dev-to-prod.yml`의 `docker image prune -f`는 dangling 이미지만 지우고 태그된 구버전 ECR 이미지를 남긴다. 32개가 쌓여 디스크가 83%까지 찼고, 배포마다 이미지를 받으므로 곧 배포 실패로 이어질 상태였다. 수동 정리로 30%까지 회복했으나 근본 대책이 필요하다.
+이슈 [#116](https://github.com/KimGiii/Gainsy/issues/116)
+
+조사 결과 7개 항목 중 **2개 취소·보류**(전제가 틀렸거나 추측성 추상화), **4개 완료**, **1개는 IAM 권한 확보 후로 이월**됐다.
+
+
+1. ~~`rehearsal` 죽은 state 삭제, 디렉터리 제거.~~ → **취소**
+
+   README를 읽어보니 죽은 스택이 아니었다. 식품 카탈로그 전량 적재 전 용량·소요·정합성을 측정하는 **의도적으로 일회성인 "쓰고 버리는" 스택**이며, 리소스 0개는 destroy 후의 정상 상태다. 게다가 [마이그레이션 릴리스 계획 §6.1](MIGRATION_RELEASE_V22_V41.md)의 "prod 카탈로그 적재"가 바로 이 도구를 쓰는 작업이다. **유지한다.**
+
+2. ~~`aws` 스택을 모듈 + 환경 디렉터리 구조로 재편.~~ → **보류**
+
+   지금은 추측성 추상화다.
+
+   - 실환경이 `aws/` 하나뿐이다. 모듈을 소비할 두 번째 대상이 없다.
+   - `dev/`는 일회성으로 재정의되어 상시 존재하지 않는다. 중복 유지 비용이 낮다.
+   - 디렉터리 이름을 바꾸면 App Store 심사 기록 등 **역사적 문서 8곳 이상의 링크가 깨진다.**
+
+   `aws/`라는 이름과 `environment = "prod"`의 불일치는 겉모습 문제이고, 실제 문제였던 원격 state는 3번에서 해소됐다. 두 번째 상시 환경이 필요해질 때 다시 판단한다. 근거는 [infra/terraform/README.md](../../infra/terraform/README.md)에 기록했다.
+
+3. **state를 S3로 원격화.** 최우선 항목. → **완료**
+
+   `prod/terraform.tfstate`·`dev/terraform.tfstate` 두 키로 `healthcare-terraform-state-621770702801` 버킷에 이전했다. 버저닝·AES256 암호화·퍼블릭 전면 차단 적용. 이전 후 `terraform plan`이 **No changes**로 인프라와 일치함을 확인했다.
+
+   **잠금은 DynamoDB가 아니라 S3 네이티브(`use_lockfile`)를 쓴다.** Terraform 1.10에서 도입됐고, DynamoDB 기반 잠금은 폐기 예정이며, 현재 실행 주체에 `dynamodb:*` 권한이 없다는 제약과도 맞는다. 이 결정으로 DynamoDB 권한 공백이 차단 요인에서 빠졌다.
+
+   dev state도 함께 옮긴 이유: destroy 잔여 리소스(IAM 롤·정책·빈 버킷) 정리를 특정 노트북이 아니라 **권한을 가진 사람이 어디서든** 마무리할 수 있어야 하기 때문이다.
+
+4. DB 비밀번호를 SSM Parameter Store 또는 Secrets Manager로 이전. → **이월, 실행 준비 완료** ([#118](https://github.com/KimGiii/Gainsy/issues/118))
+
+   `ssm:*`·`secretsmanager:*` 권한이 없어 실행하지 못했다. 권한 확보 즉시 진행할 수 있도록 최소 권한 정책([`infra/iam/health-care-gap-policy.json`](../../infra/iam/health-care-gap-policy.json))과 단계별 절차([런북](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md))를 준비했다.
+
+   **한계를 미리 밝힌다:** SSM 이관은 로컬 평문을 없애지만 `data.aws_ssm_parameter`로 읽은 값이 **Terraform state에는 평문으로 남는다.** state가 S3(AES256·버저닝·퍼블릭 차단)로 옮겨졌으므로 노트북 평문보다는 낫지만 완전한 제거는 아니다. 근본 해결은 `manage_master_user_password = true`이나, 기존 인스턴스에 적용하면 비밀번호가 즉시 회전해 앱의 GitHub Secret이 낡아지고 **DB 연결이 끊긴다.** 활성 사용자 약 50명이 있는 운영 DB라 앱 측 변경과 함께 별도 과제로 다룬다.
+
+5. IAM 정책을 실제 부착 상태와 정합화. → **문서화 완료, 실행은 관리자 몫**
+
+   조사 결과 문제는 "정책을 부착하지 않았다"가 아니라 **레포의 정책 파일이 실제와 양방향으로 어긋나 있다**는 것이었다.
+
+   - `terraform-executor-policy.json`은 S3·IAM만 정의하는데 EC2·RDS·VPC apply가 실제로 성공한다 → **실제보다 좁다**
+   - `health-care-dev-policy.json`은 `iam:DeleteRolePolicy`를 올바른 범위로 정의하지만 부착되지 않았다 → **실제보다 넓다**
+
+   `health-care-prod` 사용자는 `iam:ListAttachedUserPolicies` 권한조차 없어 자기 정책을 조회할 수 없다. **권한 진단 자체가 불가능하다.** 확인된 공백 목록과 정합화 절차를 [infra/iam/README.md](../../infra/iam/README.md)에 기록했다. 정책 부착·수정은 관리자 자격증명이 필요해 에이전트가 수행할 수 없다.
+
+6. `dev` 환경을 일회성으로 재정의. → **완료** — [infra/terraform/README.md](../../infra/terraform/README.md)에 스택별 수명, destroy 잔여물 정리 절차, `deploy-dev.yml`이 현재 무효라는 사실을 기록했다.
+
+7. **배포 스크립트의 도커 이미지 정리 로직 보강.** → **완료** — `docker image prune -f`를 `-a --filter "until=168h"`로 바꿔 태그된 구버전 ECR 이미지도 대상에 넣되 최근 7일치는 롤백용으로 남긴다. 정리 후 디스크 사용률을 로그로 남기도록 추가했다.
 
 #### Phase 1·릴리스 과정에서 확인된 IAM 권한 공백
 
@@ -214,8 +245,10 @@ apply 직후 `/actuator/health`가 503을 반환했다 — 당시 실행 중이�
 
 ```
 Phase 1 (비용)  →  Phase 2 (Terraform)  →  Phase 4 (insights)  →  Phase 3 (diet 축소)  →  Phase 5 (위생)
-  ✅ 완료            2~3일                    2~3주                  1~2주                 0.5일
+  ✅ 완료           🟡 부분 완료              2~3주                  1~2주                 0.5일
 ```
+
+Phase 2의 잔여분(시크릿 이관)은 IAM 권한 정합화에 막혀 있고 그것은 관리자 자격증명이 필요하다. **Phase 4는 이 차단과 무관하게 착수할 수 있다.**
 
 Phase 4를 Phase 3보다 앞에 두는 이유: **제품의 새 심장을 먼저 키우고, 그 다음에 기존 무게중심을 덜어내는 것이 안전하다.** 반대 순서면 `diet`를 줄이는 동안 제품에 남는 것이 없다.
 
@@ -233,7 +266,7 @@ Phase 1 진행 중 `dev`가 `prod`보다 백엔드 커밋 124개·Flyway 마이�
 
 | 항목 | 상태 |
 |---|---|
-| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인 (`ce:GetCostAndUsage` 권한 없음) |
+| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인. CLI는 `ce:GetCostAndUsage` 권한 대기 중이나 **Billing 콘솔은 권한과 무관하게 지금 확인 가능** ([런북 §2.1](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md)) |
 | ~~**EC2 t3.medium 실제 부하** — 다운사이징 판단 근거~~ | **확인 완료** — CPU 14일 평균 3.8%·최대 37%. 다만 제약은 CPU가 아니라 blue-green 피크 메모리 3.8GB로 판명, 다운사이징 불가 |
 | **베타 테스터 모집 진행 상태** — 식단 추천 de-scope 폭에 영향 | 활성 사용자 50명 확인. 모집 단계·목표는 미확인 |
 | **`diet/external` 수집 파이프라인 중 curated pool 유지에 필수인 범위** | 미확인 |
@@ -255,8 +288,8 @@ Phase 1 진행 중 `dev`가 `prod`보다 백엔드 커밋 124개·Flyway 마이�
 |---|---|---|---|
 | 1 | 인프라 비용 절감 — ElastiCache 제거·알람 정리·t3a 전환 | `refactor/` | **완료** — [#111](https://github.com/KimGiii/Gainsy/issues/111) / [#112](https://github.com/KimGiii/Gainsy/pull/112) |
 | — | V22→V41 백엔드 다크 릴리스 | `chore/` | **완료** — [계획서](MIGRATION_RELEASE_V22_V41.md) |
-| 2 | Terraform 재구성 — 모듈화·S3 원격 state·시크릿 이전·IAM 권한 정비 | `refactor/` | 미착수 |
+| 2 | Terraform 재구성 — S3 원격 state·IAM 정합·배포 정리 | `refactor/` | **부분 완료** — [#116](https://github.com/KimGiii/Gainsy/issues/116) (시크릿 이관 이월) |
 | 4 | insights 도메인 강화 — 주간 변화 루프 백엔드 | `feat/` | 미착수 |
 | 3 | 식품 카탈로그 축소 및 curated pool 품질 회복 | `refactor/` | 미착수 |
 | 5 | 저장소 위생 — 빌드 산출물·대용량 문서 자산 정리 | `chore/` | 미착수 |
-| — | FCM 인증 파일 복구 — 2026-05-15부터 푸시 실패 | `fix/` | 미착수 |
+| — | FCM 인증 파일 복구 — 2026-05-15부터 푸시 실패 | `fix/` | [#115](https://github.com/KimGiii/Gainsy/issues/115) |
