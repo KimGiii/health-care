@@ -1,7 +1,7 @@
 # 프로젝트 재구조화 실행 계획
 
 - 작성일: 2026-08-04
-- 상태: 제안 / 착수 전
+- 상태: **Phase 1 완료 (2026-08-04) · Phase 2~5 착수 전**
 - 범위: 인프라 비용, Terraform 구성, 코드베이스 구조, 제품 방향 전환에 따른 정리
 - 선행 근거: [`docs/design-docs/GAINSY_POSITIONING_STRATEGY_2026-07.md`](../design-docs/GAINSY_POSITIONING_STRATEGY_2026-07.md), [`docs/architecture-reviews/local-food-catalog-diet-recommendation-assessment-2026-08-03.md`](../architecture-reviews/local-food-catalog-diet-recommendation-assessment-2026-08-03.md)
 
@@ -62,7 +62,9 @@ IAM 롤 `healthcare-dev-ec2-role`, 인라인 정책 `healthcare-dev-ec2-s3`, 빈
 
 즉 62만 건의 카탈로그가 DB 용량과 검수 부담을 발생시키면서, 정작 추천 품질은 흰쌀밥·닭가슴살·브로콜리 같은 골격 식품을 못 쓰는 상태에 묶여 있다. **de-scope된 역량이 운영 비용의 상당 부분을 만들고 있다.**
 
-### 1.3 인프라가 사전 출시 단계 대비 과하다
+### 1.3 인프라가 현재 사용 규모 대비 과하다
+
+> **전제 정정 (2026-08-04):** 이 문서는 초기에 이 프로젝트를 "사용자 없는 사전 출시 단계"로 서술했으나, prod DB 실사 결과 **활성 사용자 약 50명**이 있다(2026-08-04 기준, 베타 테스터로 추정). 비용 절감 판단은 그대로 유효하지만, 다운타임과 데이터 유실이 실제 사용자에게 영향을 준다는 전제로 다뤄야 한다.
 
 `dev` destroy 후 남은 `aws` 스택 38개 리소스 구성:
 
@@ -97,16 +99,52 @@ Redis는 `RedisConfig`, `UserService`, `ExternalFoodSearchService` 3곳에서만
 
 ## 2. 실행 계획
 
-### Phase 1 — 인프라 비용 즉시 절감 (1일)
+### Phase 1 — 인프라 비용 즉시 절감 — **완료 (2026-08-04)**
 
-| 작업 | 근거 | 예상 절감 |
+이슈 [#111](https://github.com/KimGiii/Gainsy/issues/111) · PR [#112](https://github.com/KimGiii/Gainsy/pull/112) · 커밋 `f9f74ab`
+
+| 작업 | 결과 | 실제 절감 |
 |---|---|---:|
-| ElastiCache Redis 제거, Caffeine 인프로세스 캐시로 교체 | 단일 인스턴스, 사용처 3곳, 그중 1곳은 de-scope 대상 | ~$15/월 |
-| EC2 t3.medium → t3.small 다운사이징 | 사전 출시, 사용자 없음. 부하 지표로 검증 후 | ~$19/월 |
-| CloudWatch 알람 4개 정리 | 사용자 없는 단계에서 RDS 연결수·CPU 알람 불필요 | ~$0.4/월 |
-| RDS 자동 백업 보존 기간 점검 | 스토리지 비용 | 소액 |
+| ElastiCache Redis 제거, Caffeine 인프로세스 캐시로 교체 | **완료** — 클러스터·서브넷 그룹·보안 그룹 삭제 | ~$15/월 |
+| ~~EC2 t3.medium → t3.small 다운사이징~~ → **t3a.medium 전환** | **계획 폐기 후 대체** (아래 참고) | ~$4/월 |
+| CloudWatch 알람 4개 정리 | **완료** — 4개 모두 `alarm_actions`가 비어 아무에게도 알리지 않던 알람 | ~$0.4/월 |
+| RDS 자동 백업 보존 기간 점검 | 7일 유지 적정, Performance Insights도 7일 무료 티어 | — |
 
-**합계 ~$34/월 절감(약 45%).** 개발은 `backend/docker-compose.yml`(PostgreSQL·Redis·LocalStack)로 로컬 수행하므로 상시 개발서버가 없어도 지장 없다.
+**합계 ~$19/월 절감(약 25%).** 개발은 `backend/docker-compose.yml`(PostgreSQL·LocalStack)로 로컬 수행하므로 상시 개발서버가 없어도 지장 없다.
+
+> 여전히 공개 요금표 기반 **추정치**다. `ce:GetCostAndUsage` 권한이 없어 실제 청구액은 미확인 상태이며 Billing 콘솔 검증이 남아 있다.
+
+#### t3.small 다운사이징 계획을 폐기한 이유
+
+초안의 ~$34/월은 t3.small 전환을 전제했으나 **불가능하다는 것이 확인됐다.**
+
+blue-green 배포 중 앱 컨테이너 2개(각 `--memory 1400m`)에 Prometheus(250m)·Grafana(350m)가 동시에 떠서 피크가 **약 3.8GB**에 달한다. `infra/terraform/aws/variables.tf`에도 과거 t3.small에서 메모리 부족으로 t3.medium으로 상향한 기록이 주석으로 남아 있었다.
+
+CPU는 14일 평균 3.8%·최대 37%로 명백히 과잉이지만, **제약은 CPU가 아니라 메모리다.** 사양(2 vCPU / 4 GiB / x86_64)이 동일한 AMD 변형 t3a.medium으로 전환해 단가만 낮췄다.
+
+메모리를 실제로 줄이려면 blue-green을 롤링 단일 컨테이너 방식으로 바꾸거나 모니터링 스택을 앱 박스에서 분리해야 한다. 별도 과제다.
+
+#### apply를 막고 있던 기존 지뢰 2건 (함께 수정)
+
+Phase 1과 무관하게 존재하던 문제로, 다음 `terraform apply`에서 터졌을 것이다.
+
+| 리소스 | 문제 | 수정 |
+|---|---|---|
+| `aws_instance.app` | `data.aws_ami.ubuntu`가 `most_recent = true`라 새 Ubuntu 이미지마다 `ami`가 바뀌고, ForceNew 속성이라 **인스턴스를 교체**하려 했다. certbot TLS 인증서·배포 스크립트가 수정한 nginx 설정·Prometheus/Grafana 도커 볼륨이 유실될 수 있었다 | `lifecycle { ignore_changes = [ami] }` |
+| `aws_db_instance.postgres` | 실제 17.9인데 설정이 17.7에 고정되어 매번 **다운그레이드**를 계획했다. RDS는 다운그레이드를 지원하지 않아 apply가 실패한다 | 메이저만 고정 (`"17"`) |
+
+#### 적용 결과
+
+`terraform apply` — **0 added, 2 changed, 7 destroyed.** 교체 없이 인스턴스 ID(`i-05e28e21e906ecc1f`)와 EIP(`15.165.250.185`)가 보존됐다. EC2 stop/start로 수 분 다운타임이 발생했고 컨테이너 3개는 자동 복귀했다.
+
+apply 직후 `/actuator/health`가 503을 반환했다 — 당시 실행 중이던 구버전 이미지가 `spring-boot-starter-data-redis`의 health indicator로 사라진 ElastiCache를 찾았기 때문이다. `readiness`는 UP이었고 실제 API도 정상(401 응답)이었으며, 예측대로 `CacheErrorHandler`가 DB 경로로 우회했다. 이 503은 [V22→V41 릴리스](MIGRATION_RELEASE_V22_V41.md)에서 Caffeine 빌드가 배포되며 해소됐다.
+
+#### 남은 잔여 작업
+
+- dev 스택의 IAM 롤 `healthcare-dev-ec2-role`·인라인 정책·빈 S3 버킷 — `iam:DeleteRolePolicy` 권한이 없어 잔존(과금 없음). 관리자 자격증명으로 `infra/terraform/dev`에서 `terraform destroy`
+- GitHub Secrets `PROD_REDIS_HOST`·`DEV_REDIS_HOST` 삭제 가능
+- `.github/workflows/deploy-dev.yml`은 destroy된 dev 서버 대상이라 현재 무효 — Phase 2 정리 대상
+- Billing 콘솔에서 실제 절감액 확인
 
 > RDS는 유지를 권한다. `deletion_protection = true` + 최종 스냅샷 설정이 걸려 있고, 데이터 재구축 비용이 월 $21보다 크다.
 
@@ -125,6 +163,22 @@ Redis는 `RedisConfig`, `UserService`, `ExternalFoodSearchService` 3곳에서만
 4. DB 비밀번호를 SSM Parameter Store(SecureString) 또는 Secrets Manager로 이전, `tfvars`에서 제거.
 5. `infra/iam/health-care-dev-policy.json`을 실제 IAM 사용자에게 부착. 부착 절차를 `infra/iam/README.md`에 검증 명령과 함께 기록.
 6. `dev` 환경은 "상시 가동"이 아니라 **필요할 때 apply → 끝나면 destroy**하는 일회성 환경으로 재정의. 이번 destroy를 그 기본 상태로 삼는다.
+7. **배포 스크립트의 도커 이미지 정리 로직 보강.** `dev-to-prod.yml`의 `docker image prune -f`는 dangling 이미지만 지우고 태그된 구버전 ECR 이미지를 남긴다. 32개가 쌓여 디스크가 83%까지 찼고, 배포마다 이미지를 받으므로 곧 배포 실패로 이어질 상태였다. 수동 정리로 30%까지 회복했으나 근본 대책이 필요하다.
+
+#### Phase 1·릴리스 과정에서 확인된 IAM 권한 공백
+
+`health-care-prod` 사용자에게 아래 권한이 없어 작업이 중단되거나 우회가 필요했다. Phase 2의 IAM 정책 정비에 반드시 포함한다.
+
+| 액션 | 막힌 작업 |
+|---|---|
+| `iam:DeleteRolePolicy` | dev 스택 IAM 롤 destroy 미완 (리소스 잔존) |
+| `rds:CreateDBSnapshot` · `rds:DescribeDBSnapshots` | 릴리스 전 수동 스냅샷 생성 불가 (PITR로 대체) |
+| `ce:GetCostAndUsage` | 실제 청구액 확인 불가 (전 구간 추정치로 진행) |
+| `cloudwatch:ListMetrics` | 메모리 메트릭 존재 여부 확인 불가 |
+| `s3:ListBucketVersions` · `ecr:ListImages` | destroy 전 잔여 객체 확인 불가 |
+| `iam:ListAttachedUserPolicies` | 자기 정책 조회조차 불가 — 권한 진단 자체가 어려움 |
+
+`infra/iam/health-care-dev-policy.json`에는 `iam:DeleteRolePolicy`가 올바른 범위(`role/healthcare-dev-*`)로 정의돼 있으나 **실제 사용자에게 부착되지 않은 상태**였다. 정책 파일과 실제 부착 상태가 어긋나 있다는 것이 핵심 문제다.
 
 ### Phase 3 — 제품 방향 전환에 따른 코드 정리 (1~2주)
 
@@ -160,21 +214,36 @@ Redis는 `RedisConfig`, `UserService`, `ExternalFoodSearchService` 3곳에서만
 
 ```
 Phase 1 (비용)  →  Phase 2 (Terraform)  →  Phase 4 (insights)  →  Phase 3 (diet 축소)  →  Phase 5 (위생)
-   1일              2~3일                    2~3주                  1~2주                 0.5일
+  ✅ 완료            2~3일                    2~3주                  1~2주                 0.5일
 ```
 
 Phase 4를 Phase 3보다 앞에 두는 이유: **제품의 새 심장을 먼저 키우고, 그 다음에 기존 무게중심을 덜어내는 것이 안전하다.** 반대 순서면 `diet`를 줄이는 동안 제품에 남는 것이 없다.
 
 Phase 2의 state 원격화는 다른 모든 인프라 작업의 전제이므로 Phase 1 직후에 둔다.
 
+### 계획 밖에서 파생된 작업
+
+Phase 1 진행 중 `dev`가 `prod`보다 백엔드 커밋 124개·Flyway 마이그레이션 20개 앞서 있다는 것이 드러나 별도 릴리스 계획으로 분리했다 → [MIGRATION_RELEASE_V22_V41.md](MIGRATION_RELEASE_V22_V41.md) (**2026-08-04 완료**).
+
+그 계획의 §6이 이어질 작업을 정의한다 — prod 카탈로그 적재 → 품질 회복 → iOS 출시. **Phase 3의 카탈로그 축소·품질 회복과 같은 대상**이므로 실행 시 함께 다룬다.
+
 ---
 
 ## 4. 착수 전 확인이 필요한 것
 
-1. **실제 AWS 청구액** — Billing 콘솔에서 위 추정치 검증
-2. **EC2 t3.medium 실제 부하** — 다운사이징 판단 근거
-3. **베타 테스터 모집 진행 상태** — 식단 추천 de-scope 폭에 영향
-4. **`diet/external` 수집 파이프라인 중 curated pool 유지에 필수인 범위**
+| 항목 | 상태 |
+|---|---|
+| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인 (`ce:GetCostAndUsage` 권한 없음) |
+| ~~**EC2 t3.medium 실제 부하** — 다운사이징 판단 근거~~ | **확인 완료** — CPU 14일 평균 3.8%·최대 37%. 다만 제약은 CPU가 아니라 blue-green 피크 메모리 3.8GB로 판명, 다운사이징 불가 |
+| **베타 테스터 모집 진행 상태** — 식단 추천 de-scope 폭에 영향 | 활성 사용자 50명 확인. 모집 단계·목표는 미확인 |
+| **`diet/external` 수집 파이프라인 중 curated pool 유지에 필수인 범위** | 미확인 |
+| **prod 카탈로그 적재 범위** — 62만 건 전량 vs curated pool만 | 미결정 (제품 결정) |
+
+### 별도 이슈가 필요한 발견
+
+**FCM 푸시가 2026-05-15부터 실패 중이다.** 호스트의 `/etc/healthcare/fcm-credentials.json`이 파일이 아니라 디렉터리로 존재해(볼륨 마운트 시 Docker가 자동 생성) `FcmConfig`가 기동마다 ERROR를 남긴다. 약 2개월 반 동안 주간 회고 푸시가 조용히 실패해 왔다. 인증 정보 파일 배치가 필요하다.
+
+이건 이 재구조화의 범위 밖이지만, **포지셔닝 문서가 "주간 회고"를 새 제품의 핵심 루프로 지목한 만큼 우선순위가 낮지 않다.**
 
 ---
 
@@ -182,10 +251,12 @@ Phase 2의 state 원격화는 다른 모든 인프라 작업의 전제이므로 
 
 프로젝트 워크플로우에 따라 Phase별로 이슈를 만든다.
 
-| Phase | 이슈 제목 | 브랜치 접두어 |
-|---|---|---|
-| 1 | 인프라 비용 절감 — Redis 제거·EC2 다운사이징·알람 정리 | `refactor/` |
-| 2 | Terraform 재구성 — 모듈화·S3 원격 state·시크릿 이전 | `refactor/` |
-| 4 | insights 도메인 강화 — 주간 변화 루프 백엔드 | `feat/` |
-| 3 | 식품 카탈로그 축소 및 curated pool 품질 회복 | `refactor/` |
-| 5 | 저장소 위생 — 빌드 산출물·대용량 문서 자산 정리 | `chore/` |
+| Phase | 이슈 제목 | 브랜치 접두어 | 상태 |
+|---|---|---|---|
+| 1 | 인프라 비용 절감 — ElastiCache 제거·알람 정리·t3a 전환 | `refactor/` | **완료** — [#111](https://github.com/KimGiii/Gainsy/issues/111) / [#112](https://github.com/KimGiii/Gainsy/pull/112) |
+| — | V22→V41 백엔드 다크 릴리스 | `chore/` | **완료** — [계획서](MIGRATION_RELEASE_V22_V41.md) |
+| 2 | Terraform 재구성 — 모듈화·S3 원격 state·시크릿 이전·IAM 권한 정비 | `refactor/` | 미착수 |
+| 4 | insights 도메인 강화 — 주간 변화 루프 백엔드 | `feat/` | 미착수 |
+| 3 | 식품 카탈로그 축소 및 curated pool 품질 회복 | `refactor/` | 미착수 |
+| 5 | 저장소 위생 — 빌드 산출물·대용량 문서 자산 정리 | `chore/` | 미착수 |
+| — | FCM 인증 파일 복구 — 2026-05-15부터 푸시 실패 | `fix/` | 미착수 |
