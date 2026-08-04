@@ -32,16 +32,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
       SPRING_PROFILES_ACTIVE: test
       POSTGRES_HOST: localhost
@@ -49,8 +39,6 @@ jobs:
       POSTGRES_DB: healthcare_test
       POSTGRES_USER: healthcare
       POSTGRES_PASSWORD: test_password
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
       JWT_SECRET: test-secret-key-for-ci-min-32-chars-required
       S3_ENDPOINT: ""
       S3_BUCKET: healthcare-photos-test

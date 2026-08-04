@@ -20,7 +20,7 @@ public class ExternalFoodSearchService {
 
     /**
      * 공공데이터 포털 식품 영양정보 API에서 식품을 검색한다.
-     * 결과는 Redis에 캐싱된다 (TTL: 30일, application.yml).
+     * 결과는 인프로세스 Caffeine 캐시에 보관된다 (TTL·크기 상한: application.yml의 app.cache).
      */
     @Cacheable(value = "external-food-search",
                key = "'v2:' + #query + ':' + #source + ':' + #page + ':' + #size",

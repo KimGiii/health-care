@@ -90,7 +90,6 @@ jobs:
               -e DB_URL="${{ secrets.PROD_DB_URL }}" \
               -e DB_USERNAME="${{ secrets.PROD_DB_USERNAME }}" \
               -e DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}" \
-              -e REDIS_HOST="${{ secrets.PROD_REDIS_HOST }}" \
               -e JWT_SECRET="${{ secrets.PROD_JWT_SECRET }}" \
               -e ADMIN_OPERATION_TOKEN="${{ secrets.PROD_ADMIN_OPERATION_TOKEN }}" \
               -e S3_BUCKET="${{ secrets.PROD_S3_BUCKET }}" \

@@ -77,6 +77,17 @@ resource "aws_instance" "app" {
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-${var.environment}-app"
   })
+
+  lifecycle {
+    # data.aws_ami.ubuntu는 most_recent = true라 새 Ubuntu 이미지가 나올 때마다 id가 바뀌고,
+    # ami는 ForceNew 속성이라 terraform이 인스턴스를 교체하려 한다. 이 박스에는 certbot이
+    # 발급한 TLS 인증서, 배포 스크립트가 수정한 nginx 설정, Prometheus/Grafana 도커 볼륨처럼
+    # user_data로 재현되지 않는 상태가 있어 교체하면 유실된다.
+    #
+    # 이미지를 갱신할 때는 이 항목을 일시적으로 빼고 계획을 확인한 뒤, 위 상태를 옮길 준비가
+    # 된 상태에서 의도적으로 교체한다. (#111)
+    ignore_changes = [ami]
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -98,75 +109,10 @@ resource "aws_cloudwatch_log_group" "app" {
 }
 
 # ── CloudWatch 알람 ───────────────────────────────────────────────────────────
-
-resource "aws_cloudwatch_metric_alarm" "ec2_cpu_high" {
-  alarm_name          = "${var.project_name}-${var.environment}-ec2-cpu-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 70
-  alarm_description   = "EC2 CPU 70% 초과"
-
-  dimensions = {
-    InstanceId = aws_instance.app.id
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
-  alarm_name          = "${var.project_name}-${var.environment}-rds-cpu-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/RDS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 70
-  alarm_description   = "RDS CPU 70% 초과"
-
-  dimensions = {
-    DBInstanceIdentifier = aws_db_instance.postgres.id
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_cloudwatch_metric_alarm" "rds_storage_low" {
-  alarm_name          = "${var.project_name}-${var.environment}-rds-storage-low"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "FreeStorageSpace"
-  namespace           = "AWS/RDS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 2147483648 # 2GB
-  alarm_description   = "RDS 잔여 스토리지 2GB 미만"
-
-  dimensions = {
-    DBInstanceIdentifier = aws_db_instance.postgres.id
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
-  alarm_name          = "${var.project_name}-${var.environment}-rds-connections-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "DatabaseConnections"
-  namespace           = "AWS/RDS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "RDS 연결 수 80 초과"
-
-  dimensions = {
-    DBInstanceIdentifier = aws_db_instance.postgres.id
-  }
-
-  tags = local.common_tags
-}
+#
+# 제거됨 (#111). 기존 알람 4개(ec2_cpu_high, rds_cpu_high, rds_storage_low,
+# rds_connections_high)는 alarm_actions가 비어 있어 임계치를 넘어도 아무에게도
+# 알리지 않았다. 실제 알림 경로는 Grafana의 Slack contact point이며
+# (infra/monitoring/grafana/alerting/), 알람 정의는 그쪽에서 유지한다.
+#
+# CloudWatch 알람을 다시 도입한다면 SNS 토픽과 alarm_actions를 함께 정의해야 한다.

@@ -741,7 +741,7 @@ NavigationStack(path: $recordTabPath) {
 1. **V13 마이그레이션 실행**
    ```bash
    # Flyway가 자동으로 실행됨
-   docker compose up -d postgres redis
+   docker compose up -d postgres
    ```
 
 2. **V23 마이그레이션 실행**
@@ -816,8 +816,8 @@ CREATE INDEX idx_food_catalog_recommendation_status
 
 ### 캐싱 전략
 
-- 식품 검색 결과는 캐싱하지 않음 (usage_count가 자주 변경됨)
-- Redis 캐시는 일일 매크로 합계 등에만 사용
+- 로컬 카탈로그 검색 결과는 캐싱하지 않음 (usage_count가 자주 변경됨)
+- 외부 공공데이터 식품 검색 결과만 인프로세스 Caffeine 캐시에 보관 (`external-food-search`)
 
 ## 참고 문서
 

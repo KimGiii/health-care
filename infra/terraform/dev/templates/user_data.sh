@@ -64,7 +64,7 @@ mkdir -p /var/www/html
 nginx -t && systemctl reload nginx
 systemctl enable --now certbot.timer || true
 
-# ── Docker Compose (PostgreSQL + Redis) ──────────────────────────────────────
+# ── Docker Compose (PostgreSQL) ──────────────────────────────────────────────
 mkdir -p /opt/healthcare-dev
 cat > /opt/healthcare-dev/docker-compose.yml <<'COMPOSE'
 services:
@@ -83,21 +83,12 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
   postgres_data:
 COMPOSE
 
-# DB와 Redis만 먼저 기동 (앱은 GitHub Actions 배포 시 기동)
-docker compose -f /opt/healthcare-dev/docker-compose.yml up -d postgres redis
+# DB만 먼저 기동 (앱은 GitHub Actions 배포 시 기동)
+docker compose -f /opt/healthcare-dev/docker-compose.yml up -d postgres
 
 # ── ECR 로그인 cron (12시간마다) ──────────────────────────────────────────────
 cat > /etc/cron.d/ecr-login-dev <<CRON

@@ -2,7 +2,7 @@
 
 ## 기술 스택
 
-- **백엔드**: Spring Boot 3 (Java 21), JPA/Hibernate, Flyway, PostgreSQL, Redis, JWT
+- **백엔드**: Spring Boot 3 (Java 21), JPA/Hibernate, Flyway, PostgreSQL, Caffeine(인프로세스 캐시), JWT
 - **iOS**: Swift 5.9, SwiftUI, Combine
 - **인프라**: Docker Compose (로컬), AWS S3/LocalStack, Terraform
 
@@ -15,7 +15,7 @@ cd backend && ./gradlew test
 # 백엔드 빌드
 cd backend && ./gradlew build
 
-# Docker 서비스 시작 (PostgreSQL, Redis, LocalStack)
+# Docker 서비스 시작 (PostgreSQL, LocalStack)
 docker compose up -d
 ```
 

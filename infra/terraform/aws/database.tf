@@ -10,8 +10,11 @@ resource "aws_db_subnet_group" "postgres" {
 resource "aws_db_instance" "postgres" {
   identifier = "${var.project_name}-${var.environment}-postgres"
 
-  engine         = "postgres"
-  engine_version = "17.7"
+  engine = "postgres"
+  # 메이저 버전만 고정한다. auto_minor_version_upgrade가 켜져 있어 AWS가 마이너를
+  # 올리는데(17.7 → 17.9 실제 발생), 마이너까지 고정하면 terraform이 매번 다운그레이드를
+  # 계획한다. RDS는 다운그레이드를 지원하지 않으므로 apply가 실패한다. (#111)
+  engine_version = "17"
   instance_class = var.rds_instance_class
 
   allocated_storage     = 20
@@ -40,28 +43,7 @@ resource "aws_db_instance" "postgres" {
 }
 
 # ── ElastiCache Redis ─────────────────────────────────────────────────────────
-
-resource "aws_elasticache_subnet_group" "redis" {
-  name       = "${var.project_name}-${var.environment}-redis-subnet"
-  subnet_ids = aws_subnet.private[*].id
-
-  tags = local.common_tags
-}
-
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.project_name}-${var.environment}-redis"
-  engine               = "redis"
-  engine_version       = "7.1"
-  node_type            = var.redis_node_type
-  num_cache_nodes      = 1
-  parameter_group_name = "default.redis7"
-  port                 = 6379
-
-  subnet_group_name  = aws_elasticache_subnet_group.redis.name
-  security_group_ids = [aws_security_group.redis.id]
-
-  snapshot_retention_limit = var.environment == "prod" ? 3 : 0
-  snapshot_window          = "02:00-03:00"
-
-  tags = merge(local.common_tags, { Name = "${var.project_name}-${var.environment}-redis" })
-}
+#
+# 제거됨 (#111). 애플리케이션이 단일 인스턴스로 운영되고 캐시에 담기던 값이 모두
+# 재계산 가능한 파생 데이터뿐이어서 전용 클러스터를 유지할 이유가 없었다.
+# 캐시는 애플리케이션 내부 Caffeine으로 대체한다 — backend CacheConfig 참고.

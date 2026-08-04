@@ -24,14 +24,6 @@ output "db_url" {
   sensitive   = true
 }
 
-# ── ElastiCache ───────────────────────────────────────────────────────────────
-
-output "redis_host" {
-  description = "ElastiCache Redis 엔드포인트"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
-  sensitive   = true
-}
-
 # ── ECR ───────────────────────────────────────────────────────────────────────
 
 output "ecr_repository_url" {
@@ -66,11 +58,10 @@ output "progress_photo_bucket_access_policy_arn" {
 output "github_secrets_guide" {
   description = "GitHub Actions에 등록할 시크릿 값 요약"
   sensitive   = true
-  value = <<-EOT
+  value       = <<-EOT
     === GitHub Actions 시크릿 등록 값 ===
     DEV_SSH_HOST     = ${aws_eip.app.public_ip}
     DEV_DB_URL       = jdbc:postgresql://${aws_db_instance.postgres.endpoint}/${var.db_name}
-    DEV_REDIS_HOST   = ${aws_elasticache_cluster.redis.cache_nodes[0].address}
     ECR_REGISTRY     = ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com
   EOT
 }

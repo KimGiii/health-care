@@ -80,7 +80,7 @@ Firebase FCM으로 주간 요약 알림을 발송할 수 있는 구조를 갖췄
 | iOS | Swift 6.0, SwiftUI, MVVM, Combine, strict concurrency |
 | Backend | Java 21, Spring Boot 3.3.4, Spring Security, Spring Data JPA, Validation |
 | Database | PostgreSQL 16, Flyway |
-| Cache | Redis 7 |
+| Cache | Caffeine (인프로세스) |
 | Auth | JWT, Access Token 1시간, Refresh Token 30일, iOS Keychain 저장 |
 | Storage | AWS S3, Presigned URL, 사용자별 prefix 검증 |
 | Push | Firebase Cloud Messaging |
@@ -98,7 +98,7 @@ iOS SwiftUI App
   -> HTTPS api.gainsy.site
   -> Nginx
   -> Spring Boot API
-  -> PostgreSQL / Redis / S3 / OpenAI / FCM
+  -> PostgreSQL / S3 / OpenAI / FCM
 ```
 
 백엔드는 사용자, 인증, 운동, 식단, 신체 측정, 목표, 인사이트 도메인을 분리했다. 컨트롤러는 인증된 사용자 식별자를 `@CurrentUserId`로만 받도록 통일해 토큰 검증 우회를 막았고, 서비스 계층에서 사용자 소유권 검증과 도메인 규칙을 처리한다.
@@ -194,7 +194,7 @@ AI 식단 분석, 알러젠 회피, 칼로리 계산은 모두 추정과 한계�
 
 ## 12. 앞으로의 개선 방향
 
-- Redis 기반 rate limiting으로 멀티 인스턴스 운영 대비
+- 멀티 인스턴스로 확장할 경우 rate limiting과 캐시를 공유 저장소로 이관 (현재는 둘 다 인프로세스)
 - iOS 핵심 기록 플로우 UI 테스트 확대
 - AWS Secrets Manager 또는 SSM Parameter Store로 운영 시크릿 이관
 - 식단 추천 benchmark shadow run과 단계적 정책 승격(Phase 5 Unit 3~4)
@@ -204,7 +204,7 @@ AI 식단 분석, 알러젠 회피, 칼로리 계산은 모두 추정과 한계�
 
 ## 13. 이력서용 요약
 
-Gainsy는 운동, 식단, 신체 측정, 진행 사진, 목표, 주간 회고를 하나의 루프로 연결한 iOS 헬스 트래킹 앱이다. SwiftUI 기반 iOS 앱과 Java 21/Spring Boot 백엔드, PostgreSQL/Redis/S3/FCM/OpenAI, AWS/Terraform 운영 인프라를 end-to-end로 구현했다. JWT 인증, Presigned URL 기반 사진 업로드, AI 식단 사진 분석, 목표 체크포인트 스케줄링, App Store 심사 대응까지 제품 출시 과정 전반을 경험했다. 특히 알러지 안전을 우선하고 남은 영양량을 공동 최적화하는 목표 인지 식단 추천 엔진을 제약 최적화·검증 풀·스냅샷 피드백·고정 시나리오 benchmark까지 단계적으로 설계했다. 보안 코드 리뷰를 통해 JWT 검증 경로 통합, CORS 강화, 토큰 TTL 단축, 페이징 제한, 읽기 API 사이드이펙트 제거 등 운영 리스크를 개선했다.
+Gainsy는 운동, 식단, 신체 측정, 진행 사진, 목표, 주간 회고를 하나의 루프로 연결한 iOS 헬스 트래킹 앱이다. SwiftUI 기반 iOS 앱과 Java 21/Spring Boot 백엔드, PostgreSQL/S3/FCM/OpenAI, AWS/Terraform 운영 인프라를 end-to-end로 구현했다. JWT 인증, Presigned URL 기반 사진 업로드, AI 식단 사진 분석, 목표 체크포인트 스케줄링, App Store 심사 대응까지 제품 출시 과정 전반을 경험했다. 특히 알러지 안전을 우선하고 남은 영양량을 공동 최적화하는 목표 인지 식단 추천 엔진을 제약 최적화·검증 풀·스냅샷 피드백·고정 시나리오 benchmark까지 단계적으로 설계했다. 보안 코드 리뷰를 통해 JWT 검증 경로 통합, CORS 강화, 토큰 TTL 단축, 페이징 제한, 읽기 API 사이드이펙트 제거 등 운영 리스크를 개선했다.
 
 ## 14. 참고 문서
 

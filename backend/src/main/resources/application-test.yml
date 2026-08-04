@@ -3,10 +3,6 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:healthcare_test}
     username: ${POSTGRES_USER:healthcare}
     password: ${POSTGRES_PASSWORD:test_password}
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
 app:
   jwt:
