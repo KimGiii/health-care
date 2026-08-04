@@ -127,25 +127,4 @@ resource "aws_security_group" "rds" {
   tags = merge(local.common_tags, { Name = "${var.project_name}-${var.environment}-sg-rds" })
 }
 
-resource "aws_security_group" "redis" {
-  name        = "${var.project_name}-${var.environment}-sg-redis"
-  description = "ElastiCache Redis - EC2 access only"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "Redis from EC2"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.common_tags, { Name = "${var.project_name}-${var.environment}-sg-redis" })
-}
+# Redis 보안 그룹은 ElastiCache와 함께 제거됨 (#111).

@@ -132,7 +132,7 @@ docker stats --no-stream
 
 ### 메트릭/대시보드/알림
 
-- 기본(자동): JVM 힙/GC, HTTP 요청률·지연(`http_server_requests_*`), HikariCP, Redis.
+- 기본(자동): JVM 힙/GC, HTTP 요청률·지연(`http_server_requests_*`), HikariCP, 캐시(Caffeine).
 - 비즈니스(커스텀): `healthcare_auth_register_total`, `healthcare_auth_login_total{result}`,
   `healthcare_diet_log_created_total`, `healthcare_diet_ai_analysis_seconds_*`.
 - 대시보드/알림 규칙: `backend/monitoring/grafana/` (로컬·프로덕션 공유).

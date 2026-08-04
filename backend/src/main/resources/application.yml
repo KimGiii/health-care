@@ -20,11 +20,6 @@ spring:
         format_sql: false
         jdbc:
           batch_size: 50
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2000ms
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -100,8 +95,11 @@ app:
       openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       model: ${OPENAI_MEAL_MODEL:gpt-4.1-mini}
   cache:
+    # 인프로세스 Caffeine 캐시 — 항목 수 상한은 힙 점유를 제한한다 (#111)
     food-search-ttl-days: 30
+    food-search-max-entries: 2000
     user-profile-ttl-minutes: 60
+    user-profile-max-entries: 10000
   notifications:
     max-per-day: 2
   food-api:

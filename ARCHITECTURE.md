@@ -64,8 +64,8 @@
        │           │           │           │              │
        ▼           ▼           ▼           ▼              ▼
 ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐ ┌────────────────────┐
-│PostgreSQL│ │  Redis   │ │ AWS S3  │ │ External │ │  AI Providers      │
-│ (RDS)    │ │(ElastiC.)│ │         │ │ Food API │ │                    │
+│PostgreSQL│ │ Caffeine │ │ AWS S3  │ │ External │ │  AI Providers      │
+│ (RDS)    │ │(in-proc) │ │         │ │ Food API │ │                    │
 │          │ │          │ │ Progress│ │          │ │ ┌────────────────┐ │
 │ users    │ │ external │ │ + meal  │ │ ┌──────┐ │ │ │ OpenAI         │ │
 │ exercise │ │  food    │ │ photos  │ │ │ MFDS │ │ │ │ (meal photo,   │ │
@@ -102,9 +102,7 @@ The following describes the complete request lifecycle when a user finishes a st
 
 5. **PR Notification path** (asynchronous, Spring `@Async`): If any new PR is detected, `FcmNotificationService` calls the Firebase Cloud Messaging API with the user's stored FCM device token. The notification is delivered to the mobile client immediately. This is fire-and-forget; failure is logged but does not affect the HTTP response.
 
-6. **Redis cache invalidation**: `ExerciseSessionService` evicts the `daily_exercise_summary:{userId}:{date}` cache key so that the next dashboard query reflects the new session. This is done synchronously before returning the response.
-
-7. **HTTP 201 Created** is returned to the client with the `SessionSummaryResponse` body and a `Location` header pointing to `/api/v1/exercise/sessions/{newId}`. The client displays the summary screen immediately (optimistic UI).
+6. **HTTP 201 Created** is returned to the client with the `SessionSummaryResponse` body and a `Location` header pointing to `/api/v1/exercise/sessions/{newId}`. The client displays the summary screen immediately (optimistic UI).
 
 ---
 
@@ -116,7 +114,7 @@ Java 21 is the current LTS release and is required for Spring Boot 3.x's full fe
 
 ### 2.2 Spring Data JPA + Hibernate
 
-Spring Data JPA provides the repository abstraction layer over Hibernate ORM. The research report (section 4.1) confirms that PostgreSQL at personal-app scale (2,000–15,000 rows over 5 years) requires no special ORM tuning; standard Hibernate with connection pooling via HikariCP is more than sufficient. JPA's `@Query` annotations allow raw JPQL or native SQL for complex aggregation queries (weekly volume trends, macro totals) without abandoning the typed entity model. Hibernate's second-level cache is intentionally disabled in favor of explicit Redis caching, which provides observable cache behavior across application restarts.
+Spring Data JPA provides the repository abstraction layer over Hibernate ORM. The research report (section 4.1) confirms that PostgreSQL at personal-app scale (2,000–15,000 rows over 5 years) requires no special ORM tuning; standard Hibernate with connection pooling via HikariCP is more than sufficient. JPA's `@Query` annotations allow raw JPQL or native SQL for complex aggregation queries (weekly volume trends, macro totals) without abandoning the typed entity model. Hibernate's second-level cache is intentionally disabled in favor of an explicit application-level cache (Caffeine), which keeps cache membership and eviction visible in business code rather than hidden in the ORM.
 
 ### 2.3 Spring Security + JWT
 
@@ -126,9 +124,11 @@ Spring Security provides a mature, battle-tested security filter chain. JWT (JSO
 
 The research report (section 4.1) provides explicit justification: PostgreSQL is the correct and sufficient choice at this scale. Time-series databases (TimescaleDB, InfluxDB) are designed for millions of rows per day; the app generates approximately 2,000–3,000 rows per year per user. PostgreSQL's full SQL JOIN support is essential for the relational schema — food items reference meal items, which reference meals, which reference users. All major tables use a composite index on `(user_id, logged_at)` as recommended in the research report. `TIMESTAMPTZ` is used for all timestamp columns to avoid timezone ambiguity, which is critical for the streak evaluation logic (PRD section 5.4). Soft-delete via `deleted_at TIMESTAMPTZ` is implemented across all user-owned entities.
 
-### 2.5 Redis (Caching Layer)
+### 2.5 Caffeine (Caching Layer)
 
-Redis is used for two explicit cache targets in the current implementation: admin/enrichment-only external food search results (`external-food-search`, TTL 30 days) and user profile data (`userProfile`, TTL 1 hour, evicted on profile/body-measurement/goal updates). Spring Cache abstraction (`@Cacheable`, `@CacheEvict`) keeps cache management co-located with business logic. Cache failures degrade to the underlying data source instead of failing the request. Redis is not used for session state — JWT statelessness makes this unnecessary.
+Caching uses an in-process Caffeine cache with two explicit targets: admin/enrichment-only external food search results (`external-food-search`, TTL 30 days) and user profile data (`userProfile`, TTL 1 hour, evicted on profile/body-measurement/goal updates). Spring Cache abstraction (`@Cacheable`, `@CacheEvict`) keeps cache management co-located with business logic. The cache holds no session state — JWT statelessness makes this unnecessary, and refresh tokens are persisted in PostgreSQL via the `RefreshToken` entity.
+
+This layer previously ran on a dedicated ElastiCache Redis cluster. It was removed because the application runs as a single instance and every cached value is derived data that can be recomputed from PostgreSQL or the external food API, so a network-attached cache added cost without adding capability. Two consequences follow from the move in-process: the cache is empty after every restart and must warm up again, and each cache carries an explicit maximum entry count (`app.cache.*-max-entries`) to bound heap usage. Should the application ever scale beyond one instance, the cache becomes per-instance and a shared store must be reconsidered.
 
 ### 2.6 AWS S3 (Progress Photo Storage)
 
@@ -205,7 +205,7 @@ com.healthcare
 ├── HealthCareApplication.java
 │
 ├── common/
-│   ├── config/        RedisConfig · S3Config · SecurityConfig · AsyncConfig · WebMvcConfig
+│   ├── config/        CacheConfig · S3Config · SecurityConfig · AsyncConfig · WebMvcConfig
 │   ├── security/      AdminOperationGuard · PremiumAccessGuard
 │   ├── filter/        RateLimitingFilter
 │   ├── notification/  FcmConfig/FcmService/FcmProperties · NotificationCenterService ·
@@ -310,12 +310,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-
   localstack:
     image: localstack/localstack:latest
     ports:
@@ -358,13 +352,15 @@ Application Load Balancer (ALB)
 │  └─────────────────────────────────────────────┘ │
 └──────────────┬──────────────────────┬────────────┘
                │                      │
-      ┌────────▼──────┐      ┌────────▼──────────┐
-      │  RDS           │      │  ElastiCache       │
-      │  PostgreSQL 16 │      │  Redis 7           │
-      │  db.t3.medium  │      │  cache.t3.micro    │
-      │  Multi-AZ      │      │  (single AZ, MVP)  │
-      │  ap-northeast-2│      │  ap-northeast-2    │
-      └───────────────┘      └────────────────────┘
+      ┌────────▼──────┐
+      │  RDS           │
+      │  PostgreSQL 17 │
+      │  db.t3.micro   │
+      │  Single-AZ     │
+      │  ap-northeast-2│
+      └───────────────┘
+
+캐시는 애플리케이션 프로세스 내부(Caffeine)에 있어 별도 인프라 구성 요소가 없다.
 
 S3 Bucket: healthcare-progress-photos-prod
   - Region: ap-northeast-2 (Seoul)
@@ -397,9 +393,6 @@ spring:
         format_sql: false
         jdbc:
           batch_size: 50
-  data:
-    redis:
-      timeout: 2000ms
   threads:
     virtual:
       enabled: true
@@ -443,10 +436,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/healthcare_local
     username: healthcare
     password: local_password
-  data:
-    redis:
-      host: localhost
-      port: 6379
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -478,10 +467,6 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: 6379
 
 app:
   s3:
@@ -506,10 +491,6 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: 6379
   jpa:
     hibernate:
       ddl-auto: validate
@@ -538,7 +519,7 @@ All secrets (DB credentials, JWT secret, FCM credentials, AWS credentials) are i
 EC2에서 앱과 동일 인스턴스에 독립 컨테이너로 운영된다(blue-green과 분리). 메모리 여유를 위해
 인스턴스는 t3.medium, Grafana는 11.6.3으로 핀한다.
 
-- 자동 메트릭: JVM(힙/GC), HTTP(`http_server_requests` 히스토그램), HikariCP, Redis
+- 자동 메트릭: JVM(힙/GC), HTTP(`http_server_requests` 히스토그램), HikariCP, 캐시(Caffeine)
 - 비즈니스 메트릭: `healthcare_auth_*`, `healthcare_diet_log_created_total`, `healthcare_diet_ai_analysis_*`
 - 알림: 5xx 비율·p99 지연·힙·HikariCP·인스턴스 다운
 

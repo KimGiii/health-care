@@ -65,15 +65,15 @@ App Store 출시: **`api.gainsy.site`** · 운영 중
 |------|------|
 | **iOS** | Swift 6.0, SwiftUI, MVVM, strict concurrency (actor model), Combine |
 | **Backend** | Spring Boot 3.3.4, Java 21 (Virtual Threads), JPA/Hibernate, Flyway |
-| **DB / Cache** | PostgreSQL 16, Redis 7 |
+| **DB / Cache** | PostgreSQL 16, Caffeine (인프로세스 캐시) |
 | **인증** | JWT — Access Token **1h** · Refresh Token 30d, Keychain 저장 |
 | **스토리지** | AWS S3 (Presigned URL · 15분 TTL · 사용자별 prefix 검증) |
 | **푸시 알림** | Firebase FCM (주간 회고 자동 발송) |
 | **AI** | OpenAI GPT-4.1-mini (식단 사진 분석, 영양 추정) |
-| **인프라** | AWS — EC2 t3.small · RDS PostgreSQL · ElastiCache Redis · S3 · ECR |
+| **인프라** | AWS — EC2 t3a.medium · RDS PostgreSQL · S3 · ECR |
 | **IaC** | Terraform, Nginx 리버스 프록시, Let's Encrypt SSL (자동 갱신) |
 | **CI/CD** | GitHub Actions — backend / iOS / dev→prod 자동 배포 |
-| **로컬** | Docker Compose (PostgreSQL · Redis · LocalStack S3) |
+| **로컬** | Docker Compose (PostgreSQL · LocalStack S3) |
 
 ---
 
@@ -97,7 +97,7 @@ App Store 출시: **`api.gainsy.site`** · 운영 중
 │  Controller(@CurrentUserId) → Service       │
 │  → Repository(JPA, @Transactional)          │
 │  ├── PostgreSQL 16  (영속 데이터, Flyway)    │
-│  ├── Redis 7        (캐시 · 토큰 블랙리스트) │
+│  ├── Caffeine       (인프로세스 캐시)        │
 │  ├── S3             (사진, Presigned URL)   │
 │  ├── OpenAI         (식단 사진 분석)         │
 │  └── Firebase FCM   (주간 회고 푸시)         │

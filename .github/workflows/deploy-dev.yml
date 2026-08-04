@@ -32,16 +32,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
       SPRING_PROFILES_ACTIVE: test
       POSTGRES_HOST: localhost
@@ -49,8 +39,6 @@ jobs:
       POSTGRES_DB: healthcare_test
       POSTGRES_USER: healthcare
       POSTGRES_PASSWORD: test_password
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
       JWT_SECRET: test-secret-key-for-ci-min-32-chars-required
       S3_ENDPOINT: ""
       S3_BUCKET: healthcare-photos-test
@@ -122,7 +110,7 @@ jobs:
             docker stop healthcare-api-dev || true
             docker rm   healthcare-api-dev || true
 
-            # Docker Compose로 띄운 postgres/redis 네트워크 이름 감지
+            # Docker Compose로 띄운 postgres 네트워크 이름 감지
             COMPOSE_NETWORK=$(docker network ls --format '{{.Name}}' \
               | grep "healthcare-dev" | head -1 || echo "")
 
@@ -138,8 +126,6 @@ jobs:
               -e DB_URL="jdbc:postgresql://postgres:5432/healthcare_dev" \
               -e DB_USERNAME="healthcare" \
               -e DB_PASSWORD="${{ secrets.DEV_DB_PASSWORD }}" \
-              -e REDIS_HOST="redis" \
-              -e REDIS_PORT="6379" \
               -e JWT_SECRET="${{ secrets.DEV_JWT_SECRET }}" \
               -e ADMIN_OPERATION_TOKEN="${{ secrets.DEV_ADMIN_OPERATION_TOKEN }}" \
               -e S3_BUCKET="${{ secrets.DEV_S3_BUCKET }}" \

@@ -36,7 +36,11 @@ variable "ec2_instance_type" {
   type        = string
   # 모니터링 스택(Prometheus+Grafana)을 앱과 같은 박스에 얹으면서 t3.small(2GB) 메모리가
   # 빠듯해 t3.medium(4GB)으로 상향. 타입 변경은 in-place(스톱→수정→스타트)로 EBS/EIP 보존.
-  default     = "t3.medium"
+  #
+  # 4GB는 유지하되 AMD 변형으로 전환해 단가만 낮춘다 (#111). blue-green 배포 중
+  # 앱 컨테이너 2개(각 1400m) + Prometheus(250m) + Grafana(350m)가 동시에 떠서
+  # 피크가 3.8GB에 달하므로 메모리를 더 줄일 수는 없다.
+  default = "t3a.medium"
 }
 
 variable "ec2_key_name" {
@@ -75,13 +79,7 @@ variable "db_password" {
   }
 }
 
-# ── ElastiCache ───────────────────────────────────────────────────────────────
-
-variable "redis_node_type" {
-  description = "ElastiCache 노드 타입"
-  type        = string
-  default     = "cache.t3.micro"
-}
+# ElastiCache 변수는 클러스터 제거와 함께 삭제됨 (#111).
 
 # ── S3 ────────────────────────────────────────────────────────────────────────
 
