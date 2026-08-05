@@ -1,7 +1,13 @@
 # 시크릿 이관 · 청구액 검증 런북
 
 - 작성일: 2026-08-04
-- 상태: 실행 대기 — **1단계는 관리자 자격증명 필요**
+- **상태: 완료 (2026-08-04)** — 권한 부여·청구액 검증·SSM 이관 모두 실행됨
+
+> **실행 결과 요약**
+> - `HealthcareGapPolicy` 부착 완료 (사용자에 `healthcare-monitoring`·`healthcare-infra`와 함께 3개 부착)
+> - 2026년 7월 실제 청구액 **$112.48** — 초기 추정 ~$76 대비 48% 높음
+> - DB 비밀번호 SSM 이관 완료, `terraform plan` **No changes** 확인
+> - **한계 실증됨**: 비밀번호가 Terraform state에 평문으로 남는 것을 확인했다 (§4)
 - 이슈: [#118](https://github.com/KimGiii/Gainsy/issues/118)
 - 배경: [재구조화 계획 Phase 2](../exec-plans/PROJECT_RESTRUCTURING_2026-08.md)
 
@@ -230,14 +236,20 @@ AWS가 Secrets Manager에 시크릿을 만들고 자동 회전까지 처리한�
 
 ## 5. 체크리스트
 
-- [ ] 1.1 현재 부착 정책 확인
-- [ ] 1.2 `HealthcareGapPolicy` 생성·부착 (**관리자**)
-- [ ] 1.3 Cost Explorer 활성화 확인
-- [ ] 1.4 권한 부여 검증
-- [ ] 2.1 Billing 콘솔에서 7월 청구액 확인 — **1단계와 무관하게 지금 가능**
-- [ ] 2.3 계획서 추정치를 실제값으로 교체
-- [ ] 3.1 SSM SecureString에 비밀번호 저장
-- [ ] 3.2 Terraform이 SSM을 읽도록 변경
-- [ ] 3.3 `plan`이 **No changes**임을 확인 후 apply
-- [ ] 3.4 GitHub Secret 단일화 여부 결정
-- [ ] 4 `manage_master_user_password` 전환을 별도 이슈로 등록
+- [x] 1.1 현재 부착 정책 확인 — `healthcare-monitoring`, `HealthcareGapPolicy`, `healthcare-infra`
+- [x] 1.2 `HealthcareGapPolicy` 생성·부착
+- [x] 1.3 Cost Explorer 활성화 확인 — 이미 활성 상태였다
+- [x] 1.4 권한 부여 검증 — SSM·CE·RDS 스냅샷·ECR 모두 동작
+- [x] 2.1 7월 청구액 확인 — **$112.48**
+- [x] 2.3 계획서 추정치를 실제값으로 교체
+- [x] 3.1 SSM SecureString 저장 — `/healthcare/prod/db/password` Version 1
+- [x] 3.2 Terraform이 SSM을 읽도록 변경
+- [x] 3.3 `plan` **No changes** 확인 (변경이 없어 apply 불필요)
+- [ ] 3.4 GitHub Secret 단일화 여부 결정 — **미결**
+- [ ] 4 `manage_master_user_password` 전환을 별도 이슈로 등록 — **미착수**
+
+### 이관 검증 방법
+
+값이 어긋나면 비밀번호가 바뀌어 앱이 DB에 붙지 못하므로, 저장 후 SHA256 앞 8자를 비교해 tfvars 원본과 동일함을 먼저 확인하고(`98673c8f`) `plan`을 돌렸다. 값을 화면에 출력하지 않고 검증했다.
+
+state에 평문이 남는 것도 실측으로 확인했다 — `terraform show -json`에서 `password` 필드가 원본과 같은 해시로 존재한다. §4의 한계 서술이 추정이 아니라 사실임을 뜻한다.

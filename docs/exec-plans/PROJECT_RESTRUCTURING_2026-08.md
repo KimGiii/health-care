@@ -68,15 +68,28 @@ IAM 롤 `healthcare-dev-ec2-role`, 인라인 정책 `healthcare-dev-ec2-s3`, 빈
 
 `dev` destroy 후 남은 `aws` 스택 38개 리소스 구성:
 
-| 리소스 | 사양 | 월 비용 추정(ap-northeast-2, 온디맨드) |
-|---|---|---:|
-| EC2 `i-05e28e21e906ecc1f` | t3.medium 24/7 | ~$38 |
-| RDS PostgreSQL 17.7 | db.t3.micro, 20GB, Single-AZ | ~$21 |
-| ElastiCache Redis | cache.t3.micro | ~$15 |
-| Route53 존 + CloudWatch 알람 4개 + S3 + ECR | | ~$2 |
-| **합계** | | **~$76/월** |
+**2026년 7월 실제 청구액 — $112.48** (Cost Explorer, 2026-08-04 확인)
 
-> 이 수치는 공개 요금표 기반 **추정치**다. `health-care-prod` 사용자에게 `ce:GetCostAndUsage` 권한이 없어 실제 청구액을 확인하지 못했다. Billing 콘솔에서 검증이 필요하다.
+| 서비스 | 실제 | 내 초기 추정 | 차이 |
+|---|---:|---:|---|
+| EC2 Compute (t3.medium $38.69 + t3.micro $9.67) | $48.36 | ~$38 | dev 인스턴스를 빼고 셌다 |
+| RDS PostgreSQL | $23.53 | ~$21 | — |
+| ElastiCache Redis | $18.60 | ~$15 | — |
+| **Tax** | **$10.22** | **$0** | **누락** |
+| **VPC — `PublicIPv4:InUseAddress`** | **$7.44** | **$0** | **누락** |
+| **EC2 - Other (EBS)** | **$3.65** | **$0** | **누락** |
+| Route53 + ECR | $0.68 | ~$2 | — |
+| **합계** | **$112.48** | **~$76** | **+48%** |
+
+추정이 빗나간 이유는 세 가지다.
+
+1. **부가세를 셈에서 빼먹었다** ($10.22)
+2. **퍼블릭 IPv4 주소 요금을 몰랐다** ($7.44). AWS는 2024년 2월부터 사용 중인 퍼블릭 IPv4에 시간당 $0.005를 매긴다. EIP 2개(prod·dev)가 여기 해당한다.
+3. **EBS 볼륨 비용을 빼먹었다** ($3.65)
+
+EC2 차이는 계산 기준의 문제였다. 추정치는 "dev destroy 후 남은 aws 스택"을 셌는데 7월 청구서에는 한 달 내내 돌아간 dev의 t3.micro가 포함돼 있다.
+
+**교훈: 공개 요금표로 인스턴스 단가만 더하면 실제보다 30~50% 낮게 나온다.** 세금·IP·스토리지 같은 부수 항목이 전체의 20%를 차지한다.
 
 Redis는 `RedisConfig`, `UserService`, `ExternalFoodSearchService` 3곳에서만 쓰인다. 이 중 `ExternalFoodSearchService`는 de-scope 대상인 식품 카탈로그 소속이다. **단일 인스턴스 애플리케이션에 전용 ElastiCache 클러스터를 붙일 이유가 남지 않는다.**
 
@@ -110,9 +123,27 @@ Redis는 `RedisConfig`, `UserService`, `ExternalFoodSearchService` 3곳에서만
 | CloudWatch 알람 4개 정리 | **완료** — 4개 모두 `alarm_actions`가 비어 아무에게도 알리지 않던 알람 | ~$0.4/월 |
 | RDS 자동 백업 보존 기간 점검 | 7일 유지 적정, Performance Insights도 7일 무료 티어 | — |
 
-**합계 ~$19/월 절감(약 25%).** 개발은 `backend/docker-compose.yml`(PostgreSQL·LocalStack)로 로컬 수행하므로 상시 개발서버가 없어도 지장 없다.
+### 실제 절감 — 세션 전체 기준 약 $43/월 (38%)
 
-> 여전히 공개 요금표 기반 **추정치**다. `ce:GetCostAndUsage` 권한이 없어 실제 청구액은 미확인 상태이며 Billing 콘솔 검증이 남아 있다.
+2026-08-04 Cost Explorer 실측으로 다시 계산했다. 8월 1~3일이 변경 **이전** 기준선이다.
+
+| 항목 | 일 비용(변경 전) | 변경 후 | 근거 |
+|---|---:|---:|---|
+| EC2 Compute | $1.56 | ~$1.12 | dev t3.micro 종료 + prod t3a.medium 전환 |
+| RDS | $0.76 | $0.76 | 유지 |
+| ElastiCache | $0.60 | **$0** | 제거 |
+| VPC (퍼블릭 IPv4) | $0.24 | ~$0.12 | EIP 2개 → 1개 |
+| EC2 - Other (EBS) | $0.12 | ~$0.08 | dev 볼륨 삭제 |
+| ECR | $0.01 | $0.01 | 유지 |
+| **일 합계** | **$3.29** | **~$2.09** | |
+| **월 환산(세전)** | ~$99 | ~$63 | |
+| **월 환산(세후 +10%)** | **~$109** | **~$69** | |
+
+**7월 실적 $112.48 → 예상 ~$69/월.** dev 스택 destroy가 절감의 큰 축(t3.micro $9.67 + EIP $3.6 + EBS)이었고, ElastiCache 제거($18.60)가 그다음이다.
+
+> 8월 4일 데이터는 Cost Explorer 집계 지연으로 아직 반영되지 않았다. 위 수치는 8월 1~3일 실측 기준선에 변경분을 반영한 **투영치**이며, 8월 중순 실적으로 재확인이 필요하다.
+
+개발은 `backend/docker-compose.yml`(PostgreSQL·LocalStack)로 로컬 수행하므로 상시 개발서버가 없어도 지장 없다.
 
 #### t3.small 다운사이징 계획을 폐기한 이유
 
@@ -177,9 +208,9 @@ apply 직후 `/actuator/health`가 503을 반환했다 — 당시 실행 중이�
 
    dev state도 함께 옮긴 이유: destroy 잔여 리소스(IAM 롤·정책·빈 버킷) 정리를 특정 노트북이 아니라 **권한을 가진 사람이 어디서든** 마무리할 수 있어야 하기 때문이다.
 
-4. DB 비밀번호를 SSM Parameter Store 또는 Secrets Manager로 이전. → **이월, 실행 준비 완료** ([#118](https://github.com/KimGiii/Gainsy/issues/118))
+4. DB 비밀번호를 SSM Parameter Store로 이전. → **완료 (2026-08-04)** ([#118](https://github.com/KimGiii/Gainsy/issues/118))
 
-   `ssm:*`·`secretsmanager:*` 권한이 없어 실행하지 못했다. 권한 확보 즉시 진행할 수 있도록 최소 권한 정책([`infra/iam/health-care-gap-policy.json`](../../infra/iam/health-care-gap-policy.json))과 단계별 절차([런북](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md))를 준비했다.
+   `HealthcareGapPolicy` 부착 후 실행했다. 값을 SecureString `/healthcare/prod/db/password`에 저장하고 `data.aws_ssm_parameter`로 읽도록 바꿔 `terraform.tfvars`에서 평문을 제거했다. **`terraform plan`이 No changes**로 RDS 무변경을 확인했다(값 불일치 시 비밀번호가 바뀌어 앱이 DB에 붙지 못했을 것).
 
    **한계를 미리 밝힌다:** SSM 이관은 로컬 평문을 없애지만 `data.aws_ssm_parameter`로 읽은 값이 **Terraform state에는 평문으로 남는다.** state가 S3(AES256·버저닝·퍼블릭 차단)로 옮겨졌으므로 노트북 평문보다는 낫지만 완전한 제거는 아니다. 근본 해결은 `manage_master_user_password = true`이나, 기존 인스턴스에 적용하면 비밀번호가 즉시 회전해 앱의 GitHub Secret이 낡아지고 **DB 연결이 끊긴다.** 활성 사용자 약 50명이 있는 운영 DB라 앱 측 변경과 함께 별도 과제로 다룬다.
 
@@ -266,7 +297,7 @@ Phase 1 진행 중 `dev`가 `prod`보다 백엔드 커밋 124개·Flyway 마이�
 
 | 항목 | 상태 |
 |---|---|
-| **실제 AWS 청구액** — Billing 콘솔에서 추정치 검증 | 미확인. CLI는 `ce:GetCostAndUsage` 권한 대기 중이나 **Billing 콘솔은 권한과 무관하게 지금 확인 가능** ([런북 §2.1](../operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md)) |
+| ~~**실제 AWS 청구액** 검증~~ | **완료 (2026-08-04)** — 7월 $112.48. 초기 추정 ~$76은 세금·퍼블릭 IPv4·EBS 누락으로 48% 낮았다. §1.3 참고 |
 | ~~**EC2 t3.medium 실제 부하** — 다운사이징 판단 근거~~ | **확인 완료** — CPU 14일 평균 3.8%·최대 37%. 다만 제약은 CPU가 아니라 blue-green 피크 메모리 3.8GB로 판명, 다운사이징 불가 |
 | **베타 테스터 모집 진행 상태** — 식단 추천 de-scope 폭에 영향 | 활성 사용자 50명 확인. 모집 단계·목표는 미확인 |
 | **`diet/external` 수집 파이프라인 중 curated pool 유지에 필수인 범위** | 미확인 |
