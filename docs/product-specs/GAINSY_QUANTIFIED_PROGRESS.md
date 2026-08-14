@@ -23,6 +23,7 @@
 | AWS 운영 기간 | 최소 41일 | 운영 도메인 장애가 문서화된 2026-05-15부터 기준일 2026-06-25까지 | `docs/operations/TROUBLESHOOTING.md`, `docs/retrospectives/2026-W20.md` |
 | 사용자 수 | 12명 | 운영 DB, TestFlight, App Store Connect, 분석 도구에서 확인된 실제 사용자 수 | 운영주 보고(2026-06-19). 로컬 테스트 fixture의 "테스터" 문자열은 제외 |
 | AI 음식 분석 정확도 개선 수치 | 미측정 | 동일 benchmark set에서 baseline과 current의 음식 인식률·칼로리/영양소 오차를 비교해야 함 | 현재 릴리즈 노트에는 "정확도 향상" 표현만 있고 검증 수치 없음 |
+| API 응답 지연·에러율 (prod) | p95 33.18ms / p99 36.84ms, 5xx 22건(0.052%) | prod 앱 프로세스 uptime 전체(2026-08-04 05:49:49 ~ 2026-08-12 11:11 UTC, 약 197.4시간) 동안의 `http_server_requests_seconds_*` 실측. 표본 42,317건 | 2026-08-12 prod EC2 SSH → Prometheus API 직접 조회. 상세는 §2.5 |
 
 ---
 
@@ -111,6 +112,44 @@ iOS 테스트 실패 내역:
 | iOS Unit/UI test Swift 파일 | 12개 | `ios/HealthCareTests`, `ios/HealthCareUITests` |
 
 위 값은 생산성 향상률이나 개발 효율을 직접 증명하지 않는다. 포트폴리오에서는 "개발 산출 활동량" 또는 "구현 규모"로만 사용한다.
+
+---
+
+### 2.5 API 응답 지연·에러율 (prod)
+
+Grafana 대시보드(`api.gainsy.site/grafana`)의 `Healthcare API` 패널에서 육안으로 확인한 "p95 30~45ms, 5xx 0%"는 측정 기간·요청량·표본 크기 근거가 없어 그대로 인용하지 않는다. 아래는 prod EC2에 SSH 접속해 Prometheus API(`localhost:9090`)를 직접 조회한 실측값이다.
+
+**측정 조건**
+
+| 항목 | 값 |
+|---|---|
+| 측정 대상 | prod `healthcare-api` 앱 프로세스 1개 (`job=healthcare-api`, `instance=host.docker.internal:8080`) |
+| 측정 기간 | 2026-08-04 05:49:49 UTC ~ 2026-08-12 11:11:46 UTC (앱 프로세스 연속 uptime 전체, 약 197.4시간 / 8.22일) |
+| Prometheus scrape 주기 | 15초 (`scrape_interval: 15s`) |
+| 표본 크기(n) | 42,317건 (해당 기간 `http_server_requests_seconds_count` 누적 요청 수) |
+| 확인일 | 2026-08-12 |
+
+**결과**
+
+| 지표 | 값 | PromQL |
+|---|---:|---|
+| p95 지연 | 33.18ms | `histogram_quantile(0.95, sum by (le) (increase(http_server_requests_seconds_bucket{job="healthcare-api",instance="host.docker.internal:8080"}[198h])))` |
+| p99 지연 | 36.84ms | `histogram_quantile(0.99, sum by (le) (increase(http_server_requests_seconds_bucket{job="healthcare-api",instance="host.docker.internal:8080"}[198h])))` |
+| 5xx 비율 | 0.052% (22건 / 42,317건) | `100 * sum(increase(http_server_requests_seconds_count{status=~"5..",job="healthcare-api",instance="host.docker.internal:8080"}[198h])) / sum(increase(http_server_requests_seconds_count{job="healthcare-api",instance="host.docker.internal:8080"}[198h]))` |
+
+상태 코드 분포(같은 기간): `200`×42,010 `201`×9 `401`×151 `404`×15 `422`×5 `500`×22 `400`×0.
+
+**"5xx 0%" 패널과의 차이**: Grafana `5xx 비율(%)` 패널은 `backend/monitoring/grafana/dashboards/healthcare.json`에 고정된 `rate(...[5m])` 쿼리를 쓴다. 대시보드 시간 범위(예: last 1h)와 무관하게 항상 "최근 5분간 5xx 비율"만 보여주므로, 화면의 0%는 "5xx가 발생한 적 없음"이 아니라 "직전 5분간 5xx 없음"을 뜻한다. 실제로는 8.22일 uptime 동안 22건(0.052%)이 발생했으며 전부 24시간 이상 이전에 있었다(최근 24시간 5xx는 4건, 최근 1시간은 0건).
+
+**요청량에 대한 유보**: 표본 42,317건은 8.22일 uptime 전체 누적이며 초당 환산 시 평균 0.06 req/s 수준(피크 구간 제외)이다. 이는 §1의 사용자 수(12명) 규모에 부합하는 저트래픽 환경의 실측치이며, 상용 서비스 규모의 부하 상황에서 동일한 p95/5xx가 유지된다고 일반화하지 않는다.
+
+재확인 절차:
+
+```sh
+ssh -i healthcare-prod-key.pem ubuntu@<EIP>
+curl -sG 'http://localhost:9090/api/v1/query' \
+  --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (increase(http_server_requests_seconds_bucket{job="healthcare-api",instance="host.docker.internal:8080"}[198h])))'
+```
 
 ---
 
