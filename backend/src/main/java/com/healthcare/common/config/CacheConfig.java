@@ -1,9 +1,12 @@
 package com.healthcare.common.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,16 +51,18 @@ public class CacheConfig {
     private long foodSearchMaxEntries;
 
     @Bean
-    public CacheManager cacheManager() {
+    public CacheManager cacheManager(MeterRegistry meterRegistry) {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 
         // null 캐싱 금지 — Redis 설정의 disableCachingNullValues()와 동일한 계약을 유지한다.
         cacheManager.setAllowNullValues(false);
 
         // 명시적으로 등록되지 않은 캐시의 기본값. 사용자 프로필 캐시가 여기에 해당한다.
+        // recordStats()는 Redis 시절 lettuce_* 지표를 대신해 캐시 계층을 Prometheus에서 보이게 한다.
         cacheManager.setCaffeine(Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(userProfileTtlMinutes))
-            .maximumSize(userProfileMaxEntries));
+            .maximumSize(userProfileMaxEntries)
+            .recordStats());
 
         // 외부 식품 검색 캐시: 공공데이터 포털 호출을 줄이기 위해 TTL이 길다(기본 30일).
         // 재시작 시 유실되지만 캐시 미스는 외부 API 재조회로 복구된다.
@@ -65,8 +70,18 @@ public class CacheConfig {
             Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofDays(foodSearchTtlDays))
                 .maximumSize(foodSearchMaxEntries)
+                .recordStats()
                 .build());
 
+        bindCacheMetrics(cacheManager, meterRegistry, USER_PROFILE_CACHE);
+        bindCacheMetrics(cacheManager, meterRegistry, EXTERNAL_FOOD_SEARCH_CACHE);
+
         return cacheManager;
+    }
+
+    // getCache()가 기본 스펙 캐시(사용자 프로필)의 지연 생성을 강제해 네이티브 Caffeine 인스턴스를 확보한다.
+    private void bindCacheMetrics(CaffeineCacheManager cacheManager, MeterRegistry meterRegistry, String cacheName) {
+        CaffeineCache cache = (CaffeineCache) cacheManager.getCache(cacheName);
+        CaffeineCacheMetrics.monitor(meterRegistry, cache.getNativeCache(), cacheName);
     }
 }

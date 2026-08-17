@@ -111,7 +111,7 @@
     },
     {
       "type": "row",
-      "title": "DB / Redis",
+      "title": "DB",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 }
     },
     {
@@ -128,14 +128,44 @@
     },
     {
       "type": "row",
-      "title": "비즈니스",
+      "title": "캐시 (Caffeine)",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 }
+    },
+    {
+      "type": "timeseries",
+      "title": "캐시 히트율 (%)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "100 * sum by (cache) (rate(cache_gets_total{result=\"hit\"}[5m])) / clamp_min(sum by (cache) (rate(cache_gets_total[5m])), 1)",
+          "legendFormat": "{{cache}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "캐시 이빅션 / 크기",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum by (cache) (rate(cache_evictions_total[5m]))", "legendFormat": "{{cache}} evictions/s", "refId": "A" },
+        { "expr": "sum by (cache) (cache_size)", "legendFormat": "{{cache}} size", "refId": "B" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "비즈니스",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 }
     },
     {
       "type": "timeseries",
       "title": "인증 (회원가입 / 로그인 result별)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 43 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
         { "expr": "sum(increase(healthcare_auth_register_total[5m]))", "legendFormat": "register", "refId": "A" },
@@ -146,7 +176,7 @@
       "type": "timeseries",
       "title": "식단 기록 생성 / AI 분석 지연",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 43 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
         { "expr": "sum(increase(healthcare_diet_log_created_total[5m]))", "legendFormat": "diet logs (5m)", "refId": "A" },
