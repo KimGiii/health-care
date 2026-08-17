@@ -121,7 +121,18 @@ jobs:
                 # 구 blue 컨테이너 제거
                 docker stop $BLUE_NAME || true
                 docker rm   $BLUE_NAME || true
-                docker image prune -f
+
+                # 이미지 정리.
+                #
+                # `docker image prune -f`는 dangling(태그 없는) 이미지만 지운다. 배포마다
+                # 새로 받는 prod-<sha> 태그 이미지는 계속 쌓여 2026-08-04에 32개/12GB로
+                # 디스크가 83%까지 찼고 배포 실패 직전이었다. (#116)
+                #
+                # -a 를 붙여 컨테이너가 참조하지 않는 태그 이미지도 대상에 넣되,
+                # until 필터로 최근 7일치는 남겨 즉시 롤백 여지를 유지한다.
+                # 실행 중인 컨테이너가 쓰는 이미지는 prune 대상에서 자동 제외된다.
+                docker image prune -a -f --filter "until=168h"
+                df -h / | tail -1
                 exit 0
               fi
               echo "Attempt $i: status=$STATUS, retrying in 10s..."

@@ -1,5 +1,21 @@
 # ── RDS PostgreSQL ────────────────────────────────────────────────────────────
 
+# 마스터 비밀번호는 SSM Parameter Store(SecureString)에서 읽는다 (#118).
+# 이전에는 terraform.tfvars에 평문으로 있었다.
+#
+# 파라미터는 Terraform으로 관리하지 않는다. 값을 리소스로 정의하려면 그 값이 코드나
+# 변수로 다시 들어와야 해서 평문 제거라는 목적이 무너진다. 최초 저장은 수동으로 하고
+# (docs/operations/SECRETS_MIGRATION_AND_BILLING_VERIFICATION.md §3.1) 여기서는 읽기만 한다.
+#
+# 한계: 여기서 읽은 값은 Terraform state에 평문으로 남는다. state가 S3(AES256·버저닝·
+# 퍼블릭 차단)에 있어 로컬 평문보다는 낫지만 완전한 제거는 아니다. 근본 해결책인
+# manage_master_user_password는 기존 인스턴스에 적용 시 비밀번호가 즉시 회전해 앱의
+# GitHub Secret이 낡아지고 DB 연결이 끊기므로, 앱 측 변경과 함께 별도로 다룬다.
+data "aws_ssm_parameter" "db_password" {
+  name            = "/healthcare/prod/db/password"
+  with_decryption = true
+}
+
 resource "aws_db_subnet_group" "postgres" {
   name       = "${var.project_name}-${var.environment}-db-subnet"
   subnet_ids = aws_subnet.private[*].id
@@ -24,7 +40,7 @@ resource "aws_db_instance" "postgres" {
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = data.aws_ssm_parameter.db_password.value
 
   db_subnet_group_name   = aws_db_subnet_group.postgres.name
   vpc_security_group_ids = [aws_security_group.rds.id]

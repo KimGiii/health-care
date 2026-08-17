@@ -68,16 +68,9 @@ variable "db_username" {
   sensitive   = true
 }
 
-variable "db_password" {
-  description = "데이터베이스 마스터 비밀번호 (최소 16자)"
-  type        = string
-  sensitive   = true
-
-  validation {
-    condition     = length(var.db_password) >= 16
-    error_message = "db_password는 최소 16자 이상이어야 합니다."
-  }
-}
+# db_password 변수는 SSM Parameter Store 이관과 함께 삭제됨 (#118).
+# 값은 SecureString `/healthcare/prod/db/password`에 있고 database.tf가 data 소스로 읽는다.
+# 최소 16자 검증은 변수와 함께 사라졌다 — 파라미터를 갱신할 때 직접 지켜야 한다.
 
 # ElastiCache 변수는 클러스터 제거와 함께 삭제됨 (#111).
 

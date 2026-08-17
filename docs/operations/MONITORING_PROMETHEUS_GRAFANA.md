@@ -37,7 +37,8 @@
 **자동 (Micrometer)**
 - JVM: `jvm_memory_used_bytes`, `jvm_gc_pause_seconds_*`
 - HTTP: `http_server_requests_seconds_*` (히스토그램 버킷 포함 → p95/p99)
-- DB/Redis: `hikaricp_connections_*`, `lettuce_*`
+- DB: `hikaricp_connections_*`
+- 캐시(Caffeine, `cache={userProfile|external-food-search}` 태그): `cache_gets_total{result="hit|miss"}`, `cache_evictions_total`, `cache_size` (#111 Redis→Caffeine 전환 이후 `CacheConfig`가 `CaffeineCacheMetrics`로 바인딩)
 
 **비즈니스 (커스텀, 0으로 사전 등록)**
 - `healthcare_auth_register_total`
@@ -57,13 +58,15 @@
 
 > NoData=OK인 규칙은 배포 중·무트래픽 시 조용하다. 실제 다운은 hc-instance-down이 잡는다.
 
+**Redis→Caffeine 전환(#111) 이후 재검토**: 5개 규칙 모두 Redis/lettuce 지표를 참조하지 않아 수정 불필요. 새로 노출된 캐시 이빅션 지표(`cache_evictions_total`)에 대한 알림 규칙은 추가하지 않았다 — 캐시가 상한(maximumSize)에 도달해 오래된 항목을 밀어내는 것은 정상 동작이며, 히트율 저하로 이어지지 않는 한 즉시 대응이 필요한 장애 신호가 아니기 때문이다. 대신 위 대시보드의 "캐시 히트율/이빅션" 패널로 추이만 관찰한다.
+
 ---
 
 ## 로컬 실행
 
 ```bash
 cd backend
-docker compose up -d postgres redis prometheus grafana
+docker compose up -d postgres prometheus grafana
 JWT_SECRET=... SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
 
